@@ -175,8 +175,14 @@ const char* ModelConditionFlags::s_bitNameList[] =
 
 
 	"DISGUISED",
-  "DESIGNATED",
+	"DESIGNATED",
 
+
+	// New Weaponsets
+	"WEAPONSET_PLAYER_UPGRADE2",
+	"WEAPONSET_PLAYER_UPGRADE3",
+	"WEAPONSET_PLAYER_UPGRADE4",
+	
 	NULL
 };
 

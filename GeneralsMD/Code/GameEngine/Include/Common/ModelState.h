@@ -240,7 +240,14 @@ enum ModelConditionFlagType CPP_11(: Int)
 	MODELCONDITION_USER_5,		///< Wildcard flag to use with upgrade modules or other random little things
 
 	MODELCONDITION_DISGUISED,
-	MODELCONDITION_DESIGNATED,
+
+	// ---
+	// New Weaponsets
+	MODELCONDITION_WEAPONSET_PLAYER_UPGRADE2,
+	MODELCONDITION_WEAPONSET_PLAYER_UPGRADE3,
+	MODELCONDITION_WEAPONSET_PLAYER_UPGRADE4,
+
+
 //
 // Note: these values are saved in save files, so you MUST NOT REMOVE OR CHANGE
 // existing values!
