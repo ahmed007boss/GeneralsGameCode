@@ -237,6 +237,10 @@ enum CommandSourceType CPP_11(: Int)
 	CMD_SYNC_TO_SIX,  // ...
 	CMD_SYNC_TO_SEVEN,  // ...
 	CMD_SYNC_TO_EIGHT,  // ...
+	CMD_SWITCH_ON_INSUFFICIENT_INVENTORY,	// Auto-switch when locked weapon has insufficient inventory
+	CMD_SWITCH_ON_TARGET_REQUIRED,					// Auto-switch when locked weapon requires target but none provided
+	CMD_SWITCH_ON_TARGET_PREREQ_FAILED,		// Auto-switch when locked weapon target prerequisites fail
+	CMD_SWITCH_ON_SHOOTER_PREREQ_FAILED,	// Auto-switch when locked weapon shooter prerequisites fail
 
 	COMMAND_SOURCE_TYPE_COUNT
 };

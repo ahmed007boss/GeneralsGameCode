@@ -33,6 +33,7 @@
 #include "Common/BitFlagsIO.h"
 #include "Common/BuildAssistant.h"
 #include "Common/Dict.h"
+#include "Common/GameCommon.h"
 #include "Common/GameEngine.h"
 #include "Common/GameCommon.h"
 #include "Common/GameState.h"

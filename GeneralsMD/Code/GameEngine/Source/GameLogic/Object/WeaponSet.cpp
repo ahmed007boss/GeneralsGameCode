@@ -612,12 +612,65 @@ CanAttackResult WeaponSet::getAbleToUseWeaponAgainstTarget(AbleToAttackType atta
 	if (isCurWeaponLocked())
 	{
 		Weapon* weaponToTest = m_weapons[m_curWeapon];
+		WeaponValidationResult  lockedWeaponValidationResult = WEAPON_VALIDATION_NOT_EXIST;
+		UnsignedInt lockedWeaponCommandSourceMask = getNthCommandSourceMask(static_cast<WeaponSlotType>(m_curWeapon));
 		if (weaponToTest && weaponToTest->isWeaponSlotFunctional(source))
 		{
-			bool isValidWeaponUse = weaponToTest->isValidWeaponUse(source, victim);
-			if (isValidWeaponUse)
+			lockedWeaponValidationResult = weaponToTest->validateWeaponUse(source, victim);
+			if (lockedWeaponValidationResult == WEAPON_VALIDATION_VALID)
 			{
-				hasAValidWeaponForVictim = TRUE;
+				hasAValidWeaponForVictim = TRUE;			
+			}
+		}	
+		// TheSuperHackers @feature author 02/10/2025 If locked weapon is not valid, try to auto-switch to DEFAULT_SWITCH_WEAPON
+		Bool shouldAutoSwitch = false;
+		
+		// Check if auto-switch is allowed based on validation result and command source mask
+		if (lockedWeaponValidationResult == WEAPON_VALIDATION_INSUFFICIENT_INVENTORY &&
+			(lockedWeaponCommandSourceMask & (1 << CMD_SWITCH_ON_INSUFFICIENT_INVENTORY)))
+		{
+			shouldAutoSwitch = true;
+		}
+		else if (lockedWeaponValidationResult == WEAPON_VALIDATION_TARGET_PREREQ_FAILED &&
+			(lockedWeaponCommandSourceMask & (1 << CMD_SWITCH_ON_TARGET_PREREQ_FAILED)))
+		{
+			shouldAutoSwitch = true;
+		}
+		else if (lockedWeaponValidationResult == WEAPON_VALIDATION_NO_TARGET_REQUIRED &&
+			(lockedWeaponCommandSourceMask & (1 << CMD_SWITCH_ON_TARGET_REQUIRED)))
+		{
+			shouldAutoSwitch = true;
+		}
+		else if (lockedWeaponValidationResult == WEAPON_VALIDATION_SHOOTER_PREREQ_FAILED &&
+			(lockedWeaponCommandSourceMask & (1 << CMD_SWITCH_ON_SHOOTER_PREREQ_FAILED)))
+		{
+			shouldAutoSwitch = true;
+		}
+		
+		if (shouldAutoSwitch)
+		{
+			for (Int slot = 0; slot < WEAPONSLOT_COUNT; ++slot)
+			{
+				if (slot == m_curWeapon) // Skip the already checked locked weapon
+					continue;
+					
+				Weapon* alternativeWeapon = m_weapons[slot];
+				if (alternativeWeapon && alternativeWeapon->isWeaponSlotFunctional(source))
+				{
+					// Check if this weapon has DEFAULT_SWITCH_WEAPON in its command source mask
+					UnsignedInt commandSourceMask = getNthCommandSourceMask(static_cast<WeaponSlotType>(slot));
+					if (commandSourceMask & (1 << CMD_DEFAULT_SWITCH_WEAPON))
+					{
+						WeaponValidationResult validationResult = alternativeWeapon->validateWeaponUse(source, victim);
+						if (validationResult == WEAPON_VALIDATION_VALID)
+						{
+							// Auto-switch to this weapon
+							const_cast<WeaponSet*>(this)->m_curWeapon = static_cast<WeaponSlotType>(slot);
+							hasAValidWeaponForVictim = TRUE;
+							break; // Use the first valid DEFAULT_SWITCH_WEAPON found
+						}
+					}
+				}
 			}
 		}
 	}
@@ -630,9 +683,9 @@ CanAttackResult WeaponSet::getAbleToUseWeaponAgainstTarget(AbleToAttackType atta
 
 			if (weaponToTest && weaponToTest->isWeaponSlotFunctional(source))
 			{
-				bool isValidWeaponUse = weaponToTest->isValidWeaponUse(source, victim);
+				WeaponValidationResult validationResult = weaponToTest->validateWeaponUse(source, victim);
 				// TheSuperHackers @feature author 15/01/2025 Check if weapon component is functional
-				if (isValidWeaponUse)
+				if (validationResult == WEAPON_VALIDATION_VALID)
 				{
 					
 					/*if (commandSource == CMD_FROM_PLAYER)

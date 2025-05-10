@@ -947,11 +947,12 @@ Bool Weapon::hasEnoughInventoryToFire(const Object* source) const {
 	return true;
 }
 //-------------------------------------------------------------------------------------------------
-Bool Weapon::isValidWeaponUse(const Object* source, const Object* victim)
+// TheSuperHackers @feature author 02/10/2025 Validate weapon use and return detailed result
+WeaponValidationResult Weapon::validateWeaponUse(const Object* source, const Object* victim)
 {
 	// Check if weapon template is valid
 	if (!m_template)
-		return false;
+		return WEAPON_VALIDATION_NO_TEMPLATE;
 		
 	auto weaponTemplate = getTemplate();
 
@@ -960,11 +961,11 @@ Bool Weapon::isValidWeaponUse(const Object* source, const Object* victim)
 	for (size_t i = 0; i < shooterPrereqs.size(); i++)
 	{
 		if (!shooterPrereqs[i].isSatisfied(source))
-			return false;
+			return WEAPON_VALIDATION_SHOOTER_PREREQ_FAILED;
 	}
 	if (!hasEnoughInventoryToFire(source))
 	{
-			return false;
+		return WEAPON_VALIDATION_INSUFFICIENT_INVENTORY;
 	}
 	
 
@@ -975,7 +976,7 @@ Bool Weapon::isValidWeaponUse(const Object* source, const Object* victim)
 		for (size_t i = 0; i < targetPrereqs.size(); i++)
 		{
 			if (!targetPrereqs[i].isSatisfied(victim))
-				return false;
+				return WEAPON_VALIDATION_TARGET_PREREQ_FAILED;
 		}
 	}
 	else {
@@ -983,14 +984,13 @@ Bool Weapon::isValidWeaponUse(const Object* source, const Object* victim)
 		// If weapon has target prerequisites but can't attack without target, this is invalid
 		const std::vector<ObjectPrerequisite>& targetPrereqs = weaponTemplate->getTargetPrerequisites();
 		if (!targetPrereqs.empty() && !weaponTemplate->canAttackWithoutTarget())
-			return false;
+			return WEAPON_VALIDATION_NO_TARGET_REQUIRED;
 		
-		return weaponTemplate->canAttackWithoutTarget();
+		if (!weaponTemplate->canAttackWithoutTarget())
+			return WEAPON_VALIDATION_CANNOT_ATTACK_WITHOUT_TARGET;
 	}
 
-	
-
-	return true;
+	return WEAPON_VALIDATION_VALID;
 }
 //-------------------------------------------------------------------------------------------------
 UnsignedInt WeaponTemplate::fireWeaponTemplate
@@ -3146,7 +3146,7 @@ Bool Weapon::fireWeapon(const Object* source, Object* target, ObjectID* projecti
 		return false;
 	}
 	// Validate weapon use before firing
-	if (!isValidWeaponUse(source, target))
+	if (validateWeaponUse(source, target) != WEAPON_VALIDATION_VALID)
 	{
 		return true;
 	}
@@ -3167,7 +3167,7 @@ Bool Weapon::fireWeapon(const Object* source, const Coord3D* pos, ObjectID* proj
 		return false;
 	}
 	// Validate weapon use before firing
-	if (!isValidWeaponUse(source, nullptr))
+	if (validateWeaponUse(source, nullptr) != WEAPON_VALIDATION_VALID)
 	{
 		return true;
 	}

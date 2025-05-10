@@ -352,6 +352,10 @@ static const char *const TheCommandSourceMaskNames[] =
 	"SYNC_TO_WEAPON_SIX",  //...
 	"SYNC_TO_WEAPON_SEVEN",  //...
 	"SYNC_TO_WEAPON_EIGHT",  //...
+	"SWITCH_ON_INSUFFICIENT_INVENTORY",	//Auto-switch when locked weapon has insufficient inventory
+	"SWITCH_ON_TARGET_REQUIRED",					//Auto-switch when locked weapon requires target but none provided
+	"SWITCH_ON_TARGET_PREREQ_FAILED",		//Auto-switch when locked weapon target prerequisites fail
+	"SWITCH_ON_SHOOTER_PREREQ_FAILED",		//Auto-switch when locked weapon shooter prerequisites fail
 	NULL
 };
 static_assert(ARRAY_SIZE(TheCommandSourceMaskNames) == COMMAND_SOURCE_TYPE_COUNT + 1, "Incorrect array size");

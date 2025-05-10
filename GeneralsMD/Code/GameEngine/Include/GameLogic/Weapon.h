@@ -80,6 +80,22 @@ static_assert(ARRAY_SIZE(TheWeaponReloadNames) == WEAPON_RELOAD_COUNT + 1, "Inco
 #endif
 
 //-------------------------------------------------------------------------------------------------
+// TheSuperHackers @feature author 02/10/2025 Weapon validation result enum
+enum WeaponValidationResult CPP_11(: Int)
+{
+	WEAPON_VALIDATION_NOT_EXIST = -1,				///< Weapon does not exist
+	WEAPON_VALIDATION_VALID = 0,					///< Weapon can be used
+	WEAPON_VALIDATION_NO_TEMPLATE,				///< Weapon has no template
+	WEAPON_VALIDATION_SHOOTER_PREREQ_FAILED,	///< Shooter prerequisites not satisfied
+	WEAPON_VALIDATION_INSUFFICIENT_INVENTORY,	///< Not enough inventory items to fire
+	WEAPON_VALIDATION_TARGET_PREREQ_FAILED,	///< Target prerequisites not satisfied
+	WEAPON_VALIDATION_NO_TARGET_REQUIRED,		///< Weapon requires a target but none provided
+	WEAPON_VALIDATION_CANNOT_ATTACK_WITHOUT_TARGET, ///< Weapon cannot attack without a target
+
+	WEAPON_VALIDATION_COUNT
+};
+
+//-------------------------------------------------------------------------------------------------
 enum WeaponPrefireType CPP_11(: Int)
 {
 	PREFIRE_PER_SHOT,		///< Use the prefire delay for every shot we make
@@ -635,8 +651,8 @@ public:
 
 //~Weapon();
 
-	// return true if this weapon can be used by source against victim
-	Bool isValidWeaponUse( const Object* source, const Object* victim);
+	// TheSuperHackers @feature author 02/10/2025 Validate weapon use and return detailed result
+	WeaponValidationResult validateWeaponUse( const Object* source, const Object* victim);
 	Bool hasEnoughInventoryToFire(const Object* source) const;
 	Bool fireWeapon(const Object *source, Object *target, ObjectID* projectileID = NULL);
 
