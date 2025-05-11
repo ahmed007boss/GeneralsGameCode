@@ -303,12 +303,25 @@ void ModuleInfo::addModuleInfo(ThingTemplate* thingTemplate,
 	Bool inheritable,
 	Bool overrideableByLikeKind)
 {
-
+	// If this is an extension object, remove any existing module with the same tag
+	if (thingTemplate->isExtensionObject())
+	{
+		// Remove from behavior modules
+		AsciiString clearedModuleName;
+		thingTemplate->getBehaviorModuleInfo().clearModuleDataWithTag(moduleTag, clearedModuleName);
+		
+		// Remove from draw modules
+		thingTemplate->getDrawModuleInfo().clearModuleDataWithTag(moduleTag, clearedModuleName);
+		
+		// Remove from client update modules
+		thingTemplate->getClientUpdateModuleInfo().clearModuleDataWithTag(moduleTag, clearedModuleName);
+	}
+	
 	//
 	// there must be a module tag present, and it must be unique across all module infos
 	// for this thing template
 	//
-#if defined(RTS_DEBUG)
+	#if defined(RTS_DEBUG)
 	// get module info
 	const Nugget* nugget;
 
@@ -365,7 +378,8 @@ void ModuleInfo::addModuleInfo(ThingTemplate* thingTemplate,
 		throw INI_INVALID_DATA;
 	}
 
-#endif
+	#endif
+	
 
 	m_info.push_back(Nugget(name, moduleTag, data, interfaceMask, inheritable, overrideableByLikeKind));
 
@@ -979,6 +993,7 @@ ThingTemplate::ThingTemplate() :
 	m_isTrainable = FALSE;
 	m_enterGuard = FALSE;
 	m_hijackGuard = FALSE;
+	m_isExtensionObject = FALSE;
 
 	m_templateID = 0;
 	m_kindof = KINDOFMASK_NONE;
@@ -1201,6 +1216,19 @@ void ThingTemplate::setCopiedFromDefault()
 	m_behaviorModuleInfo.setCopiedFromDefault(true);
 	m_drawModuleInfo.setCopiedFromDefault(true);
 	m_clientUpdateModuleInfo.setCopiedFromDefault(true);
+}
+
+//-------------------------------------------------------------------------------------------------
+void ThingTemplate::setCopiedFromDefaultExtended()
+{
+	m_isExtensionObject = true;
+	//only set weapons and armors as copied, so they get cleared when defining new ones as they
+	// cannot be removed with RemoveModule
+// m_armorCopiedFromDefault = true;
+//	m_weaponsCopiedFromDefault = true;
+	//m_behaviorModuleInfo.setCopiedFromDefault(true);
+	//m_drawModuleInfo.setCopiedFromDefault(true);
+	//m_clientUpdateModuleInfo.setCopiedFromDefault(true);
 }
 
 //-------------------------------------------------------------------------------------------------

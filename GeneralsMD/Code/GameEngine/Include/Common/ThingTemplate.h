@@ -404,6 +404,12 @@ public:
 		return TEST_KINDOFMASK(m_kindof, t);
 	}
 
+	/// return true iff this template is an extension object (created via ObjectExtend)
+	inline Bool isExtensionObject() const
+	{
+		return m_isExtensionObject;
+	}
+
 	/// convenience for doing multiple kindof testing at once.
 	inline Bool isKindOfMulti(const KindOfMaskType& mustBeSet, const KindOfMaskType& mustBeClear) const
 	{
@@ -452,6 +458,11 @@ public:
 	const ModuleInfo& getBehaviorModuleInfo() const { return m_behaviorModuleInfo; }
 	const ModuleInfo& getDrawModuleInfo() const { return m_drawModuleInfo; }
 	const ModuleInfo& getClientUpdateModuleInfo() const { return m_clientUpdateModuleInfo; }
+	
+	// Non-const versions for internal use
+	ModuleInfo& getBehaviorModuleInfo() { return m_behaviorModuleInfo; }
+	ModuleInfo& getDrawModuleInfo() { return m_drawModuleInfo; }
+	ModuleInfo& getClientUpdateModuleInfo() { return m_clientUpdateModuleInfo; }
 
 	const Image *getSelectedPortraitImage( void ) const { return m_selectedPortraitImage; }
 	const Image *getButtonImage( void ) const { return m_buttonImage; }
@@ -627,6 +638,9 @@ public:
 
 	void setCopiedFromDefault();
 
+	// Only set non removable modules as copied when using ObjectExtend
+	void setCopiedFromDefaultExtended();
+
 	void setReskinnedFrom(const ThingTemplate* tt) { DEBUG_ASSERTCRASH(m_reskinnedFrom == NULL, ("should be null")); m_reskinnedFrom = tt; }
 
 	Bool isPrerequisite() const { return m_isPrerequisite; }
@@ -789,6 +803,7 @@ private:
 	Bool					m_isForbidden;								///< useful when overriding in <mapfile>.ini
 	Bool					m_armorCopiedFromDefault;
 	Bool					m_weaponsCopiedFromDefault;
+	Bool					m_isExtensionObject;
 
 	// ---- Byte-sized things
 	Byte					m_radarPriority;						///< does object appear on radar, and if so at what priority
