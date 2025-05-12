@@ -39,6 +39,7 @@
 #define DEFINE_EDITOR_SORTING_NAMES				// for EditorSortingNames[]
 #define DEFINE_RADAR_PRIORITY_NAMES				// for RadarPriorityNames[]
 #define DEFINE_BUILDABLE_STATUS_NAMES			// for BuildableStatusNames[]
+#define DEFINE_AMMO_PIPS_STYLE_NAMES			// for AmmoPipsStyleNames[]
 
 #include "Common/DamageFX.h"
 #include "Common/GameAudio.h"
@@ -279,15 +280,15 @@ const FieldParse ThingTemplate::s_objectFieldParseTable[] =
 					{ "OverrideableByLikeKind",		ThingTemplate::OverrideableByLikeKind,	NULL, 0 },
 
 					{ "Locomotor",						AIUpdateModuleData::parseLocomotorSet, NULL, 0 },
-					{ "InstanceScaleFuzziness",	INI::parseReal,					NULL, offsetof(ThingTemplate, m_instanceScaleFuzziness) },
-					{ "StructureRubbleHeight",	INI::parseUnsignedByte,					NULL, offsetof(ThingTemplate, m_structureRubbleHeight) },
-					{ "ThreatValue",						INI::parseUnsignedShort,		NULL, offsetof(ThingTemplate, m_threatValue) },
-					{ "MaxSimultaneousOfType",	ThingTemplate::parseMaxSimultaneous,		NULL, offsetof(ThingTemplate, m_maxSimultaneousOfType) },
-					{ "MaxSimultaneousLinkKey",	NameKeyGenerator::parseStringAsNameKeyType,		NULL, offsetof(ThingTemplate, m_maxSimultaneousLinkKey) },
-					{ "CrusherLevel",					INI::parseUnsignedByte,			NULL, offsetof(ThingTemplate, m_crusherLevel) },
-					{ "CrushableLevel",				INI::parseUnsignedByte,			NULL, offsetof(ThingTemplate, m_crushableLevel) },
-
-	{ 0, 0, 0, 0 }
+					{ "InstanceScaleFuzziness",	INI::parseReal,					NULL, offsetof(ThingTemplate, m_instanceScaleFuzziness ) },
+					{ "StructureRubbleHeight",	INI::parseUnsignedByte,					NULL, offsetof(ThingTemplate, m_structureRubbleHeight ) },
+					{ "ThreatValue",						INI::parseUnsignedShort,		NULL, offsetof(ThingTemplate, m_threatValue ) }, 
+					{ "MaxSimultaneousOfType",	ThingTemplate::parseMaxSimultaneous,		NULL, offsetof(ThingTemplate, m_maxSimultaneousOfType ) }, 
+					{ "MaxSimultaneousLinkKey",	NameKeyGenerator::parseStringAsNameKeyType,		NULL, offsetof(ThingTemplate, m_maxSimultaneousLinkKey ) }, 
+					{ "CrusherLevel",					INI::parseUnsignedByte,			NULL, offsetof( ThingTemplate, m_crusherLevel ) },
+					{ "CrushableLevel",				INI::parseUnsignedByte,			NULL, offsetof( ThingTemplate, m_crushableLevel ) },
+					{ "AmmoPipsStyle",  INI::parseByteSizedIndexList, AmmoPipsStyleNames, offsetof(ThingTemplate, m_ammoPipsStyle) },
+					{ 0, 0, 0, 0 }
 
 };
 // NOTE NOTE NOTE -- s_objectFieldParseTable and s_objectReskinFieldParseTable must be updated in tandem -- see comment above
@@ -1354,6 +1355,7 @@ ThingTemplate::ThingTemplate() :
 	m_crusherLevel = 0;			//Unspecified, this object is unable to crush anything!
 	m_crushableLevel = 255; //Unspecified, this object is unable to be crushed by anything!
 
+	m_ammoPipsStyle = AMMO_PIPS_DEFAULT;
 }
 
 //-------------------------------------------------------------------------------------------------
