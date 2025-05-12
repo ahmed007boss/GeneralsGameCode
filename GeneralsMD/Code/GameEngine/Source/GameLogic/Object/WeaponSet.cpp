@@ -84,6 +84,9 @@ const char* const WeaponSetFlags::s_bitNameList[] =
 	"PLAYER_UPGRADE3",
 	"PLAYER_UPGRADE4",
 
+	"GARRISONED",
+	"CONTAINED",
+
 	NULL
 };
 static_assert(ARRAY_SIZE(WeaponSetFlags::s_bitNameList) == WeaponSetFlags::NumBits + 1, "Incorrect array size");

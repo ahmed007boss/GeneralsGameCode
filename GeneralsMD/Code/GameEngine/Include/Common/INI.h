@@ -228,7 +228,7 @@ public:
 	static void parseObjectCreationListDefinition( INI* ini );
 	static void parseMultiplayerSettingsDefinition( INI* ini );
 	static void parseMultiplayerColorDefinition( INI* ini );
-  static void parseMultiplayerStartingMoneyChoiceDefinition( INI* ini );
+    static void parseMultiplayerStartingMoneyChoiceDefinition( INI* ini );
 	static void parseOnlineChatColorDefinition( INI* ini );
 	static void parseMapCacheDefinition( INI* ini );
 	static void parseVideoDefinition( INI* ini );
@@ -310,6 +310,8 @@ public:
 	static void parseUpgradeTemplate( INI *ini, void *instance, void *store, const void *userData );
 	static void parseScience( INI *ini, void *instance, void *store, const void *userData );
 	static void parseScienceVector( INI *ini, void *instance, void *store, const void *userData );
+	static void parseWeaponBonusVector( INI *ini, void *instance, void *store, const void *userData );
+	static void parseWeaponBonusVectorKeepDefault( INI *ini, void *instance, void *store, const void *userData );
 	static void parseGameClientRandomVariable( INI* ini, void *instance, void *store, const void* userData );
 	static void parseBitString8( INI *ini, void *instance, void *store, const void* userData );
 	static void parseBitString32( INI *ini, void *instance, void *store, const void* userData );

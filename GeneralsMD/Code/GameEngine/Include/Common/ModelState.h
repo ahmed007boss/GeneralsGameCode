@@ -261,6 +261,9 @@ enum ModelConditionFlagType CPP_11(: Int)
 	MODELCONDITION_WEAPONSET_PLAYER_UPGRADE3,
 	MODELCONDITION_WEAPONSET_PLAYER_UPGRADE4,
 
+	// MODELCONDITION_WEAPONSET_CONTAINED,  // for new Garrisoned and Contained weaponsets
+	// MODELCONDITION_WEAPONSET_GARRISONED,  // somewhat obsolote since we are usually not visible when contained.
+
 
     // New Weaponslots (4 to 8 -- D to H)
 	MODELCONDITION_PREATTACK_D,

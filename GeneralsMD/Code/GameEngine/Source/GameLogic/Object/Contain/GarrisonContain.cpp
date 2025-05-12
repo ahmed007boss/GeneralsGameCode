@@ -49,6 +49,7 @@
 #include "GameLogic/PartitionManager.h"
 #include "GameLogic/Weapon.h"
 #include "GameClient/GameText.h"
+#include "GameLogic/WeaponSetType.h"
 
 #include "GameClient/Drawable.h"
 #include "GameClient/GameClient.h"
@@ -77,6 +78,9 @@ GarrisonContainModuleData::GarrisonContainModuleData( void )
   m_isEnclosingContainer = TRUE; ///< a sensible default for a garrison container... few exceptions, firebase is one
 
 	m_initialRoster.count = 0;
+
+	m_passengerWeaponBonusVec.push_back(WEAPONBONUSCONDITION_GARRISONED);
+
 }
 
 //-----------------------------------------------------------------------------
@@ -1625,7 +1629,8 @@ void GarrisonContain::onContaining( Object *obj, Bool wasSelected )
 	structure->setStatus( MAKE_OBJECT_STATUS_MASK( OBJECT_STATUS_CAN_ATTACK ) );
 
 	// give the object a garrisoned version of its weapon
-	obj->setWeaponBonusCondition( WEAPONBONUSCONDITION_GARRISONED );
+	// obj->setWeaponBonusCondition( WEAPONBONUSCONDITION_GARRISONED );
+	obj->setWeaponSetFlag(WEAPONSET_GARRISONED);
 
 	// put the object in the center of the building
   if (isEnclosingContainerFor( obj ))
@@ -1666,6 +1671,7 @@ void GarrisonContain::onRemoving( Object *obj )
   }
 	// give the object back a regular weapon
 	obj->clearWeaponBonusCondition( WEAPONBONUSCONDITION_GARRISONED );
+	obj->clearWeaponSetFlag(WEAPONSET_GARRISONED);
 
 	// object is no longer held inside a garrisoned building
 	obj->clearDisabled( DISABLED_HELD );
