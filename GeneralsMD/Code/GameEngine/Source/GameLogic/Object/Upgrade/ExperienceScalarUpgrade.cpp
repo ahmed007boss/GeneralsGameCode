@@ -40,6 +40,8 @@
 ExperienceScalarUpgradeModuleData::ExperienceScalarUpgradeModuleData( void )
 {
 	m_addXPScalar = 0.0f;
+	// TheSuperHackers @feature ahmed Salah 15/01/2025 Added experience value scalar initialization for Zero Hour
+	m_xpGrantedOnDeathScalar = 0.0f;
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -52,6 +54,8 @@ void ExperienceScalarUpgradeModuleData::buildFieldParse(MultiIniFieldParse& p)
 	static const FieldParse dataFieldParse[] =
 	{
 		{ "AddXPScalar",	INI::parseReal,		NULL, offsetof( ExperienceScalarUpgradeModuleData, m_addXPScalar ) },
+		// TheSuperHackers @feature ahmed Salah 15/01/2025 Added XPGrantedOnDeathScalar field parsing for Zero Hour
+		{ "XPGrantedOnDeathScalar",	INI::parseReal,		NULL, offsetof( ExperienceScalarUpgradeModuleData, m_xpGrantedOnDeathScalar ) },
 		{ 0, 0, 0, 0 }
 	};
 
@@ -83,6 +87,8 @@ void ExperienceScalarUpgrade::upgradeImplementation( )
 	if( xpTracker )
 	{
 		xpTracker->setExperienceScalar( xpTracker->getExperienceScalar() + data->m_addXPScalar );
+		// TheSuperHackers @feature ahmed Salah 15/01/2025 Added experience value scalar application for Zero Hour
+		xpTracker->setExperienceValueScalar( xpTracker->getExperienceValueScalar() + data->m_xpGrantedOnDeathScalar );
 	}
 }
 

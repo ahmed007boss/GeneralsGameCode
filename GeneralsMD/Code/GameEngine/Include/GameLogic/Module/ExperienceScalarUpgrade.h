@@ -49,7 +49,9 @@ public:
 
 	static void buildFieldParse(MultiIniFieldParse& p);
 
-	Real m_addXPScalar;
+	Real m_addXPScalar;   ///< Additive bonus to scalar for XP this unit gains
+	// TheSuperHackers @feature ahmed Salah 15/01/2025 Added experience value scalar for Zero Hour
+	Real m_xpGrantedOnDeathScalar;  ///< Additive bonus to scalar for XP this unit gives when killed
 
 };
 
