@@ -53,10 +53,10 @@ RadiusDecalTemplate::RadiusDecalTemplate() :
 void RadiusDecalTemplate::createRadiusDecal(const Coord3D& pos, Real radius, const Player* owningPlayer, RadiusDecal& result) const
 {
 	result.clear();
-
+	
 	if (owningPlayer == NULL)
 	{
-		DEBUG_CRASH(("You MUST specify a non-NULL owningPlayer to createRadiusDecal. (srj)"));
+		DEBUG_CRASH(("You MUST specify a non-NULL owningPlayer to createRadiusDecal. (srj)\n"));
 		return;
 	}
 
@@ -82,12 +82,12 @@ void RadiusDecalTemplate::createRadiusDecal(const Coord3D& pos, Real radius, con
 		{
 			result.m_decal->setAngle(0.0f);
 			result.m_decal->setColor(m_color == 0 ? owningPlayer->getPlayerColor() : m_color);
-			result.m_decal->setPosition(pos.x, pos.y, pos.z);
+			result.m_decal->setPosition(pos.x, pos.y, pos.z);	
 			result.m_template = this;
 		}
 		else
 		{
-			DEBUG_CRASH(("Unable to add decal %s",decalInfo.m_ShadowName));
+			DEBUG_CRASH(("Unable to add decal %s\n",decalInfo.m_ShadowName));
 		}
 	}
 }
@@ -112,13 +112,13 @@ void RadiusDecalTemplate::xferRadiusDecalTemplate( Xfer *xfer )
 // ------------------------------------------------------------------------------------------------
 /*static*/ void RadiusDecalTemplate::parseRadiusDecalTemplate(INI* ini, void *instance, void * store, const void* /*userData*/)
 {
-	static const FieldParse dataFieldParse[] =
+	static const FieldParse dataFieldParse[] = 
 	{
 		{ "Texture",										INI::parseAsciiString,				NULL,							offsetof( RadiusDecalTemplate, m_name ) },
 		{ "Style",											INI::parseBitString32,				TheShadowNames,		offsetof( RadiusDecalTemplate, m_shadowType ) },
 		{ "OpacityMin",									INI::parsePercentToReal,			NULL,							offsetof( RadiusDecalTemplate, m_minOpacity ) },
 		{ "OpacityMax",									INI::parsePercentToReal,			NULL,							offsetof( RadiusDecalTemplate, m_maxOpacity) },
-		{ "OpacityThrobTime",						INI::parseDurationUnsignedInt,NULL,							offsetof( RadiusDecalTemplate, m_opacityThrobTime ) },
+		{ "OpacityThrobTime",						INI::parseDurationUnsignedInt, NULL,							offsetof( RadiusDecalTemplate, m_opacityThrobTime ) },
 		{ "Color",											INI::parseColorInt,						NULL,							offsetof( RadiusDecalTemplate, m_color ) },
 		{ "OnlyVisibleToOwningPlayer",	INI::parseBool,								NULL,							offsetof( RadiusDecalTemplate, m_onlyVisibleToOwningPlayer ) },
 		{ 0, 0, 0, 0 }
@@ -192,13 +192,18 @@ void RadiusDecal::update()
 {
 	if (m_decal && m_template)
 	{
-		UnsignedInt now = TheGameLogic->getFrame();
-		Real theta = (2*PI) * (Real)(now % m_template->m_opacityThrobTime) / (Real)m_template->m_opacityThrobTime;
-		Real percent = 0.5f * (Sin(theta) + 1.0f);
 		Int opac;
-		if( TheGameLogic->getDrawIconUI() )
+		if (TheGameLogic->getDrawIconUI())
 		{
-			opac = REAL_TO_INT((m_template->m_minOpacity + percent * (m_template->m_maxOpacity - m_template->m_minOpacity)) * 255.0f);
+			if (m_template->m_opacityThrobTime > 0) {
+				UnsignedInt now = TheGameLogic->getFrame();
+				Real theta = (2 * PI) * (Real)(now % m_template->m_opacityThrobTime) / (Real)m_template->m_opacityThrobTime;
+				Real percent = 0.5f * (Sin(theta) + 1.0f);
+				opac = REAL_TO_INT((m_template->m_minOpacity + percent * (m_template->m_maxOpacity - m_template->m_minOpacity)) * 255.0f);
+			}
+			else {
+				opac = REAL_TO_INT(m_template->m_maxOpacity * 255.0f);
+			}
 		}
 		else
 		{

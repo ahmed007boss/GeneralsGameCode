@@ -402,6 +402,7 @@ set(GAMEENGINE_SRC
     Include/GameLogic/Module/RadarUpdate.h
     Include/GameLogic/Module/RadarUpgrade.h
     Include/GameLogic/Module/RadiusDecalUpdate.h
+    Include/GameLogic/Module/RadiusDecalBehavior.h
     Include/GameLogic/Module/RailedTransportAIUpdate.h
     Include/GameLogic/Module/RailedTransportContain.h
     Include/GameLogic/Module/RailedTransportDockUpdate.h
@@ -1041,6 +1042,7 @@ set(GAMEENGINE_SRC
     Source/GameLogic/Object/Update/ProneUpdate.cpp
     Source/GameLogic/Object/Update/RadarUpdate.cpp
     Source/GameLogic/Object/Update/RadiusDecalUpdate.cpp
+    Source/GameLogic/Object/Update/RadiusDecalBehavior.cpp
     Source/GameLogic/Object/Update/SlavedUpdate.cpp
     Source/GameLogic/Object/Update/SmartBombTargetHomingUpdate.cpp
     Source/GameLogic/Object/Update/SpecialAbilityUpdate.cpp
