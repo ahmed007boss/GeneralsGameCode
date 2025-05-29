@@ -508,6 +508,7 @@ private:
 	Bool													m_hideHeadlights;
 	Bool													m_pauseAnimation;
 	Int														m_animationMode;
+	Bool													m_isFirstDrawModule;
 
 	void adjustAnimation(const ModelConditionInfo* prevState, Real prevAnimFraction);
 	Real getCurrentAnimFraction() const;
