@@ -34,6 +34,7 @@
 #include "Common/BuildAssistant.h"
 #include "Common/Dict.h"
 #include "Common/GameEngine.h"
+#include "Common/GameCommon.h"
 #include "Common/GameState.h"
 #include "Common/ModuleFactory.h"
 #include "Common/Player.h"
@@ -141,6 +142,41 @@ static const ModelConditionFlags s_allWeaponFireFlags[WEAPONSLOT_COUNT] =
 		MODELCONDITION_RELOADING_C,
 		MODELCONDITION_PREATTACK_C,
 		MODELCONDITION_USING_WEAPON_C
+	),
+	MAKE_MODELCONDITION_MASK5(
+		MODELCONDITION_FIRING_D,
+		MODELCONDITION_BETWEEN_FIRING_SHOTS_D,
+		MODELCONDITION_RELOADING_D,
+		MODELCONDITION_PREATTACK_D,
+		MODELCONDITION_USING_WEAPON_D
+	),
+	MAKE_MODELCONDITION_MASK5(
+		MODELCONDITION_FIRING_E,
+		MODELCONDITION_BETWEEN_FIRING_SHOTS_E,
+		MODELCONDITION_RELOADING_E,
+		MODELCONDITION_PREATTACK_E,
+		MODELCONDITION_USING_WEAPON_E
+	),
+	MAKE_MODELCONDITION_MASK5(
+		MODELCONDITION_FIRING_F,
+		MODELCONDITION_BETWEEN_FIRING_SHOTS_F,
+		MODELCONDITION_RELOADING_F,
+		MODELCONDITION_PREATTACK_F,
+		MODELCONDITION_USING_WEAPON_F
+	),
+	MAKE_MODELCONDITION_MASK5(
+		MODELCONDITION_FIRING_G,
+		MODELCONDITION_BETWEEN_FIRING_SHOTS_G,
+		MODELCONDITION_RELOADING_G,
+		MODELCONDITION_PREATTACK_G,
+		MODELCONDITION_USING_WEAPON_G
+	),
+	MAKE_MODELCONDITION_MASK5(
+		MODELCONDITION_FIRING_H,
+		MODELCONDITION_BETWEEN_FIRING_SHOTS_H,
+		MODELCONDITION_RELOADING_H,
+		MODELCONDITION_PREATTACK_H,
+		MODELCONDITION_USING_WEAPON_H
 	)
 };
 
@@ -1296,6 +1332,33 @@ Bool Object::hasAnyDamageWeapon() const
 UnsignedInt Object::getMostPercentReadyToFireAnyWeapon() const
 {
 	return m_weaponSet.getMostPercentReadyToFireAnyWeapon();
+}
+
+//=============================================================================
+Bool Object::getWeaponInWeaponSlotSyncedToSlot(WeaponSlotType thisSlot, WeaponSlotType otherSlot) const
+{
+	CommandSourceMask mask = getWeaponInWeaponSlotCommandSourceMask(thisSlot);
+
+	//Bool value0a = mask & (1 << CMD_SYNC_TO_PRIMARY);
+	//Bool value0b = (otherSlot == PRIMARY_WEAPON);
+	//Bool value1a = mask & (1 << CMD_SYNC_TO_SECONDARY);
+	//Bool value1b = (otherSlot == SECONDARY_WEAPON);
+	//Bool value2a = mask & (1 << CMD_SYNC_TO_TERTIARY);
+	//Bool value2b = (otherSlot == TERTIARY_WEAPON);
+
+	//DEBUG_LOG(("- getWeaponInWeaponSlotSyncedToSlot (thisSlot=%d, otherSlot=%d): mask = %d --> value0 = %d/%d, value1 = %d/%d, value2 = %d/%d.\n",
+	//	thisSlot, otherSlot, static_cast<int>(mask), value0a, value0b, value1a, value1b, value2a, value2b));
+
+	return ((Int)mask >= 0) &&
+		((mask & (1 << CMD_SYNC_TO_PRIMARY) && otherSlot == PRIMARY_WEAPON) ||
+		(mask & (1 << CMD_SYNC_TO_SECONDARY) && otherSlot == SECONDARY_WEAPON) ||
+		(mask & (1 << CMD_SYNC_TO_TERTIARY) && otherSlot == TERTIARY_WEAPON) ||
+		(mask & (1 << CMD_SYNC_TO_FOUR) && otherSlot == WEAPON_FOUR) ||
+		(mask & (1 << CMD_SYNC_TO_FIVE) && otherSlot == WEAPON_FIVE) ||
+		(mask & (1 << CMD_SYNC_TO_SIX) && otherSlot == WEAPON_SIX) ||
+		(mask & (1 << CMD_SYNC_TO_SEVEN) && otherSlot == WEAPON_SEVEN) ||
+		(mask & (1 << CMD_SYNC_TO_EIGHT) && otherSlot == WEAPON_EIGHT));
+
 }
 
 //=============================================================================
