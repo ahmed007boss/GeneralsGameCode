@@ -433,6 +433,7 @@ set(GAMEENGINE_SRC
     Include/GameLogic/Module/RebuildHoleExposeDie.h
     Include/GameLogic/Module/RepairDockUpdate.h
     Include/GameLogic/Module/ReplaceObjectUpgrade.h
+    Include/GameLogic/Module/ResetSpecialPowerTimerWhileAliveUpdate.h
     Include/GameLogic/Module/RiderChangeContain.h
     Include/GameLogic/Module/SabotageCommandCenterCrateCollide.h
     Include/GameLogic/Module/SabotageFakeBuildingCrateCollide.h
@@ -1088,6 +1089,7 @@ set(GAMEENGINE_SRC
     Source/GameLogic/Object/Update/RadiusDecalUpdate.cpp
     Source/GameLogic/Object/Update/RadiusDecalBehavior.cpp
     Source/GameLogic/Object/Update/WeaponRangeDecalBehavior.cpp
+    Source/GameLogic/Object/Update/ResetSpecialPowerTimerWhileAliveUpdate.cpp
     Source/GameLogic/Object/Update/SlavedUpdate.cpp
     Source/GameLogic/Object/Update/SmartBombTargetHomingUpdate.cpp
     Source/GameLogic/Object/Update/SpecialAbilityUpdate.cpp

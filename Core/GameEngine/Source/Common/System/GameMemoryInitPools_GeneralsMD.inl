@@ -668,5 +668,6 @@ static PoolSizeRec PoolSizes[] =
 	{ "ThumbnailManagerClass", 32, 32},
 	{ "SmudgeSet", 32, 32},
 	{ "Smudge", 128, 32},
+	{ "ResetSpecialPowerTimerWhileAliveUpdate", 8, 8 },
 	{ 0, 0, 0 }
 };
