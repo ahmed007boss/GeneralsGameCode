@@ -68,6 +68,7 @@ public:
 	UnicodeString getModuleDescription() const;
 
 	static void parseArmorCoefficients( INI* ini, void *instance, void* /* store */, const void* userData );
+	static void parseArmorMultiplier( INI* ini, void *instance, void* /* store */, const void* userData );
 
 public:
 	AsciiString m_name;											///< name for this armor
