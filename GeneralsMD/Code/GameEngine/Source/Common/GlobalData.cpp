@@ -984,8 +984,13 @@ GlobalData::GlobalData()
 
 	m_shellMapName.set("Maps\\ShellMap1\\ShellMap1.map");
 	m_shellMapOn =TRUE;
+#if defined( RTS_DEBUG )
+	m_playIntro = FALSE;
+	m_playSizzle = FALSE;
+#else
 	m_playIntro = TRUE;
 	m_playSizzle = TRUE;
+#endif
 	m_afterIntro = FALSE;
 	m_allowExitOutOfMovies = FALSE;
 	m_loadScreenRender = FALSE;
