@@ -169,8 +169,13 @@ const char* ModelConditionFlags::s_bitNameList[] =
 
 	"USER_1",
 	"USER_2",
+	"USER_3",
+	"USER_4",
+	"USER_5",
+
 
 	"DISGUISED",
+  "DESIGNATED",
 
 	NULL
 };
