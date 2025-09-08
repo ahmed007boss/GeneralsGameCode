@@ -173,6 +173,8 @@ const char* KindOfMaskType::s_bitNameList[] =
 	"EW_RADAR",
 	"EW_JAMMER",
 	"EW_JAMMABLE",
+  "EW_JAMMABLE_DIRECT",
+  "EW_JAMMABLE_AREA",
 
 
 	"TELEPORTER",
