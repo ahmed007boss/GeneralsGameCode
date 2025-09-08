@@ -454,6 +454,9 @@ public:
 	inline const WeaponBonusSet* getExtraBonus() const { return m_extraBonus; }
 	inline Int getShotsPerBarrel() const { return m_shotsPerBarrel; }
 	inline Int getAntiMask() const { return m_antiMask; }
+	inline KindOfMaskType  getTargetForbidKindOf() const { return m_targetForbidKindOf; }
+	inline KindOfMaskType  getTargetAllowedKindOf() const { return m_targetAllowedKindOf; }
+	inline BOOL canAttackWithoutTarget() const { return m_canAttackWithoutTarget; }
 	inline Bool isLeechRangeWeapon() const { return m_leechRangeWeapon; }
 	inline Bool isCapableOfFollowingWaypoint() const { return m_capableOfFollowingWaypoint; }
 	inline Bool isShowsAmmoPips() const { return m_isShowsAmmoPips; }
@@ -537,6 +540,9 @@ private:
 	Int m_shotsPerBarrel;										///< If non zero, don't cycle through your launch points every shot, mod the shot by this to get even chucks of firing
 	Int m_antiMask;													///< what we can target
 	Int m_affectsMask;											///< what we can affect
+	KindOfMaskType m_targetAllowedKindOf;		///< objects must have at least one of these kind of bits set to be targeted
+	KindOfMaskType m_targetForbidKindOf;		///< objects must have NONE of these kind of bits set to be targeted
+	Bool m_canAttackWithoutTarget;					///< Cat force Attack on ground or not
 	Int m_collideMask;											///< what we can collide with (projectiles only)
 	Bool m_damageDealtAtSelfPosition;				///< if T, weapon damage is done at source's position, not victim's pos. (useful for suicide weapons.)
 	WeaponReloadType m_reloadType;					///< does the weapon auto-reload a clip when empty?
@@ -586,7 +592,9 @@ public:
 
 //~Weapon();
 
-	// return true if we auto-reloaded our clip after firing.
+	// return true if this weapon can target this object
+	Bool isValidTarget( const Object* victim);
+
 	Bool fireWeapon(const Object *source, Object *target, ObjectID* projectileID = NULL);
 
 	// return true if we auto-reloaded our clip after firing.

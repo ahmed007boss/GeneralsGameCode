@@ -209,6 +209,9 @@ const FieldParse WeaponTemplate::TheWeaponTemplateFieldParseTable[] =
 	{ "ShotsPerBarrel",						INI::parseInt,													NULL,							offsetof(WeaponTemplate, m_shotsPerBarrel) },
 	{ "DamageDealtAtSelfPosition",INI::parseBool,													NULL,							offsetof(WeaponTemplate, m_damageDealtAtSelfPosition) },
 	{ "RadiusDamageAffects",			INI::parseBitString32,	TheWeaponAffectsMaskNames,				offsetof(WeaponTemplate, m_affectsMask) },
+	{ "TargetAllowedKindOf",			KindOfMaskType::parseFromINI,	KindOfMaskType::getBitNames(),				offsetof(WeaponTemplate, m_targetAllowedKindOf) },
+	{ "TargetForbidKindOf",				KindOfMaskType::parseFromINI,	KindOfMaskType::getBitNames(),				offsetof(WeaponTemplate, m_targetForbidKindOf) },
+	{ "CanAttackWithoutTarget",		INI::parseBool,													NULL,							offsetof(WeaponTemplate, m_canAttackWithoutTarget) },
 	{ "ProjectileCollidesWith",		INI::parseBitString32,	TheWeaponCollideMaskNames,				offsetof(WeaponTemplate, m_collideMask) },
 	{ "AntiAirborneVehicle",			INI::parseBitInInt32,										(void*)WEAPON_ANTI_AIRBORNE_VEHICLE,	offsetof(WeaponTemplate, m_antiMask) },
 	{ "AntiGround",								INI::parseBitInInt32,										(void*)WEAPON_ANTI_GROUND,						offsetof(WeaponTemplate, m_antiMask) },
@@ -227,7 +230,7 @@ const FieldParse WeaponTemplate::TheWeaponTemplateFieldParseTable[] =
 	{ "HistoricBonusRadius",			INI::parseReal,													NULL,							offsetof(WeaponTemplate, m_historicBonusRadius) },
 	{ "HistoricBonusCount",				INI::parseInt,													NULL,							offsetof(WeaponTemplate, m_historicBonusCount) },
 	{ "HistoricBonusWeapon",			INI::parseWeaponTemplate,								NULL,							offsetof(WeaponTemplate, m_historicBonusWeapon) },
-	{ "LeechRangeWeapon",					INI::parseBool,													NULL,							offsetof(WeaponTemplate, m_leechRangeWeapon) },
+	{ "LeechRangeWeapon",					INI::parseBool,													NULL,							offsetof(WeaponTemplate, m_leechRangeWeapon) },	
 	{ "ScatterTarget",						WeaponTemplate::parseScatterTarget,			NULL,							0 },
 	{ "CapableOfFollowingWaypoints", INI::parseBool,											NULL,							offsetof(WeaponTemplate, m_capableOfFollowingWaypoint) },
 	{ "ShowsAmmoPips",						INI::parseBool,													NULL,							offsetof(WeaponTemplate, m_isShowsAmmoPips) },
@@ -304,6 +307,9 @@ WeaponTemplate::WeaponTemplate() : m_nextTemplate(NULL)
 	m_extraBonus										= NULL;
 	m_shotsPerBarrel								= 1;
 	m_antiMask											= WEAPON_ANTI_GROUND;	// but not air or projectile.
+	m_targetAllowedKindOf = MAKE_KINDOF_MASK(KINDOF_FIRST);
+	m_targetForbidKindOf = MAKE_KINDOF_MASK(KINDOF_FIRST);
+	m_canAttackWithoutTarget = true;
 	m_projectileStreamName.clear();
 	m_laserName.clear();
 	m_laserBoneName.clear();
@@ -741,7 +747,43 @@ Bool WeaponTemplate::shouldProjectileCollideWith(
 	//DEBUG_LOG(("Rejecting projectile collision between %s and %s!",projectile->getTemplate()->getName().str(),thingWeCollidedWith->getTemplate()->getName().str()));
 	return false;
 }
+//-------------------------------------------------------------------------------------------------
+Bool Weapon::isValidTarget( const Object* victim)
+{
+	auto weaponTemplate = getTemplate();
 
+	if (victim)
+	{
+
+	/*	if (obj->isAnyKindOf(modData->m_allowInsideKindOf) == FALSE ||
+			obj->isAnyKindOf(modData->m_forbidInsideKindOf) == TRUE)
+		{
+			return false;
+		}*/
+	
+		auto allowed = weaponTemplate->getTargetAllowedKindOf();
+		auto forbidden = weaponTemplate->getTargetForbidKindOf();
+
+		// Check allowed kinds
+		if (allowed != MAKE_KINDOF_MASK(KINDOF_FIRST)) // replace with a real constant instead of MAKE_KINDOF_MASK(KINDOF_FIRST)
+		{
+			if (victim->isAnyKindOf(allowed) == FALSE )
+				return false;
+		}
+
+		// Check forbidden kinds
+		if (forbidden != MAKE_KINDOF_MASK(KINDOF_FIRST))
+		{
+			if (victim->isAnyKindOf(forbidden) == TRUE)
+				return false;
+		}
+
+	}
+	else {
+		return	weaponTemplate->canAttackWithoutTarget();
+	}
+	return true;
+}
 //-------------------------------------------------------------------------------------------------
 UnsignedInt WeaponTemplate::fireWeaponTemplate
 (
