@@ -170,9 +170,9 @@ const char* KindOfMaskType::s_bitNameList[] =
 	"COMMANDO",
 	"HEAVY_INFANTRY",
 	"SUPERHEAVY_VEHICLE",
-	"RADAR_VEHICLE",
-	"JAMMER_VEHICLE",
-	"JAMMABLE",
+	"EW_RADAR",
+	"EW_JAMMER",
+	"EW_JAMMABLE",
 
 
 	"TELEPORTER",
