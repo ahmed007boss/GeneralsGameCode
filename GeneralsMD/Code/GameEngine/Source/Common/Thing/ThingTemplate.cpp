@@ -118,6 +118,7 @@ const FieldParse ThingTemplate::s_objectFieldParseTable[] =
 	{ "WeaponSet",						ThingTemplate::parseWeaponTemplateSet,NULL, 0},
 	{ "VisionRange",					INI::parseReal,												NULL,		offsetof( ThingTemplate, m_visionRange ) },
 	{ "ShroudClearingRange",	INI::parseReal,												NULL,		offsetof( ThingTemplate, m_shroudClearingRange ) },
+	{ "ShroudClearingSubdualRange",	INI::parseReal,												NULL,		offsetof( ThingTemplate, m_shroudClearingSubdualRange) },
 	{ "ShroudRevealToAllRange",	INI::parseReal,											NULL,		offsetof( ThingTemplate, m_shroudRevealToAllRange ) },
 
 	{ "PlacementViewAngle",		INI::parseAngleReal,									NULL,		offsetof( ThingTemplate, m_placementViewAngle ) },
@@ -994,6 +995,7 @@ ThingTemplate::ThingTemplate() :
 	m_fenceXOffset = 0;
 	m_visionRange = 0.0f;
 	m_shroudClearingRange = -1.0f;
+	m_shroudClearingSubdualRange = -1.0f;
 	m_shroudRevealToAllRange = -1.0f;
 
 	m_buildCost = 0;
