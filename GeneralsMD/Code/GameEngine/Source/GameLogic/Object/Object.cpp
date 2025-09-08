@@ -286,10 +286,12 @@ Object::Object( const ThingTemplate *tt, const ObjectStatusMaskType &objectStatu
 
 	m_visionRange = tt->friend_calcVisionRange();
 	m_shroudClearingRange = tt->friend_calcShroudClearingRange();
+	
+	m_shroudClearingSubdualRange = tt->friend_calcShroudClearingSubdualRange();
 	if( m_shroudClearingRange == -1.0f )
 		m_shroudClearingRange = m_visionRange;// Backwards compatible, and perfectly logical default to assign
 	m_shroudRange = 0.0f;
-
+	m_shroudClearingOriginalRange = m_shroudClearingRange;
 	m_singleUseCommandUsed = false;
 
 	// assign unique object id
@@ -5154,6 +5156,11 @@ Real Object::getShroudClearingRange() const
 //-------------------------------------------------------------------------------------------------
 void Object::setShroudClearingRange( Real newShroudClearingRange )
 {
+	if (getDisabledFlags().test(DISABLED_SUBDUED) && m_shroudClearingSubdualRange >= 0 )
+	{
+		newShroudClearingRange = m_shroudClearingSubdualRange;
+	}
+
  	if( newShroudClearingRange != m_shroudClearingRange )
  	{
  		// The partition cell refresh is a slow operation, so only do it if you really have to.
@@ -5277,6 +5284,18 @@ void Object::notifySubdualDamage( Real amount )
 		else
 			getDrawable()->clearTintStatus(TINT_STATUS_GAINING_SUBDUAL_DAMAGE);
 	}
+	if (m_shroudClearingSubdualRange >= 0)
+	{
+		if (getDisabledFlags().test(DISABLED_SUBDUED))
+		{
+			setShroudClearingRange(m_shroudClearingSubdualRange);
+		}
+		else
+		{
+			setShroudClearingRange(m_shroudClearingOriginalRange);
+		}
+	}
+	
 }
 
 //-------------------------------------------------------------------------------------------------

@@ -720,7 +720,9 @@ private:
 	SightingInfo	*m_partitionLastValue;	///< Where and for whom I last delt with value, so I can undo its effects when I stop
 
 	Real					m_visionRange;										///< looking range
+	Real					m_shroudClearingOriginalRange;						///< looking range for shroud ONLY
 	Real					m_shroudClearingRange;						///< looking range for shroud ONLY
+	Real					m_shroudClearingSubdualRange;						///< looking range for shroud ONLY
 	Real					m_shroudRange;										///< like looking range, this is how far I shroud others' looks
 
 	DisabledMaskType	m_disabledMask;
