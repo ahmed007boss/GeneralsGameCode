@@ -103,6 +103,9 @@ enum CommandOption CPP_11(: Int)
 	CAN_USE_WAYPOINTS						= 0x00400000, // button has option to use a waypoint path
 	MUST_BE_STOPPED							= 0x00800000, // Unit must be stopped in order to be able to use button.
 
+	NEED_UPGRADE_TO_APPEAR = 0x01600000, // command requires upgrade to be enabled
+
+
 	NUM_COMMAND_OPTIONS						// keep this last
 };
 
@@ -137,6 +140,7 @@ static const char *TheCommandOptionNames[] =
 	"USES_MINE_CLEARING_WEAPONSET",
 	"CAN_USE_WAYPOINTS",
 	"MUST_BE_STOPPED",
+	"NEED_UPGRADE_TO_APPEAR",
 
 	NULL
 };

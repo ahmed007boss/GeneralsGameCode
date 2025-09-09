@@ -1094,6 +1094,26 @@ CommandAvailability ControlBar::getCommandAvailability( const CommandButton *com
  	}
 
 	// if the command requires an upgrade and we don't have it we can't do it
+	if (BitIsSet(command->getOptions(), NEED_UPGRADE_TO_APPEAR))
+	{
+		const UpgradeTemplate* upgradeT = command->getUpgradeTemplate();
+		if (upgradeT)
+		{
+			// upgrades come in the form of player upgrades and object upgrades
+			if (upgradeT->getUpgradeType() == UPGRADE_TYPE_PLAYER)
+			{
+				if (player->hasUpgradeComplete(upgradeT) == FALSE)
+					return COMMAND_HIDDEN;
+			}
+			else if (upgradeT->getUpgradeType() == UPGRADE_TYPE_OBJECT &&
+				obj->hasUpgrade(upgradeT) == FALSE)
+			{
+				return COMMAND_HIDDEN;
+			}
+		}
+	}
+
+	// if the command requires an upgrade and we don't have it we can't do it
 	if( BitIsSet( command->getOptions(), NEED_UPGRADE ) )
 	{
 		const UpgradeTemplate *upgradeT = command->getUpgradeTemplate();
@@ -1112,6 +1132,8 @@ CommandAvailability ControlBar::getCommandAvailability( const CommandButton *com
 			}
 		}
 	}
+
+
 
 	ProductionUpdateInterface *pu = obj->getProductionUpdateInterface();
 	if( pu && pu->firstProduction() && BitIsSet( command->getOptions(), NOT_QUEUEABLE ) )
