@@ -4398,7 +4398,11 @@ void Object::xfer( Xfer *xfer )
 
 		m_specialPowerBits.xfer( xfer );
 
+		xfer->xferInt(&m_commandSetIndex);
 		xfer->xferAsciiString(&m_commandSetStringOverride);
+		xfer->xferAsciiString(&m_commandSet2StringOverride);
+		xfer->xferAsciiString(&m_commandSet3StringOverride);
+		xfer->xferAsciiString(&m_commandSet4StringOverride);
 
 		xfer->xferBool(&m_modulesReady);
 	}
@@ -5527,6 +5531,10 @@ void Object::doCommandButton( const CommandButton *commandButton, CommandSourceT
 #ifdef ALLOW_SURRENDER
 			case GUICOMMANDMODE_PICK_UP_PRISONER:
 #endif
+			case GUI_COMMAND_SWITCH_COMMAND_SET :
+			case GUI_COMMAND_SWITCH_COMMAND_SET2 :
+			case GUI_COMMAND_SWITCH_COMMAND_SET3 :
+			case GUI_COMMAND_SWITCH_COMMAND_SET4 :			
 			default:
 				break;
 		}
@@ -6109,10 +6117,36 @@ Int Object::getMultiLogicalBonePosition(const char* boneNamePrefix, Int maxBones
 //=============================================================================
 const AsciiString& Object::getCommandSetString() const
 {
-	if (m_commandSetStringOverride.isNotEmpty())
-		return m_commandSetStringOverride;
+	switch (m_commandSetIndex)
+	{
+	case 0 :
+		if (m_commandSetStringOverride.isNotEmpty())
+			return m_commandSetStringOverride;
 
-	return getTemplate()->friend_getCommandSetString();
+		return getTemplate()->friend_getCommandSetString();
+	case 1:
+		if (m_commandSet2StringOverride.isNotEmpty())
+			return m_commandSet2StringOverride;
+
+		return getTemplate()->friend_getCommandSet2String();
+	case 2:
+		if (m_commandSet3StringOverride.isNotEmpty())
+			return m_commandSet3StringOverride;
+
+		return getTemplate()->friend_getCommandSet3String();
+	case 3:
+		if (m_commandSet4StringOverride.isNotEmpty())
+			return m_commandSet4StringOverride;
+
+		return getTemplate()->friend_getCommandSet4String();
+	default:
+		if (m_commandSetStringOverride.isNotEmpty())
+			return m_commandSetStringOverride;
+
+		return getTemplate()->friend_getCommandSetString();
+		break;
+	}
+	
 }
 
 //=============================================================================

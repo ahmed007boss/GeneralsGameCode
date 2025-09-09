@@ -42,8 +42,18 @@ void CommandSetUpgradeModuleData::buildFieldParse(MultiIniFieldParse& p)
 
 	static const FieldParse dataFieldParse[] =
 	{
-		{ "CommandSet",			INI::parseAsciiString,	NULL, offsetof( CommandSetUpgradeModuleData, m_newCommandSet ) },
-		{ "CommandSetAlt",	INI::parseAsciiString,	NULL, offsetof( CommandSetUpgradeModuleData, m_newCommandSetAlt ) },
+		{ "CommandSet",			INI::parseAsciiString,	NULL, offsetof( CommandSetUpgradeModuleData, m_newCommandSet) },
+		{ "CommandSetAlt",	INI::parseAsciiString,	NULL, offsetof( CommandSetUpgradeModuleData, m_newCommandSetAlt) },
+
+		{ "CommandSet2",			INI::parseAsciiString,	NULL, offsetof(CommandSetUpgradeModuleData, m_newCommandSet2) },
+		{ "CommandSet2Alt",	INI::parseAsciiString,	NULL, offsetof(CommandSetUpgradeModuleData, m_newCommandSet2Alt) },
+
+		{ "CommandSet3",			INI::parseAsciiString,	NULL, offsetof(CommandSetUpgradeModuleData, m_newCommandSet3) },
+		{ "CommandSet3Alt",	INI::parseAsciiString,	NULL, offsetof(CommandSetUpgradeModuleData, m_newCommandSet3Alt) },
+
+		{ "CommandSet4",			INI::parseAsciiString,	NULL, offsetof(CommandSetUpgradeModuleData, m_newCommandSet4) },
+		{ "CommandSet4Alt",	INI::parseAsciiString,	NULL, offsetof(CommandSetUpgradeModuleData, m_newCommandSet4Alt) },
+
 		{ "TriggerAlt",			INI::parseAsciiString,	NULL, offsetof( CommandSetUpgradeModuleData, m_triggerAlt ) },
 		{ 0, 0, 0, 0 }
 	};
@@ -82,7 +92,7 @@ void CommandSetUpgrade::upgradeImplementation( )
 			UpgradeMaskType playerMask = player->getCompletedUpgradeMask();
 			if (playerMask.testForAny(upgradeMask))
 			{
-				obj->setCommandSetStringOverride( getCommandSetUpgradeModuleData()->m_newCommandSetAlt );
+				obj->setCommandSetStringOverride( getCommandSetUpgradeModuleData()->m_newCommandSetAlt , getCommandSetUpgradeModuleData()->m_newCommandSet2Alt, getCommandSetUpgradeModuleData()->m_newCommandSet3Alt, getCommandSetUpgradeModuleData()->m_newCommandSet4Alt);
 				TheControlBar->markUIDirty();// Refresh the UI in case we are selected
 				return;
 			}
@@ -92,13 +102,13 @@ void CommandSetUpgrade::upgradeImplementation( )
 		UpgradeMaskType objMask = obj->getObjectCompletedUpgradeMask();
 		if (objMask.testForAny(upgradeMask))
 		{
-			obj->setCommandSetStringOverride( getCommandSetUpgradeModuleData()->m_newCommandSetAlt );
+			obj->setCommandSetStringOverride( getCommandSetUpgradeModuleData()->m_newCommandSetAlt,  getCommandSetUpgradeModuleData()->m_newCommandSet2Alt, getCommandSetUpgradeModuleData()->m_newCommandSet3Alt, getCommandSetUpgradeModuleData()->m_newCommandSet4Alt);
 			TheControlBar->markUIDirty();// Refresh the UI in case we are selected
 			return;
 		}
 	}
 
-	obj->setCommandSetStringOverride( getCommandSetUpgradeModuleData()->m_newCommandSet );
+	obj->setCommandSetStringOverride( getCommandSetUpgradeModuleData()->m_newCommandSet, getCommandSetUpgradeModuleData()->m_newCommandSet2, getCommandSetUpgradeModuleData()->m_newCommandSet3, getCommandSetUpgradeModuleData()->m_newCommandSet4);
 	TheControlBar->markUIDirty();// Refresh the UI in case we are selected
 }
 

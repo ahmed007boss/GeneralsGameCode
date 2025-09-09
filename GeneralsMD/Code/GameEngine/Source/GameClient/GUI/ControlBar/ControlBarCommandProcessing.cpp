@@ -897,7 +897,31 @@ CBCommandStatus ControlBar::processCommandUI( GameWindow *control,
 			break;
 
 		}  // end pick specialized science
-
+		//---------------------------------------------------------------------------------------------
+		case GUI_COMMAND_SWITCH_COMMAND_SET:
+		{
+			obj->setCommandSetIndex(0);
+			markUIDirty();
+			break;
+		}
+		case GUI_COMMAND_SWITCH_COMMAND_SET2:
+		{
+			obj->setCommandSetIndex(1);
+			markUIDirty();
+			break;
+		}
+		case GUI_COMMAND_SWITCH_COMMAND_SET3:
+		{
+			obj->setCommandSetIndex(2);
+			markUIDirty();
+			break;
+		}
+		case GUI_COMMAND_SWITCH_COMMAND_SET4:
+		{
+			obj->setCommandSetIndex(3);
+			markUIDirty();
+			break;
+		}
 		//---------------------------------------------------------------------------------------------
 		default:
 

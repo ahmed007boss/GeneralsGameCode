@@ -150,6 +150,9 @@ const FieldParse ThingTemplate::s_objectFieldParseTable[] =
 	{ "EditorSorting",				INI::parseByteSizedIndexList,				EditorSortingNames, offsetof( ThingTemplate, m_editorSorting ) },
 	{ "KindOf",								KindOfMaskType::parseFromINI,				NULL,		offsetof( ThingTemplate, m_kindof ) },
 	{ "CommandSet",						INI::parseAsciiString,							NULL,		offsetof( ThingTemplate, m_commandSetString ) },
+	{ "CommandSet2",						INI::parseAsciiString,							NULL,		offsetof( ThingTemplate, m_commandSet2String ) },
+	{ "CommandSet3",						INI::parseAsciiString,							NULL,		offsetof( ThingTemplate, m_commandSet3String ) },
+	{ "CommandSet4",						INI::parseAsciiString,							NULL,		offsetof( ThingTemplate, m_commandSet4String ) },
 	{ "BuildVariations",			INI::parseAsciiStringVector,				NULL,		offsetof( ThingTemplate, m_buildVariations ) },
 
 // NOTE NOTE NOTE -- s_objectFieldParseTable and s_objectReskinFieldParseTable must be updated in tandem -- see comment above

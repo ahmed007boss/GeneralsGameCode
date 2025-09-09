@@ -40,12 +40,24 @@ class CommandSetUpgradeModuleData : public UpgradeModuleData
 public:
 	AsciiString m_newCommandSet;
 	AsciiString m_newCommandSetAlt;
+	AsciiString m_newCommandSet2;
+	AsciiString m_newCommandSet2Alt;
+	AsciiString m_newCommandSet3;
+	AsciiString m_newCommandSet3Alt;
+	AsciiString m_newCommandSet4;
+	AsciiString m_newCommandSet4Alt;
 	AsciiString m_triggerAlt;
 
 	CommandSetUpgradeModuleData()
 	{
 		m_newCommandSet			= AsciiString::TheEmptyString;
 		m_newCommandSetAlt	= AsciiString::TheEmptyString;
+		m_newCommandSet2 = AsciiString::TheEmptyString;
+		m_newCommandSet2Alt = AsciiString::TheEmptyString;
+		m_newCommandSet3 = AsciiString::TheEmptyString;
+		m_newCommandSet3Alt = AsciiString::TheEmptyString;
+		m_newCommandSet4 = AsciiString::TheEmptyString;
+		m_newCommandSet4Alt = AsciiString::TheEmptyString;
 		m_triggerAlt				= "none";
 	}
 
