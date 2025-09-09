@@ -211,6 +211,8 @@ const FieldParse WeaponTemplate::TheWeaponTemplateFieldParseTable[] =
 	{ "RadiusDamageAffects",			INI::parseBitString32,	TheWeaponAffectsMaskNames,				offsetof(WeaponTemplate, m_affectsMask) },
 	{ "TargetAllowedKindOf",			KindOfMaskType::parseFromINI,	KindOfMaskType::getBitNames(),				offsetof(WeaponTemplate, m_targetAllowedKindOf) },
 	{ "TargetForbidKindOf",				KindOfMaskType::parseFromINI,	KindOfMaskType::getBitNames(),				offsetof(WeaponTemplate, m_targetForbidKindOf) },
+	{ "TargetAllowedConditions",	ModelConditionFlags::parseFromINI,	ModelConditionFlags::getBitNames(),				offsetof(WeaponTemplate, m_targetAllowedConditions) },
+	{ "TargetForbidConditions",		ModelConditionFlags::parseFromINI,	ModelConditionFlags::getBitNames(),				offsetof(WeaponTemplate, m_targetForbidConditions) },
 	{ "CanAttackWithoutTarget",		INI::parseBool,													NULL,							offsetof(WeaponTemplate, m_canAttackWithoutTarget) },
 	{ "ProjectileCollidesWith",		INI::parseBitString32,	TheWeaponCollideMaskNames,				offsetof(WeaponTemplate, m_collideMask) },
 	{ "AntiAirborneVehicle",			INI::parseBitInInt32,										(void*)WEAPON_ANTI_AIRBORNE_VEHICLE,	offsetof(WeaponTemplate, m_antiMask) },
@@ -309,6 +311,8 @@ WeaponTemplate::WeaponTemplate() : m_nextTemplate(NULL)
 	m_antiMask											= WEAPON_ANTI_GROUND;	// but not air or projectile.
 	m_targetAllowedKindOf = MAKE_KINDOF_MASK(KINDOF_FIRST);
 	m_targetForbidKindOf = MAKE_KINDOF_MASK(KINDOF_FIRST);
+	m_targetAllowedConditions = MAKE_MODELCONDITION_MASK(MODELCONDITION_FIRST);
+	m_targetForbidConditions = MAKE_MODELCONDITION_MASK(MODELCONDITION_FIRST);
 	m_canAttackWithoutTarget = true;
 	m_projectileStreamName.clear();
 	m_laserName.clear();
@@ -760,24 +764,38 @@ Bool Weapon::isValidTarget( const Object* victim)
 		{
 			return false;
 		}*/
-	
-		auto allowed = weaponTemplate->getTargetAllowedKindOf();
-		auto forbidden = weaponTemplate->getTargetForbidKindOf();
 
+		auto allowedKindOfs = weaponTemplate->getTargetAllowedKindOf();
 		// Check allowed kinds
-		if (allowed != MAKE_KINDOF_MASK(KINDOF_FIRST)) // replace with a real constant instead of MAKE_KINDOF_MASK(KINDOF_FIRST)
+		if (allowedKindOfs != MAKE_KINDOF_MASK(KINDOF_FIRST)) // replace with a real constant instead of MAKE_KINDOF_MASK(KINDOF_FIRST)
 		{
-			if (victim->isAnyKindOf(allowed) == FALSE )
+			if (victim->isAnyKindOf(allowedKindOfs) == FALSE )
 				return false;
 		}
-
+		auto forbiddenKindOfs = weaponTemplate->getTargetForbidKindOf();
 		// Check forbidden kinds
-		if (forbidden != MAKE_KINDOF_MASK(KINDOF_FIRST))
+		if (forbiddenKindOfs != MAKE_KINDOF_MASK(KINDOF_FIRST))
 		{
-			if (victim->isAnyKindOf(forbidden) == TRUE)
+			if (victim->isAnyKindOf(forbiddenKindOfs) == TRUE)
 				return false;
 		}
 
+		// Check ModelConditions
+		auto victimModelCondition = victim->getDrawable()->getModelConditionFlags();
+
+		/*auto allowedConditions = weaponTemplate->getTargetAllowedConditions();
+		if (allowedConditions != MAKE_MODELCONDITION_MASK(MODELCONDITION_FIRST))
+		{
+			if (victimModelCondition.anyIntersectionWith(allowedConditions) == FALSE )
+				return false;
+		}
+
+		auto forbiddenConditions = weaponTemplate->getTargetForbidConditions();
+		if (forbiddenConditions != MAKE_MODELCONDITION_MASK(MODELCONDITION_FIRST))
+		{
+			if (victimModelCondition.anyIntersectionWith(forbiddenConditions) == TRUE)
+				return false;
+		}*/
 	}
 	else {
 		return	weaponTemplate->canAttackWithoutTarget();

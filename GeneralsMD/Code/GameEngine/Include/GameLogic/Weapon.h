@@ -35,6 +35,7 @@
 // INCLUDES ///////////////////////////////////////////////////////////////////////////////////////
 #include "Common/AudioEventRTS.h"
 #include "Common/GameCommon.h"
+#include "Common/ModelState.h"
 
 #include "GameLogic/Damage.h"
 
@@ -456,6 +457,9 @@ public:
 	inline Int getAntiMask() const { return m_antiMask; }
 	inline KindOfMaskType  getTargetForbidKindOf() const { return m_targetForbidKindOf; }
 	inline KindOfMaskType  getTargetAllowedKindOf() const { return m_targetAllowedKindOf; }
+	inline ModelConditionFlags  getTargetForbidConditions() const { return m_targetAllowedConditions; }
+	inline ModelConditionFlags  getTargetAllowedConditions() const { return m_targetAllowedConditions; }
+
 	inline BOOL canAttackWithoutTarget() const { return m_canAttackWithoutTarget; }
 	inline Bool isLeechRangeWeapon() const { return m_leechRangeWeapon; }
 	inline Bool isCapableOfFollowingWaypoint() const { return m_capableOfFollowingWaypoint; }
@@ -542,6 +546,8 @@ private:
 	Int m_affectsMask;											///< what we can affect
 	KindOfMaskType m_targetAllowedKindOf;		///< objects must have at least one of these kind of bits set to be targeted
 	KindOfMaskType m_targetForbidKindOf;		///< objects must have NONE of these kind of bits set to be targeted
+	ModelConditionFlags m_targetAllowedConditions;		///< objects must have at least one of these conditions of bits set to be targeted
+	ModelConditionFlags m_targetForbidConditions;		///< objects must have NONE of these conditions of bits set to be targeted
 	Bool m_canAttackWithoutTarget;					///< Cat force Attack on ground or not
 	Int m_collideMask;											///< what we can collide with (projectiles only)
 	Bool m_damageDealtAtSelfPosition;				///< if T, weapon damage is done at source's position, not victim's pos. (useful for suicide weapons.)
