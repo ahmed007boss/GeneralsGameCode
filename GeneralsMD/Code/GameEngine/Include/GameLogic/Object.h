@@ -463,8 +463,16 @@ public:
 		 For Object specific dynamic command sets.  Different from the Science specific ones handled in ThingTemplate
 	*/
 	const AsciiString& getCommandSetString() const;
-	void setCommandSetStringOverride( AsciiString newCommandSetString ) { m_commandSetStringOverride = newCommandSetString; }
+	void setCommandSetStringOverride( AsciiString newCommandSetString , AsciiString newCommandSet2String, AsciiString newCommandSet3String, AsciiString newCommandSet4String) {
+		m_commandSetStringOverride = newCommandSetString;
+		m_commandSet2StringOverride = newCommandSet2String;
+		m_commandSet3StringOverride = newCommandSet3String;
+		m_commandSet4StringOverride = newCommandSet4String;
 
+	}
+	void setCommandSetIndex(int index) {
+		m_commandSetIndex = index;
+	}
 	/// People are faking their commandsets, and, Surprise!, they are authoritative.  Challenge everything.
 	Bool canProduceUpgrade( const UpgradeTemplate *upgrade );
 
@@ -796,7 +804,12 @@ private:
 	FormationID										m_formationID;
 	Coord2D												m_formationOffset;
 
+	Int														m_commandSetIndex;
+
 	AsciiString										m_commandSetStringOverride;///< To allow specific object to switch command sets
+	AsciiString										m_commandSet2StringOverride;///< To allow specific object to switch command sets
+	AsciiString										m_commandSet3StringOverride;///< To allow specific object to switch command sets
+	AsciiString										m_commandSet4StringOverride;///< To allow specific object to switch command sets
 
 	UnsignedInt										m_safeOcclusionFrame;	///<flag used by occlusion renderer so it knows when objects have exited their production building.
 

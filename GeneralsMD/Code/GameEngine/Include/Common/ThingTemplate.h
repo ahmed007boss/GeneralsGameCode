@@ -528,6 +528,21 @@ public:
 // The version that does not take an Object argument is labeled friend for use by WorldBuilder.  All game requests
 // for CommandSet must use Object::getCommandSetString, as we have two different sources for dynamic answers.
 	const AsciiString& friend_getCommandSetString() const { return m_commandSetString; }
+	const AsciiString& friend_getCommandSet2String() const {
+		if (m_commandSet2String.isNotEmpty())
+			return m_commandSet2String;
+		return m_commandSetString;
+	}
+	const AsciiString& friend_getCommandSet3String() const {
+		if (m_commandSet3String.isNotEmpty())
+			return m_commandSet3String;
+		return m_commandSetString;
+	}
+	const AsciiString& friend_getCommandSet4String() const {
+		if (m_commandSet4String.isNotEmpty())
+			return m_commandSet4String;
+		return m_commandSetString;
+	}
 
 	const std::vector<AsciiString>& getBuildVariations() const { return m_buildVariations; }
 
@@ -672,6 +687,9 @@ private:
 	AsciiString				m_nameString;					///< name of this thing template
 	AsciiString				m_defaultOwningSide;	///< default owning side (owning player is inferred)
 	AsciiString				m_commandSetString;
+	AsciiString				m_commandSet2String;
+	AsciiString				m_commandSet3String;
+	AsciiString				m_commandSet4String;
 	AsciiString				m_selectedPortraitImageName;
 	AsciiString				m_buttonImageName;
 	AsciiString				m_upgradeCameoUpgradeNames[MAX_UPGRADE_CAMEO_UPGRADES];	///< Use these to find the upgrade images to display on the control bar
