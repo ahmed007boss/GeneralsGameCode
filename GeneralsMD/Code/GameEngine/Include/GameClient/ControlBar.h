@@ -105,7 +105,6 @@ enum CommandOption CPP_11(: Int)
 
 	NEED_UPGRADE_TO_APPEAR = 0x01600000, // command requires upgrade to be enabled
 
-
 	NUM_COMMAND_OPTIONS						// keep this last
 };
 
@@ -140,8 +139,8 @@ static const char *TheCommandOptionNames[] =
 	"USES_MINE_CLEARING_WEAPONSET",
 	"CAN_USE_WAYPOINTS",
 	"MUST_BE_STOPPED",
-	"NEED_UPGRADE_TO_APPEAR",
 
+	"NEED_UPGRADE_TO_APPEAR",
 	NULL
 };
 #endif  // end DEFINE_COMMAND_OPTION_NAMES
@@ -344,6 +343,13 @@ public:
 	const AsciiString& getConflictingLabel() const { return m_conflictingLabel; }
 	const AudioEventRTS* getUnitSpecificSound() const { return &m_unitSpecificSound; }
 
+
+
+	const UpgradeTemplate* getRequiredUpgradeToEnable() const { return  m_requiredUpgradeToEnable;	};
+	const UpgradeTemplate* getConflictUpgradeToDisable() const { return m_conflictUpgradeToDisappear;};
+	const UpgradeTemplate* getRequiredUpgradeToAppear() const { return m_requiredUpgradeToAppear;	};
+	const UpgradeTemplate* getConflictUpgradeToDisappear() const { return m_conflictUpgradeToDisappear; };
+
 	GUICommandType getCommandType() const { return m_command; }
 	UnsignedInt getOptions() const { return m_options; }
 	OVERRIDE<ThingTemplate> getThingTemplate() const { return m_thingTemplate; }
@@ -386,6 +392,10 @@ private:
 	UnsignedInt										m_options;										///< command options (see CommandOption enum)
 	const ThingTemplate*					m_thingTemplate;							///< for commands that use thing templates in command data
 	const UpgradeTemplate*				m_upgradeTemplate;						///< for commands that use upgrade templates in command data
+	const UpgradeTemplate*				m_requiredUpgradeToEnable;		///< for commands that use upgrade templates in command data
+	const UpgradeTemplate*				m_conflictUpgradeToDisable;		///< for commands that use upgrade templates in command data
+	const UpgradeTemplate*				m_requiredUpgradeToAppear;		///< for commands that use upgrade templates in command data
+	const UpgradeTemplate*				m_conflictUpgradeToDisappear;		///< for commands that use upgrade templates in command data
 	const SpecialPowerTemplate*		m_specialPower;								///< actual special power template
 	RadiusCursorType							m_radiusCursor;								///< radius cursor, if any
 	AsciiString										m_cursorName;									///< cursor name for placement (NEED_TARGET_POS) or valid version (CONTEXTMODE_COMMAND)
