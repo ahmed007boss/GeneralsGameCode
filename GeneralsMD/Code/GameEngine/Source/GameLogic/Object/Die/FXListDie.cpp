@@ -70,8 +70,8 @@ void FXListDie::onDie( const DamageInfo *damageInfo )
 		return;
 	const FXListDieModuleData* d = getFXListDieModuleData();
 
-	UpgradeMaskType activation, conflicting;
-	getUpgradeActivationMasks( activation, conflicting );
+	UpgradeMaskType activation, conflicting, requireAllOf, requireAnyOf;
+	getUpgradeActivationMasks(activation, conflicting, requireAnyOf, requireAllOf);
 	Object *obj = getObject();
 	if( obj->getObjectCompletedUpgradeMask().testForAny( conflicting ) )
 	{

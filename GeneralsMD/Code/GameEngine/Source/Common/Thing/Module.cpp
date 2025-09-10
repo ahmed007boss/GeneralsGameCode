@@ -280,51 +280,79 @@ Bool UpgradeMuxData::isTriggeredBy(const std::string &upgrade) const
 }
 
 //-------------------------------------------------------------------------------------------------
-void UpgradeMuxData::getUpgradeActivationMasks(UpgradeMaskType& activation, UpgradeMaskType& conflicting) const
+void UpgradeMuxData::getUpgradeActivationMasks(UpgradeMaskType& activation, UpgradeMaskType& conflicting, UpgradeMaskType& requireAnyOf, UpgradeMaskType& requireAllOf) const
 {
 	// already computed.
-	if (!m_activationUpgradeNames.empty() || !m_conflictingUpgradeNames.empty())
+	if (!m_activationUpgradeNames.empty() || !m_conflictingUpgradeNames.empty() ||
+		!m_requireAllOfUpgradeNames.empty() || !m_requireAnyOfUpgradeNames.empty())
 	{
 		m_activationMask.clear();
 		m_conflictingMask.clear();
+		m_requireAllOfMask.clear();
+		m_requireAnyOfMask.clear();
 
 		std::vector<AsciiString>::const_iterator it;
-		for( it = m_activationUpgradeNames.begin();
-					it != m_activationUpgradeNames.end();
-					it++)
+
+		// Activation upgrades
+		for (it = m_activationUpgradeNames.begin(); it != m_activationUpgradeNames.end(); ++it)
 		{
-			const UpgradeTemplate* theTemplate = TheUpgradeCenter->findUpgrade( *it );
-			if( !theTemplate )
+			const UpgradeTemplate* theTemplate = TheUpgradeCenter->findUpgrade(*it);
+			if (!theTemplate)
 			{
 				DEBUG_CRASH(("An upgrade module references '%s', which is not an Upgrade", it->str()));
 				throw INI_INVALID_DATA;
 			}
-
-			m_activationMask.set( theTemplate->getUpgradeMask() );
+			m_activationMask.set(theTemplate->getUpgradeMask());
 		}
 
-		for( it = m_conflictingUpgradeNames.begin();
-					it != m_conflictingUpgradeNames.end();
-					it++)
+		// Conflicting upgrades
+		for (it = m_conflictingUpgradeNames.begin(); it != m_conflictingUpgradeNames.end(); ++it)
 		{
-			const UpgradeTemplate* theTemplate = TheUpgradeCenter->findUpgrade( *it );
-			if( !theTemplate )
+			const UpgradeTemplate* theTemplate = TheUpgradeCenter->findUpgrade(*it);
+			if (!theTemplate)
 			{
 				DEBUG_CRASH(("An upgrade module references '%s', which is not an Upgrade", it->str()));
 				throw INI_INVALID_DATA;
 			}
+			m_conflictingMask.set(theTemplate->getUpgradeMask());
+		}
 
-			m_conflictingMask.set( theTemplate->getUpgradeMask() );
+		// Require ALL upgrades
+		for (it = m_requireAllOfUpgradeNames.begin(); it != m_requireAllOfUpgradeNames.end(); ++it)
+		{
+			const UpgradeTemplate* theTemplate = TheUpgradeCenter->findUpgrade(*it);
+			if (!theTemplate)
+			{
+				DEBUG_CRASH(("An upgrade module references '%s', which is not an Upgrade", it->str()));
+				throw INI_INVALID_DATA;
+			}
+			m_requireAllOfMask.set(theTemplate->getUpgradeMask());
+		}
+
+		// Require ANY upgrades
+		for (it = m_requireAnyOfUpgradeNames.begin(); it != m_requireAnyOfUpgradeNames.end(); ++it)
+		{
+			const UpgradeTemplate* theTemplate = TheUpgradeCenter->findUpgrade(*it);
+			if (!theTemplate)
+			{
+				DEBUG_CRASH(("An upgrade module references '%s', which is not an Upgrade", it->str()));
+				throw INI_INVALID_DATA;
+			}
+			m_requireAnyOfMask.set(theTemplate->getUpgradeMask());
 		}
 
 		// We set the trigger upgrade names with the activationUpgradeNames entries to be used later.
-		// We have to do this because the activationUpgradeNames are toasted just below.
 		m_triggerUpgradeNames = m_activationUpgradeNames;
 
-		//Clear the names now that we've cached the values!
+		// Clear the names now that we've cached the values!
 		m_activationUpgradeNames.clear();
 		m_conflictingUpgradeNames.clear();
+		m_requireAllOfUpgradeNames.clear();
+		m_requireAnyOfUpgradeNames.clear();
 	}
-	activation = m_activationMask;
-	conflicting = m_conflictingMask;
+
+	 activation = m_activationMask;
+	 conflicting = m_conflictingMask;
+	 requireAllOf = m_requireAllOfMask;
+	 requireAnyOf = m_requireAnyOfMask;
 }
