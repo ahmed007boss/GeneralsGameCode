@@ -1113,6 +1113,7 @@ CommandAvailability ControlBar::getCommandAvailability( const CommandButton *com
 		}
 	}
 
+
 	// if the command requires an upgrade and we don't have it we can't do it
 	if( BitIsSet( command->getOptions(), NEED_UPGRADE ) )
 	{
@@ -1133,7 +1134,70 @@ CommandAvailability ControlBar::getCommandAvailability( const CommandButton *com
 		}
 	}
 
+	auto requiredUpgradeToAppear = command->getRequiredUpgradeToAppear();
+	if (requiredUpgradeToAppear)
+	{		
+			// upgrades come in the form of player upgrades and object upgrades
+			if (requiredUpgradeToAppear->getUpgradeType() == UPGRADE_TYPE_PLAYER)
+			{
+				if (player->hasUpgradeComplete(requiredUpgradeToAppear) == FALSE)
+					return COMMAND_HIDDEN;
+			}
+			else if (requiredUpgradeToAppear->getUpgradeType() == UPGRADE_TYPE_OBJECT &&
+				obj->hasUpgrade(requiredUpgradeToAppear) == FALSE)
+			{
+				return COMMAND_HIDDEN;
+			}	
+	}
 
+	auto conflictUpgradeToDisappear = command->getConflictUpgradeToDisappear();
+	if (conflictUpgradeToDisappear)
+	{
+		// upgrades come in the form of player upgrades and object upgrades
+		if (conflictUpgradeToDisappear->getUpgradeType() == UPGRADE_TYPE_PLAYER)
+		{
+			if (player->hasUpgradeComplete(conflictUpgradeToDisappear) == TRUE)
+				return COMMAND_HIDDEN;
+		}
+		else if (conflictUpgradeToDisappear->getUpgradeType() == UPGRADE_TYPE_OBJECT &&
+			obj->hasUpgrade(conflictUpgradeToDisappear) == TRUE)
+		{
+			return COMMAND_HIDDEN;
+		}
+	}
+
+
+	auto requiredUpgradeToEnable = command->getRequiredUpgradeToEnable();
+	if (requiredUpgradeToEnable)
+	{
+		// upgrades come in the form of player upgrades and object upgrades
+		if (requiredUpgradeToEnable->getUpgradeType() == UPGRADE_TYPE_PLAYER)
+		{
+			if (player->hasUpgradeComplete(requiredUpgradeToEnable) == FALSE)
+				return COMMAND_RESTRICTED;
+		}
+		else if (requiredUpgradeToEnable->getUpgradeType() == UPGRADE_TYPE_OBJECT &&
+			obj->hasUpgrade(requiredUpgradeToEnable) == FALSE)
+		{
+			return COMMAND_RESTRICTED;
+		}
+	}
+
+	auto conflictUpgradeToDisable = command->getConflictUpgradeToDisable();
+	if (conflictUpgradeToDisable)
+	{
+		// upgrades come in the form of player upgrades and object upgrades
+		if (conflictUpgradeToDisable->getUpgradeType() == UPGRADE_TYPE_PLAYER)
+		{
+			if (player->hasUpgradeComplete(conflictUpgradeToDisable) == TRUE)
+				return COMMAND_RESTRICTED;
+		}
+		else if (conflictUpgradeToDisable->getUpgradeType() == UPGRADE_TYPE_OBJECT &&
+			obj->hasUpgrade(conflictUpgradeToDisable) == TRUE)
+		{
+			return COMMAND_RESTRICTED;
+		}
+	}
 
 	ProductionUpdateInterface *pu = obj->getProductionUpdateInterface();
 	if( pu && pu->firstProduction() && BitIsSet( command->getOptions(), NOT_QUEUEABLE ) )

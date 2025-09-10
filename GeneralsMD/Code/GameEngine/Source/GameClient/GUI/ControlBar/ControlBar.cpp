@@ -118,7 +118,10 @@ const FieldParse CommandButton::s_commandButtonFieldParseTable[] =
 	{ "ButtonBorderType",			INI::parseLookupList,				 CommandButtonMappedBorderTypeNames, offsetof( CommandButton, m_commandButtonBorder ) },
 	{ "RadiusCursorType",			INI::parseIndexList,				 TheRadiusCursorNames, offsetof( CommandButton, m_radiusCursor ) },
 	{ "UnitSpecificSound",		INI::parseAudioEventRTS,		 NULL, offsetof( CommandButton, m_unitSpecificSound ) },
-
+	{ "RequiredUpgradeToAppear",				INI::parseUpgradeTemplate,	 NULL, offsetof(CommandButton, m_requiredUpgradeToAppear) },
+	{ "ConflictUpgradeToDisappear",			INI::parseUpgradeTemplate,	 NULL, offsetof(CommandButton, m_conflictUpgradeToDisappear) },
+	{ "RequiredUpgradeToEnable",				INI::parseUpgradeTemplate,	 NULL, offsetof(CommandButton, m_requiredUpgradeToEnable) },
+	{ "ConflictUpgradeToDisable",			  INI::parseUpgradeTemplate,	 NULL, offsetof(CommandButton, m_conflictUpgradeToDisable) },
 	{ NULL,						NULL,												 NULL, 0 }  // keep this last
 
 };
@@ -561,6 +564,10 @@ CommandButton::CommandButton( void )
 	m_command = GUI_COMMAND_NONE;
 	m_thingTemplate = NULL;
 	m_upgradeTemplate = NULL;
+	m_conflictUpgradeToDisappear = NULL;
+	m_requiredUpgradeToAppear = NULL;
+	m_conflictUpgradeToDisable = NULL;
+	m_requiredUpgradeToEnable = NULL;
 	m_weaponSlot = PRIMARY_WEAPON;
 	m_maxShotsToFire = 0x7fffffff;	// huge number
 	m_science.clear();
