@@ -36,7 +36,7 @@
 #include "Common/Xfer.h"
 #include "GameClient/InGameUI.h"
 #include "GameClient/Image.h"
-
+#include "Common/GlobalData.h"
 
 const char *TheUpgradeTypeNames[] =
 {
@@ -157,7 +157,7 @@ UpgradeTemplate::~UpgradeTemplate( void )
 Int UpgradeTemplate::calcTimeToBuild( Player *player ) const
 {
 #if defined(RTS_DEBUG) || defined(_ALLOW_DEBUG_CHEATS_IN_RELEASE)
-	if( player->buildsInstantly() )
+	if( player->buildsInstantly()  || TheGlobalData->m_disableTime)
 	{
 		return 1;
 	}
@@ -173,7 +173,12 @@ Int UpgradeTemplate::calcTimeToBuild( Player *player ) const
 //-------------------------------------------------------------------------------------------------
 Int UpgradeTemplate::calcCostToBuild( Player *player ) const
 {
-
+#if defined( RTS_DEBUG )
+	if (TheGlobalData->m_disableCost)
+	{
+		return 1;
+	}
+#endif
 	///@todo modify this by any player handicaps
 	return m_cost;
 

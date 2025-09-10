@@ -521,6 +521,9 @@ GlobalData* GlobalData::m_theOriginal = NULL;
 	{ "BaseStatsDir",								INI::parseAsciiString,NULL,			offsetof( GlobalData, m_baseStatsDir ) },
 	{ "LocalMOTDPath",							INI::parseAsciiString,NULL,			offsetof( GlobalData, m_MOTDPath ) },
 	{ "ExtraLogging",								INI::parseBool,				NULL,			offsetof( GlobalData, m_extraLogging ) },
+	{ "DisableBuildPrerequisite",				INI::parseBool,				NULL,			offsetof( GlobalData, m_disablePrerequisite) },
+	{ "DisableBuildCost",								INI::parseBool,				NULL,			offsetof( GlobalData, m_disableCost) },
+	{ "DisableBuildTime",								INI::parseBool,				NULL,			offsetof( GlobalData, m_disableTime) },
 #endif
 
 	{ NULL,					NULL,						NULL,						0 }  // keep this last
@@ -595,6 +598,9 @@ GlobalData::GlobalData()
 	m_baseStatsDir = ".\\";
 	m_MOTDPath = "MOTD.txt";
 	m_extraLogging = FALSE;
+	m_disableCost = FALSE;
+	m_disablePrerequisite = FALSE;
+	m_disableTime = FALSE;
 #endif
 
 #ifdef DEBUG_CRASHING
