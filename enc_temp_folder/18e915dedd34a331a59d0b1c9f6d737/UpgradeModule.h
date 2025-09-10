@@ -103,8 +103,8 @@ public:
 		static const FieldParse dataFieldParse[] =
 		{
 			{ "TriggeredBy",		INI::parseAsciiStringVector, NULL, offsetof( UpgradeMuxData, m_activationUpgradeNames ) },
-			{ "RequiredAnyUpgradeOf",		INI::parseAsciiStringVector, NULL, offsetof( UpgradeMuxData, m_requireAnyOfUpgradeNames) },
-			{ "RequiredAllUpgradesOf",		INI::parseAsciiStringVector, NULL, offsetof( UpgradeMuxData, m_requireAllOfUpgradeNames) },
+			{ "RequireAnyOf",		INI::parseAsciiStringVector, NULL, offsetof( UpgradeMuxData, m_requireAnyOfUpgradeNames) },
+			{ "RequireAllOf",		INI::parseAsciiStringVector, NULL, offsetof( UpgradeMuxData, m_requireAllOfUpgradeNames) },
 			{ "ConflictsWith",	INI::parseAsciiStringVector, NULL, offsetof( UpgradeMuxData, m_conflictingUpgradeNames ) },
 			{ "RemovesUpgrades",INI::parseAsciiStringVector, NULL, offsetof( UpgradeMuxData, m_removalUpgradeNames ) },
 			{ "FXListUpgrade",	INI::parseFXList, NULL, offsetof( UpgradeMuxData, m_fxListUpgrade ) },

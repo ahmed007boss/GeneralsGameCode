@@ -94,8 +94,8 @@ void FireWeaponWhenDeadBehavior::onDie( const DamageInfo *damageInfo )
 		return;
 
 
-	UpgradeMaskType activation, conflicting;
-	getUpgradeActivationMasks( activation, conflicting );
+	UpgradeMaskType activation, conflicting, requireAllOf, requireAnyOf;
+	getUpgradeActivationMasks(activation, conflicting, requireAnyOf, requireAllOf);
 
 	if( obj->getObjectCompletedUpgradeMask().testForAny( conflicting ) )
 	{

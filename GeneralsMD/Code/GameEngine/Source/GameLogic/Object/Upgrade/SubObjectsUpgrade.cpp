@@ -85,8 +85,19 @@ SubObjectsUpgrade::~SubObjectsUpgrade( void )
 void SubObjectsUpgrade::upgradeImplementation( )
 {
 	const SubObjectsUpgradeModuleData *data = getSubObjectsUpgradeModuleData();
-	UpgradeMaskType activation, conflicting;
-	getUpgradeActivationMasks( activation, conflicting );
+	UpgradeMaskType activation, conflicting, requireAnyOf, requireAllOf;
+	getUpgradeActivationMasks( activation, conflicting, requireAnyOf, requireAllOf);
+
+	/*bool anyCond = true;
+	if (requireAnyOf.any())
+	{
+		anyCond == getObject()->getObjectCompletedUpgradeMask().testForAny(requireAnyOf) || ;
+	}
+	bool allCond = true;
+	if (requireAllOf.any())
+	{
+		allCond == keyMask.testForAny(requireAllOf);
+	}*/
 
 	//First make sure we have the right combination of upgrades
 

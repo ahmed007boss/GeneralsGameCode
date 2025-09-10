@@ -74,9 +74,9 @@ protected:
 		// nothing!
 	}
 
-	virtual void getUpgradeActivationMasks(UpgradeMaskType& activation, UpgradeMaskType& conflicting) const
+	virtual void getUpgradeActivationMasks(UpgradeMaskType& activation, UpgradeMaskType& conflicting, UpgradeMaskType& requireAnyOf, UpgradeMaskType& requireAllOf) const
 	{
-		getFireOCLAfterWeaponCooldownUpdateModuleData()->m_upgradeMuxData.getUpgradeActivationMasks(activation, conflicting);
+		getFireOCLAfterWeaponCooldownUpdateModuleData()->m_upgradeMuxData.getUpgradeActivationMasks(activation, conflicting,requireAnyOf,requireAllOf);
 	}
 
 	virtual void performUpgradeFX()
