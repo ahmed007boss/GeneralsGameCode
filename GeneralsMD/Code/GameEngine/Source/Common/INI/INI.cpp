@@ -503,6 +503,21 @@ void INI::readLine( void )
     }
     *p=0;
 
+    // Treat StartRegion and EndRegion as comment markers (like ';')
+    {
+      char *sr = strstr(m_buffer, "StartRegion");
+      char *er = strstr(m_buffer, "EndRegion");
+      char *cut = NULL;
+      if (sr && er)
+        cut = (sr < er) ? sr : er;
+      else if (sr)
+        cut = sr;
+      else if (er)
+        cut = er;
+      if (cut)
+        *cut = 0;
+    }
+
 		// increase our line count
 		m_lineNum++;
 
