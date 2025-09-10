@@ -50,7 +50,7 @@
 #include "GameLogic/WeaponSet.h"
 #include "Common/STLTypedefs.h"
 #include "GameClient/Color.h"
-
+#include "Common/GlobalData.h"
 // FORWARD REFERENCES /////////////////////////////////////////////////////////////////////////////
 class AIUpdateModuleData;
 class Image;
@@ -564,7 +564,15 @@ public:
 
 	BuildableStatus getBuildable() const;
 
-	Int getPrereqCount() const { return m_prereqInfo.size(); }
+	Int getPrereqCount() const {
+#if defined( RTS_DEBUG )
+		if (TheGlobalData->m_disablePrerequisite)
+		{
+			return 0;
+		}
+#endif
+		return m_prereqInfo.size();
+	}
 	const ProductionPrerequisite *getNthPrereq(Int i) const { return &m_prereqInfo[i]; }
 
 	/**
