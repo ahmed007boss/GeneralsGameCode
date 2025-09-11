@@ -22,7 +22,7 @@
 //																																						//
 ////////////////////////////////////////////////////////////////////////////////
 
-// FILE: WeaponBonusUpgrade.h /////////////////////////////////////////////////
+// FILE: DisplayNameUpgrade.h /////////////////////////////////////////////////
 //-----------------------------------------------------------------------------
 //
 //                       Electronic Arts Pacific.
@@ -32,25 +32,22 @@
 //
 //-----------------------------------------------------------------------------
 //
-//	created:	May 2002
+//	Created:	September 2002
 //
-//	Filename: 	WeaponBonusUpgrade.h
+//	Filename: DisplayNameUpgrade.cpp
 //
-//	author:		Chris Huybregts
+//	Author:		Kris Morness
 //
-//	purpose:
+//	Purpose:	Shows or hides a list of subobjects based on upgrade statii. It
+//            will override any animation subobjects states.
 //
 //-----------------------------------------------------------------------------
 ///////////////////////////////////////////////////////////////////////////////
 
 #pragma once
 
-#ifndef __WEAPON_BONUS_UPGRADE_H_
-#define __WEAPON_BONUS_UPGRADE_H_
-
-//-----------------------------------------------------------------------------
-// SYSTEM INCLUDES ////////////////////////////////////////////////////////////
-//-----------------------------------------------------------------------------
+#ifndef __DISPLAY_NAME_UPGRADE_H_
+#define __DISPLAY_NAME_UPGRADE_H_
 
 //-----------------------------------------------------------------------------
 // USER INCLUDES //////////////////////////////////////////////////////////////
@@ -63,18 +60,27 @@
 class Thing;
 
 //-----------------------------------------------------------------------------
-// TYPE DEFINES ///////////////////////////////////////////////////////////////
-//-----------------------------------------------------------------------------
+class DisplayNameUpgradeModuleData : public UpgradeModuleData
+{
+public:
+	UnicodeString			m_displayName;
 
-class WeaponBonusUpgrade : public UpgradeModule
+	DisplayNameUpgradeModuleData(){}
+
+	static void buildFieldParse(MultiIniFieldParse& p);
+};
+
+//-----------------------------------------------------------------------------
+class DisplayNameUpgrade : public UpgradeModule
 {
 
-	MEMORY_POOL_GLUE_WITH_USERLOOKUP_CREATE( WeaponBonusUpgrade, "WeaponBonusUpgrade" )
-	MAKE_STANDARD_MODULE_MACRO( WeaponBonusUpgrade );
+	MEMORY_POOL_GLUE_WITH_USERLOOKUP_CREATE( DisplayNameUpgrade, "DisplayNameUpgrade" )
+	MAKE_STANDARD_MODULE_MACRO_WITH_MODULE_DATA( DisplayNameUpgrade, DisplayNameUpgradeModuleData );
+
 
 public:
 
-	WeaponBonusUpgrade( Thing *thing, const ModuleData* moduleData );
+	DisplayNameUpgrade( Thing *thing, const ModuleData* moduleData );
 	// virtual destructor prototype defined by MemoryPoolObject
 
 protected:
@@ -83,14 +89,6 @@ protected:
 
 };
 
-//-----------------------------------------------------------------------------
-// INLINING ///////////////////////////////////////////////////////////////////
-//-----------------------------------------------------------------------------
-
-//-----------------------------------------------------------------------------
-// EXTERNALS //////////////////////////////////////////////////////////////////
-//-----------------------------------------------------------------------------
-
-#endif // __DISPLAY_NAME_UPGRADE_H_
+#endif
 
 

@@ -239,7 +239,11 @@ public:
 	VeterancyLevel getVeterancyLevel() const;
 
 	inline const AsciiString& getName() const { return m_name; }
+	inline const UnicodeString& getDisplayNameOverride() const {
+		return m_displayNameOverride;
+	}
 	inline void setName( const AsciiString& newName ) { m_name = newName; }
+	inline void setDisplayName( const UnicodeString& newName ) { m_displayNameOverride = newName; }
 
 	inline Team* getTeam() { return m_team; }
 	inline const Team *getTeam() const { return m_team; }
@@ -703,7 +707,8 @@ private:
 	ObjectID			m_producerID;								///< object that produced us, if any
 	ObjectID			m_builderID;								///< object that is building or has built us (dozers or workers are builders)
 	Drawable*			m_drawable;									///< drawable (if any) for this object
-	AsciiString		m_name;										///< internal name
+	AsciiString		m_name;										  ///< internal name
+	UnicodeString	m_displayNameOverride;			///< Display Name
 
 	Object *			m_next;
 	Object *			m_prev;

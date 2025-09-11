@@ -222,7 +222,6 @@ Object::Object( const ThingTemplate *tt, const ObjectStatusMaskType &objectStatu
 #endif
 	//Modules have not been created yet!
 	m_modulesReady = false;
-
 	// Force the thing template to use the most overridden version of itself - jkmcd
 	// Note that after this, the object will be using m_template, which forces the usage of the
 	// most overridden version of tt, so this is okay.
@@ -4064,6 +4063,7 @@ void Object::xfer( Xfer *xfer )
 
 	// internal name
 	xfer->xferAsciiString( &m_name );
+	xfer->xferUnicodeString( &m_displayNameOverride);
 
 	// status
 	if( version >= 8 )

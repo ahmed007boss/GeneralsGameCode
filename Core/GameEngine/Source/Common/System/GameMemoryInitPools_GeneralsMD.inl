@@ -205,6 +205,7 @@ static PoolSizeRec PoolSizes[] =
 	{ "AnimationSteeringUpdate", 1024, 32 },
 	{ "SupplyWarehouseCripplingBehavior", 16, 16 },
 	{ "CostModifierUpgrade", 32, 32 },
+	{ "DisplayNameUpgrade", 32, 32 },
 	{ "CashBountyPower", 32, 32 },
 	{ "CleanupAreaPower", 32, 32 },
 	{ "ObjectCreationUpgrade", 196, 32 },
