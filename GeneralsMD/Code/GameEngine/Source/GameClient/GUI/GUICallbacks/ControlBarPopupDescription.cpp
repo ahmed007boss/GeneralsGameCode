@@ -251,6 +251,7 @@ void ControlBar::populateBuildTooltipLayout(const CommandButton* commandButton, 
 	UnicodeString requiresFormat = UnicodeString::TheEmptyString, requiresList;
 	UnicodeString conflictsFormat = UnicodeString::TheEmptyString, conflictsList;
 	Bool firstRequirement = true;
+	Bool firstConflicts = true;
 	const ProductionPrerequisite* prereq;
 	Bool fireScienceButton = false;
 	UnsignedInt costToBuild = 0;
@@ -406,7 +407,7 @@ void ControlBar::populateBuildTooltipLayout(const CommandButton* commandButton, 
 			if (!prereq->isSatisfied(player))
 			{
 				requiresList = prereq->getRequiresList(player);
-
+				conflictsList =  prereq->getConflictList(player);
 				if (requiresList != UnicodeString::TheEmptyString)
 				{
 					// make sure to put in 'returns' to space things correctly
@@ -416,6 +417,17 @@ void ControlBar::populateBuildTooltipLayout(const CommandButton* commandButton, 
 						requiresFormat.concat(L", ");
 				}
 				requiresFormat.concat(requiresList);
+
+				if (conflictsList != UnicodeString::TheEmptyString)
+				{
+					// make sure to put in 'returns' to space things correctly
+					if (firstConflicts)
+						firstConflicts = false;
+					else
+						conflictsFormat.concat(L", ");
+				}
+				conflictsFormat.concat(conflictsList);
+
 			}
 		}
 
@@ -440,7 +452,7 @@ void ControlBar::populateBuildTooltipLayout(const CommandButton* commandButton, 
 			{
 				prereq = thingTemplate->getNthPrereq(i);
 				requiresList = prereq->getRequiresList(player);
-
+				conflictsList = prereq->getConflictList(player);
 				if (requiresList != UnicodeString::TheEmptyString)
 				{
 					// make sure to put in 'returns' to space things correctly
@@ -450,6 +462,16 @@ void ControlBar::populateBuildTooltipLayout(const CommandButton* commandButton, 
 						requiresFormat.concat(L", ");
 				}
 				requiresFormat.concat(requiresList);
+
+				if (conflictsList != UnicodeString::TheEmptyString)
+				{
+					// make sure to put in 'returns' to space things correctly
+					if (firstConflicts)
+						firstConflicts = false;
+					else
+						conflictsFormat.concat(L", ");
+				}
+				conflictsFormat.concat(conflictsList);
 			}
 			
 		}
@@ -587,8 +609,17 @@ void ControlBar::populateBuildTooltipLayout(const CommandButton* commandButton, 
 		{
 			UnicodeString conflictFormat = TheGameText->fetch("CONTROLBAR:Conflicts");
 			conflictsFormat.format(conflictFormat.str(), conflictsFormat.str());
-			if (!descrip.isEmpty())
-				descrip.concat(L"\n\n");
+			if (!descrip.isEmpty()) {
+				if (!requiresFormat.isEmpty())
+				{
+					descrip.concat(L"\n");
+				}
+				else
+				{
+					descrip.concat(L"\n\n");
+				}
+			}
+				
 			descrip.concat(conflictsFormat);
 		}
 	}

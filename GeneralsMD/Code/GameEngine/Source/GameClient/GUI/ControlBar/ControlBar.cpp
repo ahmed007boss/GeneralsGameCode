@@ -477,36 +477,6 @@ void ControlBar::populatePurchaseScience( Player* player )
 
 }
 
-//---------------------------------------------
-//       Prerequisite
-//---------------------------------------------
-
-//-------------------------------------------------------------------------------------------------
-static void parsePrerequisiteUnit(INI* ini, void* instance, void* /*store*/, const void* /*userData*/)
-{
-	std::vector<ProductionPrerequisite>* v = (std::vector<ProductionPrerequisite>*)instance;
-
-	ProductionPrerequisite prereq;
-	Bool orUnitWithPrevious = FALSE;
-	for (const char* token = ini->getNextToken(); token != NULL; token = ini->getNextTokenOrNull())
-	{
-		prereq.addUnitPrereq(AsciiString(token), orUnitWithPrevious);
-		orUnitWithPrevious = TRUE;
-	}
-
-	v->push_back(prereq);
-}
-
-//-------------------------------------------------------------------------------------------------
-static void parsePrerequisiteScience(INI* ini, void* instance, void* /*store*/, const void* /*userData*/)
-{
-	std::vector<ProductionPrerequisite>* v = (std::vector<ProductionPrerequisite>*)instance;
-
-	ProductionPrerequisite prereq;
-	prereq.addSciencePrereq(INI::scanScience(ini->getNextToken()));
-
-	v->push_back(prereq);
-}
 
 //-------------------------------------------------------------------------------------------------
 void CommandButton::parseEnablePrerequisites(INI* ini, void* instance, void* store, const void* userData)
@@ -515,8 +485,12 @@ void CommandButton::parseEnablePrerequisites(INI* ini, void* instance, void* sto
 
 	static const FieldParse myFieldParse[] =
 	{
-		{ "Object", parsePrerequisiteUnit, 0, 0 },
-		{ "Science", parsePrerequisiteScience,	0, 0 },
+		{ "Object", ProductionPrerequisite::parsePrerequisiteUnit, 0, 0 },
+		{ "Science", ProductionPrerequisite::parsePrerequisiteScience,	0, 0 },
+		{ "ObjectNotExist", ProductionPrerequisite::parsePrerequisiteUnitConflict, 0, 0 },
+		{ "ScienceNotExist", ProductionPrerequisite::parsePrerequisiteScienceConflict,	0, 0 },
+		{ "Upgrade", ProductionPrerequisite::parsePrerequisiteUpgrade, 0, 0 },
+		{ "UpgradeNotExist", ProductionPrerequisite::parsePrerequisiteUpgradeConflict, 0, 0 },
 		{ 0, 0, 0, 0 }
 	};
 
@@ -539,8 +513,12 @@ void CommandButton::parseVisiblePrerequisites(INI* ini, void* instance, void* st
 
 	static const FieldParse myFieldParse[] =
 	{
-		{ "Object", parsePrerequisiteUnit, 0, 0 },
-		{ "Science", parsePrerequisiteScience,	0, 0 },
+		{ "Object", ProductionPrerequisite::parsePrerequisiteUnit, 0, 0 },
+		{ "Science", ProductionPrerequisite::parsePrerequisiteScience,	0, 0 },
+		{ "ObjectNotExist", ProductionPrerequisite::parsePrerequisiteUnitConflict, 0, 0 },
+		{ "ScienceNotExist", ProductionPrerequisite::parsePrerequisiteScienceConflict,	0, 0 },
+		{ "Upgrade", ProductionPrerequisite::parsePrerequisiteUpgrade, 0, 0 },
+		{ "UpgradeNotExist", ProductionPrerequisite::parsePrerequisiteUpgradeConflict, 0, 0 },
 		{ 0, 0, 0, 0 }
 	};
 
