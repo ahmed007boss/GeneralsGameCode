@@ -1167,6 +1167,22 @@ CommandAvailability ControlBar::getCommandAvailability( const CommandButton *com
 	}
 
 
+	for (Int i = 0; i < command->getEnablePrereqCount(); i++)
+	{
+		const ProductionPrerequisite* pre = command->getNthEnablePrereq(i);
+		// Names are resolved at parse time; just check satisfaction here
+		if (pre->isSatisfied(player) == false)
+			return COMMAND_RESTRICTED;
+	}
+
+	for (Int i = 0; i < command->getVisiblePrereqCount(); i++)
+	{
+		const ProductionPrerequisite* pre = command->getNthVisiblePrereq(i);
+		// Names are resolved at parse time; just check satisfaction here
+		if (pre->isSatisfied(player) == false)
+			return COMMAND_HIDDEN;
+	}
+
 	auto requiredUpgradeToEnable = command->getRequiredUpgradeToEnable();
 	if (requiredUpgradeToEnable)
 	{

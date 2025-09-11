@@ -37,6 +37,7 @@
 #include "Common/GameType.h"
 #include "Common/Overridable.h"
 #include "Common/Science.h"
+#include "Common/ProductionPrerequisite.h"
 #include "GameClient/Color.h"
 
 // FORWARD REFERENCES /////////////////////////////////////////////////////////////////////////////
@@ -350,6 +351,10 @@ public:
 	const UpgradeTemplate* getRequiredUpgradeToAppear() const { return m_requiredUpgradeToAppear;	};
 	const UpgradeTemplate* getConflictUpgradeToDisappear() const { return m_conflictUpgradeToDisappear; };
 
+	std::vector<ProductionPrerequisite>	m_enablePrereqInfo;
+	std::vector<ProductionPrerequisite>	m_visiblePrereqInfo;
+	Bool m_prereqInfoResloved;
+
 	GUICommandType getCommandType() const { return m_command; }
 	UnsignedInt getOptions() const { return m_options; }
 	OVERRIDE<ThingTemplate> getThingTemplate() const { return m_thingTemplate; }
@@ -368,6 +373,13 @@ public:
 
 	const CommandButton* getNext() const { return m_next; }
 
+
+	Int getEnablePrereqCount() const {	return m_enablePrereqInfo.size();	}
+	const ProductionPrerequisite* getNthEnablePrereq(Int i) const { return &m_enablePrereqInfo[i]; }
+
+	Int getVisiblePrereqCount() const { return m_visiblePrereqInfo.size(); }
+	const ProductionPrerequisite* getNthVisiblePrereq(Int i) const { return &m_visiblePrereqInfo[i]; }
+
 	void setName(const AsciiString& n) { m_name = n; }
 
 	void setButtonImage( const Image *image ) { m_buttonImage = image; }
@@ -385,17 +397,21 @@ public:
 	void friend_addToList(CommandButton** list) {	m_next = *list;	*list = this; }
 	CommandButton* friend_getNext() { return m_next; }
 
+	static void parseEnablePrerequisites(INI* ini, void* instance, void* /*store*/, const void* /*userData*/);
+	static void parseVisiblePrerequisites(INI* ini, void* instance, void* /*store*/, const void* /*userData*/);
 private:
 	AsciiString										m_name;												///< template name
 	GUICommandType								m_command;										///< type of command this button
 	CommandButton*								m_next;
 	UnsignedInt										m_options;										///< command options (see CommandOption enum)
 	const ThingTemplate*					m_thingTemplate;							///< for commands that use thing templates in command data
+
 	const UpgradeTemplate*				m_upgradeTemplate;						///< for commands that use upgrade templates in command data
 	const UpgradeTemplate*				m_requiredUpgradeToEnable;		///< for commands that use upgrade templates in command data
 	const UpgradeTemplate*				m_conflictUpgradeToDisable;		///< for commands that use upgrade templates in command data
 	const UpgradeTemplate*				m_requiredUpgradeToAppear;		///< for commands that use upgrade templates in command data
 	const UpgradeTemplate*				m_conflictUpgradeToDisappear;		///< for commands that use upgrade templates in command data
+
 	const SpecialPowerTemplate*		m_specialPower;								///< actual special power template
 	RadiusCursorType							m_radiusCursor;								///< radius cursor, if any
 	AsciiString										m_cursorName;									///< cursor name for placement (NEED_TARGET_POS) or valid version (CONTEXTMODE_COMMAND)

@@ -49,6 +49,7 @@
 #include "Common/ThingFactory.h"
 #include "Common/Upgrade.h"
 #include "Common/Recorder.h"
+#include "Common/ProductionPrerequisite.h"
 
 #include "GameLogic/GameLogic.h"
 #include "GameLogic/Object.h"
@@ -122,6 +123,8 @@ const FieldParse CommandButton::s_commandButtonFieldParseTable[] =
 	{ "ConflictUpgradeToDisappear",			INI::parseUpgradeTemplate,	 NULL, offsetof(CommandButton, m_conflictUpgradeToDisappear) },
 	{ "RequiredUpgradeToEnable",				INI::parseUpgradeTemplate,	 NULL, offsetof(CommandButton, m_requiredUpgradeToEnable) },
 	{ "ConflictUpgradeToDisable",			  INI::parseUpgradeTemplate,	 NULL, offsetof(CommandButton, m_conflictUpgradeToDisable) },
+	{ "EnablePrerequisites",				CommandButton::parseEnablePrerequisites,	0, 0 },
+	{ "VisiblePrerequisites",				CommandButton::parseVisiblePrerequisites,	0, 0 },
 	{ NULL,						NULL,												 NULL, 0 }  // keep this last
 
 };
@@ -474,6 +477,86 @@ void ControlBar::populatePurchaseScience( Player* player )
 
 }
 
+//---------------------------------------------
+//       Prerequisite
+//---------------------------------------------
+
+//-------------------------------------------------------------------------------------------------
+static void parsePrerequisiteUnit(INI* ini, void* instance, void* /*store*/, const void* /*userData*/)
+{
+	std::vector<ProductionPrerequisite>* v = (std::vector<ProductionPrerequisite>*)instance;
+
+	ProductionPrerequisite prereq;
+	Bool orUnitWithPrevious = FALSE;
+	for (const char* token = ini->getNextToken(); token != NULL; token = ini->getNextTokenOrNull())
+	{
+		prereq.addUnitPrereq(AsciiString(token), orUnitWithPrevious);
+		orUnitWithPrevious = TRUE;
+	}
+
+	v->push_back(prereq);
+}
+
+//-------------------------------------------------------------------------------------------------
+static void parsePrerequisiteScience(INI* ini, void* instance, void* /*store*/, const void* /*userData*/)
+{
+	std::vector<ProductionPrerequisite>* v = (std::vector<ProductionPrerequisite>*)instance;
+
+	ProductionPrerequisite prereq;
+	prereq.addSciencePrereq(INI::scanScience(ini->getNextToken()));
+
+	v->push_back(prereq);
+}
+
+//-------------------------------------------------------------------------------------------------
+void CommandButton::parseEnablePrerequisites(INI* ini, void* instance, void* store, const void* userData)
+{
+	CommandButton* self = (CommandButton*)instance;
+
+	static const FieldParse myFieldParse[] =
+	{
+		{ "Object", parsePrerequisiteUnit, 0, 0 },
+		{ "Science", parsePrerequisiteScience,	0, 0 },
+		{ 0, 0, 0, 0 }
+	};
+
+	if (ini->getLoadType() == INI_LOAD_CREATE_OVERRIDES)
+	{
+		self->m_enablePrereqInfo.clear();
+	}
+
+	ini->initFromINI(&self->m_enablePrereqInfo, myFieldParse);
+
+	// Resolve prerequisite names now so later const accesses don't need to mutate state
+	for (size_t i = 0; i < self->m_enablePrereqInfo.size(); ++i)
+	{
+		self->m_enablePrereqInfo[i].resolveNames();
+	}
+}
+void CommandButton::parseVisiblePrerequisites(INI* ini, void* instance, void* store, const void* userData)
+{
+	CommandButton* self = (CommandButton*)instance;
+
+	static const FieldParse myFieldParse[] =
+	{
+		{ "Object", parsePrerequisiteUnit, 0, 0 },
+		{ "Science", parsePrerequisiteScience,	0, 0 },
+		{ 0, 0, 0, 0 }
+	};
+
+	if (ini->getLoadType() == INI_LOAD_CREATE_OVERRIDES)
+	{
+		self->m_visiblePrereqInfo.clear();
+	}
+
+	ini->initFromINI(&self->m_visiblePrereqInfo, myFieldParse);
+
+	// Resolve prerequisite names now so later const accesses don't need to mutate state
+	for (size_t i = 0; i < self->m_visiblePrereqInfo.size(); ++i)
+	{
+		self->m_visiblePrereqInfo[i].resolveNames();
+	}
+}
 //-------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------
 void ControlBar::updateContextPurchaseScience( void )
@@ -573,7 +656,7 @@ CommandButton::CommandButton( void )
 	m_science.clear();
 	m_specialPower = NULL;
 	m_buttonImage = NULL;
-
+	m_prereqInfoResloved = false;
 	//Code renderer handles these states now.
 	//m_disabledImage = NULL;
 	//m_hiliteImage = NULL;
