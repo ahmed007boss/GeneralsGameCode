@@ -71,6 +71,10 @@ void ProductionPrerequisite::init()
 	m_prereqSciences.clear();
 	m_prereqUnitsConflict.clear();
 	m_prereqSciencesConflict.clear();
+	m_prereqUpgradesNames.clear();
+	m_prereqUpgradesMask.clear();
+	m_prereqUpgradesNamesConflict.clear();
+	m_prereqUpgradesMaskConflict.clear();
 }
 
 //=============================================================================

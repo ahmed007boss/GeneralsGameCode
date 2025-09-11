@@ -471,6 +471,64 @@ void ControlBar::populatePurchaseScience( Player* player )
 
 }
 
+
+//-------------------------------------------------------------------------------------------------
+void CommandButton::parseEnablePrerequisites(INI* ini, void* instance, void* store, const void* userData)
+{
+	CommandButton* self = (CommandButton*)instance;
+
+	static const FieldParse myFieldParse[] =
+	{
+		{ "Object", ProductionPrerequisite::parsePrerequisiteUnit, 0, 0 },
+		{ "Science", ProductionPrerequisite::parsePrerequisiteScience,	0, 0 },
+		{ "ObjectNotExist", ProductionPrerequisite::parsePrerequisiteUnitConflict, 0, 0 },
+		{ "ScienceNotExist", ProductionPrerequisite::parsePrerequisiteScienceConflict,	0, 0 },
+		{ "Upgrade", ProductionPrerequisite::parsePrerequisiteUpgrade, 0, 0 },
+		{ "UpgradeNotExist", ProductionPrerequisite::parsePrerequisiteUpgradeConflict, 0, 0 },
+		{ 0, 0, 0, 0 }
+	};
+
+	if (ini->getLoadType() == INI_LOAD_CREATE_OVERRIDES)
+	{
+		self->m_enablePrereqInfo.clear();
+	}
+
+	ini->initFromINI(&self->m_enablePrereqInfo, myFieldParse);
+
+	// Resolve prerequisite names now so later const accesses don't need to mutate state
+	for (size_t i = 0; i < self->m_enablePrereqInfo.size(); ++i)
+	{
+		self->m_enablePrereqInfo[i].resolveNames();
+	}
+}
+void CommandButton::parseVisiblePrerequisites(INI* ini, void* instance, void* store, const void* userData)
+{
+	CommandButton* self = (CommandButton*)instance;
+
+	static const FieldParse myFieldParse[] =
+	{
+		{ "Object", ProductionPrerequisite::parsePrerequisiteUnit, 0, 0 },
+		{ "Science", ProductionPrerequisite::parsePrerequisiteScience,	0, 0 },
+		{ "ObjectNotExist", ProductionPrerequisite::parsePrerequisiteUnitConflict, 0, 0 },
+		{ "ScienceNotExist", ProductionPrerequisite::parsePrerequisiteScienceConflict,	0, 0 },
+		{ "Upgrade", ProductionPrerequisite::parsePrerequisiteUpgrade, 0, 0 },
+		{ "UpgradeNotExist", ProductionPrerequisite::parsePrerequisiteUpgradeConflict, 0, 0 },
+		{ 0, 0, 0, 0 }
+	};
+
+	if (ini->getLoadType() == INI_LOAD_CREATE_OVERRIDES)
+	{
+		self->m_visiblePrereqInfo.clear();
+	}
+
+	ini->initFromINI(&self->m_visiblePrereqInfo, myFieldParse);
+
+	// Resolve prerequisite names now so later const accesses don't need to mutate state
+	for (size_t i = 0; i < self->m_visiblePrereqInfo.size(); ++i)
+	{
+		self->m_visiblePrereqInfo[i].resolveNames();
+	}
+}
 //---------------------------------------------
 //       Prerequisite
 //---------------------------------------------
