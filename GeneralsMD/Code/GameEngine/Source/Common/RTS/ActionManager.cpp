@@ -1461,6 +1461,13 @@ Bool ActionManager::canDoSpecialPowerAtLocation( const Object *obj, const Coord3
 		{
 			return false;
 		}
+
+		//Check if player can afford the special power
+		Player *player = obj->getControllingPlayer();
+		if( player && !spTemplate->canAffordUsingPower( player ) )
+		{
+			return false;
+		}
 	}
 
 	SpecialPowerModuleInterface *mod = obj->getSpecialPowerModule( spTemplate );
@@ -1580,6 +1587,13 @@ Bool ActionManager::canDoSpecialPowerAtObject( const Object *obj, const Object *
 	{
 		//First check, if our object can do this special power.
 		if( !obj->hasSpecialPower( spTemplate->getSpecialPowerType() ) )
+		{
+			return false;
+		}
+
+		//Check if player can afford the special power
+		Player *player = obj->getControllingPlayer();
+		if( player && !spTemplate->canAffordUsingPower( player ) )
 		{
 			return false;
 		}
@@ -1842,6 +1856,13 @@ Bool ActionManager::canDoSpecialPower( const Object *obj, const SpecialPowerTemp
 	{
 		//First check, if our object can do this special power.
 		if( !obj->hasSpecialPower( spTemplate->getSpecialPowerType() ) )
+		{
+			return false;
+		}
+
+		//Check if player can afford the special power
+		Player *player = obj->getControllingPlayer();
+		if( player && !spTemplate->canAffordUsingPower( player ) )
 		{
 			return false;
 		}

@@ -2701,15 +2701,23 @@ void AIGroup::groupDoSpecialPower( UnsignedInt specialPowerID, UnsignedInt comma
 			{
 				if( TheActionManager->canDoSpecialPower( object, spTemplate, CMD_FROM_PLAYER, commandOptions ) )
 				{
-					mod->doSpecialPower( commandOptions );
+					// Check if player can afford the special power and withdraw cost
+					Player *player = object->getControllingPlayer();
+					if( spTemplate->canAffordUsingPower( player ) )
+					{
+						Money *money = player->getMoney();
+						money->withdraw( spTemplate->getUsingCost() );
+						
+						mod->doSpecialPower( commandOptions );
 
-					object->friend_setUndetectedDefector( FALSE );// My secret is out
+						object->friend_setUndetectedDefector( FALSE );// My secret is out
+					}
 				}
 			}
 		}
 	}
 }
-
+ 
 /**
  * The unit(s)/structure will perform it's special power -- special powers triggered by buildings
  * don't use AIUpdateInterfaces!!! No special power uses an AIUpdateInterface immediately, but special
@@ -2749,9 +2757,17 @@ void AIGroup::groupDoSpecialPowerAtLocation( UnsignedInt specialPowerID, const C
 			{
 				if( TheActionManager->canDoSpecialPowerAtLocation( object, location, CMD_FROM_PLAYER, spTemplate, objectInWay, commandOptions ) )
 				{
-					mod->doSpecialPowerAtLocation( location, angle, commandOptions );
+					// Check if player can afford the special power and withdraw cost
+					Player *player = object->getControllingPlayer();
+					if( spTemplate->canAffordUsingPower( player ) )
+					{
+						Money *money = player->getMoney();
+						money->withdraw( spTemplate->getUsingCost() );
+						
+						mod->doSpecialPowerAtLocation( location, angle, commandOptions );
 
-					object->friend_setUndetectedDefector( FALSE );// My secret is out
+						object->friend_setUndetectedDefector( FALSE );// My secret is out
+					}
 				}
 			}
 		}
@@ -2789,9 +2805,17 @@ void AIGroup::groupDoSpecialPowerAtObject( UnsignedInt specialPowerID, Object *t
 			{
 				if( TheActionManager->canDoSpecialPowerAtObject( object, target, CMD_FROM_PLAYER, spTemplate, commandOptions ) )
 				{
-					mod->doSpecialPowerAtObject( target, commandOptions );
+					// Check if player can afford the special power and withdraw cost
+					Player *player = object->getControllingPlayer();
+					if( spTemplate->canAffordUsingPower( player ) )
+					{
+						Money *money = player->getMoney();
+						money->withdraw( spTemplate->getUsingCost() );
+						
+						mod->doSpecialPowerAtObject( target, commandOptions );
 
-					object->friend_setUndetectedDefector( FALSE );// My secret is out
+						object->friend_setUndetectedDefector( FALSE );// My secret is out
+					}
 				}
 			}
 		}

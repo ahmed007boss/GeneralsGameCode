@@ -196,6 +196,7 @@ void SpecialPowerStore::parseSpecialPowerDefinition( INI *ini )
 	{ "InitiateAtLocationSound",	INI::parseAudioEventRTS,					NULL,	offsetof( SpecialPowerTemplate, m_initiateAtLocationSound ) },
 	{ "PublicTimer",							INI::parseBool,										NULL, offsetof( SpecialPowerTemplate, m_publicTimer ) },
 	{ "Enum",											INI::parseIndexList,							SpecialPowerMaskType::getBitNames(), offsetof( SpecialPowerTemplate, m_type ) },
+	{ "CostPerUse",								INI::parseUnsignedInt,										NULL,		offsetof(SpecialPowerTemplate, m_usingCost) },
 	{ "DetectionTime",						INI::parseDurationUnsignedInt,		NULL,	offsetof( SpecialPowerTemplate, m_detectionTime ) },
 	{ "SharedSyncedTimer",				INI::parseBool,										NULL, offsetof( SpecialPowerTemplate, m_sharedNSync ) },
 	{ "ViewObjectDuration",				INI::parseDurationUnsignedInt,		NULL,	offsetof( SpecialPowerTemplate, m_viewObjectDuration ) },
@@ -222,7 +223,7 @@ SpecialPowerTemplate::SpecialPowerTemplate()
 	m_viewObjectRange = 0;
 	m_radiusCursorRadius = 0;
 	m_shortcutPower = FALSE;
-
+	m_usingCost = 0;
 }  // end SpecialPowerTemplate
 
 //-------------------------------------------------------------------------------------------------
@@ -336,17 +337,23 @@ Bool SpecialPowerStore::canUseSpecialPower( Object *obj, const SpecialPowerTempl
 	// they cannot have all of them.
 	//
 
+	// get the controlling player
+	Player *player = obj->getControllingPlayer();
+	if( player == NULL )
+		return FALSE;
+
 	// check for requried science
 	ScienceType requiredScience = specialPowerTemplate->getRequiredScience();
 	if( requiredScience != SCIENCE_INVALID )
 	{
-		Player *player = obj->getControllingPlayer();
-
 		if( player->hasScience( requiredScience ) == FALSE )
 			return FALSE;
 
 	}  // end if
 
+	// check if player can afford the special power
+	if( specialPowerTemplate->canAffordUsingPower( player ) == FALSE )
+		return FALSE;
 
 	// I THINK THIS IS WHERE WE BAIL OUT IF A DIFFERENT CONYARD IS ALREADY CHARGIN THIS SPECIAL RIGHT NOW //LORENZEN
 
@@ -375,3 +382,23 @@ void SpecialPowerStore::reset( void )
 		}
 	}
 }  // end reset
+
+//-------------------------------------------------------------------------------------------------
+/** does this player have all the necessary things to make this Using Power */
+//-------------------------------------------------------------------------------------------------
+Bool SpecialPowerTemplate::canAffordUsingPower(Player* player) const
+{
+	// sanity check
+	if (player == NULL)
+		return FALSE;
+
+	// money check
+	Money* money = player->getMoney();
+	if (money->countMoney() < getUsingCost())
+	{
+		return FALSE;
+	}
+
+	return TRUE;  // all is well
+
+}  // end canAffordUsingPower

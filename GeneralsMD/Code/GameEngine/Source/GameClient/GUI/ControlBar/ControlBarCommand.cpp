@@ -1509,7 +1509,14 @@ CommandAvailability ControlBar::getCommandAvailability( const CommandButton *com
 			DEBUG_ASSERTCRASH( command->getSpecialPowerTemplate() != NULL,
 												 ("The special power in the command '%s' is NULL", command->getName().str()) );
 			// get special power module from the object to execute it
-			SpecialPowerModuleInterface *mod = obj->getSpecialPowerModule( command->getSpecialPowerTemplate() );
+			auto specialPowerTemplate = command->getSpecialPowerTemplate();
+
+			if (!specialPowerTemplate->canAffordUsingPower(player))
+			{
+				return COMMAND_CANT_AFFORD;
+			}
+
+			SpecialPowerModuleInterface *mod = obj->getSpecialPowerModule(specialPowerTemplate);
 
 			if( mod == NULL )
 			{

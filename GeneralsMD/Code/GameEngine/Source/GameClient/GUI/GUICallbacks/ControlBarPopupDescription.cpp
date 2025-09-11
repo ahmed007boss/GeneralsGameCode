@@ -72,6 +72,7 @@
 #include "Common/Player.h"
 #include "Common/PlayerList.h"
 #include "Common/ProductionPrerequisite.h"
+#include "Common/SpecialPower.h"
 #include "Common/ThingTemplate.h"
 #include "Common/Upgrade.h"
 #include "GameClient/AnimateWindowManager.h"
@@ -260,6 +261,9 @@ void ControlBar::populateBuildTooltipLayout(const CommandButton* commandButton, 
 	{
 		const ThingTemplate* thingTemplate = commandButton->getThingTemplate();
 		const UpgradeTemplate* upgradeTemplate = commandButton->getUpgradeTemplate();
+		const SpecialPowerTemplate* specialPowerTemplate = commandButton->getSpecialPowerTemplate();
+
+		
 
 
 
@@ -594,7 +598,24 @@ void ControlBar::populateBuildTooltipLayout(const CommandButton* commandButton, 
 			}
 
 		}
+		if (specialPowerTemplate)
+		{
+			//We are looking at a special power button
+			
+			//Get the cost to use the special power
+			costToBuild = specialPowerTemplate->getUsingCost();
+			if (costToBuild > 0)
+			{
+				cost.format(TheGameText->fetch("TOOLTIP:Cost"), costToBuild);
+			}
 
+			if (!specialPowerTemplate->canAffordUsingPower(player))
+			{
+				descrip.concat(L"\n\n");
+				descrip.concat(TheGameText->fetch("TOOLTIP:TooltipNotEnoughMoneyToBuild"));
+			}
+			
+		}
 		if (!requiresFormat.isEmpty())
 		{
 			UnicodeString requireFormat = TheGameText->fetch("CONTROLBAR:Requirements");
