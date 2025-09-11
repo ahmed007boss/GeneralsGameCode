@@ -557,6 +557,12 @@ void CommandButton::parseVisiblePrerequisites(INI* ini, void* instance, void* st
 		self->m_visiblePrereqInfo[i].resolveNames();
 	}
 }
+//---------------------------------------------
+//       Prerequisite
+//---------------------------------------------
+
+
+
 //-------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------
 void ControlBar::updateContextPurchaseScience( void )

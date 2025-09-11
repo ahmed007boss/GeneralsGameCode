@@ -249,6 +249,7 @@ void ControlBar::populateBuildTooltipLayout(const CommandButton* commandButton, 
 	Player* player = ThePlayerList->getLocalPlayer();
 	UnicodeString name, cost, descrip;
 	UnicodeString requiresFormat = UnicodeString::TheEmptyString, requiresList;
+	UnicodeString conflictsFormat = UnicodeString::TheEmptyString, conflictsList;
 	Bool firstRequirement = true;
 	const ProductionPrerequisite* prereq;
 	Bool fireScienceButton = false;
@@ -580,6 +581,15 @@ void ControlBar::populateBuildTooltipLayout(const CommandButton* commandButton, 
 				descrip.concat(L"\n\n");
 			descrip.concat(requiresFormat);
 
+		}
+
+		if (!conflictsFormat.isEmpty())
+		{
+			UnicodeString conflictFormat = TheGameText->fetch("CONTROLBAR:Conflicts");
+			conflictsFormat.format(conflictFormat.str(), conflictsFormat.str());
+			if (!descrip.isEmpty())
+				descrip.concat(L"\n\n");
+			descrip.concat(conflictsFormat);
 		}
 	}
 	else if (tooltipWin)
