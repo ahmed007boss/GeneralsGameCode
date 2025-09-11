@@ -2431,9 +2431,14 @@ void InGameUI::createMouseoverHint( const GameMessage *msg )
 				}
 			}
 
-
-			UnicodeString str = thingTemplate->getDisplayName();
-			UnicodeString displayName = thingTemplate->getDisplayName();
+			UnicodeString str = obj->getDisplayNameOverride();
+			UnicodeString displayName = obj->getDisplayNameOverride();
+			if (str.isEmpty())
+			{
+				 str = thingTemplate->getDisplayName();
+				 displayName = thingTemplate->getDisplayName();
+			}
+			
 			if( str.isEmpty() )
 			{
 				AsciiString txtTemp;
