@@ -63,8 +63,7 @@ void TAiData::addFactionBuildList(AISideBuildList *buildList)
 	AISideBuildList *info = m_sideBuildLists;
 	while (info) {
 		if (buildList->m_side == info->m_side) {
-			if (info->m_buildList)
-				deleteInstance(info->m_buildList);
+			deleteInstance(info->m_buildList);
 			info->m_buildList = buildList->m_buildList;
 			buildList->m_buildList = NULL;
 			buildList->m_next = NULL;
@@ -109,9 +108,7 @@ AISideBuildList::AISideBuildList( AsciiString side ) :
 
 AISideBuildList::~AISideBuildList()
 {
-	if (m_buildList) {
-		deleteInstance(m_buildList); // note - deletes all in the list.
-	}
+	deleteInstance(m_buildList); // note - deletes all in the list.
 	m_buildList = NULL;
 }
 
@@ -436,7 +433,7 @@ void AI::parseAiDataDefinition( INI* ini )
 		// parse the ini weapon definition
 		ini->initFromINI( TheAI->m_aiData, TheAIFieldParseTable );
 
-	}  // end if
+	}
 }
 
 
@@ -988,7 +985,7 @@ void TAiData::crc( Xfer *xfer )
 	xfer->xferBool( &m_enableRepulsors );
 	CRCGEN_LOG(("CRC after AI TAiData for frame %d is 0x%8.8X", TheGameLogic->getFrame(), ((XferCRC *)xfer)->getCRC()));
 
-}  // end crc
+}
 
 //-----------------------------------------------------------------------------
 void TAiData::xfer( Xfer *xfer )
@@ -999,13 +996,13 @@ void TAiData::xfer( Xfer *xfer )
 	XferVersion version = currentVersion;
 	xfer->xferVersion( &version, currentVersion );
 
-}  // end xfer
+}
 
 //-----------------------------------------------------------------------------
 void TAiData::loadPostProcess( void )
 {
 
-}  // end loadPostProcess
+}
 
 //-----------------------------------------------------------------------------
 void AI::crc( Xfer *xfer )
@@ -1034,7 +1031,7 @@ void AI::crc( Xfer *xfer )
 		}
 	}
 
-}  // end crc
+}
 
 //-----------------------------------------------------------------------------
 void AI::xfer( Xfer *xfer )
@@ -1045,12 +1042,12 @@ void AI::xfer( Xfer *xfer )
 	XferVersion version = currentVersion;
 	xfer->xferVersion( &version, currentVersion );
 
-}  // end xfer
+}
 
 //-----------------------------------------------------------------------------
 void AI::loadPostProcess( void )
 {
 
-}  // end loadPostProcess
+}
 
 

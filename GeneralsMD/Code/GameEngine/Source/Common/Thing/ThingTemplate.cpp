@@ -290,7 +290,7 @@ const ModuleInfo::Nugget* ModuleInfo::getNuggetWithTag(const AsciiString& tag) c
 	// no match
 	return NULL;
 
-}  // end isTagPresent
+}
 
 // ------------------------------------------------------------------------------------------------
 /** Add this module info to the thing template */
@@ -328,7 +328,7 @@ void ModuleInfo::addModuleInfo(ThingTemplate* thingTemplate,
 
 		// srj sez: prevent people from ignoring this.
 		throw INI_INVALID_DATA;
-	}  // end if
+	}
 
 	nugget = thingTemplate->getDrawModuleInfo().getNuggetWithTag(moduleTag);
 	if (nugget != NULL)
@@ -346,7 +346,7 @@ void ModuleInfo::addModuleInfo(ThingTemplate* thingTemplate,
 
 		// srj sez: prevent people from ignoring this.
 		throw INI_INVALID_DATA;
-	}  // end if
+	}
 
 	nugget = thingTemplate->getClientUpdateModuleInfo().getNuggetWithTag(moduleTag);
 	if (nugget != NULL)
@@ -363,7 +363,7 @@ void ModuleInfo::addModuleInfo(ThingTemplate* thingTemplate,
 				nugget->first.str()));
 		// srj sez: prevent people from ignoring this.
 		throw INI_INVALID_DATA;
-	}  // end if
+	}
 
 #endif
 

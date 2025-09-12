@@ -215,7 +215,7 @@ enum CommandSourceType CPP_11(: Int)
 	CMD_FROM_AI,
 	CMD_FROM_DOZER,							// Special rare command when the dozer originates a command to attack a mine. Mines are not ai-attackable, and it seems deceitful for the dozer to generate a player or script command. jba.
 
-};		///< the source of a command
+};
 
 //-------------------------------------------------------------------------------------------------
 enum AbleToAttackType CPP_11(: Int)
@@ -468,6 +468,7 @@ enum WhichTurretType CPP_11(: Int)
 
 // ------------------------------------------------------------------------
 // this normalizes an angle to the range -PI...PI.
+// TheSuperHackers @todo DO NOT USE THIS FUNCTION! Use WWMath::Normalize_Angle instead. Delete this.
 extern Real normalizeAngle(Real angle);
 
 // ------------------------------------------------------------------------

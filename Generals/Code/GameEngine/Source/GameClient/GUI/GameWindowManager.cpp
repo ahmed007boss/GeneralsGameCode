@@ -118,12 +118,11 @@ void GameWindowManager::processDestroyList( void )
 		DEBUG_ASSERTCRASH(doDestroy->winGetUserData() == NULL, ("Win user data is expected to be deleted now"));
 
 		// free the memory
-		if (doDestroy)
-			deleteInstance(doDestroy);
+		deleteInstance(doDestroy);
 
-	}  // end for
+	}
 
-}  // end processDestroyList
+}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // PUBLIC FUNCTIONS ///////////////////////////////////////////////////////////////////////////////
@@ -147,11 +146,11 @@ WindowMsgHandledType PassSelectedButtonsToParentSystem( GameWindow *window, Unsi
 		if( parent )
 			return TheWindowManager->winSendSystemMsg( parent, msg, mData1, mData2 );
 
-	}  // end if
+	}
 
 	return MSG_IGNORED;
 
-}  // end PassSelectedButtonsToParentSystem
+}
 
 //-------------------------------------------------------------------------------------------------
 /** Generic function to simply propagate only button press messages to parent and let it deal with it */
@@ -172,7 +171,7 @@ WindowMsgHandledType PassMessagesToParentSystem( GameWindow *window, UnsignedInt
 
 	return MSG_IGNORED;
 
-}  // end PassSelectedButtonsToParentSystem
+}
 
 
 //-------------------------------------------------------------------------------------------------
@@ -195,7 +194,7 @@ GameWindowManager::GameWindowManager( void )
 	m_cursorBitmap = NULL;
 	m_captureFlags = 0;
 
-}  // end GameWindowManger
+}
 
 //-------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------
@@ -208,7 +207,7 @@ GameWindowManager::~GameWindowManager( void )
 	if(TheTransitionHandler)
 		delete TheTransitionHandler;
 	TheTransitionHandler = NULL;
-}  // end ~GameWindowManager
+}
 
 //-------------------------------------------------------------------------------------------------
 /** Initialize the game window manager system */
@@ -219,7 +218,7 @@ void GameWindowManager::init( void )
 		TheTransitionHandler = NEW GameWindowTransitionsHandler;
 	TheTransitionHandler->load();
 	TheTransitionHandler->init();
-}  // end init
+}
 
 //-------------------------------------------------------------------------------------------------
 /** Reset window system */
@@ -232,7 +231,7 @@ void GameWindowManager::reset( void )
 	if(TheTransitionHandler)
 		TheTransitionHandler->reset();
 
-}  // end reset
+}
 
 //-------------------------------------------------------------------------------------------------
 /** Update cycle for game widnow manager */
@@ -244,7 +243,7 @@ void GameWindowManager::update( void )
 	processDestroyList();
 	if(TheTransitionHandler)
 		TheTransitionHandler->update();
-}  // end update
+}
 
 //-------------------------------------------------------------------------------------------------
 /** Puts a window at the head of the window list */
@@ -296,7 +295,7 @@ void GameWindowManager::linkWindow( GameWindow *window )
 		}
 	}
 
-}  // end linkWindow
+}
 
 //-------------------------------------------------------------------------------------------------
 /** Insert the window ahead of the the 'aheadOf' window.  'aheadOf' can
@@ -318,7 +317,7 @@ void GameWindowManager::insertWindowAheadOf( GameWindow *window,
 		linkWindow( window );
 		return;
 
-	}  // end if
+	}
 
 	// get parent of aheadOf
 	GameWindow *aheadOfParent = aheadOf->winGetParent();
@@ -340,7 +339,7 @@ void GameWindowManager::insertWindowAheadOf( GameWindow *window,
 		aheadOf->m_prev = window;
 		window->m_next = aheadOf;
 
-	}  // end if
+	}
 	else
 	{
 
@@ -356,9 +355,9 @@ void GameWindowManager::insertWindowAheadOf( GameWindow *window,
 
 		window->m_parent = aheadOfParent;
 
-	}  // end else
+	}
 
-}  // end insertWindowAheadOf
+}
 
 //-------------------------------------------------------------------------------------------------
 /** Takes a window off the window list */
@@ -379,7 +378,7 @@ void GameWindowManager::unlinkWindow( GameWindow *window )
 	else
 		m_windowList = window->m_next;
 
-}  // end unlinkWindow
+}
 
 //-------------------------------------------------------------------------------------------------
 /** Takes a child window off its parent's window list */
@@ -416,12 +415,12 @@ void GameWindowManager::unlinkChildWindow( GameWindow *window )
 
 		}
 
-	}  // end else
+	}
 
 	// remove the parent reference from this window
 	window->m_parent = NULL;
 
-}  // end unlinkChildWindow
+}
 
 //-------------------------------------------------------------------------------------------------
 /** Check window and parents to see if this window is enabled */
@@ -449,7 +448,7 @@ Bool GameWindowManager::isEnabled( GameWindow *win )
 
 	return TRUE;
 
-}  // end isEnabled
+}
 
 //-------------------------------------------------------------------------------------------------
 /** Check window and parents to see if this window is hidden */
@@ -477,7 +476,7 @@ Bool GameWindowManager::isHidden( GameWindow *win )
 
 	return FALSE;
 
-}  // end isHidden
+}
 
 //-------------------------------------------------------------------------------------------------
 // Adds a child window to its parent.
@@ -501,7 +500,7 @@ void GameWindowManager::addWindowToParent( GameWindow *window,
 
 	}
 
-}  // end addWindowToParent
+}
 
 //-------------------------------------------------------------------------------------------------
 /** Add a child window to the parent, put place it at the end of the
@@ -529,16 +528,16 @@ void GameWindowManager::addWindowToParentAtEnd( GameWindow *window,
 			last->m_next = window;
 			window->m_prev = last;
 
-		}  // end if
+		}
 		else
 			parent->m_child = window;
 
 		// assign the parent to the window
 		window->m_parent = parent;
 
-	}  // end if
+	}
 
-}  // end addWindowToParentAtEnd
+}
 
 //-------------------------------------------------------------------------------------------------
 /** this gets called from winHide() when a window hides itself */
@@ -567,7 +566,7 @@ void GameWindowManager::windowHiding( GameWindow *window )
 	for( child = window->winGetChild(); child; child = child->winGetNext() )
 		windowHiding( child );
 
-}  // end windowHiding
+}
 
 //-------------------------------------------------------------------------------------------------
 /** Hide all windows in a certain range of id's (inclusive) */
@@ -586,9 +585,9 @@ void GameWindowManager::hideWindowsInRange( GameWindow *baseWindow,
 		if( window )
 			window->winHide( hideFlag );
 
-	}  // end for i
+	}
 
-}  // end hideWindowsInRange
+}
 
 //-------------------------------------------------------------------------------------------------
 // Enable all windows in a certain range of id's (inclusive)
@@ -607,9 +606,9 @@ void GameWindowManager::enableWindowsInRange( GameWindow *baseWindow,
 		if( window )
 			window->winEnable( enableFlag );
 
-	}  // end for i
+	}
 
-}  // end enableWindowsInRange
+}
 
 //-------------------------------------------------------------------------------------------------
 /** Captures the mouse capture. */
@@ -624,7 +623,7 @@ Int GameWindowManager::winCapture( GameWindow *window )
 
 	return WIN_ERR_OK;
 
-}  // end WinCapture
+}
 
 //-------------------------------------------------------------------------------------------------
 /** Releases the mouse capture. */
@@ -637,7 +636,7 @@ Int GameWindowManager::winRelease( GameWindow *window )
 
 	return WIN_ERR_OK;
 
-}  // end WinRelease
+}
 
 //-------------------------------------------------------------------------------------------------
 /** Returns the current mouse captor. */
@@ -647,7 +646,7 @@ GameWindow *GameWindowManager::winGetCapture( void )
 
 	return m_mouseCaptor;
 
-}  // end WinGetCapture
+}
 
 //-------------------------------------------------------------------------------------------------
 /** Gets the window pointer from its id */
@@ -670,13 +669,13 @@ GameWindow *GameWindowManager::winGetWindowFromId( GameWindow *window, Int id )
 			if( child )
 				return child;
 
-		}  // end else if
+		}
 
-	}  // end for
+	}
 
 	return NULL;
 
-}  // end WinGetWindowFromId
+}
 
 //-------------------------------------------------------------------------------------------------
 /** Gets the Window List Pointer */
@@ -686,7 +685,7 @@ GameWindow *GameWindowManager::winGetWindowList( void )
 
 	return m_windowList;
 
-}  // end winGetWindowList
+}
 
 //-------------------------------------------------------------------------------------------------
 /** Send a system message to the specified window */
@@ -705,7 +704,7 @@ WindowMsgHandledType GameWindowManager::winSendSystemMsg( GameWindow *window,
 
 	return window->m_system( window, msg, mData1, mData2 );
 
-}  // end winSendSystemMsg
+}
 
 //-------------------------------------------------------------------------------------------------
 /** Send a system message to the specified window */
@@ -724,7 +723,7 @@ WindowMsgHandledType GameWindowManager::winSendInputMsg( GameWindow *window,
 
 	return window->m_input( window, msg, mData1, mData2 );
 
-}  // end winSendInputMsg
+}
 
 //-------------------------------------------------------------------------------------------------
 /** Get the current input focus */
@@ -734,7 +733,7 @@ GameWindow *GameWindowManager::winGetFocus( void )
 
 	return m_keyboardFocus;
 
-}  // end WinGetFocus
+}
 
 //-------------------------------------------------------------------------------------------------
 /** Set the current input focus */
@@ -776,7 +775,7 @@ Int GameWindowManager::winSetFocus( GameWindow *window )
 				break;
 		}
 
-	}  // end if
+	}
 
 	// If new window doesn't want focus, set focus to NULL
 	if( wantsFocus == FALSE )
@@ -784,7 +783,7 @@ Int GameWindowManager::winSetFocus( GameWindow *window )
 
 	return WIN_ERR_OK;
 
-}  // end WinSetFocus
+}
 
 //-------------------------------------------------------------------------------------------------
 /** Process key press through the GUI. */
@@ -815,15 +814,15 @@ WinInputReturnCode GameWindowManager::winProcessKey( UnsignedByte key,
 				returnCode = WIN_INPUT_NOT_USED;  // oops, it wasn't used after all
 				break;
 
-			}  // end if
+			}
 
-		}  // end while
+		}
 
-	}  // end if
+	}
 
 	return returnCode;
 
-}  // end winProcessKey
+}
 
 //-------------------------------------------------------------------------------------------------
 /** Process a single mouse event through the window system */
@@ -884,9 +883,9 @@ WinInputReturnCode GameWindowManager::winProcessMouseEvent( GameWindowMessage ms
 
 					win = win->winGetParent();
 
-				}  // end while
+				}
 
-			}  // end if
+			}
 			else
 			{
 
@@ -894,11 +893,11 @@ WinInputReturnCode GameWindowManager::winProcessMouseEvent( GameWindowMessage ms
 				if(	winSendInputMsg( m_mouseCaptor, msg, packedMouseCoords, 0 ) == MSG_HANDLED )
 					returnCode = WIN_INPUT_USED;
 
-			}  // end else
+			}
 
-		}  // end if
+		}
 
-	}  // end if, mouse captor window present
+	}
 	else
 	{
 
@@ -926,7 +925,7 @@ WinInputReturnCode GameWindowManager::winProcessMouseEvent( GameWindowMessage ms
 					clearGrabWindow = TRUE;
 					break;
 
-				}  // end left up
+				}
 
 				// --------------------------------------------------------------------
 				case MOUSE_EVENT_NONE:
@@ -982,20 +981,20 @@ WinInputReturnCode GameWindowManager::winProcessMouseEvent( GameWindowMessage ms
 
 						m_grabWindow->winSetPosition( newRegion.lo.x, newRegion.lo.y );
 
-					}  // end if, draggable window
+					}
 
 					// Send mouse drag message
 					winSendInputMsg( m_grabWindow, msg, packedMouseCoords, 0 );
 					break;
 
-				}  // end mouse event none or left drag
+				}
 
-			}  // end switch
+			}
 
 			// mark event handled
 			returnCode = WIN_INPUT_USED;
 
-		}  // end if, m_grabWindow
+		}
 		else
 		{
 
@@ -1015,7 +1014,7 @@ WinInputReturnCode GameWindowManager::winProcessMouseEvent( GameWindowMessage ms
 				// check below and !hidden
 				if( window == NULL )
 					window = findWindowUnderMouse(toolTipWindow, mousePos, WIN_STATUS_BELOW, WIN_STATUS_HIDDEN);
-			}  // end else, no modal head
+			}
 
 			if( window )
 				if( BitIsSet( window->m_status, WIN_STATUS_NO_INPUT ) )
@@ -1048,7 +1047,7 @@ WinInputReturnCode GameWindowManager::winProcessMouseEvent( GameWindowMessage ms
 						if( tempWin == NULL )
 							break;
 
-					}  // end while
+					}
 
 
 					// First check to see if m_loneWindow is set if so, close the window
@@ -1085,16 +1084,16 @@ WinInputReturnCode GameWindowManager::winProcessMouseEvent( GameWindowMessage ms
 //							WinActivate( tempWin );
 							m_grabWindow = tempWin;
 
-						}  // end if
+						}
 
 						// event is used
 						returnCode = WIN_INPUT_USED;
 
-					}  // end if, tempWin
+					}
 
-				}  // end if
+				}
 
-			}  // end if( window )
+			}
 
 			if( toolTipWindow == NULL )
 			{
@@ -1102,7 +1101,7 @@ WinInputReturnCode GameWindowManager::winProcessMouseEvent( GameWindowMessage ms
 				if( isHidden( window ) == FALSE )
 					toolTipWindow = window;
 
-			}  // end if
+			}
 
 			// if tooltips are on set them into the window
 			Bool tooltipsOn = TRUE;
@@ -1122,7 +1121,7 @@ WinInputReturnCode GameWindowManager::winProcessMouseEvent( GameWindowMessage ms
 					else if( toolTipWindow->m_instData.getTooltipTextLength() )
 						TheMouse->setCursorTooltip( toolTipWindow->m_instData.getTooltipText(), toolTipWindow->m_instData.m_tooltipDelay );
 
-				}  // end if
+				}
 				else
 				{
 
@@ -1135,13 +1134,13 @@ WinInputReturnCode GameWindowManager::winProcessMouseEvent( GameWindowMessage ms
 					//
 					objectTooltip = TRUE;
 
-				}  // end else
+				}
 
-			}  // end if
+			}
 
-		}  // end if grabWindow not present
+		}
 
-	}  // end else (mouseCaptor)
+	}
 
 	//
 	// check if new current window is different from the last
@@ -1162,7 +1161,7 @@ WinInputReturnCode GameWindowManager::winProcessMouseEvent( GameWindowMessage ms
 
 		m_currMouseRgn = window;
 
-	}  // end if
+	}
 
 	// clear grabWindow if necessary
 	if( clearGrabWindow == TRUE )
@@ -1171,11 +1170,11 @@ WinInputReturnCode GameWindowManager::winProcessMouseEvent( GameWindowMessage ms
 		m_grabWindow = NULL;
 		clearGrabWindow = FALSE;
 
-	}  // end if
+	}
 
 	return returnCode;
 
-}  // end winProcessMouseEvent
+}
 
 bool GameWindowManager::isMouseWithinWindow(GameWindow* window, const ICoord2D* mousePos, unsigned int requiredStatusMask, unsigned int forbiddenStatusMask)
 {
@@ -1257,11 +1256,11 @@ Int GameWindowManager::drawWindow( GameWindow *window )
 					!BitIsSet( window->m_status, WIN_STATUS_SEE_THRU ) )
 				window->winDrawBorder();
 
-	}  // end if
+	}
 
 	return WIN_ERR_OK;
 
-}  // end drawWindow
+}
 
 //-------------------------------------------------------------------------------------------------
 /** Draw the GUI in reverse order to correlate with clicking priority */
@@ -1300,7 +1299,7 @@ void GameWindowManager::winRepaint( void )
 
 	if(TheTransitionHandler)
 		TheTransitionHandler->draw();
-}  // end WinRepaint
+}
 
 //-------------------------------------------------------------------------------------------------
 /** Dump information about all the windows for resource problems */
@@ -1321,7 +1320,7 @@ void GameWindowManager::dumpWindow( GameWindow *window )
 
 	return;
 #endif
-}  // end dumpWindow
+}
 
 //-------------------------------------------------------------------------------------------------
 /** Create a new window by setting up its parameters and callbacks. */
@@ -1352,7 +1351,7 @@ GameWindow *GameWindowManager::winCreate( GameWindow *parent,
 
 		return NULL;
 
-	}  // endif
+	}
 
 	// If this is a child window add it to the parent's window list
 	if( parent )
@@ -1391,7 +1390,7 @@ GameWindow *GameWindowManager::winCreate( GameWindow *parent,
 
 	return window;
 
-}  // end WinCreate
+}
 
 //-------------------------------------------------------------------------------------------------
 /** Take a window and its children off the top level list and free
@@ -1459,7 +1458,7 @@ Int GameWindowManager::winDestroy( GameWindow *window )
 
 	return WIN_ERR_OK;
 
-}  // winDestroy
+}
 
 //-------------------------------------------------------------------------------------------------
 /** Destroy all windows on the window list IMMEDIATELY */
@@ -1482,14 +1481,14 @@ Int GameWindowManager::winDestroyAll( void )
 
 		winDestroy( win );
 
-	}  // end for
+	}
 
 	// Destroy All Windows just added to destroy list
 	processDestroyList();
 
 	return WIN_ERR_OK;
 
-}  // end WinDestroyAll
+}
 
 //-------------------------------------------------------------------------------------------------
 /** Sets selected window into a modal state.  This window will get
@@ -1523,7 +1522,7 @@ Int GameWindowManager::winSetModal( GameWindow *window )
 
 	return WIN_ERR_OK;
 
-}  // end WinSetModal
+}
 
 //-------------------------------------------------------------------------------------------------
 /** pops window off of the modal stack.  If this window is not the top
@@ -1545,7 +1544,7 @@ Int GameWindowManager::winUnsetModal( GameWindow *window )
 								window->winGetWindowId() ));
 		return WIN_ERR_GENERAL_FAILURE;
 
-	}  // end if
+	}
 
 	// remove from top of list
 	next = m_modalHead->next;
@@ -1554,7 +1553,7 @@ Int GameWindowManager::winUnsetModal( GameWindow *window )
 
 	return WIN_ERR_OK;
 
-}  // end WinUnsetModal
+}
 
 //-------------------------------------------------------------------------------------------------
 /** Get the grabbed window */
@@ -1564,7 +1563,7 @@ GameWindow *GameWindowManager::winGetGrabWindow( void )
 
 	return m_grabWindow;
 
-}  // end WinGetGrabWindow
+}
 
 //-------------------------------------------------------------------------------------------------
 /** Explicitly set the grab window */
@@ -1574,7 +1573,7 @@ void GameWindowManager::winSetGrabWindow( GameWindow *window )
 
 	m_grabWindow = window;
 
-}  // end winSetGrabWindow
+}
 
 //-------------------------------------------------------------------------------------------------
 /** Explicitly set the grab window */
@@ -1588,7 +1587,7 @@ void GameWindowManager::winSetLoneWindow( GameWindow *window )
 		TheWindowManager->winSendSystemMsg( m_loneWindow, GGM_CLOSE, 0, 0 );
 	m_loneWindow = window;
 
-}  // end winSetGrabWindow
+}
 
 //-------------------------------------------------------------------------------------------------
 /** Create a Modal Message Box */
@@ -1769,7 +1768,7 @@ GameWindow *GameWindowManager::gogoMessageBox(Int x, Int y, Int width, Int heigh
 
 	//Changed By Chris
 	return trueParent;
-}// gogoMessageBox
+}
 
 //-------------------------------------------------------------------------------------------------
 /** Create a button GUI control */
@@ -1792,7 +1791,7 @@ GameWindow *GameWindowManager::gogoGadgetPushButton( GameWindow *parent,
 		assert( 0 );
 		return NULL;
 
-	}  // end if
+	}
 
 	// create the button window
 	button = TheWindowManager->winCreate( parent, status,
@@ -1806,7 +1805,7 @@ GameWindow *GameWindowManager::gogoGadgetPushButton( GameWindow *parent,
 		assert( 0 );
 		return NULL;
 
-	}  // end if
+	}
 
 	// assign input function
 	button->winSetInputFunc( GadgetPushButtonInput );
@@ -1836,7 +1835,7 @@ GameWindow *GameWindowManager::gogoGadgetPushButton( GameWindow *parent,
 
 	return button;
 
-}  // end gogoGadgetPushButton
+}
 
 //-------------------------------------------------------------------------------------------------
 /** Create a checkbox UI element */
@@ -1860,7 +1859,7 @@ GameWindow *GameWindowManager::gogoGadgetCheckbox( GameWindow *parent,
 		assert( 0 );
 		return NULL;
 
-	}  // end if
+	}
 
 	// create the button window
 	checkbox = TheWindowManager->winCreate( parent, status,
@@ -1874,7 +1873,7 @@ GameWindow *GameWindowManager::gogoGadgetCheckbox( GameWindow *parent,
 		assert( 0 );
 		return NULL;
 
-	}  // end if
+	}
 
 	// assign input function
 	checkbox->winSetInputFunc( GadgetCheckBoxInput );
@@ -1901,7 +1900,7 @@ GameWindow *GameWindowManager::gogoGadgetCheckbox( GameWindow *parent,
 
 	return checkbox;
 
-}  // end gogoGadgetCheckbox
+}
 
 //-------------------------------------------------------------------------------------------------
 /** Create a radio button GUI element */
@@ -1927,7 +1926,7 @@ GameWindow *GameWindowManager::gogoGadgetRadioButton( GameWindow *parent,
 		assert( 0 );
 		return NULL;
 
-	}  // end if
+	}
 
 	// create the button window
 	radioButton = TheWindowManager->winCreate( parent, status,
@@ -1941,7 +1940,7 @@ GameWindow *GameWindowManager::gogoGadgetRadioButton( GameWindow *parent,
 		assert( 0 );
 		return NULL;
 
-	}  // end if
+	}
 
 	// allocate and store the radio button user data
 	radioData = NEW RadioButtonData;
@@ -1973,7 +1972,7 @@ GameWindow *GameWindowManager::gogoGadgetRadioButton( GameWindow *parent,
 
 	return radioButton;
 
-}  // end gogoGadgetRadioButton
+}
 
 //-------------------------------------------------------------------------------------------------
 /** Create a tab control GUI element */
@@ -1999,7 +1998,7 @@ GameWindow *GameWindowManager::gogoGadgetTabControl( GameWindow *parent,
 		assert( 0 );
 		return NULL;
 
-	}  // end if
+	}
 
 	// create the tab control window
 	tabControl = TheWindowManager->winCreate( parent, status,
@@ -2013,7 +2012,7 @@ GameWindow *GameWindowManager::gogoGadgetTabControl( GameWindow *parent,
 		assert( 0 );
 		return NULL;
 
-	}  // end if
+	}
 
 	// allocate and store the tab control user data
 	tabData = NEW TabControlData;
@@ -2044,7 +2043,7 @@ GameWindow *GameWindowManager::gogoGadgetTabControl( GameWindow *parent,
 
 	return tabControl;
 
-}  // end gogoGadgetTabControl
+}
 
 //-------------------------------------------------------------------------------------------------
 /** Create a list box GUI control */
@@ -2071,7 +2070,7 @@ GameWindow *GameWindowManager::gogoGadgetListBox( GameWindow *parent,
 		assert( 0 );
 		return NULL;
 
-	}  // end if
+	}
 
 	// create the listbox
   listbox = winCreate( parent, status, x, y, width, height,
@@ -2084,7 +2083,7 @@ GameWindow *GameWindowManager::gogoGadgetListBox( GameWindow *parent,
 		assert( 0 );
 		return NULL;
 
-	}  // end if
+	}
 
 	// allocate the listbox data, copy template data over and set it into box
 	listboxData = NEW ListboxData;
@@ -2159,8 +2158,8 @@ GameWindow *GameWindowManager::gogoGadgetListBox( GameWindow *parent,
 			listboxData->slider->winGetSize( &sliderSize.x, &sliderSize.y );
 			listboxData->columnWidth[0] -= (sliderSize.x + 2);
 
-		}  // end if
-	}// if
+		}
+	}
 	else
 	{
 		if( !listboxData->columnWidthPercentage )
@@ -2177,18 +2176,18 @@ GameWindow *GameWindowManager::gogoGadgetListBox( GameWindow *parent,
 			listboxData->slider->winGetSize( &sliderSize.x, &sliderSize.y );
 			totalWidth -= (sliderSize.x + 2);
 
-		}  // end if
+		}
 		for(Int i = 0; i < listboxData->columns; i++ )
 		{
 			listboxData->columnWidth[i] = listboxData->columnWidthPercentage[i] * totalWidth / 100;
-		}// for
-	}// else
+		}
+	}
 	// assign the default images/colors
 	assignDefaultGadgetLook( listbox, defaultFont, defaultVisual );
 
   return listbox;
 
-}  // end gogoGadgetListBox
+}
 
 //-------------------------------------------------------------------------------------------------
 /** Does all generic window creation, calls appropriate slider create
@@ -2227,7 +2226,7 @@ GameWindow *GameWindowManager::gogoGadgetSlider( GameWindow *parent,
 		else
 			slider->winSetDrawFunc( getHorizontalSliderDrawFunc() );
 
-	}  // end if
+	}
 	else if ( BitIsSet( instData->getStyle(), GWS_VERT_SLIDER ) )
 	{
 
@@ -2242,7 +2241,7 @@ GameWindow *GameWindowManager::gogoGadgetSlider( GameWindow *parent,
 		else
 			slider->winSetDrawFunc( getVerticalSliderDrawFunc() );
 
-	}  // end else if
+	}
 	else
 	{
 
@@ -2250,7 +2249,7 @@ GameWindow *GameWindowManager::gogoGadgetSlider( GameWindow *parent,
 		assert( 0 );
 		return NULL;
 
-	}  // end else
+	}
 
 	// sanity
 	if( slider == NULL )
@@ -2260,7 +2259,7 @@ GameWindow *GameWindowManager::gogoGadgetSlider( GameWindow *parent,
 		assert( 0 );
 		return NULL;
 
-	}  // end if
+	}
 
 	// set the owner to the parent, or if no parent it will be itself
 	slider->winSetOwner( parent );
@@ -2313,7 +2312,7 @@ GameWindow *GameWindowManager::gogoGadgetSlider( GameWindow *parent,
 
 	return slider;
 
-}  // end gogoGadgetSlider
+}
 
 //-------------------------------------------------------------------------------------------------
 /** Create a Combo Box GUI element */
@@ -2339,7 +2338,7 @@ GameWindow *GameWindowManager::gogoGadgetComboBox( GameWindow *parent,
 		assert( 0 );
 		return NULL;
 
-	}  // end if
+	}
 
 	// create the listbox
   comboBox = winCreate( parent, status, x, y, width, height,
@@ -2352,7 +2351,7 @@ GameWindow *GameWindowManager::gogoGadgetComboBox( GameWindow *parent,
 		assert( 0 );
 		return NULL;
 
-	}  // end if
+	}
 
 
 // begin here
@@ -2543,7 +2542,7 @@ GameWindow *GameWindowManager::gogoGadgetProgressBar( GameWindow *parent,
 		assert( 0 );
 		return NULL;
 
-	}  // end if
+	}
 
 	// create the button window
 	progressBar = TheWindowManager->winCreate( parent, status,
@@ -2557,7 +2556,7 @@ GameWindow *GameWindowManager::gogoGadgetProgressBar( GameWindow *parent,
 		assert( 0 );
 		return NULL;
 
-	}  // end if
+	}
 
 	//
 	// assign draw function, the draw functions must actually be implemented
@@ -2576,7 +2575,7 @@ GameWindow *GameWindowManager::gogoGadgetProgressBar( GameWindow *parent,
 
 	return progressBar;
 
-}  // end gogoGadgetProgressBar
+}
 
 //-------------------------------------------------------------------------------------------------
 /** Does all generic window creation, calls appropriate text field create
@@ -2641,11 +2640,11 @@ GameWindow *GameWindowManager::gogoGadgetStaticText( GameWindow *parent,
 		if( text.getLength() )
 			GadgetStaticTextSetText( textWin, text );
 
-  }  // end if
+  }
 
   return textWin;
 
-}  // end gogoGadetStaticText
+}
 
 //-------------------------------------------------------------------------------------------------
 /** Does all generic window creation, calls appropriate entry field create
@@ -2671,7 +2670,7 @@ GameWindow *GameWindowManager::gogoGadgetTextEntry( GameWindow *parent,
 		assert( 0 );
 		return NULL;
 
-	}  // end if
+	}
 
 	// create the window
 	entry = winCreate( parent, status, x, y, width, height,
@@ -2683,7 +2682,7 @@ GameWindow *GameWindowManager::gogoGadgetTextEntry( GameWindow *parent,
 		assert( 0 );
 		return NULL;
 
-	}  // end if
+	}
 
 	// set owner of this control
 	entry->winSetOwner( parent );
@@ -2778,9 +2777,9 @@ GameWindow *GameWindowManager::gogoGadgetTextEntry( GameWindow *parent,
 			winDestroy( entry );
 			return NULL;
 
-		}  // end if
+		}
 
-	}  // end, korean or japanese
+	}
 
 	// assign the default images/colors
 	assignDefaultGadgetLook( entry, defaultFont, defaultVisual );
@@ -2792,7 +2791,7 @@ GameWindow *GameWindowManager::gogoGadgetTextEntry( GameWindow *parent,
 
 	return entry;
 
-}  // end gogoGadgetTextEntry
+}
 
 //-------------------------------------------------------------------------------------------------
 /** Use this method to assign the default images/colors to gadgets as
@@ -2899,7 +2898,7 @@ void GameWindowManager::assignDefaultGadgetLook( GameWindow *gadget,
 		gadget->winSetHiliteTextColors( hiliteText, hiliteTextBorder );
 		gadget->winSetIMECompositeTextColors( imeCompositeText, imeCompositeTextBorder );
 
-	}  // end if
+	}
 	else if( BitIsSet( instData->getStyle(), GWS_CHECK_BOX ) )
 	{
 
@@ -2948,7 +2947,7 @@ void GameWindowManager::assignDefaultGadgetLook( GameWindow *gadget,
 		gadget->winSetHiliteTextColors( hiliteText, hiliteTextBorder );
 		gadget->winSetIMECompositeTextColors( imeCompositeText, imeCompositeTextBorder );
 
-	}  // end else if
+	}
 	else if( BitIsSet( instData->getStyle(), GWS_RADIO_BUTTON ) )
 	{
 
@@ -2997,7 +2996,7 @@ void GameWindowManager::assignDefaultGadgetLook( GameWindow *gadget,
 		gadget->winSetHiliteTextColors( hiliteText, hiliteTextBorder );
 		gadget->winSetIMECompositeTextColors( imeCompositeText, imeCompositeTextBorder );
 
-	}  // end else if
+	}
 	else if( BitIsSet( instData->getStyle(), GWS_HORZ_SLIDER ) )
 	{
 
@@ -3059,7 +3058,7 @@ void GameWindowManager::assignDefaultGadgetLook( GameWindow *gadget,
 		GadgetSliderSetHiliteSelectedThumbBorderColor( gadget, GadgetSliderGetHiliteColor( gadget ) );
 
 
-	}  // end if
+	}
 	else if( BitIsSet( instData->getStyle(), GWS_VERT_SLIDER ) )
 	{
 		// enabled
@@ -3119,7 +3118,7 @@ void GameWindowManager::assignDefaultGadgetLook( GameWindow *gadget,
 		GadgetSliderSetHiliteSelectedThumbColor( gadget, GadgetSliderGetHiliteBorderColor( gadget ) );
 		GadgetSliderSetHiliteSelectedThumbBorderColor( gadget, GadgetSliderGetHiliteColor( gadget ) );
 
-	}  // end else if
+	}
 	else if( BitIsSet( instData->getStyle(), GWS_SCROLL_LISTBOX ) )
 	{
 		ListboxData *listboxData = (ListboxData *)gadget->winGetUserData();
@@ -3224,9 +3223,9 @@ void GameWindowManager::assignDefaultGadgetLook( GameWindow *gadget,
 			GadgetButtonSetHiliteImage( downButton, winFindImage( "VSliderLargeDownButtonHilite" ) );
 			GadgetButtonSetHiliteSelectedImage( downButton, winFindImage( "VSliderLargeDownButtonHiliteSelected" ) );
 
-		}  // end if
+		}
 
-	}  // end else if
+	}
 	else if( BitIsSet( instData->getStyle(), GWS_COMBO_BOX ) )
 	{
 //		ComboBoxData *comboBoxData = (ComboBoxData *)gadget->winGetUserData();
@@ -3404,9 +3403,9 @@ void GameWindowManager::assignDefaultGadgetLook( GameWindow *gadget,
 				GadgetButtonSetHiliteImage( downButton, winFindImage( "VSliderLargeDownButtonHilite" ) );
 				GadgetButtonSetHiliteSelectedImage( downButton, winFindImage( "VSliderLargeDownButtonHiliteSelected" ) );
 
-			}  // end if
+			}
 		}
-	}  // end else if
+	}
 	else if( BitIsSet( instData->getStyle(), GWS_PROGRESS_BAR ) )
 	{
 
@@ -3452,7 +3451,7 @@ void GameWindowManager::assignDefaultGadgetLook( GameWindow *gadget,
 		GadgetProgressBarSetHiliteBarImageCenter( gadget, winFindImage( "ProgressBarHiliteBarRepeatingCenter" ) );
 		GadgetProgressBarSetHiliteBarImageSmallCenter( gadget, winFindImage( "ProgressBarHiliteBarSmallRepeatingCenter" ) );
 
-	}  // end else if
+	}
 	else if( BitIsSet( instData->getStyle(), GWS_STATIC_TEXT ) )
 	{
 
@@ -3477,7 +3476,7 @@ void GameWindowManager::assignDefaultGadgetLook( GameWindow *gadget,
 		gadget->winSetHiliteTextColors( hiliteText, hiliteTextBorder );
 		gadget->winSetIMECompositeTextColors( imeCompositeText, imeCompositeTextBorder );
 
-	}  // end else if
+	}
 	else if( BitIsSet( instData->getStyle(), GWS_ENTRY_FIELD ) )
 	{
 
@@ -3511,9 +3510,9 @@ void GameWindowManager::assignDefaultGadgetLook( GameWindow *gadget,
 		gadget->winSetHiliteTextColors( hiliteText, hiliteTextBorder );
 		gadget->winSetIMECompositeTextColors( imeCompositeText, imeCompositeTextBorder );
 
-	}  // end else if
+	}
 
-}  // end assignDefaultGadgetLook
+}
 
 //-------------------------------------------------------------------------------------------------
 /** Given a text label, retreive the real localized text associated
@@ -3531,7 +3530,7 @@ UnicodeString GameWindowManager::winTextLabelToText( AsciiString label )
 	tmp.translate(label);
 	return tmp;
 
-}  // end winTextLabelToText
+}
 
 //-------------------------------------------------------------------------------------------------
 /** find the top window at the given coordinates */
@@ -3574,8 +3573,8 @@ GameWindow *GameWindowManager::getWindowUnderCursor( Int x, Int y, Bool ignoreEn
 					window = window->winPointInChild( x, y, ignoreEnabled );
 					break;  // exit for
 				}
-			}  // end if
-		}  // end for window
+			}
+		}
 
 		// check !above, below and hidden
 		if( window == NULL )
@@ -3598,7 +3597,7 @@ GameWindow *GameWindowManager::getWindowUnderCursor( Int x, Int y, Bool ignoreEn
 					}
 				}
 			}
-		}  // end if, window == NULL
+		}
 
 		// check below and !hidden
 		if( window == NULL )
@@ -3620,8 +3619,8 @@ GameWindow *GameWindowManager::getWindowUnderCursor( Int x, Int y, Bool ignoreEn
 					}
 				}
 			}
-		}  // end if
-	}  // end else, no modal head
+		}
+	}
 
 	if( window )
 	{
@@ -3972,7 +3971,7 @@ Bool GameWindowManager::initTestGUI( void )
 
 	return TRUE;
 
-}  // end initTestGUI
+}
 
 
 void GameWindowManager::winNextTab( GameWindow *window )

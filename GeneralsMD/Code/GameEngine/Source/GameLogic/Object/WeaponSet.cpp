@@ -194,8 +194,7 @@ WeaponSet::WeaponSet()
 WeaponSet::~WeaponSet()
 {
 	for (Int i = 0; i < WEAPONSLOT_COUNT; ++i)
-		if (m_weapons[i])
-			deleteInstance(m_weapons[i]);
+		deleteInstance(m_weapons[i]);
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -204,7 +203,7 @@ WeaponSet::~WeaponSet()
 void WeaponSet::crc(Xfer* xfer)
 {
 
-}  // end crc
+}
 
 // ------------------------------------------------------------------------------------------------
 /** Xfer method
@@ -293,7 +292,7 @@ void WeaponSet::xfer(Xfer* xfer)
 void WeaponSet::loadPostProcess(void)
 {
 
-}  // end loadPostProcess
+}
 
 //-------------------------------------------------------------------------------------------------
 void WeaponSet::updateWeaponSet(const Object* obj)
@@ -315,11 +314,8 @@ void WeaponSet::updateWeaponSet(const Object* obj)
 		m_hasDamageWeapon = false;
 		for (Int i = WEAPONSLOT_COUNT - 1; i >= PRIMARY_WEAPON; --i)
 		{
-			if (m_weapons[i] != NULL)
-			{
-				deleteInstance(m_weapons[i]);
-				m_weapons[i] = NULL;
-			}
+			deleteInstance(m_weapons[i]);
+			m_weapons[i] = NULL;
 
 			if (set->getNth((WeaponSlotType)i))
 			{

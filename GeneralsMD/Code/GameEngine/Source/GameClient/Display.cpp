@@ -189,7 +189,7 @@ void Display::setWidth( UnsignedInt width )
 	if( TheMouse )
 		TheMouse->setMouseLimits();
 
-}  // end setWidth
+}
 
 // Display::setHeight =========================================================
 /** Set the height of the display */
@@ -204,7 +204,7 @@ void Display::setHeight( UnsignedInt height )
 	if( TheMouse )
 		TheMouse->setMouseLimits();
 
-}  // end setHeight
+}
 
 //============================================================================
 // Display::playLogoMovie
@@ -320,8 +320,7 @@ void Display::update( void )
 				if( m_elapsedCopywriteTime == 0 && m_elapsedCopywriteTime >= 0)
 				{
 					//display the copyrighttext;
-					if(m_copyrightDisplayString)
-						deleteInstance(m_copyrightDisplayString);
+					deleteInstance(m_copyrightDisplayString);
 					m_copyrightDisplayString = TheDisplayStringManager->newDisplayString();
 					m_copyrightDisplayString->setText(TheGameText->fetch("GUI:EACopyright"));
 					if (TheGlobalLanguageData && TheGlobalLanguageData->m_copyrightFont.name.isNotEmpty())

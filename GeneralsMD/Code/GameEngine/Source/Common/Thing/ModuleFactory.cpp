@@ -561,7 +561,7 @@ void ModuleFactory::init( void )
 	addModule( SwayClientUpdate );
 	addModule( BeaconClientUpdate );
 
-}  // end init
+}
 
 //-------------------------------------------------------------------------------------------------
 Int ModuleFactory::findModuleInterfaceMask(const AsciiString& name, ModuleType type)
@@ -684,7 +684,7 @@ Module *ModuleFactory::newModule( Thing *thing, const AsciiString& name, const M
 
 	return NULL;
 
-}  // end newModule
+}
 
 //-------------------------------------------------------------------------------------------------
 /** Add a module template to our list of templates */

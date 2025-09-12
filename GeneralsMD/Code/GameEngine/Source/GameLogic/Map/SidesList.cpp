@@ -87,10 +87,12 @@ void SidesInfo::init(const Dict* d)
 {
 	deleteInstance(m_pBuildList);
 	m_pBuildList = NULL;
+
 	m_dict.clear();
-	if (m_scripts)
-		deleteInstance(m_scripts);
+
+	deleteInstance(m_scripts);
 	m_scripts = NULL;
+
 	if (d)
 		m_dict = *d;
 }
@@ -302,8 +304,7 @@ Bool SidesList::ParseSidesDataChunk(DataChunkInput &file, DataChunkInfo *info, v
 	count = ScriptList::getReadScripts(scripts);
 	for (i=0; i<count; i++) {
 		if (i<TheSidesList->getNumSides()) {
-			ScriptList *pSL = TheSidesList->getSideInfo(i)->getScriptList();
-			deleteInstance(pSL);
+			deleteInstance(TheSidesList->getSideInfo(i)->getScriptList());
 			TheSidesList->getSideInfo(i)->setScriptList(scripts[i]);
 			scripts[i] = NULL;
 		} else {
@@ -545,11 +546,8 @@ void SidesList::prepareForMP_or_Skirmish(void)
 					}
 					if (curSide == -1) continue;
 
-					ScriptList *pSL = getSkirmishSideInfo(curSide)->getScriptList();
+					deleteInstance(getSkirmishSideInfo(curSide)->getScriptList());
 					getSkirmishSideInfo(curSide)->setScriptList(scripts[i]);
-					scripts[i] = NULL;
-					if (pSL)
-						deleteInstance(pSL);
 					scripts[i] = NULL;
 				}
 				for (i=0; i<MAX_PLAYER_COUNT; i++) {
@@ -844,7 +842,7 @@ validate_team_names:
 void SidesList::crc( Xfer *xfer )
 {
 
-}  // end crc
+}
 
 // ------------------------------------------------------------------------------------------------
 /** Xfer method
@@ -868,7 +866,7 @@ void SidesList::xfer( Xfer *xfer )
 		DEBUG_CRASH(( "SidesList::xfer - The sides list size has changed, this was not supposed to happen, you must version this method and figure out how to translate between old and new versions now" ));
 		throw SC_INVALID_DATA;
 
-	}  // end if
+	}
 
 	// side data
 	ScriptList *scriptList;
@@ -887,13 +885,13 @@ void SidesList::xfer( Xfer *xfer )
 			DEBUG_CRASH(( "SidesList::xfer - script list missing/present mismatch" ));
 			throw SC_INVALID_DATA;
 
-		}  // end if
+		}
 		if( scriptListPresent )
 			xfer->xferSnapshot( scriptList );
 
-	}  // end for i
+	}
 
-}  // end xfer
+}
 
 // ------------------------------------------------------------------------------------------------
 /** Load post process */
@@ -901,7 +899,7 @@ void SidesList::xfer( Xfer *xfer )
 void SidesList::loadPostProcess( void )
 {
 
-}  // end loadPostProcess
+}
 
 /* ********* BuildListInfo class ****************************/
 /**
@@ -1012,7 +1010,7 @@ BuildListInfo *BuildListInfo::duplicate(void)
 void BuildListInfo::crc( Xfer *xfer )
 {
 
-}  // end crc
+}
 
 // ------------------------------------------------------------------------------------------------
 /** Xfer method
@@ -1054,7 +1052,7 @@ void BuildListInfo::xfer( Xfer *xfer )
 		xfer->xferInt(&m_currentGatherers);
 	}
 
-}  // end xfer
+}
 
 // ------------------------------------------------------------------------------------------------
 /** Load post process */
@@ -1062,7 +1060,7 @@ void BuildListInfo::xfer( Xfer *xfer )
 void BuildListInfo::loadPostProcess( void )
 {
 
-}  // end loadPostProcess
+}
 
 /* ********* TeamsInfoRec class ****************************/
 TeamsInfoRec::TeamsInfoRec() :

@@ -337,8 +337,8 @@ void GameLODManager::init(void)
 				}
 				prof++;
 			}
-		}	//finding equivalent CPU to unkown cpu.
-	}	//find data needed to determine m_idealDetailLevel
+		}
+	}
 
 	if (userSetDetail == STATIC_GAME_LOD_CUSTOM)
 	{

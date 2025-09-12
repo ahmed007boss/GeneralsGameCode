@@ -44,6 +44,7 @@
 #include "GameClient/ClientInstance.h"
 #include "GameClient/GameClient.h"
 #include "GameClient/InGameUI.h"
+#include "GameClient/LookAtXlat.h"
 #include "GameClient/WindowLayout.h"
 #include "GameClient/Gadget.h"
 #include "GameClient/GadgetCheckBox.h"
@@ -62,6 +63,7 @@
 #include "GameClient/IMEManager.h"
 #include "GameClient/ShellHooks.h"
 #include "GameClient/GUICallbacks.h"
+#include "GameClient/GlobalLanguage.h"
 #include "GameNetwork/FirewallHelper.h"
 #include "GameNetwork/IPEnumeration.h"
 #include "GameNetwork/GameSpyOverlay.h"
@@ -419,6 +421,38 @@ CursorCaptureMode OptionPreferences::getCursorCaptureMode() const
 			}
 		}
 	}
+	return mode;
+}
+
+Bool OptionPreferences::getScreenEdgeScrollEnabledInWindowedApp() const
+{
+	OptionPreferences::const_iterator it = find("ScreenEdgeScrollEnabledInWindowedApp");
+	if (it == end())
+		return (ScreenEdgeScrollMode_Default & ScreenEdgeScrollMode_EnabledInWindowedApp) != 0;
+
+	if (stricmp(it->second.str(), "yes") == 0)
+		return TRUE;
+
+	return FALSE;
+}
+
+Bool OptionPreferences::getScreenEdgeScrollEnabledInFullscreenApp() const
+{
+	OptionPreferences::const_iterator it = find("ScreenEdgeScrollEnabledInFullscreenApp");
+	if (it == end())
+		return (ScreenEdgeScrollMode_Default & ScreenEdgeScrollMode_EnabledInFullscreenApp) != 0;
+
+	if (stricmp(it->second.str(), "yes") == 0)
+		return TRUE;
+
+	return FALSE;
+}
+
+ScreenEdgeScrollMode OptionPreferences::getScreenEdgeScrollMode() const
+{
+	ScreenEdgeScrollMode mode = 0;
+	mode |= getScreenEdgeScrollEnabledInWindowedApp() ? ScreenEdgeScrollMode_EnabledInWindowedApp : 0;
+	mode |= getScreenEdgeScrollEnabledInFullscreenApp() ? ScreenEdgeScrollMode_EnabledInFullscreenApp : 0;
 	return mode;
 }
 
@@ -854,6 +888,20 @@ Int OptionPreferences::getGameTimeFontSize(void)
 	return fontSize;
 }
 
+Real OptionPreferences::getResolutionFontAdjustment(void)
+{
+	OptionPreferences::const_iterator it = find("ResolutionFontAdjustment");
+	if (it == end())
+		return -1.0f;
+
+	Real fontScale = (Real)atof(it->second.str()) / 100.0f;
+	if (fontScale < 0.0f)
+	{
+		fontScale = -1.0f;
+	}
+	return fontScale;
+}
+
 static OptionPreferences *pref = NULL;
 
 static void setDefaults( void )
@@ -1251,6 +1299,14 @@ static void saveOptions( void )
 		TheMouse->setCursorCaptureMode(mode);
 	}
 
+	// TheSuperHackers @todo Add combo box ?
+	{
+		ScreenEdgeScrollMode mode = pref->getScreenEdgeScrollMode();
+		(*pref)["ScreenEdgeScrollEnabledInWindowedApp"] = (mode & ScreenEdgeScrollMode_EnabledInWindowedApp) ? "yes" : "no";
+		(*pref)["ScreenEdgeScrollEnabledInFullscreenApp"] = (mode & ScreenEdgeScrollMode_EnabledInFullscreenApp) ? "yes" : "no";
+		TheLookAtTranslator->setScreenEdgeScrollMode(mode);
+	}
+
 	//-------------------------------------------------------------------------------------------------
 	// scroll speed val
 	val = GadgetSliderGetPosition(sliderScrollSpeed);
@@ -1396,6 +1452,17 @@ static void saveOptions( void )
 		prefString.format("%d", val);
 		(*pref)["GameTimeFontSize"] = prefString;
 		TheInGameUI->refreshGameTimeResources();
+	}
+
+	//-------------------------------------------------------------------------------------------------
+	// Set User Font Scaling Percentage
+	val = pref->getResolutionFontAdjustment() * 100.0f; // TheSuperHackers @todo replace with options input when applicable
+	if (val >= 0 || val == -100)
+	{
+		AsciiString prefString;
+		prefString.format("%d", REAL_TO_INT( val ) );
+		(*pref)["ResolutionFontAdjustment"] = prefString;
+		TheGlobalLanguageData->m_userResolutionFontSizeAdjustment = (Real)val / 100.0f;
 	}
 
 	//-------------------------------------------------------------------------------------------------
@@ -2004,7 +2071,7 @@ void OptionsMenuInit( WindowLayout *layout, void *userData )
 
 	TheWindowManager->winSetModal(parent);
 	ignoreSelected = FALSE;
-}  // end OptionsMenuInit
+}
 
 //-------------------------------------------------------------------------------------------------
 /** options menu shutdown method */
@@ -2028,7 +2095,7 @@ void OptionsMenuShutdown( WindowLayout *layout, void *userData )
 	TheShell->shutdownComplete( layout );
 */
 
-}  // end OptionsMenuShutdown
+}
 
 //-------------------------------------------------------------------------------------------------
 /** options menu update method */
@@ -2036,7 +2103,7 @@ void OptionsMenuShutdown( WindowLayout *layout, void *userData )
 void OptionsMenuUpdate( WindowLayout *layout, void *userData )
 {
 
-}  // end OptionsMenuUpdate
+}
 
 //-------------------------------------------------------------------------------------------------
 /** Options menu input callback */
@@ -2074,22 +2141,22 @@ WindowMsgHandledType OptionsMenuInput( GameWindow *window, UnsignedInt msg,
 						TheWindowManager->winSendSystemMsg( window, GBM_SELECTED,
 																								(WindowMsgData)button, buttonID );
 
-					}  // end if
+					}
 
 					// don't let key fall through anywhere else
 					return MSG_HANDLED;
 
-				}  // end escape
+				}
 
-			}  // end switch( key )
+			}
 
-		}  // end char
+		}
 
-	}  // end switch( msg )
+	}
 
 	return MSG_IGNORED;
 
-}  // end OptionsMenuInput
+}
 
 //-------------------------------------------------------------------------------------------------
 /** options menu window system callback */
@@ -2118,7 +2185,7 @@ WindowMsgHandledType OptionsMenuSystem( GameWindow *window, UnsignedInt msg,
 
 			break;
 
-		}  // end create
+		}
 
 		//---------------------------------------------------------------------------------------------
 		case GWM_DESTROY:
@@ -2126,7 +2193,7 @@ WindowMsgHandledType OptionsMenuSystem( GameWindow *window, UnsignedInt msg,
 
 			break;
 
-		}  // end case
+		}
 
 		// --------------------------------------------------------------------------------------------
 		case GWM_INPUT_FOCUS:
@@ -2138,7 +2205,7 @@ WindowMsgHandledType OptionsMenuSystem( GameWindow *window, UnsignedInt msg,
 
 			return MSG_HANDLED;
 
-		}  // end input
+		}
 
 		//---------------------------------------------------------------------------------------------
 		case GCM_SELECTED:
@@ -2188,7 +2255,7 @@ WindowMsgHandledType OptionsMenuSystem( GameWindow *window, UnsignedInt msg,
 					DestroyOptionsLayout();
 				}
 
-			}  // end if
+			}
 			else if (controlID == buttonAccept )
 			{
 				saveOptions();
@@ -2302,13 +2369,13 @@ WindowMsgHandledType OptionsMenuSystem( GameWindow *window, UnsignedInt msg,
 			}
 			break;
 
-		}  // end selected
+		}
 
 		default:
 			return MSG_IGNORED;
 
-	}  // end switch
+	}
 
 	return MSG_HANDLED;
 
-}  // end OptionsMenuSystem
+}
