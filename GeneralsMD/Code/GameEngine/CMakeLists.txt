@@ -439,6 +439,7 @@ set(GAMEENGINE_SRC
     Include/GameLogic/Module/StatusDamageHelper.h
     Include/GameLogic/Module/StealthDetectorUpdate.h
     Include/GameLogic/Module/StealthUpdate.h
+    Include/GameLogic/Module/EWDamageHelper.h
     Include/GameLogic/Module/StealthUpgrade.h
     Include/GameLogic/Module/StickyBombUpdate.h
     Include/GameLogic/Module/StructureBody.h
@@ -948,6 +949,7 @@ set(GAMEENGINE_SRC
     Source/GameLogic/Object/Helper/ObjectWeaponStatusHelper.cpp
     Source/GameLogic/Object/Helper/StatusDamageHelper.cpp
     Source/GameLogic/Object/Helper/SubdualDamageHelper.cpp
+    Source/GameLogic/Object/Helper/EWDamageHelper.cpp
     Source/GameLogic/Object/Helper/TempWeaponBonusHelper.cpp
     Source/GameLogic/Object/Locomotor.cpp
     Source/GameLogic/Object/Object.cpp

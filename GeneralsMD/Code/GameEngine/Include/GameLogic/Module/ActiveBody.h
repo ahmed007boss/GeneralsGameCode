@@ -58,6 +58,10 @@ public:
 	UnsignedInt m_subdualDamageHealRate;		///< Every this often, we drop subdual damage...
 	Real m_subdualDamageHealAmount;					///< by this much.
 
+	Real m_ewDamageCap;								///< Subdual damage will never accumulate past this
+	UnsignedInt m_ewDamageHealRate;		///< Every this often, we drop subdual damage...
+	Real m_ewDamageHealAmount;					///< by this much.
+
 	ActiveBodyModuleData();
 
 	static void buildFieldParse(MultiIniFieldParse& p);
@@ -84,10 +88,16 @@ public:
 	virtual BodyDamageType getDamageState() const;
 	virtual void setDamageState( BodyDamageType newState );	///< control damage state directly.  Will adjust hitpoints.
 	virtual void setAflame( Bool setting );///< This is a major change like a damage state.
+
 	virtual UnsignedInt getSubdualDamageHealRate() const;
 	virtual Real getSubdualDamageHealAmount() const;
 	virtual Bool hasAnySubdualDamage() const;
 	virtual Real getCurrentSubdualDamageAmount() const { return m_currentSubdualDamage; }
+
+	virtual UnsignedInt getEWDamageHealRate() const;
+	virtual Real getEWDamageHealAmount() const;
+	virtual Bool hasAnyEWDamage() const;
+	virtual Real getCurrentEWDamageAmount() const { return m_currentEWDamage; }
 
 	virtual const DamageInfo *getLastDamageInfo() const { return &m_lastDamageInfo; }	///< return info on last damage dealt to this object
 	virtual UnsignedInt getLastDamageTimestamp() const { return m_lastDamageTimestamp; }	///< return frame of last damage dealt
@@ -128,6 +138,10 @@ public:
 	virtual Bool canBeSubdued() const;
 	virtual void onSubdualChange( Bool isNowSubdued );///< Override this if you want a totally different effect than DISABLED_SUBDUED
 
+	virtual Bool isEWJammed() const;
+	virtual Bool canBeEWJammed() const;
+	virtual void onEWChange( Bool isNowEWJammed );///< Override this if you want a totally different effect than DISABLED_SUBDUED
+
 protected:
 
 	void validateArmorAndDamageFX() const;
@@ -144,6 +158,8 @@ protected:
 
 	virtual void internalAddSubdualDamage( Real delta );								///< change health
 
+	virtual void internalAddEWDamage( Real delta );								///< change health
+
 private:
 
 	Real									m_currentHealth;				///< health of the object
@@ -151,6 +167,7 @@ private:
   Real									m_maxHealth;						///< max health this object can have
   Real									m_initialHealth;				///< starting health for this object
 	Real									m_currentSubdualDamage;	///< Starts at zero and goes up.  Inherited modules will do something when "subdued".
+	Real									m_currentEWDamage;	///< Starts at zero and goes up.  Inherited modules will do something when "subdued".
 
 	BodyDamageType				m_curDamageState;				///< last known damage state
 	UnsignedInt						m_nextDamageFXTime;

@@ -136,7 +136,7 @@ public:
 
 	// UpdateModuleInterface
 	virtual UpdateSleepTime update();
-	virtual DisabledMaskType getDisabledTypesToProcess() const { return MAKE_DISABLED_MASK( DISABLED_HELD ); }
+	virtual DisabledMaskType getDisabledTypesToProcess() const { return MAKE_DISABLED_MASK2( DISABLED_HELD, DISABLED_EW); }
 
 	void stopHealing();
 	void undoUpgrade(); ///<pretend like we have not been activated yet, so we can be reactivated later

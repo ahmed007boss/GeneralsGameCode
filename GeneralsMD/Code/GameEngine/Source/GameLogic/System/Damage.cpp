@@ -80,12 +80,16 @@ const char* DamageTypeFlags::s_bitNameList[] =
 	"MICROWAVE",
 	"KILL_GARRISONED",
 	"STATUS",
-
+	"EW_MISSILE",
+	"EW_VEHICLE",
+	"EW_BUILDING",
+	"EW_UNRESISTABLE",
 	NULL
 };
 
 DamageTypeFlags DAMAGE_TYPE_FLAGS_NONE; 	// inits to all zeroes
 DamageTypeFlags DAMAGE_TYPE_FLAGS_ALL;
+DamageTypeFlags DAMAGE_TYPE_FLAGS_EW;
 
 void initDamageTypeFlags()
 {

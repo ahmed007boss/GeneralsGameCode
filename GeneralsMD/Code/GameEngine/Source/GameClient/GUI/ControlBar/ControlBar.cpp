@@ -119,6 +119,7 @@ const FieldParse CommandButton::s_commandButtonFieldParseTable[] =
 	{ "ButtonBorderType",			INI::parseLookupList,				 CommandButtonMappedBorderTypeNames, offsetof( CommandButton, m_commandButtonBorder ) },
 	{ "RadiusCursorType",			INI::parseIndexList,				 TheRadiusCursorNames, offsetof( CommandButton, m_radiusCursor ) },
 	{ "UnitSpecificSound",		INI::parseAudioEventRTS,		 NULL, offsetof( CommandButton, m_unitSpecificSound ) },
+	{ "RequireElectronics",		INI::parseBool,							 NULL, offsetof( CommandButton, m_isRequireElectronics) },
 	{ "RequiredUpgradeToAppear",				INI::parseUpgradeTemplate,	 NULL, offsetof(CommandButton, m_requiredUpgradeToAppear) },
 	{ "ConflictUpgradeToDisappear",			INI::parseUpgradeTemplate,	 NULL, offsetof(CommandButton, m_conflictUpgradeToDisappear) },
 	{ "RequiredUpgradeToEnable",				INI::parseUpgradeTemplate,	 NULL, offsetof(CommandButton, m_requiredUpgradeToEnable) },
@@ -143,6 +144,7 @@ const FieldParse CommandButton::s_commandButtonFieldParseTable[] =
 	{ "RightClickCtrlShiftButton",		INI::parseAsciiString, NULL, offsetof( CommandButton, m_rightClickCtrlShiftButtonName ) },
 	{ "RightClickAltShiftButton",			INI::parseAsciiString, NULL, offsetof( CommandButton, m_rightClickAltShiftButtonName ) },
 	{ "RightClickCtrlAltShiftButton",	INI::parseAsciiString, NULL, offsetof( CommandButton, m_rightClickCtrlAltShiftButtonName ) },
+
 
 	{ NULL,						NULL,												 NULL, 0 }  // keep this last
 
@@ -678,7 +680,7 @@ CommandButton::CommandButton( void )
 	m_options = 0;
 	m_purchasedLabel.clear();
 	m_textLabel.clear();
-
+	m_isRequireElectronics = false;
 	// End Add
 
 	m_window = NULL;

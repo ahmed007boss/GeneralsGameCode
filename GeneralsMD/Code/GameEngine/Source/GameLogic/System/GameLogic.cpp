@@ -3854,7 +3854,7 @@ void GameLogic::update( void )
 		//Handle disabled statii (and re-enable objects once frame matches)
 		for( Object *obj = m_objList; obj; obj = obj->getNextObject() )
 		{
-			if( obj->isDisabled() )
+			if( obj->isDisabled() || obj->isElectronicallyDisabled())
 			{
 				obj->checkDisabledStatus();
 			}

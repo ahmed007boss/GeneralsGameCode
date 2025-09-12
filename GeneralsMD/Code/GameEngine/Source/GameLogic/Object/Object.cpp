@@ -92,6 +92,7 @@
 #include "GameLogic/Module/StatusDamageHelper.h"
 #include "GameLogic/Module/StickyBombUpdate.h"
 #include "GameLogic/Module/SubdualDamageHelper.h"
+#include "GameLogic/Module/EWDamageHelper.h"
 #include "GameLogic/Module/TempWeaponBonusHelper.h"
 #include "GameLogic/Module/ToppleUpdate.h"
 #include "GameLogic/Module/UpdateModule.h"
@@ -199,6 +200,7 @@ Object::Object( const ThingTemplate *tt, const ObjectStatusMaskType &objectStatu
 	m_statusDamageHelper(NULL),
 	m_tempWeaponBonusHelper(NULL),
 	m_subdualDamageHelper(NULL),
+	m_ewDamageHelper(NULL),
 	m_smcHelper(NULL),
 	m_wsHelper(NULL),
 	m_defectionHelper(NULL),
@@ -345,11 +347,11 @@ Object::Object( const ThingTemplate *tt, const ObjectStatusMaskType &objectStatu
 		m_statusDamageHelper = newInstance(StatusDamageHelper)(this, &statusModuleData);
 		*curB++ = m_statusDamageHelper;
 
-		static const NameKeyType subdualHelperModuleDataTagNameKey = NAMEKEY( "ModuleTag_SubdualDamageHelper" );
-		static SubdualDamageHelperModuleData subdualModuleData;
-		subdualModuleData.setModuleTagNameKey( subdualHelperModuleDataTagNameKey );
-		m_subdualDamageHelper = newInstance(SubdualDamageHelper)(this, &subdualModuleData);
-		*curB++ = m_subdualDamageHelper;
+		static const NameKeyType ewHelperModuleDataTagNameKey = NAMEKEY("ModuleTag_EWDamageHelper");
+		static EWDamageHelperModuleData ewModuleData;
+		ewModuleData.setModuleTagNameKey(ewHelperModuleDataTagNameKey);
+		m_ewDamageHelper = newInstance(EWDamageHelper)(this, &ewModuleData);
+		*curB++ = m_ewDamageHelper;
 	}
 
 	if (TheAI != NULL
@@ -668,6 +670,7 @@ Object::~Object()
 	m_statusDamageHelper = NULL;
 	m_tempWeaponBonusHelper = NULL;
 	m_subdualDamageHelper = NULL;
+	m_ewDamageHelper = NULL;
 	m_smcHelper = NULL;
 	m_wsHelper = NULL;
 	m_defectionHelper = NULL;
@@ -5155,7 +5158,7 @@ Real Object::getShroudClearingRange() const
 //-------------------------------------------------------------------------------------------------
 void Object::setShroudClearingRange( Real newShroudClearingRange )
 {
-	if (getDisabledFlags().test(DISABLED_SUBDUED) && m_shroudClearingSubdualRange >= 0 )
+	if (getDisabledFlags().test(DISABLED_EW) && m_shroudClearingSubdualRange >= 0 )
 	{
 		newShroudClearingRange = m_shroudClearingSubdualRange;
 	}
@@ -5296,7 +5299,33 @@ void Object::notifySubdualDamage( Real amount )
 	}
 	
 }
+//-------------------------------------------------------------------------------------------------
+void Object::notifyEWDamage(Real amount)
+{
+	if (m_ewDamageHelper)
+		m_ewDamageHelper->notifyEWDamage(amount);
 
+	// If we are gaining ew damage, we are slowly tinting
+	if (getDrawable())
+	{
+		if (amount > 0)
+			getDrawable()->setTintStatus(TINT_STATUS_GAINING_EW_DAMAGE);
+		else
+			getDrawable()->clearTintStatus(TINT_STATUS_GAINING_EW_DAMAGE);
+	}
+	if (m_shroudClearingSubdualRange >= 0)
+	{
+		if (getDisabledFlags().test(DISABLED_SUBDUED))
+		{
+			setShroudClearingRange(m_shroudClearingSubdualRange);
+		}
+		else
+		{
+			setShroudClearingRange(m_shroudClearingOriginalRange);
+		}
+	}
+
+}
 //-------------------------------------------------------------------------------------------------
 /** Given a special power template, find the module in the object that can implement it.
 	* There can be at most one */

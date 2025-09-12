@@ -102,7 +102,7 @@ ProductionUpdateModuleData::ProductionUpdateModuleData( void )
 	m_constructionCompleteDuration = 0;
 	m_quantityModifiers.clear();
 	m_maxQueueEntries = 9;
-	m_disabledTypesToProcess = MAKE_DISABLED_MASK(DISABLED_HELD);
+	m_disabledTypesToProcess = MAKE_DISABLED_MASK2(DISABLED_HELD,  DISABLED_EW);
 }
 
 //-------------------------------------------------------------------------------------------------

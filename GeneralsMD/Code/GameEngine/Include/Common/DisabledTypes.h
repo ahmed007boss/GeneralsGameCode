@@ -55,6 +55,7 @@ enum DisabledType CPP_11(: Int)
   DISABLED_AWESTRUCK,
   DISABLED_BRAINWASHED,
 	DISABLED_SUBDUED,			///< Temporarily shut down by Subdual damage
+	DISABLED_EW,			///< Temporarily shut down by Subdual damage
 	//These ones are specificially for scripts to enable/reenable!
 	DISABLED_SCRIPT_DISABLED,
 	DISABLED_SCRIPT_UNDERPOWERED,

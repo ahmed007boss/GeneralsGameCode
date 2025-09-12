@@ -87,7 +87,10 @@ enum DamageType CPP_11(: Int)
 	DAMAGE_MICROWAVE							= 35, ///< Radiation that only affects infantry
 	DAMAGE_KILL_GARRISONED				= 36, ///< Kills Passengers up to the number specified in Damage
 	DAMAGE_STATUS									= 37, ///< Damage that gives a status condition, not that does hitpoint damage
-
+	DAMAGE_EW_MISSILE = 38,	
+	DAMAGE_EW_VEHICLE = 39,
+	DAMAGE_EW_BUILDING = 40,
+	DAMAGE_EW_UNRESISTABLE = 41,
 	// Please note: There is a string array DamageTypeFlags::s_bitNameList[]
 
 	DAMAGE_NUM_TYPES			// keep this last
@@ -129,7 +132,19 @@ inline Bool IsSubdualDamage( DamageType type )
 
 	return FALSE;
 }
+inline Bool IsEWDamage(DamageType type)
+{
+	switch (type)
+	{
+	case DAMAGE_EW_MISSILE:
+	case DAMAGE_EW_VEHICLE:
+	case DAMAGE_EW_BUILDING:
+	case DAMAGE_EW_UNRESISTABLE:
+		return TRUE;
+	}
 
+	return FALSE;
+}
 /// Does this type of damage go to internalChangeHealth?
 inline Bool IsHealthDamagingDamage( DamageType type )
 {
@@ -144,6 +159,11 @@ inline Bool IsHealthDamagingDamage( DamageType type )
 		case DAMAGE_SUBDUAL_UNRESISTABLE:
 		case DAMAGE_KILLPILOT:
 		case DAMAGE_KILL_GARRISONED:
+		case DAMAGE_EW_MISSILE:
+		case DAMAGE_EW_VEHICLE:
+		case DAMAGE_EW_BUILDING:
+		case DAMAGE_EW_UNRESISTABLE:
+			
 			return FALSE;
 	}
 

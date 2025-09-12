@@ -131,6 +131,10 @@ ActiveBodyModuleData::ActiveBodyModuleData()
 	m_subdualDamageCap = 0;
 	m_subdualDamageHealRate = 0;
 	m_subdualDamageHealAmount = 0;
+
+	m_ewDamageCap = 0;
+	m_ewDamageHealRate = 0;
+	m_ewDamageHealAmount = 0;
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -147,6 +151,11 @@ void ActiveBodyModuleData::buildFieldParse(MultiIniFieldParse& p)
 		{ "SubdualDamageCap",					INI::parseReal,									NULL,		offsetof( ActiveBodyModuleData, m_subdualDamageCap ) },
 		{ "SubdualDamageHealRate",		INI::parseDurationUnsignedInt,	NULL,		offsetof( ActiveBodyModuleData, m_subdualDamageHealRate ) },
 		{ "SubdualDamageHealAmount",	INI::parseReal,									NULL,		offsetof( ActiveBodyModuleData, m_subdualDamageHealAmount ) },
+
+		{ "EWDamageCap",				INI::parseReal,									NULL,		offsetof(ActiveBodyModuleData, m_ewDamageCap) },
+		{ "EWDamageHealRate",		INI::parseDurationUnsignedInt,	NULL,		offsetof(ActiveBodyModuleData, m_ewDamageHealRate) },
+		{ "EWDamageHealAmount",	INI::parseReal,									NULL,		offsetof(ActiveBodyModuleData, m_ewDamageHealAmount) },
+
 		{ 0, 0, 0, 0 }
 	};
   p.add(dataFieldParse);
@@ -168,6 +177,7 @@ ActiveBody::ActiveBody( Thing *thing, const ModuleData* moduleData ) :
 	m_lastDamageCleared(false),
 	m_particleSystems(NULL),
 	m_currentSubdualDamage(0),
+	m_currentEWDamage(0),
 	m_indestructible(false)
 {
 	m_currentHealth = getActiveBodyModuleData()->m_initialHealth;
@@ -286,6 +296,10 @@ Real ActiveBody::estimateDamage( DamageInfoInput& damageInfo ) const
 
 	//Subdual damage can't affect you if you can't be subdued
 	if( IsSubdualDamage(damageInfo.m_damageType)  &&  !canBeSubdued() )
+		return 0.0f;
+
+	//ew jamming damage can't affect you if you can't be jammed
+	if (IsEWDamage(damageInfo.m_damageType) && !canBeEWJammed())
 		return 0.0f;
 
 	if( damageInfo.m_damageType == DAMAGE_KILL_GARRISONED )
@@ -504,6 +518,25 @@ void ActiveBody::attemptDamage( DamageInfo *damageInfo )
 		}
 
 		getObject()->notifySubdualDamage(amount);
+	}
+
+	if (IsEWDamage(damageInfo->in.m_damageType))
+	{
+		if (!canBeEWJammed())
+			return;
+
+		Bool wasEWJammed = isEWJammed();
+		internalAddEWDamage(amount);
+		Bool nowEWJammed = isEWJammed();
+		alreadyHandled = TRUE;
+		allowModifier = FALSE;
+
+		if (wasEWJammed != nowEWJammed)
+		{
+			onEWChange(nowEWJammed);
+		}
+
+		getObject()->notifyEWDamage(amount);
 	}
 
 	if (allowModifier)
@@ -1316,6 +1349,62 @@ Bool ActiveBody::isSubdued() const
 	return m_maxHealth <= m_currentSubdualDamage;
 }
 
+
+
+//-------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------
+void ActiveBody::internalAddEWDamage(Real delta)
+{
+	const ActiveBodyModuleData* data = getActiveBodyModuleData();
+
+	m_currentEWDamage += delta;
+	m_currentEWDamage = min(m_currentEWDamage, data->m_ewDamageCap);
+}
+//-------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------
+Bool ActiveBody::canBeEWJammed() const
+{
+	// Any body with subdue listings can be subdued.
+	return getActiveBodyModuleData()->m_ewDamageCap > 0;
+}
+
+//-------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------
+void ActiveBody::onEWChange(Bool isNowSubdued)
+{
+	//if (!getObject()->isKindOf(KINDOF_PROJECTILE))
+	{
+		Object* me = getObject();
+
+		if (isNowSubdued)
+		{
+			me->setDisabled(DISABLED_EW);
+
+		}
+		else
+		{
+			me->clearDisabled(DISABLED_EW);
+
+		}
+	}
+	//else if (isNowSubdued)// There is no coming back from being jammed, and projectiles can't even heal, but this makes it clear.
+	//{
+	//	ProjectileUpdateInterface* pui = getObject()->getProjectileUpdateInterface();
+	//	if (pui)
+	//	{
+	//		pui->projectileNowJammed();
+	//	}
+	//}
+}
+
+//-------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------
+Bool ActiveBody::isEWJammed() const
+{
+	return m_maxHealth <= m_currentEWDamage;
+}
+
+
 //-------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------
 Real ActiveBody::getHealth() const
@@ -1357,7 +1446,25 @@ Bool ActiveBody::hasAnySubdualDamage() const
 {
 	return m_currentSubdualDamage > 0;
 }
+//-------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------
+UnsignedInt ActiveBody::getEWDamageHealRate() const
+{
+	return getActiveBodyModuleData()->m_ewDamageHealRate;
+}
 
+//-------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------
+Real ActiveBody::getEWDamageHealAmount() const
+{
+	return getActiveBodyModuleData()->m_ewDamageHealAmount;
+}
+//-------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------
+Bool ActiveBody::hasAnyEWDamage() const
+{
+	return m_currentEWDamage > 0;
+}
 //-------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------
 Real ActiveBody::getInitialHealth() const
@@ -1543,6 +1650,8 @@ void ActiveBody::xfer( Xfer *xfer )
 	xfer->xferReal( &m_currentHealth );
 
 	xfer->xferReal( &m_currentSubdualDamage );
+
+	xfer->xferReal( &m_currentEWDamage );
 
 	// previous health
 	xfer->xferReal( &m_prevHealth );

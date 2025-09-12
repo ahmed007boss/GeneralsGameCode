@@ -124,7 +124,7 @@ public:
 	virtual UpdateSleepTime update();
 
 	//Still gets called, even if held -ML
-	virtual DisabledMaskType getDisabledTypesToProcess() const { return MAKE_DISABLED_MASK( DISABLED_HELD ); }
+	virtual DisabledMaskType getDisabledTypesToProcess() const { return MAKE_DISABLED_MASK2( DISABLED_HELD, DISABLED_EW); }
 
 	// ??? ugh
 	Bool isDisguised() const { return m_disguiseAsTemplate != NULL; }

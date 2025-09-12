@@ -102,6 +102,7 @@ static const char *TheDrawableIconNames[] =
 	"BombTimed",
 	"BombRemote",
 	"Disabled",
+	"Jammed",
 	"BattlePlanIcon_Bombard",
 	"BattlePlanIcon_HoldTheLine",
 	"BattlePlanIcon_SeekAndDestroy",
@@ -248,6 +249,7 @@ const RGBColor SICKLY_GREEN_POISONED_COLOR	= {-1.0f,  1.0f, -1.0f};
 const RGBColor DARK_GRAY_DISABLED_COLOR			= {-0.5f, -0.5f, -0.5f};
 const RGBColor RED_IRRADIATED_COLOR					= { 1.0f, -1.0f, -1.0f};
 const RGBColor SUBDUAL_DAMAGE_COLOR					= {-0.2f, -0.2f,  0.8f};
+const RGBColor EW_DAMAGE_COLOR							= { -0.7f, -0.5f, -0.1f };
 const RGBColor FRENZY_COLOR									= { 0.2f, -0.2f, -0.2f};
 const RGBColor FRENZY_COLOR_INFANTRY				= { 0.0f, -0.7f, -0.7f};
 const Int MAX_ENABLED_MODULES								= 16;
@@ -293,6 +295,7 @@ const Int MAX_ENABLED_MODULES								= 16;
 	s_animationTemplates[ICON_BOMB_TIMED]				= TheAnim2DCollection->findTemplate(TheDrawableIconNames[ICON_BOMB_TIMED]);
 	s_animationTemplates[ICON_BOMB_REMOTE]			= TheAnim2DCollection->findTemplate(TheDrawableIconNames[ICON_BOMB_REMOTE]);
 	s_animationTemplates[ICON_DISABLED]					= TheAnim2DCollection->findTemplate(TheDrawableIconNames[ICON_DISABLED]);
+	s_animationTemplates[ICON_JAMMED]					= TheAnim2DCollection->findTemplate(TheDrawableIconNames[ICON_JAMMED]);
 	s_animationTemplates[ICON_BATTLEPLAN_BOMBARD]						= TheAnim2DCollection->findTemplate(TheDrawableIconNames[ICON_BATTLEPLAN_BOMBARD]);
 	s_animationTemplates[ICON_BATTLEPLAN_HOLDTHELINE]				= TheAnim2DCollection->findTemplate(TheDrawableIconNames[ICON_BATTLEPLAN_HOLDTHELINE]);
 	s_animationTemplates[ICON_BATTLEPLAN_SEARCHANDDESTROY]	= TheAnim2DCollection->findTemplate(TheDrawableIconNames[ICON_BATTLEPLAN_SEARCHANDDESTROY]);
@@ -1252,22 +1255,28 @@ void Drawable::updateDrawable( void )
 		{
 			if (m_colorTintEnvelope == NULL)
 				m_colorTintEnvelope = newInstance(TintEnvelope);
-			m_colorTintEnvelope->play( &DARK_GRAY_DISABLED_COLOR, 30, 30, SUSTAIN_INDEFINITELY);
+				m_colorTintEnvelope->play( &DARK_GRAY_DISABLED_COLOR, 30, 30, SUSTAIN_INDEFINITELY);
 		}
 		else if( testTintStatus(TINT_STATUS_GAINING_SUBDUAL_DAMAGE) )
 		{
 			// Disabled has precendence, so it goes first
 			if (m_colorTintEnvelope == NULL)
 				m_colorTintEnvelope = newInstance(TintEnvelope);
-			m_colorTintEnvelope->play( &SUBDUAL_DAMAGE_COLOR, 150, 150, SUSTAIN_INDEFINITELY);
+				m_colorTintEnvelope->play( &SUBDUAL_DAMAGE_COLOR, 150, 150, SUSTAIN_INDEFINITELY);
+		}
+		else if (testTintStatus(TINT_STATUS_GAINING_EW_DAMAGE))
+		{
+			// Disabled has precendence, so it goes first
+			if (m_colorTintEnvelope == NULL)
+				m_colorTintEnvelope = newInstance(TintEnvelope);
+				m_colorTintEnvelope->play(&EW_DAMAGE_COLOR, 120, 120, SUSTAIN_INDEFINITELY);
 		}
 		else if( testTintStatus(TINT_STATUS_FRENZY) )
 		{
 			// Disabled has precendence, so it goes first
 			if (m_colorTintEnvelope == NULL)
 				m_colorTintEnvelope = newInstance(TintEnvelope);
-
-      m_colorTintEnvelope->play( isKindOf( KINDOF_INFANTRY) ? &FRENZY_COLOR_INFANTRY:&FRENZY_COLOR, 30, 30, SUSTAIN_INDEFINITELY);
+				m_colorTintEnvelope->play( isKindOf( KINDOF_INFANTRY) ? &FRENZY_COLOR_INFANTRY:&FRENZY_COLOR, 30, 30, SUSTAIN_INDEFINITELY);
 
     }
 //		else if ( testTintStatus( TINT_STATUS_POISONED) )
@@ -2785,6 +2794,7 @@ void Drawable::drawIconUI( void )
 		drawDemoralized( healthBarRegion );
 #endif
 		drawDisabled( healthBarRegion );
+		drawJammed( healthBarRegion );
 
 		drawAmmo( healthBarRegion );
 		drawContained( healthBarRegion );
@@ -3671,6 +3681,59 @@ void Drawable::drawDisabled(const IRegion2D* healthBarRegion)
 	{
 		// delete icon if necessary
 		killIcon(ICON_DISABLED);
+
+	}
+
+}
+
+// ------------------------------------------------------------------------------------------------
+/** Draw any icon information that needs to be drawn */
+// ------------------------------------------------------------------------------------------------
+void Drawable::drawJammed(const IRegion2D* healthBarRegion)
+{
+	
+	const Object* obj = getObject();
+
+
+	//
+	// Disabled Emoticon /Lightning
+	//                   7/
+	if (obj->isDisabledByType(DISABLED_EW)		)		
+	{
+		// create icon if necessary
+		if (getIconInfo()->m_icon[ICON_JAMMED] == NULL)
+		{
+			getIconInfo()->m_icon[ICON_JAMMED] = newInstance(Anim2D)
+				(s_animationTemplates[ICON_JAMMED], TheAnim2DCollection);
+		}
+
+		// draw the icon
+		if (healthBarRegion)
+		{
+			Int barHeight = healthBarRegion->hi.y - healthBarRegion->lo.y;
+
+			Int frameWidth = getIconInfo()->m_icon[ICON_JAMMED]->getCurrentFrameWidth();
+			Int frameHeight = getIconInfo()->m_icon[ICON_JAMMED]->getCurrentFrameHeight();
+
+#ifdef SCALE_ICONS_WITH_ZOOM_ML
+			// adjust the width to be a % of the health bar region size
+			Int barWidth = healthBarRegion->hi.x - healthBarRegion->lo.x;
+			Int size = REAL_TO_INT(barWidth * 0.3f);
+			frameHeight = REAL_TO_INT((INT_TO_REAL(size) / INT_TO_REAL(frameWidth)) * frameHeight);
+			frameWidth = size;
+#endif
+			// given our scaled width and height we need to find the top left point to draw the image at
+			ICoord2D screen;
+			screen.x = healthBarRegion->lo.x;
+			screen.y = healthBarRegion->hi.y - (frameHeight + barHeight);
+			getIconInfo()->m_icon[ICON_JAMMED]->draw(screen.x, screen.y, frameWidth, frameHeight);
+
+		}
+	}
+	else
+	{
+		// delete icon if necessary
+		killIcon(ICON_JAMMED);
 
 	}
 

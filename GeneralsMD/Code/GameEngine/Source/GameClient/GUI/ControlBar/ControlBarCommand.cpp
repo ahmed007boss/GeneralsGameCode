@@ -1063,7 +1063,13 @@ CommandAvailability ControlBar::getCommandAvailability( const CommandButton *com
 
 	//Other disabled objects are unable to use buttons -- so gray them out.
 	Bool disabled = obj->isDisabled();
+	//Other disabled objects are unable to use buttons -- so gray them out.
 
+
+	if ( obj->isElectronicallyDisabled() && command->isRequireElectronics())
+	{
+		return COMMAND_RESTRICTED;
+	}
 	// if we are only disabled by being underpowered, and this button doesn't care, well, fix it
 	if (disabled
 			&& BitIsSet(command->getOptions(), IGNORES_UNDERPOWERED)

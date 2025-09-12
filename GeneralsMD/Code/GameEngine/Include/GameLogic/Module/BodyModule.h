@@ -154,6 +154,12 @@ public:
 	virtual Bool hasAnySubdualDamage() const = 0;
 	virtual Real getCurrentSubdualDamageAmount() const = 0;
 
+	virtual UnsignedInt getEWDamageHealRate() const = 0;
+	virtual Real getEWDamageHealAmount() const = 0;
+	virtual Bool hasAnyEWDamage() const = 0;
+	virtual Real getCurrentEWDamageAmount() const = 0;
+
+
 	virtual BodyDamageType getDamageState() const = 0;
 	virtual void setDamageState( BodyDamageType newState ) = 0;	///< control damage state directly.  Will adjust hitpoints.
 	virtual void setAflame( Bool setting ) = 0;///< This is a major change like a damage state.
@@ -245,6 +251,11 @@ public:
 	virtual Real getSubdualDamageHealAmount() const {return 0.0f;}
 	virtual Bool hasAnySubdualDamage() const{return FALSE;}
 	virtual Real getCurrentSubdualDamageAmount() const { return 0.0f; }
+
+	virtual UnsignedInt getEWDamageHealRate() const { return 0; }
+	virtual Real getEWDamageHealAmount() const { return 0.0f; }
+	virtual Bool hasAnyEWDamage() const { return FALSE; }
+	virtual Real getCurrentEWDamageAmount() const { return 0.0f; }
 
 	virtual Real getInitialHealth() const {return 0.0f;}  // return initial health
 

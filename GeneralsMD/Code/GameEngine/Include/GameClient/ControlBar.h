@@ -343,7 +343,7 @@ public:
 	const AsciiString& getPurchasedLabel() const { return m_purchasedLabel; }
 	const AsciiString& getConflictingLabel() const { return m_conflictingLabel; }
 	const AudioEventRTS* getUnitSpecificSound() const { return &m_unitSpecificSound; }
-
+	const bool isRequireElectronics() const { return m_isRequireElectronics; }
 
 
 	const UpgradeTemplate* getRequiredUpgradeToEnable() const { return  m_requiredUpgradeToEnable;	};
@@ -437,6 +437,7 @@ private:
 	RadiusCursorType							m_radiusCursor;								///< radius cursor, if any
 	AsciiString										m_cursorName;									///< cursor name for placement (NEED_TARGET_POS) or valid version (CONTEXTMODE_COMMAND)
 	AsciiString										m_invalidCursorName;					///< cursor name for invalid version
+	Bool													m_isRequireElectronics;
 
 	// bleah. shouldn't be mutable, but is. sue me. (Kris) -snork!
 	mutable AsciiString										m_textLabel;									///< string manager text label

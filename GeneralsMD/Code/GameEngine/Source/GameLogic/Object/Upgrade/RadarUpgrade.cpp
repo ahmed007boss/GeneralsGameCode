@@ -78,7 +78,7 @@ void RadarUpgrade::onDelete( void )
 		return;
 
 	// If we're currently disabled, we shouldn't do anything, because we've already done it.
-	if ( getObject()->isDisabled() )
+	if ( getObject()->isDisabled() || getObject()->isElectronicallyDisabled())
 		return;
 
 	// remove the radar from the player
@@ -102,7 +102,7 @@ void RadarUpgrade::onCapture( Player *oldOwner, Player *newOwner )
 		return;
 
 	// If we're currently disabled, we shouldn't do anything, because we've already done it.
-	if ( getObject()->isDisabled() )
+	if ( getObject()->isDisabled() || getObject()->isElectronicallyDisabled())
 		return;
 
 	// remove radar from old player and add to new player
