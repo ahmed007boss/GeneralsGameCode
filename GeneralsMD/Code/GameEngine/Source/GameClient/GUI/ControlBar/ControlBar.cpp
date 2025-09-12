@@ -125,6 +125,25 @@ const FieldParse CommandButton::s_commandButtonFieldParseTable[] =
 	{ "ConflictUpgradeToDisable",			  INI::parseUpgradeTemplate,	 NULL, offsetof(CommandButton, m_conflictUpgradeToDisable) },
 	{ "EnablePrerequisites",				CommandButton::parseEnablePrerequisites,	0, 0 },
 	{ "VisiblePrerequisites",				CommandButton::parseVisiblePrerequisites,	0, 0 },
+
+	// Modifier key and click type button name strings
+	{ "LeftClickCtrlButton",					INI::parseAsciiString, NULL, offsetof( CommandButton, m_leftClickCtrlButtonName ) },
+	{ "LeftClickAltButton",						INI::parseAsciiString, NULL, offsetof( CommandButton, m_leftClickAltButtonName ) },
+	{ "LeftClickShiftButton",					INI::parseAsciiString, NULL, offsetof( CommandButton, m_leftClickShiftButtonName ) },
+	{ "LeftClickCtrlAltButton",				INI::parseAsciiString, NULL, offsetof( CommandButton, m_leftClickCtrlAltButtonName ) },
+	{ "LeftClickCtrlShiftButton",			INI::parseAsciiString, NULL, offsetof( CommandButton, m_leftClickCtrlShiftButtonName ) },
+	{ "LeftClickAltShiftButton",			INI::parseAsciiString, NULL, offsetof( CommandButton, m_leftClickAltShiftButtonName ) },
+	{ "LeftClickCtrlAltShiftButton",	INI::parseAsciiString, NULL, offsetof( CommandButton, m_leftClickCtrlAltShiftButtonName ) },
+
+	{ "RightClickButton",							INI::parseAsciiString, NULL, offsetof( CommandButton, m_rightClickButtonName ) },
+	{ "RightClickCtrlButton",					INI::parseAsciiString, NULL, offsetof( CommandButton, m_rightClickCtrlButtonName ) },
+	{ "RightClickAltButton",					INI::parseAsciiString, NULL, offsetof( CommandButton, m_rightClickAltButtonName ) },
+	{ "RightClickShiftButton",				INI::parseAsciiString, NULL, offsetof( CommandButton, m_rightClickShiftButtonName ) },
+	{ "RightClickCtrlAltButton",			INI::parseAsciiString, NULL, offsetof( CommandButton, m_rightClickCtrlAltButtonName ) },
+	{ "RightClickCtrlShiftButton",		INI::parseAsciiString, NULL, offsetof( CommandButton, m_rightClickCtrlShiftButtonName ) },
+	{ "RightClickAltShiftButton",			INI::parseAsciiString, NULL, offsetof( CommandButton, m_rightClickAltShiftButtonName ) },
+	{ "RightClickCtrlAltShiftButton",	INI::parseAsciiString, NULL, offsetof( CommandButton, m_rightClickCtrlAltShiftButtonName ) },
+
 	{ NULL,						NULL,												 NULL, 0 }  // keep this last
 
 };
@@ -668,6 +687,227 @@ CommandButton::CommandButton( void )
 	m_next = NULL;
 	m_radiusCursor = RADIUSCURSOR_NONE;
 
+	// Initialize modifier key button name strings
+	m_leftClickCtrlButtonName.clear();
+	m_leftClickAltButtonName.clear();
+	m_leftClickShiftButtonName.clear();
+	m_leftClickCtrlAltButtonName.clear();
+	m_leftClickCtrlShiftButtonName.clear();
+	m_leftClickAltShiftButtonName.clear();
+	m_leftClickCtrlAltShiftButtonName.clear();
+
+	m_rightClickButtonName.clear();
+	m_rightClickCtrlButtonName.clear();
+	m_rightClickAltButtonName.clear();
+	m_rightClickShiftButtonName.clear();
+	m_rightClickCtrlAltButtonName.clear();
+	m_rightClickCtrlShiftButtonName.clear();
+	m_rightClickAltShiftButtonName.clear();
+	m_rightClickCtrlAltShiftButtonName.clear();
+
+	// Initialize cached button references to NULL
+	m_leftClickCtrlButton = NULL;
+	m_leftClickAltButton = NULL;
+	m_leftClickShiftButton = NULL;
+	m_leftClickCtrlAltButton = NULL;
+	m_leftClickCtrlShiftButton = NULL;
+	m_leftClickAltShiftButton = NULL;
+	m_leftClickCtrlAltShiftButton = NULL;
+
+	m_rightClickButton = NULL;
+	m_rightClickCtrlButton = NULL;
+	m_rightClickAltButton = NULL;
+	m_rightClickShiftButton = NULL;
+	m_rightClickCtrlAltButton = NULL;
+	m_rightClickCtrlShiftButton = NULL;
+	m_rightClickAltShiftButton = NULL;
+	m_rightClickCtrlAltShiftButton = NULL;
+
+}
+
+//-------------------------------------------------------------------------------------------------
+/** Getter functions with caching mechanism for modifier button combinations */
+//-------------------------------------------------------------------------------------------------
+const CommandButton* CommandButton::getLeftClickCtrlButton() const
+{
+	if (!m_leftClickCtrlButton && !m_leftClickCtrlButtonName.isEmpty())
+	{
+		m_leftClickCtrlButton = TheControlBar->findCommandButton(m_leftClickCtrlButtonName);
+	}
+	return m_leftClickCtrlButton;
+}
+
+const CommandButton* CommandButton::getLeftClickAltButton() const
+{
+	if (!m_leftClickAltButton && !m_leftClickAltButtonName.isEmpty())
+	{
+		m_leftClickAltButton = TheControlBar->findCommandButton(m_leftClickAltButtonName);
+	}
+	return m_leftClickAltButton;
+}
+
+const CommandButton* CommandButton::getLeftClickShiftButton() const
+{
+	if (!m_leftClickShiftButton && !m_leftClickShiftButtonName.isEmpty())
+	{
+		m_leftClickShiftButton = TheControlBar->findCommandButton(m_leftClickShiftButtonName);
+	}
+	return m_leftClickShiftButton;
+}
+
+const CommandButton* CommandButton::getLeftClickCtrlAltButton() const
+{
+	if (!m_leftClickCtrlAltButton && !m_leftClickCtrlAltButtonName.isEmpty())
+	{
+		m_leftClickCtrlAltButton = TheControlBar->findCommandButton(m_leftClickCtrlAltButtonName);
+	}
+	return m_leftClickCtrlAltButton;
+}
+
+const CommandButton* CommandButton::getLeftClickCtrlShiftButton() const
+{
+	if (!m_leftClickCtrlShiftButton && !m_leftClickCtrlShiftButtonName.isEmpty())
+	{
+		m_leftClickCtrlShiftButton = TheControlBar->findCommandButton(m_leftClickCtrlShiftButtonName);
+	}
+	return m_leftClickCtrlShiftButton;
+}
+
+const CommandButton* CommandButton::getLeftClickAltShiftButton() const
+{
+	if (!m_leftClickAltShiftButton && !m_leftClickAltShiftButtonName.isEmpty())
+	{
+		m_leftClickAltShiftButton = TheControlBar->findCommandButton(m_leftClickAltShiftButtonName);
+	}
+	return m_leftClickAltShiftButton;
+}
+
+const CommandButton* CommandButton::getLeftClickCtrlAltShiftButton() const
+{
+	if (!m_leftClickCtrlAltShiftButton && !m_leftClickCtrlAltShiftButtonName.isEmpty())
+	{
+		m_leftClickCtrlAltShiftButton = TheControlBar->findCommandButton(m_leftClickCtrlAltShiftButtonName);
+	}
+	return m_leftClickCtrlAltShiftButton;
+}
+
+const CommandButton* CommandButton::getRightClickButton() const
+{
+	if (!m_rightClickButton && !m_rightClickButtonName.isEmpty())
+	{
+		m_rightClickButton = TheControlBar->findCommandButton(m_rightClickButtonName);
+	}
+	return m_rightClickButton;
+}
+
+const CommandButton* CommandButton::getRightClickCtrlButton() const
+{
+	if (!m_rightClickCtrlButton && !m_rightClickCtrlButtonName.isEmpty())
+	{
+		m_rightClickCtrlButton = TheControlBar->findCommandButton(m_rightClickCtrlButtonName);
+	}
+	return m_rightClickCtrlButton;
+}
+
+const CommandButton* CommandButton::getRightClickAltButton() const
+{
+	if (!m_rightClickAltButton && !m_rightClickAltButtonName.isEmpty())
+	{
+		m_rightClickAltButton = TheControlBar->findCommandButton(m_rightClickAltButtonName);
+	}
+	return m_rightClickAltButton;
+}
+
+const CommandButton* CommandButton::getRightClickShiftButton() const
+{
+	if (!m_rightClickShiftButton && !m_rightClickShiftButtonName.isEmpty())
+	{
+		m_rightClickShiftButton = TheControlBar->findCommandButton(m_rightClickShiftButtonName);
+	}
+	return m_rightClickShiftButton;
+}
+
+const CommandButton* CommandButton::getRightClickCtrlAltButton() const
+{
+	if (!m_rightClickCtrlAltButton && !m_rightClickCtrlAltButtonName.isEmpty())
+	{
+		m_rightClickCtrlAltButton = TheControlBar->findCommandButton(m_rightClickCtrlAltButtonName);
+	}
+	return m_rightClickCtrlAltButton;
+}
+
+const CommandButton* CommandButton::getRightClickCtrlShiftButton() const
+{
+	if (!m_rightClickCtrlShiftButton && !m_rightClickCtrlShiftButtonName.isEmpty())
+	{
+		m_rightClickCtrlShiftButton = TheControlBar->findCommandButton(m_rightClickCtrlShiftButtonName);
+	}
+	return m_rightClickCtrlShiftButton;
+}
+
+const CommandButton* CommandButton::getRightClickAltShiftButton() const
+{
+	if (!m_rightClickAltShiftButton && !m_rightClickAltShiftButtonName.isEmpty())
+	{
+		m_rightClickAltShiftButton = TheControlBar->findCommandButton(m_rightClickAltShiftButtonName);
+	}
+	return m_rightClickAltShiftButton;
+}
+
+const CommandButton* CommandButton::getRightClickCtrlAltShiftButton() const
+{
+	if (!m_rightClickCtrlAltShiftButton && !m_rightClickCtrlAltShiftButtonName.isEmpty())
+	{
+		m_rightClickCtrlAltShiftButton = TheControlBar->findCommandButton(m_rightClickCtrlAltShiftButtonName);
+	}
+	return m_rightClickCtrlAltShiftButton;
+}
+
+//-------------------------------------------------------------------------------------------------
+/** Get the appropriate button based on modifier keys and click type */
+//-------------------------------------------------------------------------------------------------
+const CommandButton* CommandButton::getButtonForModifiers(Bool ctrlPressed, Bool altPressed, Bool shiftPressed, Bool isRightClick) const
+{
+	if (isRightClick)
+	{
+		// Right-click combinations
+		if (ctrlPressed && altPressed && shiftPressed)
+			return getRightClickCtrlAltShiftButton();
+		else if (ctrlPressed && altPressed)
+			return getRightClickCtrlAltButton();
+		else if (ctrlPressed && shiftPressed)
+			return getRightClickCtrlShiftButton();
+		else if (altPressed && shiftPressed)
+			return getRightClickAltShiftButton();
+		else if (ctrlPressed)
+			return getRightClickCtrlButton();
+		else if (altPressed)
+			return getRightClickAltButton();
+		else if (shiftPressed)
+			return getRightClickShiftButton();
+		else
+			return getRightClickButton(); 
+	}
+	else
+	{
+		// Left-click combinations
+		if (ctrlPressed && altPressed && shiftPressed)
+			return getLeftClickCtrlAltShiftButton();
+		else if (ctrlPressed && altPressed)
+			return getLeftClickCtrlAltButton();
+		else if (ctrlPressed && shiftPressed)
+			return getLeftClickCtrlShiftButton();
+		else if (altPressed && shiftPressed)
+			return getLeftClickAltShiftButton();
+		else if (ctrlPressed)
+			return getLeftClickCtrlButton();
+		else if (altPressed)
+			return getLeftClickAltButton();
+		else if (shiftPressed)
+			return getLeftClickShiftButton();
+		else
+			return NULL; // No modifier-specific left-click button, use the button itself
+	}
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -1218,6 +1458,13 @@ void ControlBar::init( void )
 				m_commandWindows[ i ]->winGetPosition(&commandPos.x, &commandPos.y);
 				m_commandWindows[ i ]->winGetSize(&commandSize.x, &commandSize.y);
 				m_commandWindows[ i ]->winSetStatus( WIN_STATUS_USE_OVERLAY_STATES );
+				// Enable right-click support for command buttons
+				// TheSuperHackers @rightclick Ahmed Salah 27/06/2025 Enable right-click support for command buttons by setting WIN_STATUS_RIGHT_CLICK on both window and instance data
+				m_commandWindows[ i ]->winSetStatus( WIN_STATUS_RIGHT_CLICK );
+				// Also set it on the instance data since that's what the input handler checks
+				WinInstanceData *instData = m_commandWindows[ i ]->winGetInstanceData();
+				if (instData)
+					instData->m_status |= WIN_STATUS_RIGHT_CLICK;
 			}
 
 	// removed from multiplayer branch
@@ -2196,11 +2443,15 @@ CommandSet *ControlBar::newCommandSetOverride( CommandSet *setToOverride )
 /** Process a button click for the context sensitive GUI */
 //-------------------------------------------------------------------------------------------------
 CBCommandStatus ControlBar::processContextSensitiveButtonClick( GameWindow *button,
-																																GadgetGameMessage gadgetMessage )
+																																GadgetGameMessage gadgetMessage,
+																																Bool ctrlPressed,
+																																Bool altPressed,
+																																Bool shiftPressed,
+																																Bool isRightClick )
 {
 
 	// call command processing method
-	return processCommandUI( button, gadgetMessage );
+	return processCommandUI( button, gadgetMessage, ctrlPressed, altPressed, shiftPressed, isRightClick );
 
 }  // end processContextSensitiveButtonClick
 

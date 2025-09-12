@@ -48,6 +48,7 @@
 #include "GameClient/InGameUI.h"
 #include "GameClient/ControlBar.h"
 #include "GameClient/GameWindowManager.h"
+#include "GameClient/Keyboard.h"
 #include "GameClient/LanguageFilter.h"
 #include "GameClient/CommandXlat.h"
 
@@ -352,6 +353,7 @@ void ToggleQuitMenu(void);
 WindowMsgHandledType ControlBarSystem( GameWindow *window, UnsignedInt msg,
 																			 WindowMsgData mData1, WindowMsgData mData2 )
 {
+
 	static NameKeyType buttonCommunicator = NAMEKEY_INVALID;
 	if(TheScriptEngine && TheScriptEngine->isGameEnding())
 		return MSG_IGNORED;
@@ -450,7 +452,16 @@ WindowMsgHandledType ControlBarSystem( GameWindow *window, UnsignedInt msg,
 				// all buttons from all the context sensitive user interface windows are part of the
 				// control bar, send the button processing that way
 				//
-				TheControlBar->processContextSensitiveButtonClick( control, (GadgetGameMessage)msg );
+
+				// Determine if this is a right-click
+				Bool isRightClick = (msg == GBM_SELECTED_RIGHT);
+				// Check modifier keys using the keyboard system
+				// TheSuperHackers @modifier Ahmed Salah 27/06/2025 Use TheKeyboard system to detect modifier keys instead of relying on mData2
+				Bool ctrlPressed = TheKeyboard->isCtrl();
+				Bool altPressed = TheKeyboard->isAlt();
+				Bool shiftPressed = TheKeyboard->isShift();
+
+				TheControlBar->processContextSensitiveButtonClick( control, (GadgetGameMessage)msg, ctrlPressed, altPressed, shiftPressed, isRightClick );
 			}
 			break;
 

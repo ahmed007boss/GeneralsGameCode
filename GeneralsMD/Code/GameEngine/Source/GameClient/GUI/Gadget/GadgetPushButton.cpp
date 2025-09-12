@@ -276,6 +276,11 @@ WindowMsgHandledType GadgetPushButtonInput( GameWindow *window,
 					// just select as normal
 					BitSet( instData->m_state, WIN_STATE_SELECTED );
 
+					// Send the right-click message immediately for normal buttons
+					// TheSuperHackers @rightclick Ahmed Salah 27/06/2025 Send GBM_SELECTED_RIGHT message immediately on right-click for normal buttons
+					TheWindowManager->winSendSystemMsg( instData->getOwner(), GBM_SELECTED_RIGHT,
+																						(WindowMsgData)window, mData1 );
+
 				}  // end else
 
 			}
@@ -296,15 +301,14 @@ WindowMsgHandledType GadgetPushButtonInput( GameWindow *window,
 
 				//
 				// note check like selected messages aren't sent here ... they are sent
-				// on the down press
+				// on the down press. Normal buttons also send messages on down press now.
 				//
 				if( BitIsSet( instData->getState(), WIN_STATE_SELECTED ) &&
 						BitIsSet( window->winGetStatus(), WIN_STATUS_CHECK_LIKE ) == FALSE )
 				{
 
-					TheWindowManager->winSendSystemMsg( instData->getOwner(), GBM_SELECTED_RIGHT,
-																							(WindowMsgData)window, mData1 );
-
+					// Normal buttons already sent the message on right-down, just clear the state
+					// TheSuperHackers @rightclick Ahmed Salah 27/06/2025 Clear selected state for normal buttons on right-up since message was already sent on right-down
 					BitClear( instData->m_state, WIN_STATE_SELECTED );
 
 				}

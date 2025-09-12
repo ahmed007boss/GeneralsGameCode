@@ -242,6 +242,249 @@ void ControlBar::repopulateBuildTooltipLayout(void)
 	populateBuildTooltipLayout(commandButton);
 }
 
+//-------------------------------------------------------------------------------------------------
+/** Helper function to remove hotkey shortcuts like (&B) from button text */
+//-------------------------------------------------------------------------------------------------
+static UnicodeString removeHotkeyFromText(const UnicodeString& text)
+{
+	// TheSuperHackers @hotkey Ahmed Salah 27/06/2025 Remove hotkey shortcuts like (&B) from button text in tooltips for cleaner display
+	// Convert to wide char string for processing
+	const WideChar* str = text.str();
+	Int len = text.getLength();
+	
+	// Create a new string without the hotkey patterns
+	UnicodeString result;
+	
+	for (Int i = 0; i < len; i++)
+	{
+		// Check if we found the start of a hotkey pattern (&X)
+		if (i + 3 < len && 
+			str[i] == L'(' && str[i + 1] == L'&' && 
+			str[i + 2] >= L'A' && str[i + 2] <= L'Z' && 
+			str[i + 3] == L')')
+		{
+			// Skip the entire (&X) pattern
+			i += 3; // Skip past the closing )
+		}
+		else
+		{
+			// Add this character to the result
+			result.concat(str[i]);
+		}
+	}
+	
+	return result;
+}
+
+//-------------------------------------------------------------------------------------------------
+/** Helper function to generate button alternatives text for tooltips */
+//-------------------------------------------------------------------------------------------------
+// TheSuperHackers @tooltip Ahmed Salah 27/06/2025 Generate tooltip text for alternative modifier-based command buttons with availability checking
+static UnicodeString getButtonAlternativesText(const CommandButton* commandButton, const ControlBar* controlBar)
+{
+	UnicodeString alternativesText = UnicodeString::TheEmptyString;
+	Bool hasAlternatives = false;
+	
+	// Get the current object for availability checking
+	Drawable* draw = TheInGameUI->getFirstSelectedDrawable();
+	Object* selectedObject = draw ? draw->getObject() : NULL;
+	
+	// Helper function to check if an alternative button is available
+	auto isButtonAvailable = [selectedObject, controlBar](const CommandButton* altButton) -> Bool {
+		if (!altButton || !selectedObject || !controlBar) return false;
+		// Check availability using the control bar's getCommandAvailability method
+		CommandAvailability availability = controlBar->getCommandAvailability(altButton, selectedObject, theWindow);
+		return (availability == COMMAND_AVAILABLE);
+	};
+	
+	// Check for right-click alternatives
+	if (commandButton->getRightClickCtrlAltShiftButton() && isButtonAvailable(commandButton->getRightClickCtrlAltShiftButton()))
+	{
+		if (!hasAlternatives)
+		{
+			alternativesText = L"\n\n";
+			hasAlternatives = true;
+		}
+		alternativesText.concat(TheGameText->fetch("TOOLTIP:RightClickCtrlAltShiftTo"));
+		alternativesText.concat(L" ");
+		alternativesText.concat(removeHotkeyFromText(TheGameText->fetch(commandButton->getRightClickCtrlAltShiftButton()->getTextLabel().str())));
+		alternativesText.concat(L"\n");
+	}
+	if (commandButton->getRightClickCtrlAltButton() && isButtonAvailable(commandButton->getRightClickCtrlAltButton()))
+	{
+		if (!hasAlternatives)
+		{
+			alternativesText = L"\n\n";
+			hasAlternatives = true;
+		}
+		alternativesText.concat(TheGameText->fetch("TOOLTIP:RightClickCtrlAltTo"));
+		alternativesText.concat(L" ");
+		alternativesText.concat(removeHotkeyFromText(TheGameText->fetch(commandButton->getRightClickCtrlAltButton()->getTextLabel().str())));
+		alternativesText.concat(L"\n");
+	}
+	if (commandButton->getRightClickCtrlShiftButton() && isButtonAvailable(commandButton->getRightClickCtrlShiftButton()))
+	{
+		if (!hasAlternatives)
+		{
+			alternativesText = L"\n\n";
+			hasAlternatives = true;
+		}
+		alternativesText.concat(TheGameText->fetch("TOOLTIP:RightClickCtrlShiftTo"));
+		alternativesText.concat(L" ");
+		alternativesText.concat(removeHotkeyFromText(TheGameText->fetch(commandButton->getRightClickCtrlShiftButton()->getTextLabel().str())));
+		alternativesText.concat(L"\n");
+	}
+	if (commandButton->getRightClickAltShiftButton() && isButtonAvailable(commandButton->getRightClickAltShiftButton()))
+	{
+		if (!hasAlternatives)
+		{
+			alternativesText = L"\n\n";
+			hasAlternatives = true;
+		}
+		alternativesText.concat(TheGameText->fetch("TOOLTIP:RightClickAltShiftTo"));
+		alternativesText.concat(L" ");
+		alternativesText.concat(removeHotkeyFromText(TheGameText->fetch(commandButton->getRightClickAltShiftButton()->getTextLabel().str())));
+		alternativesText.concat(L"\n");
+	}
+	if (commandButton->getRightClickButton() && isButtonAvailable(commandButton->getRightClickButton()))
+	{
+		if (!hasAlternatives)
+		{
+			alternativesText = L"\n\n";
+			hasAlternatives = true;
+		}
+		alternativesText.concat(TheGameText->fetch("TOOLTIP:RightClickTo"));
+		alternativesText.concat(L" ");
+		alternativesText.concat(removeHotkeyFromText(TheGameText->fetch(commandButton->getRightClickButton()->getTextLabel().str())));
+		alternativesText.concat(L"\n");
+	}
+	if (commandButton->getRightClickCtrlButton() && isButtonAvailable(commandButton->getRightClickCtrlButton()))
+	{
+		if (!hasAlternatives)
+		{
+			alternativesText = L"\n\n";
+			hasAlternatives = true;
+		}
+		alternativesText.concat(TheGameText->fetch("TOOLTIP:RightClickCtrlTo"));
+		alternativesText.concat(L" ");
+		alternativesText.concat(removeHotkeyFromText(TheGameText->fetch(commandButton->getRightClickCtrlButton()->getTextLabel().str())));
+		alternativesText.concat(L"\n");
+	}
+	if (commandButton->getRightClickAltButton() && isButtonAvailable(commandButton->getRightClickAltButton()))
+	{
+		if (!hasAlternatives)
+		{
+			alternativesText = L"\n\n";
+			hasAlternatives = true;
+		}
+		alternativesText.concat(TheGameText->fetch("TOOLTIP:RightClickAltTo"));
+		alternativesText.concat(L" ");
+		alternativesText.concat(removeHotkeyFromText(TheGameText->fetch(commandButton->getRightClickAltButton()->getTextLabel().str())));
+		alternativesText.concat(L"\n");
+	}
+	if (commandButton->getRightClickShiftButton() && isButtonAvailable(commandButton->getRightClickShiftButton()))
+	{
+		if (!hasAlternatives)
+		{
+			alternativesText = L"\n\n";
+			hasAlternatives = true;
+		}
+		alternativesText.concat(TheGameText->fetch("TOOLTIP:RightClickShiftTo"));
+		alternativesText.concat(L" ");
+		alternativesText.concat(removeHotkeyFromText(TheGameText->fetch(commandButton->getRightClickShiftButton()->getTextLabel().str())));
+		alternativesText.concat(L"\n");
+	}
+	
+	// Check for left-click modifier alternatives
+	if (commandButton->getLeftClickCtrlAltShiftButton() && isButtonAvailable(commandButton->getLeftClickCtrlAltShiftButton()))
+	{
+		if (!hasAlternatives)
+		{
+			alternativesText = L"\n\n";
+			hasAlternatives = true;
+		}
+		alternativesText.concat(TheGameText->fetch("TOOLTIP:LeftClickCtrlAltShiftTo"));
+		alternativesText.concat(L" ");
+		alternativesText.concat(removeHotkeyFromText(TheGameText->fetch(commandButton->getLeftClickCtrlAltShiftButton()->getTextLabel().str())));
+		alternativesText.concat(L"\n");
+	}
+	if (commandButton->getLeftClickCtrlAltButton() && isButtonAvailable(commandButton->getLeftClickCtrlAltButton()))
+	{
+		if (!hasAlternatives)
+		{
+			alternativesText = L"\n\n";
+			hasAlternatives = true;
+		}
+		alternativesText.concat(TheGameText->fetch("TOOLTIP:LeftClickCtrlAltTo"));
+		alternativesText.concat(L" ");
+		alternativesText.concat(removeHotkeyFromText(TheGameText->fetch(commandButton->getLeftClickCtrlAltButton()->getTextLabel().str())));
+		alternativesText.concat(L"\n");
+	}
+	if (commandButton->getLeftClickCtrlShiftButton() && isButtonAvailable(commandButton->getLeftClickCtrlShiftButton()))
+	{
+		if (!hasAlternatives)
+		{
+			alternativesText = L"\n\n";
+			hasAlternatives = true;
+		}
+		alternativesText.concat(TheGameText->fetch("TOOLTIP:LeftClickCtrlShiftTo"));
+		alternativesText.concat(L" ");
+		alternativesText.concat(removeHotkeyFromText(TheGameText->fetch(commandButton->getLeftClickCtrlShiftButton()->getTextLabel().str())));
+		alternativesText.concat(L"\n");
+	}
+	if (commandButton->getLeftClickAltShiftButton() && isButtonAvailable(commandButton->getLeftClickAltShiftButton()))
+	{
+		if (!hasAlternatives)
+		{
+			alternativesText = L"\n\n";
+			hasAlternatives = true;
+		}
+		alternativesText.concat(TheGameText->fetch("TOOLTIP:LeftClickAltShiftTo"));
+		alternativesText.concat(L" ");
+		alternativesText.concat(removeHotkeyFromText(TheGameText->fetch(commandButton->getLeftClickAltShiftButton()->getTextLabel().str())));
+		alternativesText.concat(L"\n");
+	}
+	if (commandButton->getLeftClickCtrlButton() && isButtonAvailable(commandButton->getLeftClickCtrlButton()))
+	{
+		if (!hasAlternatives)
+		{
+			alternativesText = L"\n\n";
+			hasAlternatives = true;
+		}
+		alternativesText.concat(TheGameText->fetch("TOOLTIP:LeftClickCtrlTo"));
+		alternativesText.concat(L" ");
+		alternativesText.concat(removeHotkeyFromText(TheGameText->fetch(commandButton->getLeftClickCtrlButton()->getTextLabel().str())));
+		alternativesText.concat(L"\n");
+	}
+	if (commandButton->getLeftClickAltButton() && isButtonAvailable(commandButton->getLeftClickAltButton()))
+	{
+		if (!hasAlternatives)
+		{
+			alternativesText = L"\n\n";
+			hasAlternatives = true;
+		}
+		alternativesText.concat(TheGameText->fetch("TOOLTIP:LeftClickAltTo"));
+		alternativesText.concat(L" ");
+		alternativesText.concat(removeHotkeyFromText(TheGameText->fetch(commandButton->getLeftClickAltButton()->getTextLabel().str())));
+		alternativesText.concat(L"\n");
+	}
+	if (commandButton->getLeftClickShiftButton() && isButtonAvailable(commandButton->getLeftClickShiftButton()))
+	{
+		if (!hasAlternatives)
+		{
+			alternativesText = L"\n\n";
+			hasAlternatives = true;
+		}
+		alternativesText.concat(TheGameText->fetch("TOOLTIP:LeftClickShiftTo"));
+		alternativesText.concat(L" ");
+		alternativesText.concat(removeHotkeyFromText(TheGameText->fetch(commandButton->getLeftClickShiftButton()->getTextLabel().str())));
+		alternativesText.concat(L"\n");
+	}
+	
+	return alternativesText;
+}
+
+//-------------------------------------------------------------------------------------------------
 void ControlBar::populateBuildTooltipLayout(const CommandButton* commandButton, GameWindow* tooltipWin)
 {
 	if (!m_buildToolTipLayout)
@@ -616,6 +859,15 @@ void ControlBar::populateBuildTooltipLayout(const CommandButton* commandButton, 
 			}
 			
 		}
+
+		// Add button alternatives for right-click and modifier key combinations
+		// TheSuperHackers @tooltip Ahmed Salah 27/06/2025 Append alternative command button descriptions to tooltip text
+		UnicodeString alternativesText = getButtonAlternativesText(commandButton, this);
+		if (!alternativesText.isEmpty())
+		{
+			descrip.concat(alternativesText);
+		}
+
 		if (!requiresFormat.isEmpty())
 		{
 			UnicodeString requireFormat = TheGameText->fetch("CONTROLBAR:Requirements");

@@ -148,7 +148,15 @@ WindowMsgHandledType GeneralsExpPointsSystem( GameWindow *window, UnsignedInt ms
 				TheControlBar->hidePurchaseScience();
 			}
 			else
-				TheControlBar->processContextSensitiveButtonClick( control, (GadgetGameMessage)msg );
+			{
+				// Check modifier keys
+				Bool ctrlPressed = BitIsSet(mData2, KEY_STATE_CONTROL);
+				Bool altPressed = BitIsSet(mData2, KEY_STATE_ALT);
+				Bool shiftPressed = BitIsSet(mData2, KEY_STATE_SHIFT);
+				Bool isRightClick = FALSE; // GBM_SELECTED is always left-click
+				
+				TheControlBar->processContextSensitiveButtonClick( control, (GadgetGameMessage)msg, ctrlPressed, altPressed, shiftPressed, isRightClick );
+			}
 			break;
 
 		}  // end button selected

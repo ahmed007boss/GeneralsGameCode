@@ -368,6 +368,27 @@ public:
 	const Image* getButtonImage() const { return m_buttonImage;	}
 	void cacheButtonImage();
 
+	// Modifier key and click type button reference getters (with caching)
+	const CommandButton* getLeftClickCtrlButton() const;
+	const CommandButton* getLeftClickAltButton() const;
+	const CommandButton* getLeftClickShiftButton() const;
+	const CommandButton* getLeftClickCtrlAltButton() const;
+	const CommandButton* getLeftClickCtrlShiftButton() const;
+	const CommandButton* getLeftClickAltShiftButton() const;
+	const CommandButton* getLeftClickCtrlAltShiftButton() const;
+
+	const CommandButton* getRightClickButton() const;
+	const CommandButton* getRightClickCtrlButton() const;
+	const CommandButton* getRightClickAltButton() const;
+	const CommandButton* getRightClickShiftButton() const;
+	const CommandButton* getRightClickCtrlAltButton() const;
+	const CommandButton* getRightClickCtrlShiftButton() const;
+	const CommandButton* getRightClickAltShiftButton() const;
+	const CommandButton* getRightClickCtrlAltShiftButton() const;
+
+	// Get the appropriate button based on modifier keys and click type
+	const CommandButton* getButtonForModifiers(Bool ctrlPressed, Bool altPressed, Bool shiftPressed, Bool isRightClick) const;
+
 	GameWindow* getWindow() const { return m_window;	}
 	Int getFlashCount() const { return m_flashCount; }
 
@@ -435,6 +456,44 @@ private:
 	mutable const Image*					m_buttonImage;								///< button image
 	// bleah. shouldn't be mutable, but is. sue me. (srj)
 	mutable Int										m_flashCount;                 ///< the number of times a cameo is supposed to flash
+
+	// Modifier key and click type button name strings (for INI parsing)
+	// Left-click combinations
+	AsciiString							m_leftClickCtrlButtonName;					///< name for Ctrl+left-click button
+	AsciiString							m_leftClickAltButtonName;					///< name for Alt+left-click button
+	AsciiString							m_leftClickShiftButtonName;					///< name for Shift+left-click button
+	AsciiString							m_leftClickCtrlAltButtonName;				///< name for Ctrl+Alt+left-click button
+	AsciiString							m_leftClickCtrlShiftButtonName;				///< name for Ctrl+Shift+left-click button
+	AsciiString							m_leftClickAltShiftButtonName;				///< name for Alt+Shift+left-click button
+	AsciiString							m_leftClickCtrlAltShiftButtonName;			///< name for Ctrl+Alt+Shift+left-click button
+
+	// Right-click combinations
+	AsciiString							m_rightClickButtonName;						///< name for right-click button
+	AsciiString							m_rightClickCtrlButtonName;					///< name for Ctrl+right-click button
+	AsciiString							m_rightClickAltButtonName;					///< name for Alt+right-click button
+	AsciiString							m_rightClickShiftButtonName;				///< name for Shift+right-click button
+	AsciiString							m_rightClickCtrlAltButtonName;				///< name for Ctrl+Alt+right-click button
+	AsciiString							m_rightClickCtrlShiftButtonName;			///< name for Ctrl+Shift+right-click button
+	AsciiString							m_rightClickAltShiftButtonName;				///< name for Alt+Shift+right-click button
+	AsciiString							m_rightClickCtrlAltShiftButtonName;		///< name for Ctrl+Alt+Shift+right-click button
+
+	// Cached button references (assigned once when first accessed)
+	mutable const CommandButton*			m_leftClickCtrlButton;						///< cached button for Ctrl+left-click
+	mutable const CommandButton*			m_leftClickAltButton;						///< cached button for Alt+left-click
+	mutable const CommandButton*			m_leftClickShiftButton;						///< cached button for Shift+left-click
+	mutable const CommandButton*			m_leftClickCtrlAltButton;					///< cached button for Ctrl+Alt+left-click
+	mutable const CommandButton*			m_leftClickCtrlShiftButton;					///< cached button for Ctrl+Shift+left-click
+	mutable const CommandButton*			m_leftClickAltShiftButton;					///< cached button for Alt+Shift+left-click
+	mutable const CommandButton*			m_leftClickCtrlAltShiftButton;				///< cached button for Ctrl+Alt+Shift+left-click
+
+	mutable const CommandButton*			m_rightClickButton;							///< cached button for right-click
+	mutable const CommandButton*			m_rightClickCtrlButton;						///< cached button for Ctrl+right-click
+	mutable const CommandButton*			m_rightClickAltButton;						///< cached button for Alt+right-click
+	mutable const CommandButton*			m_rightClickShiftButton;					///< cached button for Shift+right-click
+	mutable const CommandButton*			m_rightClickCtrlAltButton;					///< cached button for Ctrl+Alt+right-click
+	mutable const CommandButton*			m_rightClickCtrlShiftButton;				///< cached button for Ctrl+Shift+right-click
+	mutable const CommandButton*			m_rightClickAltShiftButton;					///< cached button for Alt+Shift+right-click
+	mutable const CommandButton*			m_rightClickCtrlAltShiftButton;			///< cached button for Ctrl+Alt+Shift+right-click
 
 };
 
@@ -714,7 +773,11 @@ public:
 	/** if this button is part of the context sensitive command system, process a button click
 	the gadgetMessage is either a GBM_SELECTED or GBM_SELECTED_RIGHT */
 	CBCommandStatus processContextSensitiveButtonClick( GameWindow *button,
-																											GadgetGameMessage gadgetMessage );
+																											GadgetGameMessage gadgetMessage,
+																											Bool ctrlPressed ,
+																											Bool altPressed ,
+																											Bool shiftPressed ,
+																											Bool isRightClick );
 
 	/** if this button is part of the context sensitive command system, process the Transition
 	gadgetMessage is either a GBM_MOUSE_LEAVING or GBM_MOUSE_ENTERING */
@@ -725,6 +788,7 @@ public:
 	/// is the drawable the currently selected drawable for the context sensitive UI?
 	Bool isDrivingContextUI( Drawable *draw ) const { return draw == m_currentSelectedDrawable; }
 
+	CommandAvailability getCommandAvailability(const CommandButton* command, Object* obj, GameWindow* win, GameWindow* applyToWin = NULL, Bool forceDisabledEvaluation = FALSE) const;
 	//-----------------------------------------------------------------------------------------------
 	// the remaining methods are used to construct the command buttons and command sets for
 	// the command bar
@@ -888,7 +952,7 @@ protected:
 	static void populateInvDataCallback( Object *obj, void *userData );
 
 	// the following methods are for updating the currently showing context
-	CommandAvailability getCommandAvailability( const CommandButton *command, Object *obj, GameWindow *win, GameWindow *applyToWin = NULL, Bool forceDisabledEvaluation = FALSE ) const;
+	
 	void updateContextMultiSelect( void );
 	void updateContextPurchaseScience( void );
 	void updateContextCommand( void );
@@ -906,7 +970,7 @@ protected:
 	static const Image* calculateVeterancyOverlayForObject( const Object *obj );
 
 	// the following methods do command processing for GUI selections
-	CBCommandStatus processCommandUI( GameWindow *control, GadgetGameMessage gadgetMessage );
+	CBCommandStatus processCommandUI( GameWindow *control, GadgetGameMessage gadgetMessage, Bool ctrlPressed = FALSE, Bool altPressed = FALSE, Bool shiftPressed = FALSE, Bool isRightClick = FALSE );
 	CBCommandStatus processCommandTransitionUI( GameWindow *control, GadgetGameMessage gadgetMessage );
 
 	// methods to help out with each context

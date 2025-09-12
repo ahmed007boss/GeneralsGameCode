@@ -119,26 +119,60 @@ CBCommandStatus ControlBar::processCommandTransitionUI( GameWindow *control, Gad
 
 //-------------------------------------------------------------------------------------------------
 /** Process a button selected message from the window system that should be for one of
-	* our GUI commands */
+	* our GUI commands */ 
 //-------------------------------------------------------------------------------------------------
 CBCommandStatus ControlBar::processCommandUI( GameWindow *control,
-																							GadgetGameMessage gadgetMessage )
+																							GadgetGameMessage gadgetMessage,
+																							Bool ctrlPressed,
+																							Bool altPressed,
+																							Bool shiftPressed,
+																							Bool isRightClick )
 {
 	// get the command pointer from the control user data we put in the button
-	const CommandButton *commandButton = (const CommandButton *)GadgetButtonGetData(control);
-	if( !commandButton )
+	const CommandButton *orgCommandButton = (const CommandButton *)GadgetButtonGetData(control);
+	if( !orgCommandButton)
 	{
 		DEBUG_CRASH( ("ControlBar::processCommandUI() -- Button activated has no data. Ignoring...") );
 		return CBC_COMMAND_NOT_USED;
 	}
 
+
+	// Check if there's a specific button for this modifier combination
+	// TheSuperHackers @modifier Ahmed Salah 27/06/2025 Use temporary variable to handle const reassignment for modifier-based command buttons
+	const CommandButton* actualCommandButton = orgCommandButton;
+	if (ctrlPressed || altPressed || shiftPressed || isRightClick)
+	{
+		const CommandButton* modifierButton = actualCommandButton->getButtonForModifiers(ctrlPressed, altPressed, shiftPressed, isRightClick);
+		if (modifierButton)
+		{
+			auto obj = m_currentSelectedDrawable->getObject();
+			CommandAvailability availability = getCommandAvailability(modifierButton, obj, control);
+			if (availability == COMMAND_AVAILABLE)
+			{
+				// Use the modifier-specific button instead of the original button
+				actualCommandButton = modifierButton;
+			}
+			else
+			{
+				return CBC_COMMAND_NOT_USED;
+			}
+		}
+		else
+			if (isRightClick)
+			{
+				return CBC_COMMAND_NOT_USED;
+			}		
+		}
+	
+	
+
 	// sanity, we won't process messages if we have no source object,
 	// unless we're CB_CONTEXT_PURCHASE_SCIENCE or GUI_COMMAND_SPECIAL_POWER_FROM_SHORTCUT
 	if( m_currContext != CB_CONTEXT_MULTI_SELECT &&
-			commandButton->getCommandType() != GUI_COMMAND_PURCHASE_SCIENCE &&
-			commandButton->getCommandType() != GUI_COMMAND_SPECIAL_POWER_FROM_SHORTCUT &&
-			commandButton->getCommandType() != GUI_COMMAND_SPECIAL_POWER_CONSTRUCT_FROM_SHORTCUT &&
-			commandButton->getCommandType() != GUI_COMMAND_SELECT_ALL_UNITS_OF_TYPE &&
+			actualCommandButton->getCommandType() != GUI_COMMAND_PURCHASE_SCIENCE &&
+			actualCommandButton->getCommandType() != GUI_COMMAND_SPECIAL_POWER_FROM_SHORTCUT &&
+			actualCommandButton->getCommandType() != GUI_COMMAND_SPECIAL_POWER_CONSTRUCT_FROM_SHORTCUT &&
+			actualCommandButton->getCommandType() != GUI_COMMAND_SELECT_ALL_UNITS_OF_TYPE &&
 			(m_currentSelectedDrawable == NULL || m_currentSelectedDrawable->getObject() == NULL) )
 	{
 
@@ -157,16 +191,17 @@ CBCommandStatus ControlBar::processCommandUI( GameWindow *control,
 		return CBC_COMMAND_NOT_USED;
 
 
-	if( commandButton == NULL )
+	if( actualCommandButton == NULL )
 		return CBC_COMMAND_NOT_USED;
 
 	// if the button is flashing, tell it to stop flashing
-	commandButton->setFlashCount(0);
+	actualCommandButton->setFlashCount(0);
 	TheControlBar->setFlash( FALSE );
 
-	if( commandButton->getCommandType() != GUI_COMMAND_EXIT_CONTAINER )
+	if( actualCommandButton->getCommandType() != GUI_COMMAND_EXIT_CONTAINER )
 	{
-		GadgetButtonSetEnabledImage( control, commandButton->getButtonImage() );
+		// TheSuperHackers @ui Ahmed Salah 27/06/2025 Use original button image for UI display while processing modifier-based command
+		GadgetButtonSetEnabledImage( control, orgCommandButton->getButtonImage() );
 	}
 
 	//
@@ -175,15 +210,15 @@ CBCommandStatus ControlBar::processCommandUI( GameWindow *control,
 	//
 	Object *obj = NULL;
 	if( m_currContext != CB_CONTEXT_MULTI_SELECT &&
-			commandButton->getCommandType() != GUI_COMMAND_PURCHASE_SCIENCE &&
-			commandButton->getCommandType() != GUI_COMMAND_SPECIAL_POWER_FROM_SHORTCUT &&
-			commandButton->getCommandType() != GUI_COMMAND_SPECIAL_POWER_CONSTRUCT_FROM_SHORTCUT &&
-			commandButton->getCommandType() != GUI_COMMAND_SELECT_ALL_UNITS_OF_TYPE )
+			actualCommandButton->getCommandType() != GUI_COMMAND_PURCHASE_SCIENCE &&
+			actualCommandButton->getCommandType() != GUI_COMMAND_SPECIAL_POWER_FROM_SHORTCUT &&
+			actualCommandButton->getCommandType() != GUI_COMMAND_SPECIAL_POWER_CONSTRUCT_FROM_SHORTCUT &&
+			actualCommandButton->getCommandType() != GUI_COMMAND_SELECT_ALL_UNITS_OF_TYPE )
 		obj = m_currentSelectedDrawable->getObject();
 
 	//@todo Kris -- Special case code so convoy trucks can detonate nuke trucks -- if other things need this,
 	//rethink it.
-	if( obj && BitIsSet( commandButton->getOptions(), SINGLE_USE_COMMAND ) )
+	if( obj && BitIsSet( actualCommandButton->getOptions(), SINGLE_USE_COMMAND ) )
 	{
 		/** @todo Added obj check because Single Use and Multi Select crash when used together, but with this check
 			* they just won't work.  When the "rethinking" occurs, this can get fixed.  Right now it is unused.
@@ -203,14 +238,14 @@ CBCommandStatus ControlBar::processCommandUI( GameWindow *control,
 	Player *player = ThePlayerList->getLocalPlayer();
 	if( player )
 	{
-		AudioEventRTS sound = *commandButton->getUnitSpecificSound();
+		AudioEventRTS sound = *actualCommandButton->getUnitSpecificSound();
 		sound.setPlayerIndex( player->getPlayerIndex() );
 		TheAudio->addAudioEvent( &sound );
 	}
 
-	if( BitIsSet( commandButton->getOptions(), COMMAND_OPTION_NEED_TARGET ) )
+	if( BitIsSet( actualCommandButton->getOptions(), COMMAND_OPTION_NEED_TARGET ) )
 	{
-		if (commandButton->getOptions() & USES_MINE_CLEARING_WEAPONSET)
+		if (actualCommandButton->getOptions() & USES_MINE_CLEARING_WEAPONSET)
 		{
 			TheMessageStream->appendMessage( GameMessage::MSG_SET_MINE_CLEARING_DETAIL );
 		}
@@ -225,9 +260,9 @@ CBCommandStatus ControlBar::processCommandUI( GameWindow *control,
 		//with. For example, the terrorist can jack a car and convert it into a carbomb, but he has to
 		//click on a valid car. In this case the doCommandOrHint code will determine if the mode is valid
 		//or not and the cursor modes will be set appropriately.
-		TheInGameUI->setGUICommand( commandButton );
+		TheInGameUI->setGUICommand( actualCommandButton );
 	}
-	else switch( commandButton->getCommandType() )
+	else switch( actualCommandButton->getCommandType() )
 	{
 
 		//---------------------------------------------------------------------------------------------
@@ -241,7 +276,7 @@ CBCommandStatus ControlBar::processCommandUI( GameWindow *control,
 			//Kris: September 27, 2002
 			//Make sure we have enough CASH to build it WHEN we click the button to build it,
 			//before actually previewing the purchase, otherwise, cancel altogether.
-			const ThingTemplate *whatToBuild = commandButton->getThingTemplate();
+			const ThingTemplate *whatToBuild = actualCommandButton->getThingTemplate();
 			CanMakeType cmt = TheBuildAssistant->canMakeUnit( obj, whatToBuild );
 			if (cmt == CANMAKE_NO_MONEY)
 			{
@@ -266,7 +301,7 @@ CBCommandStatus ControlBar::processCommandUI( GameWindow *control,
 			}
 
 			// tell the UI that we want to build something so we get a building at the cursor
-			TheInGameUI->placeBuildAvailable( commandButton->getThingTemplate(), m_currentSelectedDrawable );
+			TheInGameUI->placeBuildAvailable( actualCommandButton->getThingTemplate(), m_currentSelectedDrawable );
 
 			break;
 
@@ -276,14 +311,14 @@ CBCommandStatus ControlBar::processCommandUI( GameWindow *control,
 		case GUI_COMMAND_SPECIAL_POWER_CONSTRUCT_FROM_SHORTCUT:
 		{
 			//Determine the object that would construct it.
-			const SpecialPowerTemplate *spTemplate = commandButton->getSpecialPowerTemplate();
+			const SpecialPowerTemplate *spTemplate = actualCommandButton->getSpecialPowerTemplate();
 			SpecialPowerType spType = spTemplate->getSpecialPowerType();
 			Object* obj = ThePlayerList->getLocalPlayer()->findMostReadyShortcutSpecialPowerOfType( spType );
 			if( !obj )
 				break;
 			Drawable *draw = obj->getDrawable();
 
-			const ThingTemplate *whatToBuild = commandButton->getThingTemplate();
+			const ThingTemplate *whatToBuild = actualCommandButton->getThingTemplate();
 
 			CanMakeType cmt = TheBuildAssistant->canMakeUnit( obj, whatToBuild );
 			if (cmt == CANMAKE_NO_MONEY)
@@ -309,12 +344,12 @@ CBCommandStatus ControlBar::processCommandUI( GameWindow *control,
 			}
 
 			// tell the UI that we want to build something so we get a building at the cursor
-			TheInGameUI->placeBuildAvailable( commandButton->getThingTemplate(), draw );
+			TheInGameUI->placeBuildAvailable( actualCommandButton->getThingTemplate(), draw );
 
 			ProductionUpdateInterface* pu = obj->getProductionUpdateInterface();
 			if( pu )
 			{
-				pu->setSpecialPowerConstructionCommandButton( commandButton );
+				pu->setSpecialPowerConstructionCommandButton( actualCommandButton );
 			}
 
 			break;
@@ -325,7 +360,7 @@ CBCommandStatus ControlBar::processCommandUI( GameWindow *control,
 			if( m_currentSelectedDrawable == NULL )
 				break;
 
-			const ThingTemplate *whatToBuild = commandButton->getThingTemplate();
+			const ThingTemplate *whatToBuild = actualCommandButton->getThingTemplate();
 
 			CanMakeType cmt = TheBuildAssistant->canMakeUnit( obj, whatToBuild );
 			if (cmt == CANMAKE_NO_MONEY)
@@ -351,12 +386,12 @@ CBCommandStatus ControlBar::processCommandUI( GameWindow *control,
 			}
 
 			// tell the UI that we want to build something so we get a building at the cursor
-			TheInGameUI->placeBuildAvailable( commandButton->getThingTemplate(), m_currentSelectedDrawable );
+			TheInGameUI->placeBuildAvailable( actualCommandButton->getThingTemplate(), m_currentSelectedDrawable );
 
 			ProductionUpdateInterface* pu = obj->getProductionUpdateInterface();
 			if( pu )
 			{
-				pu->setSpecialPowerConstructionCommandButton( commandButton );
+				pu->setSpecialPowerConstructionCommandButton( actualCommandButton );
 			}
 
 			break;
@@ -389,7 +424,7 @@ CBCommandStatus ControlBar::processCommandUI( GameWindow *control,
 		case GUI_COMMAND_UNIT_BUILD:
 		{
 			//
-			const ThingTemplate *whatToBuild = commandButton->getThingTemplate();
+			const ThingTemplate *whatToBuild = actualCommandButton->getThingTemplate();
 
 			// get the "factory" object that is going to make the thing
 			Object *factory = obj;
@@ -398,7 +433,7 @@ CBCommandStatus ControlBar::processCommandUI( GameWindow *control,
 
 			// sanity, we must have something to build
 			DEBUG_ASSERTCRASH( whatToBuild, ("Undefined BUILD command for object '%s'",
-												 commandButton->getThingTemplate()->getName().str()) );
+												 actualCommandButton->getThingTemplate()->getName().str()) );
 
 			CanMakeType cmt = TheBuildAssistant->canMakeUnit(factory, whatToBuild);
 
@@ -504,7 +539,7 @@ CBCommandStatus ControlBar::processCommandUI( GameWindow *control,
 		//---------------------------------------------------------------------------------------------
 		case GUI_COMMAND_PLAYER_UPGRADE:
 		{
-			const UpgradeTemplate *upgradeT = commandButton->getUpgradeTemplate();
+			const UpgradeTemplate *upgradeT = actualCommandButton->getUpgradeTemplate();
 			DEBUG_ASSERTCRASH( upgradeT, ("Undefined upgrade '%s' in player upgrade command", "UNKNOWN") );
 
 			// sanity
@@ -540,7 +575,7 @@ CBCommandStatus ControlBar::processCommandUI( GameWindow *control,
 		//---------------------------------------------------------------------------------------------
 		case GUI_COMMAND_OBJECT_UPGRADE:
 		{
-			const UpgradeTemplate *upgradeT = commandButton->getUpgradeTemplate();
+			const UpgradeTemplate *upgradeT = actualCommandButton->getUpgradeTemplate();
 			DEBUG_ASSERTCRASH( upgradeT, ("Undefined upgrade '%s' in object upgrade command", "UNKNOWN") );
 			// sanity
 			if( upgradeT == NULL )
@@ -644,7 +679,7 @@ CBCommandStatus ControlBar::processCommandUI( GameWindow *control,
 				break;
 			}
 
-			const ThingTemplate *thing = commandButton->getThingTemplate();
+			const ThingTemplate *thing = actualCommandButton->getThingTemplate();
 			if( !thing )
 			{
 				break;
@@ -729,7 +764,7 @@ CBCommandStatus ControlBar::processCommandUI( GameWindow *control,
 			// Cancel GUI command mode.
 			TheInGameUI->setGUICommand( NULL );
 
-			if (BitIsSet(commandButton->getOptions(), NEED_TARGET_POS) == FALSE) {
+			if (BitIsSet(actualCommandButton->getOptions(), NEED_TARGET_POS) == FALSE) {
 				pickAndPlayUnitVoiceResponse( TheInGameUI->getAllSelectedDrawables(), GameMessage::MSG_EVACUATE );
 				TheMessageStream->appendMessage( GameMessage::MSG_EVACUATE );
 			}
@@ -815,11 +850,11 @@ CBCommandStatus ControlBar::processCommandUI( GameWindow *control,
 
 				//Play mode change acknowledgement
 				PickAndPlayInfo info;
-				WeaponSlotType slot = commandButton->getWeaponSlot();
+				WeaponSlotType slot = actualCommandButton->getWeaponSlot();
 				info.m_weaponSlot = &slot;
 				pickAndPlayUnitVoiceResponse( TheInGameUI->getAllSelectedDrawables(), GameMessage::MSG_SWITCH_WEAPONS, &info );
 
-				msg->appendIntegerArgument( commandButton->getWeaponSlot() );
+				msg->appendIntegerArgument( actualCommandButton->getWeaponSlot() );
 				break;
 		}
 
@@ -828,8 +863,8 @@ CBCommandStatus ControlBar::processCommandUI( GameWindow *control,
 		{
 			// command needs no additional data, send the message
 			GameMessage *msg = TheMessageStream->appendMessage( GameMessage::MSG_DO_WEAPON );
-			msg->appendIntegerArgument( commandButton->getWeaponSlot() );
-			msg->appendIntegerArgument( commandButton->getMaxShotsToFire() );
+			msg->appendIntegerArgument( actualCommandButton->getWeaponSlot() );
+			msg->appendIntegerArgument( actualCommandButton->getMaxShotsToFire() );
 
 			break;
 
@@ -838,7 +873,7 @@ CBCommandStatus ControlBar::processCommandUI( GameWindow *control,
 		//---------------------------------------------------------------------------------------------
 		case GUI_COMMAND_SPECIAL_POWER_FROM_SHORTCUT:
 		{
-			const SpecialPowerTemplate *spTemplate = commandButton->getSpecialPowerTemplate();
+			const SpecialPowerTemplate *spTemplate = actualCommandButton->getSpecialPowerTemplate();
 			SpecialPowerType spType = spTemplate->getSpecialPowerType();
 
 			Object* obj = ThePlayerList->getLocalPlayer()->findMostReadyShortcutSpecialPowerOfType( spType );
@@ -848,7 +883,7 @@ CBCommandStatus ControlBar::processCommandUI( GameWindow *control,
 			// command needs no additional data, send the message
 			GameMessage *msg = TheMessageStream->appendMessage( GameMessage::MSG_DO_SPECIAL_POWER );
 			msg->appendIntegerArgument( spTemplate->getID() );
-			msg->appendIntegerArgument( commandButton->getOptions() );
+			msg->appendIntegerArgument( actualCommandButton->getOptions() );
 			msg->appendObjectIDArgument( obj->getID() );
 			break;
 
@@ -858,8 +893,8 @@ CBCommandStatus ControlBar::processCommandUI( GameWindow *control,
 		{
 			// command needs no additional data, send the message
 			GameMessage *msg = TheMessageStream->appendMessage( GameMessage::MSG_DO_SPECIAL_POWER );
-			msg->appendIntegerArgument( commandButton->getSpecialPowerTemplate()->getID() );
-			msg->appendIntegerArgument( commandButton->getOptions() );
+			msg->appendIntegerArgument( actualCommandButton->getSpecialPowerTemplate()->getID() );
+			msg->appendIntegerArgument( actualCommandButton->getOptions() );
 			msg->appendObjectIDArgument( INVALID_ID );	// no specific source
 			break;
 
@@ -873,9 +908,9 @@ CBCommandStatus ControlBar::processCommandUI( GameWindow *control,
 
 			ScienceType	st = SCIENCE_INVALID;
 			Player *player = ThePlayerList->getLocalPlayer();
-			for(size_t i = 0; i < commandButton->getScienceVec().size(); ++i)
+			for(size_t i = 0; i < actualCommandButton->getScienceVec().size(); ++i)
 			{
-				st = commandButton->getScienceVec()[ i ];
+				st = actualCommandButton->getScienceVec()[ i ];
 				if(!player->hasScience(st) && TheScienceStore->playerHasPrereqsForScience(player, st) && TheScienceStore->getSciencePurchaseCost(st) <= player->getSciencePurchasePoints())
 				{
 					break;
@@ -925,7 +960,7 @@ CBCommandStatus ControlBar::processCommandUI( GameWindow *control,
 		//---------------------------------------------------------------------------------------------
 		default:
 
-			DEBUG_ASSERTCRASH( 0, ("Unknown command '%d'", commandButton->getCommandType()) );
+			DEBUG_ASSERTCRASH( 0, ("Unknown command '%d'", actualCommandButton->getCommandType()) );
 			return CBC_COMMAND_NOT_USED;
 
 	}  // end switch
