@@ -386,8 +386,17 @@ public:
 	const CommandButton* getRightClickAltShiftButton() const;
 	const CommandButton* getRightClickCtrlAltShiftButton() const;
 
+	// Alternative button getters (completely replace original button when prerequisites are satisfied)
+	const CommandButton* getAlternativeButton1() const;
+	const CommandButton* getAlternativeButton2() const;
+	const CommandButton* getAlternativeButton3() const;
+	const CommandButton* getAlternativeButton4() const;
+
 	// Get the appropriate button based on modifier keys and click type
 	const CommandButton* getButtonForModifiers(Bool ctrlPressed, Bool altPressed, Bool shiftPressed, Bool isRightClick) const;
+
+	// Get the appropriate alternative button based on prerequisites (replaces original button completely)
+	const CommandButton* getAlternativeButtonForPrerequisites(const Player* player) const;
 
 	GameWindow* getWindow() const { return m_window;	}
 	Int getFlashCount() const { return m_flashCount; }
@@ -420,6 +429,16 @@ public:
 
 	static void parseEnablePrerequisites(INI* ini, void* instance, void* /*store*/, const void* /*userData*/);
 	static void parseVisiblePrerequisites(INI* ini, void* instance, void* /*store*/, const void* /*userData*/);
+
+	// Alternative button prerequisite parsing functions
+	static void parseAlternativeButton1Prerequisites(INI* ini, void* instance, void* /*store*/, const void* /*userData*/);
+	static void parseAlternativeButton2Prerequisites(INI* ini, void* instance, void* /*store*/, const void* /*userData*/);
+	static void parseAlternativeButton3Prerequisites(INI* ini, void* instance, void* /*store*/, const void* /*userData*/);
+	static void parseAlternativeButton4Prerequisites(INI* ini, void* instance, void* /*store*/, const void* /*userData*/);
+
+	// TheSuperHackers @alternative Ahmed Salah 27/06/2025 Helper function to check all alternative buttons
+	const CommandButton* getAlternativeButtonByIndex(Int index) const;
+
 private:
 	AsciiString										m_name;												///< template name
 	GUICommandType								m_command;										///< type of command this button
@@ -478,6 +497,18 @@ private:
 	AsciiString							m_rightClickAltShiftButtonName;				///< name for Alt+Shift+right-click button
 	AsciiString							m_rightClickCtrlAltShiftButtonName;		///< name for Ctrl+Alt+Shift+right-click button
 
+	// Alternative command buttons (completely replace original button when prerequisites are satisfied)
+	AsciiString							m_alternativeButton1Name;					///< name for alternative button 1
+	AsciiString							m_alternativeButton2Name;					///< name for alternative button 2
+	AsciiString							m_alternativeButton3Name;					///< name for alternative button 3
+	AsciiString							m_alternativeButton4Name;					///< name for alternative button 4
+
+	// Prerequisites for alternative buttons
+	std::vector<ProductionPrerequisite>	m_alternativeButton1Prereq;				///< prerequisites for alternative button 1
+	std::vector<ProductionPrerequisite>	m_alternativeButton2Prereq;				///< prerequisites for alternative button 2
+	std::vector<ProductionPrerequisite>	m_alternativeButton3Prereq;				///< prerequisites for alternative button 3
+	std::vector<ProductionPrerequisite>	m_alternativeButton4Prereq;				///< prerequisites for alternative button 4
+
 	// Cached button references (assigned once when first accessed)
 	mutable const CommandButton*			m_leftClickCtrlButton;						///< cached button for Ctrl+left-click
 	mutable const CommandButton*			m_leftClickAltButton;						///< cached button for Alt+left-click
@@ -495,6 +526,12 @@ private:
 	mutable const CommandButton*			m_rightClickCtrlShiftButton;				///< cached button for Ctrl+Shift+right-click
 	mutable const CommandButton*			m_rightClickAltShiftButton;					///< cached button for Alt+Shift+right-click
 	mutable const CommandButton*			m_rightClickCtrlAltShiftButton;			///< cached button for Ctrl+Alt+Shift+right-click
+
+	// Cached alternative button references
+	mutable const CommandButton*			m_alternativeButton1;						///< cached alternative button 1
+	mutable const CommandButton*			m_alternativeButton2;						///< cached alternative button 2
+	mutable const CommandButton*			m_alternativeButton3;						///< cached alternative button 3
+	mutable const CommandButton*			m_alternativeButton4;						///< cached alternative button 4
 
 };
 

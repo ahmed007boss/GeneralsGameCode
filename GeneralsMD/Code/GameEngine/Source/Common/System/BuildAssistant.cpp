@@ -1257,12 +1257,13 @@ Bool BuildAssistant::isPossibleToMakeUnit( Object *builder, const ThingTemplate 
 
 	}
 
+
 	//
 	// scan the command set, we must find whatToBuild as one of the "build" commands available
 	// in the command set.  We want to have all players run this logic on all their machines
 	// so that nobody can hack one game and cheat to make stuff that they can't usually make
-	// Also check alternative modifier-based command buttons
-	// TheSuperHackers @build Ahmed Salah 27/06/2025 Include alternative modifier-based command buttons in build validation to support modifier key combinations
+	// Also check alternative modifier-based command buttons and prerequisite-based alternative buttons
+	// TheSuperHackers @build Ahmed Salah 27/06/2025 Include alternative modifier-based command buttons and prerequisite-based alternative buttons in build validation
 	//
 	const CommandButton *commandButton;
 	const CommandButton *foundCommand = NULL;
@@ -1280,119 +1281,24 @@ Bool BuildAssistant::isPossibleToMakeUnit( Object *builder, const ThingTemplate 
 			break; // Found a match, no need to check alternatives
 		}
 
-		// Check alternative modifier-based command buttons for this command
-		// TheSuperHackers @build Ahmed Salah 27/06/2025 Check all 14 alternative modifier combinations for build validation
+		// TheSuperHackers @alternative Ahmed Salah 27/06/2025 Check all alternative buttons using simple index-based approach
 		if( commandButton )
 		{
-			// Check all possible modifier combinations
-			const CommandButton* altButton = NULL;
-			
-			// Check right-click alternatives
-			altButton = commandButton->getRightClickCtrlAltShiftButton();
-			if( altButton && altButton->getThingTemplate() && altButton->getThingTemplate()->isEquivalentTo(whatToBuild) )
+			// Check all 19 alternative buttons using the simple index-based function
+			for( Int j = 0; j < 19; ++j )
 			{
-				foundCommand = altButton;
-				break;
+				const CommandButton* altButton = commandButton->getAlternativeButtonByIndex(j);
+				if( altButton && 
+					(altButton->getCommandType() == GUI_COMMAND_UNIT_BUILD || altButton->getCommandType() == GUI_COMMAND_DOZER_CONSTRUCT) &&
+					altButton->getThingTemplate() && altButton->getThingTemplate()->isEquivalentTo(whatToBuild) )
+				{
+					foundCommand = altButton;
+					break;
+				}
 			}
 			
-			altButton = commandButton->getRightClickCtrlAltButton();
-			if( altButton && altButton->getThingTemplate() && altButton->getThingTemplate()->isEquivalentTo(whatToBuild) )
-			{
-				foundCommand = altButton;
+			if( foundCommand )
 				break;
-			}
-			
-			altButton = commandButton->getRightClickCtrlShiftButton();
-			if( altButton && altButton->getThingTemplate() && altButton->getThingTemplate()->isEquivalentTo(whatToBuild) )
-			{
-				foundCommand = altButton;
-				break;
-			}
-			
-			altButton = commandButton->getRightClickCtrlButton();
-			if( altButton && altButton->getThingTemplate() && altButton->getThingTemplate()->isEquivalentTo(whatToBuild) )
-			{
-				foundCommand = altButton;
-				break;
-			}
-			
-			altButton = commandButton->getRightClickAltShiftButton();
-			if( altButton && altButton->getThingTemplate() && altButton->getThingTemplate()->isEquivalentTo(whatToBuild) )
-			{
-				foundCommand = altButton;
-				break;
-			}
-			
-			altButton = commandButton->getRightClickAltButton();
-			if( altButton && altButton->getThingTemplate() && altButton->getThingTemplate()->isEquivalentTo(whatToBuild) )
-			{
-				foundCommand = altButton;
-				break;
-			}
-			
-			altButton = commandButton->getRightClickShiftButton();
-			if( altButton && altButton->getThingTemplate() && altButton->getThingTemplate()->isEquivalentTo(whatToBuild) )
-			{
-				foundCommand = altButton;
-				break;
-			}
-			
-			altButton = commandButton->getRightClickButton();
-			if( altButton && altButton->getThingTemplate() && altButton->getThingTemplate()->isEquivalentTo(whatToBuild) )
-			{
-				foundCommand = altButton;
-				break;
-			}
-			
-			// Check left-click alternatives
-			altButton = commandButton->getLeftClickCtrlAltShiftButton();
-			if( altButton && altButton->getThingTemplate() && altButton->getThingTemplate()->isEquivalentTo(whatToBuild) )
-			{
-				foundCommand = altButton;
-				break;
-			}
-			
-			altButton = commandButton->getLeftClickCtrlAltButton();
-			if( altButton && altButton->getThingTemplate() && altButton->getThingTemplate()->isEquivalentTo(whatToBuild) )
-			{
-				foundCommand = altButton;
-				break;
-			}
-			
-			altButton = commandButton->getLeftClickCtrlShiftButton();
-			if( altButton && altButton->getThingTemplate() && altButton->getThingTemplate()->isEquivalentTo(whatToBuild) )
-			{
-				foundCommand = altButton;
-				break;
-			}
-			
-			altButton = commandButton->getLeftClickCtrlButton();
-			if( altButton && altButton->getThingTemplate() && altButton->getThingTemplate()->isEquivalentTo(whatToBuild) )
-			{
-				foundCommand = altButton;
-				break;
-			}
-			
-			altButton = commandButton->getLeftClickAltShiftButton();
-			if( altButton && altButton->getThingTemplate() && altButton->getThingTemplate()->isEquivalentTo(whatToBuild) )
-			{
-				foundCommand = altButton;
-				break;
-			}
-			
-			altButton = commandButton->getLeftClickAltButton();
-			if( altButton && altButton->getThingTemplate() && altButton->getThingTemplate()->isEquivalentTo(whatToBuild) )
-			{
-				foundCommand = altButton;
-				break;
-			}
-			
-			altButton = commandButton->getLeftClickShiftButton();
-			if( altButton && altButton->getThingTemplate() && altButton->getThingTemplate()->isEquivalentTo(whatToBuild) )
-			{
-				foundCommand = altButton;
-				break;
-			}
 		}
 
 	}

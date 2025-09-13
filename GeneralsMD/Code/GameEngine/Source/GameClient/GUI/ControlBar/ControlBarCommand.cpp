@@ -304,6 +304,17 @@ void ControlBar::populateCommand( Object *obj )
 		// get command button
 		commandButton = commandSet->getCommandButton(i);
 
+		// TheSuperHackers @alternative Ahmed Salah 27/06/2025 Check for alternative buttons that can replace the original button based on prerequisites
+		if (commandButton)
+		{
+			const CommandButton* alternativeButton = commandButton->getAlternativeButtonForPrerequisites(player);
+			if (alternativeButton)
+			{
+				// Replace the original button with the alternative button
+				commandButton = alternativeButton;
+			}
+		}
+
 		// if button is not present, just hide the window
 		if( commandButton == NULL )
 		{

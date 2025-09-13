@@ -145,10 +145,49 @@ const FieldParse CommandButton::s_commandButtonFieldParseTable[] =
 	{ "RightClickAltShiftButton",			INI::parseAsciiString, NULL, offsetof( CommandButton, m_rightClickAltShiftButtonName ) },
 	{ "RightClickCtrlAltShiftButton",	INI::parseAsciiString, NULL, offsetof( CommandButton, m_rightClickCtrlAltShiftButtonName ) },
 
+	// Alternative command buttons (completely replace original button when prerequisites are satisfied)
+	{ "AlternativeButton1",				INI::parseAsciiString, NULL, offsetof( CommandButton, m_alternativeButton1Name ) },
+	{ "AlternativeButton2",				INI::parseAsciiString, NULL, offsetof( CommandButton, m_alternativeButton2Name ) },
+	{ "AlternativeButton3",				INI::parseAsciiString, NULL, offsetof( CommandButton, m_alternativeButton3Name ) },
+	{ "AlternativeButton4",				INI::parseAsciiString, NULL, offsetof( CommandButton, m_alternativeButton4Name ) },
+	{ "AlternativeButton1Prerequisites",	CommandButton::parseAlternativeButton1Prerequisites,	0, 0 },
+	{ "AlternativeButton2Prerequisites",	CommandButton::parseAlternativeButton2Prerequisites,	0, 0 },
+	{ "AlternativeButton3Prerequisites",	CommandButton::parseAlternativeButton3Prerequisites,	0, 0 },
+	{ "AlternativeButton4Prerequisites",	CommandButton::parseAlternativeButton4Prerequisites,	0, 0 },
 
 	{ NULL,						NULL,												 NULL, 0 }  // keep this last
 
 };
+
+//-------------------------------------------------------------------------------------------------
+// TheSuperHackers @alternative Ahmed Salah 27/06/2025 Helper function to get alternative button by index
+//-------------------------------------------------------------------------------------------------
+const CommandButton* CommandButton::getAlternativeButtonByIndex(Int index) const
+{
+	switch(index)
+	{
+		case 0:  return getAlternativeButton1();
+		case 1:  return getAlternativeButton2();
+		case 2:  return getAlternativeButton3();
+		case 3:  return getAlternativeButton4();
+		case 4:  return getRightClickCtrlAltShiftButton();
+		case 5:  return getRightClickCtrlAltButton();
+		case 6:  return getRightClickCtrlShiftButton();
+		case 7:  return getRightClickCtrlButton();
+		case 8:  return getRightClickAltShiftButton();
+		case 9:  return getRightClickAltButton();
+		case 10: return getRightClickShiftButton();
+		case 11: return getRightClickButton();
+		case 12: return getLeftClickCtrlAltShiftButton();
+		case 13: return getLeftClickCtrlAltButton();
+		case 14: return getLeftClickCtrlShiftButton();
+		case 15: return getLeftClickCtrlButton();
+		case 16: return getLeftClickAltShiftButton();
+		case 17: return getLeftClickAltButton();
+		case 18: return getLeftClickShiftButton();
+		default: return NULL;
+	}
+}
 static void commandButtonTooltip(GameWindow *window,
 													WinInstanceData *instData,
 													UnsignedInt mouse)
@@ -556,6 +595,129 @@ void CommandButton::parseVisiblePrerequisites(INI* ini, void* instance, void* st
 		self->m_visiblePrereqInfo[i].resolveNames();
 	}
 }
+
+//-------------------------------------------------------------------------------------------------
+/** Alternative button prerequisite parsing functions */
+//-------------------------------------------------------------------------------------------------
+void CommandButton::parseAlternativeButton1Prerequisites(INI* ini, void* instance, void* store, const void* userData)
+{
+	// TheSuperHackers @alternative Ahmed Salah 27/06/2025 Parse prerequisites for alternative button 1
+	CommandButton* self = (CommandButton*)instance;
+
+	static const FieldParse myFieldParse[] =
+	{
+		{ "Object", ProductionPrerequisite::parsePrerequisiteUnit, 0, 0 },
+		{ "Science", ProductionPrerequisite::parsePrerequisiteScience,	0, 0 },
+		{ "ObjectNotExist", ProductionPrerequisite::parsePrerequisiteUnitConflict, 0, 0 },
+		{ "ScienceNotExist", ProductionPrerequisite::parsePrerequisiteScienceConflict,	0, 0 },
+		{ "Upgrade", ProductionPrerequisite::parsePrerequisiteUpgrade, 0, 0 },
+		{ "UpgradeNotExist", ProductionPrerequisite::parsePrerequisiteUpgradeConflict, 0, 0 },
+		{ 0, 0, 0, 0 }
+	};
+
+	if (ini->getLoadType() == INI_LOAD_CREATE_OVERRIDES)
+	{
+		self->m_alternativeButton1Prereq.clear();
+	}
+
+	ini->initFromINI(&self->m_alternativeButton1Prereq, myFieldParse);
+
+	// Resolve prerequisite names now so later const accesses don't need to mutate state
+	for (size_t i = 0; i < self->m_alternativeButton1Prereq.size(); ++i)
+	{
+		self->m_alternativeButton1Prereq[i].resolveNames();
+	}
+}
+
+void CommandButton::parseAlternativeButton2Prerequisites(INI* ini, void* instance, void* store, const void* userData)
+{
+	// TheSuperHackers @alternative Ahmed Salah 27/06/2025 Parse prerequisites for alternative button 2
+	CommandButton* self = (CommandButton*)instance;
+
+	static const FieldParse myFieldParse[] =
+	{
+		{ "Object", ProductionPrerequisite::parsePrerequisiteUnit, 0, 0 },
+		{ "Science", ProductionPrerequisite::parsePrerequisiteScience,	0, 0 },
+		{ "ObjectNotExist", ProductionPrerequisite::parsePrerequisiteUnitConflict, 0, 0 },
+		{ "ScienceNotExist", ProductionPrerequisite::parsePrerequisiteScienceConflict,	0, 0 },
+		{ "Upgrade", ProductionPrerequisite::parsePrerequisiteUpgrade, 0, 0 },
+		{ "UpgradeNotExist", ProductionPrerequisite::parsePrerequisiteUpgradeConflict, 0, 0 },
+		{ 0, 0, 0, 0 }
+	};
+
+	if (ini->getLoadType() == INI_LOAD_CREATE_OVERRIDES)
+	{
+		self->m_alternativeButton2Prereq.clear();
+	}
+
+	ini->initFromINI(&self->m_alternativeButton2Prereq, myFieldParse);
+
+	// Resolve prerequisite names now so later const accesses don't need to mutate state
+	for (size_t i = 0; i < self->m_alternativeButton2Prereq.size(); ++i)
+	{
+		self->m_alternativeButton2Prereq[i].resolveNames();
+	}
+}
+
+void CommandButton::parseAlternativeButton3Prerequisites(INI* ini, void* instance, void* store, const void* userData)
+{
+	// TheSuperHackers @alternative Ahmed Salah 27/06/2025 Parse prerequisites for alternative button 3
+	CommandButton* self = (CommandButton*)instance;
+
+	static const FieldParse myFieldParse[] =
+	{
+		{ "Object", ProductionPrerequisite::parsePrerequisiteUnit, 0, 0 },
+		{ "Science", ProductionPrerequisite::parsePrerequisiteScience,	0, 0 },
+		{ "ObjectNotExist", ProductionPrerequisite::parsePrerequisiteUnitConflict, 0, 0 },
+		{ "ScienceNotExist", ProductionPrerequisite::parsePrerequisiteScienceConflict,	0, 0 },
+		{ "Upgrade", ProductionPrerequisite::parsePrerequisiteUpgrade, 0, 0 },
+		{ "UpgradeNotExist", ProductionPrerequisite::parsePrerequisiteUpgradeConflict, 0, 0 },
+		{ 0, 0, 0, 0 }
+	};
+
+	if (ini->getLoadType() == INI_LOAD_CREATE_OVERRIDES)
+	{
+		self->m_alternativeButton3Prereq.clear();
+	}
+
+	ini->initFromINI(&self->m_alternativeButton3Prereq, myFieldParse);
+
+	// Resolve prerequisite names now so later const accesses don't need to mutate state
+	for (size_t i = 0; i < self->m_alternativeButton3Prereq.size(); ++i)
+	{
+		self->m_alternativeButton3Prereq[i].resolveNames();
+	}
+}
+
+void CommandButton::parseAlternativeButton4Prerequisites(INI* ini, void* instance, void* store, const void* userData)
+{
+	// TheSuperHackers @alternative Ahmed Salah 27/06/2025 Parse prerequisites for alternative button 4
+	CommandButton* self = (CommandButton*)instance;
+
+	static const FieldParse myFieldParse[] =
+	{
+		{ "Object", ProductionPrerequisite::parsePrerequisiteUnit, 0, 0 },
+		{ "Science", ProductionPrerequisite::parsePrerequisiteScience,	0, 0 },
+		{ "ObjectNotExist", ProductionPrerequisite::parsePrerequisiteUnitConflict, 0, 0 },
+		{ "ScienceNotExist", ProductionPrerequisite::parsePrerequisiteScienceConflict,	0, 0 },
+		{ "Upgrade", ProductionPrerequisite::parsePrerequisiteUpgrade, 0, 0 },
+		{ "UpgradeNotExist", ProductionPrerequisite::parsePrerequisiteUpgradeConflict, 0, 0 },
+		{ 0, 0, 0, 0 }
+	};
+
+	if (ini->getLoadType() == INI_LOAD_CREATE_OVERRIDES)
+	{
+		self->m_alternativeButton4Prereq.clear();
+	}
+
+	ini->initFromINI(&self->m_alternativeButton4Prereq, myFieldParse);
+
+	// Resolve prerequisite names now so later const accesses don't need to mutate state
+	for (size_t i = 0; i < self->m_alternativeButton4Prereq.size(); ++i)
+	{
+		self->m_alternativeButton4Prereq[i].resolveNames();
+	}
+}
 //---------------------------------------------
 //       Prerequisite
 //---------------------------------------------
@@ -707,6 +869,12 @@ CommandButton::CommandButton( void )
 	m_rightClickAltShiftButtonName.clear();
 	m_rightClickCtrlAltShiftButtonName.clear();
 
+	// Initialize alternative button name strings
+	m_alternativeButton1Name.clear();
+	m_alternativeButton2Name.clear();
+	m_alternativeButton3Name.clear();
+	m_alternativeButton4Name.clear();
+
 	// Initialize cached button references to NULL
 	m_leftClickCtrlButton = NULL;
 	m_leftClickAltButton = NULL;
@@ -724,6 +892,12 @@ CommandButton::CommandButton( void )
 	m_rightClickCtrlShiftButton = NULL;
 	m_rightClickAltShiftButton = NULL;
 	m_rightClickCtrlAltShiftButton = NULL;
+
+	// Initialize cached alternative button references to NULL
+	m_alternativeButton1 = NULL;
+	m_alternativeButton2 = NULL;
+	m_alternativeButton3 = NULL;
+	m_alternativeButton4 = NULL;
 
 }
 
@@ -863,6 +1037,136 @@ const CommandButton* CommandButton::getRightClickCtrlAltShiftButton() const
 		m_rightClickCtrlAltShiftButton = TheControlBar->findCommandButton(m_rightClickCtrlAltShiftButtonName);
 	}
 	return m_rightClickCtrlAltShiftButton;
+}
+
+//-------------------------------------------------------------------------------------------------
+/** Alternative button getters (completely replace original button when prerequisites are satisfied) */
+//-------------------------------------------------------------------------------------------------
+const CommandButton* CommandButton::getAlternativeButton1() const
+{
+	if (!m_alternativeButton1 && !m_alternativeButton1Name.isEmpty())
+	{
+		m_alternativeButton1 = TheControlBar->findCommandButton(m_alternativeButton1Name);
+	}
+	return m_alternativeButton1;
+}
+
+const CommandButton* CommandButton::getAlternativeButton2() const
+{
+	if (!m_alternativeButton2 && !m_alternativeButton2Name.isEmpty())
+	{
+		m_alternativeButton2 = TheControlBar->findCommandButton(m_alternativeButton2Name);
+	}
+	return m_alternativeButton2;
+}
+
+const CommandButton* CommandButton::getAlternativeButton3() const
+{
+	if (!m_alternativeButton3 && !m_alternativeButton3Name.isEmpty())
+	{
+		m_alternativeButton3 = TheControlBar->findCommandButton(m_alternativeButton3Name);
+	}
+	return m_alternativeButton3;
+}
+
+const CommandButton* CommandButton::getAlternativeButton4() const
+{
+	if (!m_alternativeButton4 && !m_alternativeButton4Name.isEmpty())
+	{
+		m_alternativeButton4 = TheControlBar->findCommandButton(m_alternativeButton4Name);
+	}
+	return m_alternativeButton4;
+}
+
+//-------------------------------------------------------------------------------------------------
+/** Get the appropriate alternative button based on prerequisites (replaces original button completely) */
+//-------------------------------------------------------------------------------------------------
+const CommandButton* CommandButton::getAlternativeButtonForPrerequisites(const Player* player) const
+{
+	// TheSuperHackers @alternative Ahmed Salah 27/06/2025 Check alternative buttons in order of priority (1-4) and return first one with satisfied prerequisites
+	
+	// Check alternative button 1
+	if (!m_alternativeButton1Name.isEmpty())
+	{
+		const CommandButton* altButton1 = getAlternativeButton1();
+		if (altButton1)
+		{
+			Bool allPrereqsSatisfied = true;
+			for (size_t i = 0; i < m_alternativeButton1Prereq.size(); ++i)
+			{
+				if (!m_alternativeButton1Prereq[i].isSatisfied(player))
+				{
+					allPrereqsSatisfied = false;
+					break;
+				}
+			}
+			if (allPrereqsSatisfied)
+				return altButton1;
+		}
+	}
+
+	// Check alternative button 2
+	if (!m_alternativeButton2Name.isEmpty())
+	{
+		const CommandButton* altButton2 = getAlternativeButton2();
+		if (altButton2)
+		{
+			Bool allPrereqsSatisfied = true;
+			for (size_t i = 0; i < m_alternativeButton2Prereq.size(); ++i)
+			{
+				if (!m_alternativeButton2Prereq[i].isSatisfied(player))
+				{
+					allPrereqsSatisfied = false;
+					break;
+				}
+			}
+			if (allPrereqsSatisfied)
+				return altButton2;
+		}
+	}
+
+	// Check alternative button 3
+	if (!m_alternativeButton3Name.isEmpty())
+	{
+		const CommandButton* altButton3 = getAlternativeButton3();
+		if (altButton3)
+		{
+			Bool allPrereqsSatisfied = true;
+			for (size_t i = 0; i < m_alternativeButton3Prereq.size(); ++i)
+			{
+				if (!m_alternativeButton3Prereq[i].isSatisfied(player))
+				{
+					allPrereqsSatisfied = false;
+					break;
+				}
+			}
+			if (allPrereqsSatisfied)
+				return altButton3;
+		}
+	}
+
+	// Check alternative button 4
+	if (!m_alternativeButton4Name.isEmpty())
+	{
+		const CommandButton* altButton4 = getAlternativeButton4();
+		if (altButton4)
+		{
+			Bool allPrereqsSatisfied = true;
+			for (size_t i = 0; i < m_alternativeButton4Prereq.size(); ++i)
+			{
+				if (!m_alternativeButton4Prereq[i].isSatisfied(player))
+				{
+					allPrereqsSatisfied = false;
+					break;
+				}
+			}
+			if (allPrereqsSatisfied)
+				return altButton4;
+		}
+	}
+
+	// No alternative button prerequisites satisfied, return NULL (use original button)
+	return NULL;
 }
 
 //-------------------------------------------------------------------------------------------------

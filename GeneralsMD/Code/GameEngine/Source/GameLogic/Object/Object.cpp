@@ -6187,6 +6187,18 @@ Bool Object::canProduceUpgrade( const UpgradeTemplate *upgrade )
 		const CommandButton *button = set->getCommandButton(buttonIndex);
 		if( button  &&  button->getUpgradeTemplate()  &&  (button->getUpgradeTemplate() == upgrade) )
 			return TRUE; // getUpgradeTemplate only returns something if it is actually an upgrade
+
+		// TheSuperHackers @alternative Ahmed Salah 27/06/2025 Check all alternative buttons using simple index-based approach
+		if( button )
+		{
+			// Check all 19 alternative buttons using the simple index-based function
+			for( Int j = 0; j < 19; ++j )
+			{
+				const CommandButton* altButton = button->getAlternativeButtonByIndex(j);
+				if( altButton && altButton->getUpgradeTemplate() && (altButton->getUpgradeTemplate() == upgrade) )
+					return TRUE;
+			}
+		}
 	}
 
 	return FALSE;// Cheatin' punk.
