@@ -22,7 +22,24 @@ Used by objects that need to clean up hazards, such as chemical spills, radiatio
 
 ## Properties
 
-*Properties documentation will be added when this page is completed.*
+The following INI properties are parsed by this module. All are optional unless noted.
+
+- **`WeaponSlot`**
+  - **Type**: `WeaponSlotType`
+  - **Description**: Which weapon slot this module uses to fire at cleanup hazards.
+  - **Notes**: Must reference a valid weapon on the object. Common values: `PRIMARY`, `SECONDARY`, `TERTIARY`.
+  - **Example**: `WeaponSlot = PRIMARY`
+
+- **`ScanRate`**
+  - **Type**: `UnsignedInt` (duration)
+  - **Description**: Time between expensive hazard scans. Converted from time to internal frames.
+  - **Example**: `ScanRate = 1000`
+
+- **`ScanRange`**
+  - **Type**: `Real`
+  - **Description**: Radius to search for objects with `KINDOF_CLEANUP_HAZARD`.
+  - **Important**: Must be strictly greater than the weapon's `AttackRange` or a debug crash will be triggered at runtime.
+  - **Example**: `ScanRange = 175.0`
 
 ## Examples
 
@@ -46,10 +63,10 @@ End
 
 ### Example 3
 ```ini
-Behavior = CleanupHazardUpdate ModuleTag_03
-  WeaponSlot            = PRIMARY
-  ScanRate              = 500
-  ScanRange             = 175.0 ;If this range exceeds the AmbulanceCleanHazardWeapon AttackRange, it'll move!
+Behavior = CleanupHazardUpdate ModuleTag_AreaClean
+  WeaponSlot            = SECONDARY
+  ScanRate              = 250
+  ScanRange             = 300.0
 End
 ```
 
@@ -63,3 +80,15 @@ End
 
 - Header: [`GeneralsMD/Code/GameEngine/Include/GameLogic/Module/UpdateModule.h`](../../GeneralsMD/Code/GameEngine/Include/GameLogic/Module/UpdateModule.h)
 - Source: [`GeneralsMD/Code/GameEngine/Source/GameLogic/Object/Update/CleanupHazardUpdate.cpp`](../../GeneralsMD/Code/GameEngine/Source/GameLogic/Object/Update/CleanupHazardUpdate.cpp)
+
+## Template
+
+Ready-to-use template with all properties:
+
+```ini
+Behavior = CleanupHazardUpdate <ModuleTag_Cleanup>
+  WeaponSlot  = PRIMARY  ; Weapon slot used to fire the cleanup weapon
+  ScanRate    = 500      ; Milliseconds between hazard scans (converted to frames)
+  ScanRange   = 200.0    ; Radius to search for KINDOF_CLEANUP_HAZARD (must exceed weapon range)
+End
+```
