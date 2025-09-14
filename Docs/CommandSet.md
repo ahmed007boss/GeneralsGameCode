@@ -3,22 +3,61 @@
 ## Overview
 The `CommandSet` class represents a collection of CommandButtons that are displayed together in the game's control bar. CommandSets provide context-sensitive command interfaces that change based on the selected object, building, or game state.
 
-## Source Files
-
-- Header: [`GeneralsMD/Code/GameEngine/Include/GameClient/ControlBar.h`](../GeneralsMD/Code/GameEngine/Include/GameClient/ControlBar.h) - `CommandSet` class definition
-- Source: [`GeneralsMD/Code/GameEngine/Source/GameClient/GUI/ControlBar/ControlBar.cpp`](../GeneralsMD/Code/GameEngine/Source/GameClient/GUI/ControlBar/ControlBar.cpp) - `CommandSet` parsing logic
 
 ## Usage
-CommandSets are defined in `.ini` files within the game's data directories in a root folder called "CommandSet". They are typically associated with specific objects, buildings, or game contexts and determine which [CommandButtons](CommandButton.md) are available to the player at any given time.
+
+CommandSets are defined in `.ini` files within the game's data directories in a root folder called "CommandSet". They are typically associated with specific objects, buildings, or game contexts and determine which [CommandButtons](CommandButton.md) are available to the player at any given time. This is a **context-sensitive configuration system** that manages command button collections. The command set system allows objects to have different available commands based on their state, upgrades, or context.
+
+**Limitations**:
+- CommandSets can only contain up to 18 command button slots
+- Only slots 1-14 are visible in the user interface
+- All referenced CommandButtons must be valid and defined
+- CommandSet names must be unique across all INI files
+
+**Conditions**:
+- CommandSets manage command button availability across different game contexts
+- The configuration handles dynamic command switching based on upgrades and user input
+- Command operations provide context-sensitive user interface elements
+- Command management creates flexible and responsive control systems
+- **Multiple instances behavior**: Each object can have only one active CommandSet, but multiple objects can share the same CommandSet template
+
+**Dependencies**:
+- Uses CommandButton definitions for individual command functionality
+- Integrates with object templates through the CommandSet property
+- Referenced by CommandSetupgradeModule for automatic switching
+- Requires valid CommandButton references for all defined slots
 
 ## Table of Contents
+
+- [Overview](#overview)
+- [Usage](#usage)
 - [Properties](#properties)
   - [Basic Properties](#basic-properties)
 - [Command Set Assignment](#command-set-assignment)
-- [Command Set Limits](#command-set-limits)
+  - [Object-Based Assignment](#object-based-assignment)
+  - [Building-Based Assignment](#building-based-assignment)
+  - [Command Set Switching](#command-set-switching)
+    - [User-Initiated Switching](#user-initiated-switching)
+    - [Automatic Switching (CommandSetupgradeModule)](#automatic-switching-commandsetupgrademodule)
 - [Examples](#examples)
+  - [Basic Dozer Command Set](#basic-dozer-command-set)
+  - [Faction-Specific Dozer Command Set](#faction-specific-dozer-command-set)
+  - [Unit Command Set](#unit-command-set)
+  - [Destroyed Building Command Set](#destroyed-building-command-set)
+- [Command Set Limits](#command-set-limits)
+  - [Maximum Commands](#maximum-commands)
+  - [UI Layout](#ui-layout)
+  - [Command Set Switching](#command-set-switching-1)
 - [Best Practices](#best-practices)
+  - [Command Organization](#command-organization)
+  - [Command Set Naming](#command-set-naming)
+  - [Performance Considerations](#performance-considerations)
+- [Template](#template)
 - [Notes](#notes)
+- [Source Files](#source-files)
+- [Changes History](#changes-history)
+- [Status](#status)
+  - [Reviews (0)](#modder-reviews)
 
 ## Properties
 
@@ -177,12 +216,71 @@ Command sets can be dynamically switched in two ways:
 3. **Use prerequisites to control button availability**
 4. **Consider UI layout when designing command sets**
 
+## Template
+
+```ini
+CommandSet CommandSetName
+    1  = CommandButton1                       ; // First command button slot *(v1.04)*
+    2  = CommandButton2                       ; // Second command button slot *(v1.04)*
+    3  = CommandButton3                       ; // Third command button slot *(v1.04)*
+    4  = CommandButton4                       ; // Fourth command button slot *(v1.04)*
+    5  = CommandButton5                       ; // Fifth command button slot *(v1.04)*
+    6  = CommandButton6                       ; // Sixth command button slot *(v1.04)*
+    7  = CommandButton7                       ; // Seventh command button slot *(v1.04)*
+    8  = CommandButton8                       ; // Eighth command button slot *(v1.04)*
+    9  = CommandButton9                       ; // Ninth command button slot *(v1.04)*
+    10 = CommandButton10                      ; // Tenth command button slot *(v1.04)*
+    11 = CommandButton11                      ; // Eleventh command button slot *(v1.04)*
+    12 = CommandButton12                      ; // Twelfth command button slot *(v1.04)*
+    13 = CommandButton13                      ; // Thirteenth command button slot *(v1.04)*
+    14 = CommandButton14                      ; // Fourteenth command button slot *(v1.04)*
+    15 = CommandButton15                      ; // Fifteenth command button slot *(v1.04, Generals Zero Hour only)*
+    16 = CommandButton16                      ; // Sixteenth command button slot *(v1.04, Generals Zero Hour only)*
+    17 = CommandButton17                      ; // Seventeenth command button slot *(v1.04, Generals Zero Hour only)*
+    18 = CommandButton18                      ; // Eighteenth command button slot *(v1.04, Generals Zero Hour only)*
+End
+```
+
 ## Notes
-- CommandSets are defined in `.ini` files within the game's data directories in a root folder called "CommandSet" and in root file with name `CommandSet.ini` 
-- Each CommandSet must have a unique name - no two CommandSets can share the same name even across multiple files 
+
+- CommandSets provide context-sensitive command button collections for user interface management
+- The configuration manages command availability and organization across different game contexts
+- Command operations create flexible and responsive control interfaces for players
+- Command management ensures intuitive and efficient user interaction experiences
+- This configuration is essential for user interface design and player control
+- Command coordination creates consistent button behavior across different objects and contexts
+- Command button slots control the order and availability of interface elements
+- Dynamic switching allows command sets to change based on upgrades and context
+- UI layout systems organize command buttons in logical and accessible arrangements
+- Command set assignment connects command collections to specific objects and buildings
+- Performance considerations ensure efficient command set switching and rendering
+- CommandSets are defined in `.ini` files within the game's data directories in a root folder called "CommandSet" and in root file with name `CommandSet.ini`
+- Each CommandSet must have a unique name - no two CommandSets can share the same name even across multiple files
 - Command sets support dynamic switching based on upgrades
 - All command buttons within a set must be valid CommandButton definitions
 - Maximum of 18 command button slots per set (only 14 visible in UI)
 - Up to 3 alternative command sets (CommandSet2-CommandSet4) can be defined
+- Command sets integrate with the game's command system for executing player actions
+- Button slot organization affects user interface layout and player experience
+- Command set switching provides dynamic interface adaptation based on game state
+- UI visibility controls ensure clean interface presentation with unused slots hidden
+
+## Source Files
+
+**Base Class:** [CommandSet](../GeneralsMD/Code/GameEngine/Include/GameClient/ControlBar.h)
+- Header: [`GeneralsMD/Code/GameEngine/Include/GameClient/ControlBar.h`](../GeneralsMD/Code/GameEngine/Include/GameClient/ControlBar.h)
+- Source: [`GeneralsMD/Code/GameEngine/Source/GameClient/GUI/ControlBar/ControlBar.cpp`](../GeneralsMD/Code/GameEngine/Source/GameClient/GUI/ControlBar/ControlBar.cpp)
+
+## Changes History
+
+- No Changes done since 1.04
+
+## Status
+
+- **Documentation Status**: AI Generated Pending Reviews 
+- **Last Updated**: [Current Date] by @ahmed Salah using AI
+
+### Modder Reviews 
+- No Reviews done yet
 
 

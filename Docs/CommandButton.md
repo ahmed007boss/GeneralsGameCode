@@ -29,12 +29,15 @@ A CommandButton definition on its own does nothing. It only becomes visible and 
 
 ## Table of Contents
 
+- [Overview](#overview)
+- [Usage](#usage)
 - [Properties](#properties)
   - [Basic Properties](#basic-properties)
   - [Display Properties](#display-properties)
   - [Prerequisites and Requirements](#prerequisites-and-requirements)
   - [Modifier Key and Click Type Buttons](#modifier-key-and-click-type-buttons)
   - [Alternative Command Buttons (Prerequisite-Based Replacement)](#alternative-command-buttons-prerequisite-based-replacement)
+    - [Available Prerequisite Types](#available-prerequisite-types)
 - [Enum Value Lists](#enum-value-lists)
   - [Command Values (GUICommandType)](#command-values-guicommandtype)
   - [WeaponSlot Values (WeaponSlotType)](#weaponslot-values-weaponslottype)
@@ -42,8 +45,28 @@ A CommandButton definition on its own does nothing. It only becomes visible and 
   - [RadiusCursorType Values](#radiuscursortype-values)
   - [CommandOption Enum Values](#commandoption-enum-values)
 - [Examples](#examples)
+  - [Basic Unit Build Button](#basic-unit-build-button)
+  - [Player Upgrade Button](#player-upgrade-button)
+  - [Object Upgrade Button](#object-upgrade-button)
+  - [Special Power Button](#special-power-button)
+  - [Weapon Switching Button](#weapon-switching-button)
+  - [Science Purchase Button](#science-purchase-button)
+  - [Complex Prerequisites Example](#complex-prerequisites-example)
+  - [Alternative Command Buttons (New Feature)](#alternative-command-buttons-new-feature)
+  - [Modifier Key Button Example](#modifier-key-button-example)
+  - [Fire Weapon Button](#fire-weapon-button)
 - [Best Practices](#best-practices)
+  - [Command Button Design](#command-button-design)
+  - [Prerequisites and Requirements](#prerequisites-and-requirements-1)
+  - [Alternative Buttons](#alternative-buttons)
+  - [Display and UI](#display-and-ui)
+  - [Performance and Maintenance](#performance-and-maintenance)
+- [Template](#template)
 - [Notes](#notes)
+- [Source Files](#source-files)
+- [Changes History](#changes-history)
+- [Status](#status)
+  - [Reviews (0)](#modder-reviews)
 
 ## Properties
 
@@ -729,12 +752,81 @@ End
 3. **Documentation** - Comment complex prerequisite logic for future maintenance
 4. **Testing** - Test all alternative button combinations and prerequisite scenarios
 
+## Template
+
+```ini
+CommandButton CommandButtonName
+    Command = NONE                           ; // Command type (UNIT_BUILD/PLAYER_UPGRADE/etc.) *(v1.04)*
+    Object = ObjectName                      ; // Object to create or target *(v1.04)*
+    Upgrade = UpgradeName                    ; // Upgrade to research *(v1.04)*
+    SpecialPower = SpecialPowerName          ; // Special power to activate *(v1.04)*
+    Science = ScienceName                    ; // Science requirement *(v1.04)*
+    WeaponSlot = PRIMARY_WEAPON              ; // Weapon slot to use *(v1.04)*
+    MaxShotsToFire = 1                       ; // Maximum shots to fire *(v1.04)*
+    Options = NONE                           ; // Command options (NEED_TARGET_POS/etc.) *(v1.04)*
+    TextLabel = CONTROLBAR:ButtonText        ; // Button text label *(v1.04)*
+    DescriptLabel = CONTROLBAR:ButtonDesc    ; // Button description *(v1.04)*
+    ButtonImage = ButtonIcon                 ; // Button icon image *(v1.04)*
+    ButtonBorderType = BUILD                 ; // Button border type *(v1.04)*
+    CursorName = Attack                      ; // Valid target cursor *(v1.04)*
+    InvalidCursorName = Invalid              ; // Invalid target cursor *(v1.04)*
+    RadiusCursorType = RADIUSCURSOR_NONE     ; // Radius cursor type *(v1.04)*
+    UnitSpecificSound = SoundEvent           ; // Sound to play *(v1.04)*
+    ; Zero Hour only properties:
+    RequireElectronics = false               ; // Requires electronics *(v1.04, Generals Zero Hour only)*
+    RequiredUpgradeToAppear = UpgradeName    ; // Upgrade required to appear *(v1.04, Generals Zero Hour only)*
+    ConflictUpgradeToDisappear = UpgradeName ; // Upgrade that makes button disappear *(v1.04, Generals Zero Hour only)*
+    RequiredUpgradeToEnable = UpgradeName    ; // Upgrade required to enable *(v1.04, Generals Zero Hour only)*
+    ConflictUpgradeToDisable = UpgradeName   ; // Upgrade that disables button *(v1.04, Generals Zero Hour only)*
+    LeftClickCtrlButton = ButtonName         ; // Ctrl+Left-Click alternative *(v1.04, Generals Zero Hour only)*
+    LeftClickAltButton = ButtonName          ; // Alt+Left-Click alternative *(v1.04, Generals Zero Hour only)*
+    LeftClickShiftButton = ButtonName        ; // Shift+Left-Click alternative *(v1.04, Generals Zero Hour only)*
+    RightClickButton = ButtonName            ; // Right-Click alternative *(v1.04, Generals Zero Hour only)*
+    AlternativeButton1 = ButtonName          ; // First alternative button *(v1.04, Generals Zero Hour only)*
+    AlternativeButton2 = ButtonName          ; // Second alternative button *(v1.04, Generals Zero Hour only)*
+    AlternativeButton3 = ButtonName          ; // Third alternative button *(v1.04, Generals Zero Hour only)*
+    AlternativeButton4 = ButtonName          ; // Fourth alternative button *(v1.04, Generals Zero Hour only)*
+End
+```
+
 ## Notes
 
+- CommandButtons provide user interface elements for player actions and game commands
+- The configuration manages button appearance, behavior, and functionality for different game contexts
+- Command operations create interactive elements that connect player input to game functionality
+- Command management ensures intuitive and responsive user interface experiences
+- This configuration is essential for user interface design and player interaction
+- Command coordination creates consistent button behavior across different game modes
+- Button properties control visual appearance, text labels, and interaction behavior
+- Prerequisite systems manage button availability based on game state and player progress
+- Alternative buttons provide dynamic button replacement based on modifiers or prerequisites
+- Command options control specific behaviors like target requirements and multi-select support
+- Button images are defined as MappedImage references, not direct file paths
+- All text labels support localization through the game's text system
+- Each CommandButton must have a unique name across all INI files
 - CommandButtons are defined in `.ini` files within the game's data directories in a root folder called "CommandButton"
 - **GMX Feature**: Multiple `.ini` files in the CommandButton directory are automatically merged at runtime (vs. vanilla single CommandButton.ini file)
 - Multiple CommandButtons can be grouped into [CommandSets](CommandSet.md) for different contexts
-- All text labels support localization through the game's text system
-- Button images are defined as MappedImage references, not direct file paths
-- Each CommandButton must have a unique name - no two CommandButtons can share the same name even across multiple files
 - **Version Compatibility**: All properties marked with `*(v1.04)*` are available in Generals Zero Hour; `*(v1.04, Generals Zero Hour only)*` indicates features unique to Zero Hour vs. original Generals
+- CommandButtons integrate with the game's command system for executing player actions
+- Button borders provide visual categorization (BUILD, UPGRADE, ACTION, SYSTEM)
+- Cursor systems provide visual feedback for valid and invalid targets
+- Sound systems provide audio feedback for button interactions
+
+## Source Files
+
+**Base Class:** [CommandButton](../../GeneralsMD/Code/GameEngine/Include/GameClient/ControlBar.h)
+- Header: [`GeneralsMD/Code/GameEngine/Include/GameClient/ControlBar.h`](../../GeneralsMD/Code/GameEngine/Include/GameClient/ControlBar.h)
+- Source: [`GeneralsMD/Code/GameEngine/Source/GameClient/GUI/ControlBar/ControlBar.cpp`](../../GeneralsMD/Code/GameEngine/Source/GameClient/GUI/ControlBar/ControlBar.cpp)
+
+## Changes History
+
+- No Changes done since 1.04
+
+## Status
+
+- **Documentation Status**: AI Generated Pending Reviews 
+- **Last Updated**: [Current Date] by @ahmed Salah using AI
+
+### Modder Reviews 
+- No Reviews done yet
