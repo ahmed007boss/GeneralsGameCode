@@ -1,12 +1,12 @@
 # Weapon INI Documentation
 
 ## Overview
-The `WeaponTemplate` class defines the properties and behavior of weapons in the game. Weapons are used by units, buildings, and special powers to deal damage, apply status effects, or trigger other game mechanics. Each weapon template specifies damage values, range, firing mechanics, visual effects, and targeting rules.
+The `Weapon` class defines the properties and behavior of weapons in the game. Weapons are used by units, buildings, and special powers to deal damage, apply status effects, or trigger other game mechanics. Each weapon template specifies damage values, range, firing mechanics, visual effects, and targeting rules.
 
 ## Source Files
 
-- Header: [`GeneralsMD/Code/GameEngine/Include/GameLogic/Weapon.h`](../GeneralsMD/Code/GameEngine/Include/GameLogic/Weapon.h#338) - `WeaponTemplate` class definition
-- Source: [`GeneralsMD/Code/GameEngine/Source/GameLogic/Object/Weapon.cpp`](../GeneralsMD/Code/GameEngine/Source/GameLogic/Object/Weapon.cpp#162) - `TheWeaponTemplateFieldParseTable` parsing logic
+- Header: [`GeneralsMD/Code/GameEngine/Include/GameLogic/Weapon.h`](../GeneralsMD/Code/GameEngine/Include/GameLogic/Weapon.h#338) - `Weapon` class definition
+- Source: [`GeneralsMD/Code/GameEngine/Source/GameLogic/Object/Weapon.cpp`](../GeneralsMD/Code/GameEngine/Source/GameLogic/Object/Weapon.cpp#162) - `TheWeaponFieldParseTable` parsing logic
 
 ## Usage
 Weapons are defined in `.ini` files within the game's data directories in a root folder called "Weapon". They are referenced by units, buildings, and special powers to define their combat capabilities and special abilities.

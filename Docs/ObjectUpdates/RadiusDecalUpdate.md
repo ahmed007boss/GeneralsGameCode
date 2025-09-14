@@ -1,14 +1,32 @@
 # RadiusDecalUpdate
 
-*This documentation is a work in progress (WIP) and will be completed as part of the GMX project.*
+RadiusDecalUpdate provides radius decal functionality for objects that can create radius-based visual effects.
 
 ## Overview
 
-RadiusDecalUpdate provides radius decal functionality for objects that can create radius-based visual effects.
+The `RadiusDecalUpdate` class manages radius decal creation and management for objects that need to display area-of-effect indicators, range markers, or radius-based visual effects. It handles decal creation, positioning, and removal for visual feedback systems. This update is commonly used by weapons, abilities, and objects that need to show radius-based effects or range indicators.
 
 ## Usage
 
-Used by objects that can create radius decals for area-of-effect visualization or range indicators.
+Used by objects that can create radius decals for area-of-effect visualization or range indicators. This is an **update module** that must be embedded within object definitions. Use the [Template](#template) below by copying it into your object definition. Then, customize it as needed, making sure to review any limitations, conditions, or dependencies related to its usage.
+
+**Limitations**:
+- Radius decal creation is limited by decal system capabilities and graphics performance
+- Decal positioning depends on coordinate accuracy and terrain conditions
+- Decal management is controlled by decal lifecycle parameters
+- Visual effects are limited by graphics system capabilities
+
+**Conditions**:
+- RadiusDecalUpdate manages radius decal creation, positioning, and removal
+- The update handles decal lifecycle management and visual feedback
+- Decal positioning provides accurate area-of-effect visualization
+- Radius decals create visual indicators for range and effect areas
+- **Multiple instances behavior**: Multiple instances can coexist; each operates independently with its own decal parameters
+
+**Dependencies**:
+- Uses decal system for visual effect creation and management
+- Integrates with graphics system for decal rendering
+- Uses positioning system for decal placement
 
 ## Table of Contents
 
@@ -16,11 +34,16 @@ Used by objects that can create radius decals for area-of-effect visualization o
 - [Usage](#usage)
 - [Properties](#properties)
 - [Examples](#examples)
+- [Template](#template)
 - [Notes](#notes)
+- [Source Files](#source-files)
+- [Changes History](#changes-history)
+- [Status](#status)
+  - [Reviews (0)](#modder-reviews)
 
 ## Properties
 
-*Properties documentation will be added when this page is completed.*
+*Properties documentation will be added when this page is completed from the corresponding C++ source files.*
 
 ## Examples
 
@@ -33,13 +56,37 @@ End
 
 *Only 1 example of RadiusDecalUpdate was found in the INI files.*
 
+## Template
+
+```ini
+Behavior = RadiusDecalUpdate ModuleTag_XX
+  ; Properties will be documented from source files
+End
+```
+
 ## Notes
 
-- This is a GMX (Generals Modding eXtended) documentation page
-- Properties and examples will be documented from the corresponding C++ source files
-- Version compatibility information will be included for all properties
+- RadiusDecalUpdate provides radius decal creation and management for visual effects
+- The update handles decal lifecycle including creation, positioning, and removal
+- Radius decals provide visual feedback for area-of-effect abilities and range indicators
+- This update is commonly used by weapons, abilities, and objects requiring radius visualization
+- Decal management ensures efficient visual effect creation and performance
 
 ## Source Files
 
-- Header: [`GeneralsMD/Code/GameEngine/Include/GameLogic/Module/UpdateModule.h`](../../GeneralsMD/Code/GameEngine/Include/GameLogic/Module/UpdateModule.h)
+**Base Class:** [`UpdateModule`](../../GeneralsMD/Code/GameEngine/Include/GameLogic/Module/UpdateModule.h)
+
+- Header: [`GeneralsMD/Code/GameEngine/Include/GameLogic/Module/RadiusDecalUpdate.h`](../../GeneralsMD/Code/GameEngine/Include/GameLogic/Module/RadiusDecalUpdate.h)
 - Source: [`GeneralsMD/Code/GameEngine/Source/GameLogic/Object/Update/RadiusDecalUpdate.cpp`](../../GeneralsMD/Code/GameEngine/Source/GameLogic/Object/Update/RadiusDecalUpdate.cpp)
+
+## Changes History
+
+- No Changes done since 1.04
+
+## Status
+
+- **Documentation Status**: AI Generated Pending Reviews 
+- **Last Updated**: [Current Date] by @ahmed Salah using AI
+
+### Modder Reviews 
+- No Reviews done yet

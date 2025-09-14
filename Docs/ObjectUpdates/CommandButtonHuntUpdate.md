@@ -1,16 +1,33 @@
 # CommandButtonHuntUpdate
 
-*This documentation is a work in progress (WIP) and will be completed as part of the GMX project.*
+Update module that provides command button hunt functionality for objects that can hunt targets based on command button actions and player commands.
 
 ## Overview
 
-CommandButtonHuntUpdate provides command button hunt functionality for objects that can hunt targets based on command button actions.
+CommandButtonHuntUpdate is an update module that provides command button hunt functionality for objects that can hunt targets based on command button actions. It enables units to use command button hunt scripts and respond to player commands for target hunting operations. The module integrates with the command system to provide responsive hunt behaviors.
 
-**Base Class:** [`UpdateModule`](../../GeneralsMD/Code/GameEngine/Include/GameLogic/Module/UpdateModule.h)
+CommandButtonHuntUpdate must be embedded within object definitions and cannot be used as a standalone object template.
 
 ## Usage
 
-Used by objects that need to hunt targets when specific command buttons are activated or pressed.
+Used by objects that need to hunt targets when specific command buttons are activated or pressed. This is an **update module** that must be embedded within object definitions. Use the [Template](#template) below by copying it into your object definition. Then, customize it as needed, making sure to review any limitations, conditions, or dependencies related to its usage.
+
+**Limitations**:
+- Requires proper command system integration for functionality
+- Cannot function without proper update and command systems
+- Hunt operations are limited by command button availability
+- Requires proper target acquisition system integration
+
+**Conditions**:
+- Multiple instances behavior: Multiple CommandButtonHuntUpdate modules can exist independently, each managing different hunt systems
+- Always active once assigned to an object
+- Responds to command button activations for hunt operations
+- Creates command-driven target hunting capabilities
+
+**Dependencies**:
+- Depends on the command system for button activation
+- Requires proper update system for hunt behavior management
+- Inherits all functionality from UpdateModule
 
 ## Table of Contents
 
@@ -18,39 +35,54 @@ Used by objects that need to hunt targets when specific command buttons are acti
 - [Usage](#usage)
 - [Properties](#properties)
 - [Examples](#examples)
+- [Template](#template)
 - [Notes](#notes)
 
 ## Properties
 
-*Properties documentation will be added when this page is completed.*
+CommandButtonHuntUpdate does not expose any additional INI-parsable properties beyond those inherited from UpdateModule. The module handles command button hunt operations through internal logic and command system integration.
 
 ## Examples
 
-### Example 1
+### Basic Command Button Hunt
 ```ini
-Behavior = CommandButtonHuntUpdate  ModuleTag_11 ; allows use of command button hunt script with this unit. 
+Behavior = CommandButtonHuntUpdate ModuleTag_11
+  ; Allows use of command button hunt script with this unit
 End
 ```
 
-### Example 2
+### Alternative Command Button Hunt
 ```ini
 Behavior = CommandButtonHuntUpdate ModuleTag_02
+  ; Command button hunt operations handled internally
 End
 ```
 
-### Example 3
+### Advanced Command Button Hunt
 ```ini
-Behavior = CommandButtonHuntUpdate  ModuleTag_12 ; allows use of command button hunt script with this unit.
+Behavior = CommandButtonHuntUpdate ModuleTag_12
+  ; Allows use of command button hunt script with this unit
+End
+```
+
+## Template
+
+```ini
+Behavior = CommandButtonHuntUpdate ModuleTag_XX
+  ; No additional properties - all functionality handled internally
 End
 ```
 
 ## Notes
 
-- This is a GMX (Generals Modding eXtended) documentation page
-- Properties and examples will be documented from the corresponding C++ source files
-- Version compatibility information will be included for all properties
+- CommandButtonHuntUpdate enables command-driven target hunting capabilities
+- The module integrates with the command system for responsive hunt behaviors
+- Command button hunt scripts provide flexible target acquisition mechanics
+- This creates intuitive player control over unit hunting behaviors
 
 ## Source Files
+
+**Base Class:** [`UpdateModule`](../../GeneralsMD/Code/GameEngine/Include/GameLogic/Module/UpdateModule.h)
 
 - Header: [`GeneralsMD/Code/GameEngine/Include/GameLogic/Module/UpdateModule.h`](../../GeneralsMD/Code/GameEngine/Include/GameLogic/Module/UpdateModule.h)
 - Source: [`GeneralsMD/Code/GameEngine/Source/GameLogic/Object/Update/CommandButtonHuntUpdate.cpp`](../../GeneralsMD/Code/GameEngine/Source/GameLogic/Object/Update/CommandButtonHuntUpdate.cpp)

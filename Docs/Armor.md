@@ -1,38 +1,46 @@
-# Armor
-
-*This documentation is a work in progress (WIP) and will be completed as part of the GMX project.*
+# Armor INI Documentation
 
 ## Overview
 
-Armor provides armor functionality for objects that can have armor protection and damage resistance.
+**⚠️ Work In Progress (WIP) ⚠️**
 
-## Usage
+This documentation page is currently under development. The Armor INI file contains armor configuration settings and parameters for damage resistance and protection systems.
 
-Used by objects that need armor protection, damage resistance, or armor-based defense systems.
+## Status
 
-## Table of Contents
+- **Documentation Status**: In Progress
+- **Completion**: ~10%
+- **Last Updated**: [Current Date]
 
-- [Overview](#overview)
-- [Usage](#usage)
-- [Properties](#properties)
-- [Examples](#examples)
-- [Notes](#notes)
+## Planned Sections
 
-## Properties
+- [ ] Overview and Usage
+- [ ] Properties
+- [ ] Enum Value Lists
+- [ ] Examples
+- [ ] Best Practices
+- [ ] Notes
 
-*Properties documentation will be added when this page is completed.*
+## Related Documentation
 
-## Examples
+- [Object](Object.md) - Armor is applied to objects
+- [Weapon](Weapon.md) - Armor interacts with weapons
+- [DamageFX](DamageFX.md) - Armor affects damage effects
 
-*Examples will be added when this page is completed.*
+---
 
-## Notes
+**Note**: This page will be completed as part of the GMX documentation effort. For now, refer to the existing game files and source code for Armor template information.
 
-- This is a GMX (Generals Modding eXtended) documentation page
-- Properties and examples will be documented from the corresponding C++ source files
-- Version compatibility information will be included for all properties
+## Example Structure
+
+```ini
+Armor
+  ; Armor configuration parameters
+  ; Damage resistance, protection types, etc.
+End
+```
 
 ## Source Files
 
-- Header: [`GeneralsMD/Code/GameEngine/Include/GameLogic/Object/Armor.h`](../GeneralsMD
-- Source: [`GeneralsMD/Code/GameEngine/Source/GameLogic/Object/Armor.cpp`](../GeneralsMD
+- Header: [`GeneralsMD/Code/GameEngine/Include/GameLogic/Armor.h`](../GeneralsMD/Code/GameEngine/Include/GameLogic/Armor.h)
+- Source: [`GeneralsMD/Code/GameEngine/Source/GameLogic/Armor/Armor.cpp`](../GeneralsMD/Code/GameEngine/Source/GameLogic/Armor/Armor.cpp)

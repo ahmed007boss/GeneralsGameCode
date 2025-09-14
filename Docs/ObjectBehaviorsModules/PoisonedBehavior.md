@@ -1,61 +1,98 @@
 # PoisonedBehavior
 
-*This documentation is a work in progress (WIP) and will be completed as part of the GMX project.*
+Update module that manages poison damage effects, including continuous damage over time and poison duration tracking.
 
 ## Overview
 
-PoisonedBehavior provides poison effect functionality for objects that can apply or suffer from poison damage over time.
+PoisonedBehavior is an update module that handles poison damage effects on objects. When an object receives poison damage, this module activates and begins applying continuous damage over time at specified intervals. The poison effect continues for a configurable duration after the last poison dose, creating a persistent damage-over-time effect that can be countered by healing.
 
-**Base Class:** [`UpdateModule`](../../GeneralsMD/Code/GameEngine/Include/GameLogic/Module/UpdateModule.h), [`DamageModuleInterface`](../../GeneralsMD/Code/GameEngine/Include/GameLogic/Module/DamageModule.h)
+PoisonedBehavior must be embedded within object definitions and cannot be used as a standalone object template.
 
 ## Usage
 
-Used by objects that can poison enemies or are affected by poison effects, such as chemical weapons or poisoned units.
+Used by objects that should suffer from poison damage effects with continuous damage over time and poison duration tracking. This is an **update module** that must be embedded within object definitions. Use the [Template](#template) below by copying it into your object definition. Then, customize it as needed, making sure to review any limitations, conditions, or dependencies related to its usage.
 
-## Table of Contents
+**Limitations**:
+- Only responds to poison damage types
+- Cannot function without proper damage and healing systems
+- Poison effects are stopped by healing
+- Requires poison damage types to function properly
 
-- [Overview](#overview)
-- [Usage](#usage)
-- [Properties](#properties)
-- [Examples](#examples)
-- [Notes](#notes)
+**Conditions**:
+- Multiple instances behavior: Multiple PoisonedBehavior modules can exist independently, each managing different poison effects
+- Always active once assigned to an object
+- Activates when poison damage is received and continues until healed
+- Creates tactical poison effects that require healing to counter
+
+**Dependencies**:
+- Requires poison damage types to function
+- Depends on the damage and healing systems
+- Inherits functionality from UpdateModule and DamageModuleInterface
 
 ## Properties
 
-*Properties documentation will be added when this page is completed.*
+### Poison Configuration
+
+#### `PoisonDamageInterval` *(v1.04)*
+- **Type**: `UnsignedInt` (frames)
+- **Description**: Interval in frames between poison damage applications. Higher values apply poison damage less frequently. When set to 0 (default), no poison damage interval is used
+- **Default**: `0`
+- **Example**: `PoisonDamageInterval = 60`
+
+#### `PoisonDuration` *(v1.04)*
+- **Type**: `UnsignedInt` (frames)
+- **Description**: Duration in frames that poison effects last after the last poison dose. Higher values make poison effects last longer. When set to 0 (default), no poison duration is applied
+- **Default**: `0`
+- **Example**: `PoisonDuration = 300`
 
 ## Examples
 
-### Example 1: GLA AT Site Poisoned Behavior
+### Basic Poison Effect
 ```ini
-Behavior = PoisonedBehavior ModuleTag_12
-  PoisonDamageInterval = 100  ; Every this many msec I will retake the poison damage dealt me...
-  PoisonDuration = 3000       ; ... for this long after last hit by poison damage
+Update = PoisonedBehavior ModuleTag_01
+  PoisonDamageInterval = 30
+  PoisonDuration = 180
 End
 ```
 
-### Example 2: GLA Stinger Site Poisoned Behavior
+### Long-Lasting Poison
 ```ini
-Behavior = PoisonedBehavior ModuleTag_09
-  PoisonDamageInterval = 100  ; Every this many msec I will retake the poison damage dealt me...
-  PoisonDuration = 3000       ; ... for this long after last hit by poison damage
+Update = PoisonedBehavior ModuleTag_02
+  PoisonDamageInterval = 45
+  PoisonDuration = 600
 End
 ```
 
-### Example 3: GLA Fortress Turret Poisoned Behavior (Commented)
+### Quick Poison Damage
 ```ini
-; Behavior = PoisonedBehavior ModuleTag_09
-;   PoisonDamageInterval = 100  ; Every this many msec I will retake the poison damage dealt me...
-;   PoisonDuration = 3000       ; ... for this long after last hit by poison damage
+Update = PoisonedBehavior ModuleTag_03
+  PoisonDamageInterval = 15
+  PoisonDuration = 120
+End
+```
+
+## Template
+
+```ini
+Update = PoisonedBehavior ModuleTag_XX
+  ; Poison Configuration
+  PoisonDamageInterval = 0            ; // frames between poison damage applications *(v1.04)*
+  PoisonDuration = 0                  ; // frames poison effects last after last dose *(v1.04)*
+End
 ```
 
 ## Notes
 
-- This is a GMX (Generals Modding eXtended) documentation page
-- Properties and examples will be documented from the corresponding C++ source files
-- Version compatibility information will be included for all properties
+- PoisonedBehavior manages poison damage effects with continuous damage over time
+- Activates when objects receive poison damage and continues until healed
+- Includes configurable damage intervals and poison duration
+- Commonly used for poison weapons, environmental hazards, and damage-over-time effects
+- The module tracks poison damage amounts and applies them at specified intervals
+- Creates tactical poison effects that require healing to counter
 
 ## Source Files
+
+**Base Class:** [`UpdateModule`](../../GeneralsMD/Code/GameEngine/Include/GameLogic/Module/UpdateModule.h)
 
 - Header: [`GeneralsMD/Code/GameEngine/Include/GameLogic/Module/PoisonedBehavior.h`](../../GeneralsMD/Code/GameEngine/Include/GameLogic/Module/PoisonedBehavior.h)
 - Source: [`GeneralsMD/Code/GameEngine/Source/GameLogic/Object/Behavior/PoisonedBehavior.cpp`](../../GeneralsMD/Code/GameEngine/Source/GameLogic/Object/Behavior/PoisonedBehavior.cpp)

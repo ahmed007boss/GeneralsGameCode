@@ -1,16 +1,31 @@
 # DestroyDie
 
-*This documentation is a work in progress (WIP) and will be completed as part of the GMX project.*
+DestroyDie provides the default destruction behavior for objects when they die.
 
 ## Overview
 
-DestroyDie provides standard destruction death mechanics for objects.
-
-**Base Class:** [`DieModule`](../../GeneralsMD/Code/GameEngine/Include/GameLogic/Module/DieModule.h)
+The `DestroyDie` class is the standard death module that handles object destruction when an object dies. It simply removes the object from the game world by calling the game logic's destroy object function. This is the most basic death behavior and serves as the default for most objects that don't require special death effects or object creation.
 
 ## Usage
 
-Used by objects that need standard destruction death effects and mechanics.
+Used by objects that need standard destruction behavior when they die, such as most units, buildings, and projectiles. This is a **die module** that must be embedded within object definitions. Use the [Template](#template) below by copying it into your object definition. Then, customize it as needed, making sure to review any limitations, conditions, or dependencies related to its usage.
+
+**Limitations**:
+- DestroyDie only triggers when the object actually dies
+- The behavior provides no special effects or object creation
+- Object destruction is immediate and irreversible
+- The behavior requires the death system to function properly
+
+**Conditions**:
+- DestroyDie provides the default destruction behavior for most objects
+- The behavior integrates with the death system for conditional activation
+- Object destruction is handled by the game logic system
+- The behavior supports conditional activation based on death types and conditions
+- **Multiple instances behavior**: Only one instance should be used per object; multiple instances are unnecessary since destruction is a single action
+
+**Dependencies**:
+- Requires the game logic system to function correctly
+- The behavior relies on the death system for activation timing
 
 ## Table of Contents
 
@@ -18,42 +33,54 @@ Used by objects that need standard destruction death effects and mechanics.
 - [Usage](#usage)
 - [Properties](#properties)
 - [Examples](#examples)
+- [Template](#template)
 - [Notes](#notes)
 
 ## Properties
 
-*Properties documentation will be added when this page is completed.*
+DestroyDie has no additional properties beyond those inherited from DieModule (death types, veterancy levels, status requirements, etc.).
 
 ## Examples
 
-### Example 1: GLA Scout Van Destroy Die
+### Standard Unit Death
 ```ini
-Behavior = DestroyDie DeathTag_02
-  DeathTypes = NONE +CRUSHED +SPLATTED
+Die = DestroyDie ModuleTag_Death
 End
 ```
 
-### Example 2: GLA Airfield Destroy Die
+### Conditional Death
 ```ini
-Behavior             = DestroyDie ModuleTag_15
-  ;nothing
+Die = DestroyDie ModuleTag_Conditional
+  DeathTypes = NONE +EXPLODED +BURNED
 End
 ```
 
-### Example 3: GLA Artillery Bunker Destroy Die
+### Veterancy-Based Death
 ```ini
-Behavior = DestroyDie ModuleTag_322
-  ; nothing
+Die = DestroyDie ModuleTag_Veteran
+  VeterancyLevels = VETERAN +ELITE
+End
+```
+
+## Template
+
+```ini
+Die = DestroyDie ModuleTag_XX
+  ; No additional properties - uses base DieModule properties
 End
 ```
 
 ## Notes
 
-- This is a GMX (Generals Modding eXtended) documentation page
-- Properties and examples will be documented from the corresponding C++ source files
-- Version compatibility information will be included for all properties
+- DestroyDie provides the default destruction behavior for most objects
+- The behavior integrates with the death system for conditional activation
+- Object destruction is handled by the game logic system
+- The behavior supports conditional activation based on death types and conditions
+- This is the simplest death behavior and requires no additional configuration
 
 ## Source Files
 
-- Header: [`GeneralsMD/Code/GameEngine/Include/GameLogic/Module/DieModule.h`](../../GeneralsMD/Code/GameEngine/Include/GameLogic/Module/DieModule.h)
+**Base Class:** [`DieModule`](../../GeneralsMD/Code/GameEngine/Include/GameLogic/Module/DieModule.h)
+
+- Header: [`GeneralsMD/Code/GameEngine/Include/GameLogic/Module/DestroyDie.h`](../../GeneralsMD/Code/GameEngine/Include/GameLogic/Module/DestroyDie.h)
 - Source: [`GeneralsMD/Code/GameEngine/Source/GameLogic/Object/Die/DestroyDie.cpp`](../../GeneralsMD/Code/GameEngine/Source/GameLogic/Object/Die/DestroyDie.cpp)

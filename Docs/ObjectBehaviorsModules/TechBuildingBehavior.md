@@ -1,16 +1,33 @@
 # TechBuildingBehavior
 
-*This documentation is a work in progress (WIP) and will be completed as part of the GMX project.*
+Update module that provides technology building functionality for structures that provide research or technology benefits.
 
 ## Overview
 
-TechBuildingBehavior provides technology building functionality for structures that provide research or technology benefits.
+TechBuildingBehavior is an update module that provides technology building functionality for structures that provide research or technology benefits. It manages research capabilities, technology unlocks, and special technology-based abilities for technology buildings. The module handles technology progression and provides integration with the research and upgrade systems.
 
-**Base Class:** [`UpdateModule`](../../GeneralsMD/Code/GameEngine/Include/GameLogic/Module/UpdateModule.h), [`DieModuleInterface`](../../GeneralsMD/Code/GameEngine/Include/GameLogic/Module/DieModule.h)
+TechBuildingBehavior must be embedded within object definitions and cannot be used as a standalone object template.
 
 ## Usage
 
-Used by technology buildings to provide research capabilities, technology unlocks, or special technology-based abilities.
+Used by technology buildings to provide research capabilities, technology unlocks, or special technology-based abilities. This is an **update module** that must be embedded within object definitions. Use the [Template](#template) below by copying it into your object definition. Then, customize it as needed, making sure to review any limitations, conditions, or dependencies related to its usage.
+
+**Limitations**:
+- Designed specifically for technology buildings
+- Requires proper research and technology systems for functionality
+- Cannot function without proper update and death systems
+- Technology benefits are limited by research system integration
+
+**Conditions**:
+- Multiple instances behavior: Multiple TechBuildingBehavior modules can exist independently, each managing different technology systems
+- Always active once assigned to an object
+- Continuously manages technology building operations and research capabilities
+- Creates research and technology advancement capabilities
+
+**Dependencies**:
+- Depends on the research system for technology progression
+- Requires proper update and death systems for functionality
+- Inherits functionality from UpdateModule and DieModuleInterface
 
 ## Table of Contents
 
@@ -18,42 +35,54 @@ Used by technology buildings to provide research capabilities, technology unlock
 - [Usage](#usage)
 - [Properties](#properties)
 - [Examples](#examples)
+- [Template](#template)
 - [Notes](#notes)
 
 ## Properties
 
-*Properties documentation will be added when this page is completed.*
+TechBuildingBehavior does not expose any additional INI-parsable properties beyond those inherited from UpdateModule. The module handles technology building operations through internal logic and research system integration.
 
 ## Examples
 
-### Example 1: Tech Building Behavior Module 09
+### Basic Tech Building Behavior
 ```ini
 Behavior = TechBuildingBehavior ModuleTag_09
-  ;nothing
+  ; No additional properties required
 End
 ```
 
-### Example 2: Tech Building Behavior Module 10
+### Enhanced Tech Building Behavior
 ```ini
 Behavior = TechBuildingBehavior ModuleTag_10
-  ;nothing
+  ; Technology building operations handled internally
 End
 ```
 
-### Example 3: Tech Building Behavior Module 12
+### Advanced Tech Building Behavior
 ```ini
 Behavior = TechBuildingBehavior ModuleTag_12
-  ;nothing
+  ; Research capabilities handled internally
+End
+```
+
+## Template
+
+```ini
+Behavior = TechBuildingBehavior ModuleTag_XX
+  ; No additional properties - all functionality handled internally
 End
 ```
 
 ## Notes
 
-- This is a GMX (Generals Modding eXtended) documentation page
-- Properties and examples will be documented from the corresponding C++ source files
-- Version compatibility information will be included for all properties
+- TechBuildingBehavior provides research and technology advancement capabilities for technology buildings
+- The module handles technology building operations and research system integration
+- Technology buildings enable research capabilities and technology unlocks
+- This creates proper technology progression mechanics for strategic gameplay
 
 ## Source Files
+
+**Base Class:** [`UpdateModule`](../../GeneralsMD/Code/GameEngine/Include/GameLogic/Module/UpdateModule.h), [`DieModuleInterface`](../../GeneralsMD/Code/GameEngine/Include/GameLogic/Module/DieModule.h)
 
 - Header: [`GeneralsMD/Code/GameEngine/Include/GameLogic/Module/TechBuildingBehavior.h`](../../GeneralsMD/Code/GameEngine/Include/GameLogic/Module/TechBuildingBehavior.h)
 - Source: [`GeneralsMD/Code/GameEngine/Source/GameLogic/Object/Behavior/TechBuildingBehavior.cpp`](../../GeneralsMD/Code/GameEngine/Source/GameLogic/Object/Behavior/TechBuildingBehavior.cpp)

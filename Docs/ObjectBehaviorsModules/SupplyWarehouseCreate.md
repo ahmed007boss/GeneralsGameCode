@@ -1,16 +1,33 @@
 # SupplyWarehouseCreate
 
-*This documentation is a work in progress (WIP) and will be completed as part of the GMX project.*
+Create module that provides functionality for creating supply warehouse effects when objects are created or spawned.
 
 ## Overview
 
-SupplyWarehouseCreate provides functionality for creating supply warehouse effects when objects are created or spawned.
+SupplyWarehouseCreate is a create module that provides functionality for creating supply warehouse effects when objects are created or spawned. It handles the initialization and setup of supply warehouse capabilities for objects during their creation process. The module integrates with the supply system to enable supply storage and management upon object creation.
 
-**Base Class:** [`CreateModule`](../../GeneralsMD/Code/GameEngine/Include/GameLogic/Module/CreateModule.h)
+SupplyWarehouseCreate must be embedded within object definitions and cannot be used as a standalone object template.
 
 ## Usage
 
-Used by objects that can create supply warehouse effects upon creation or when specific conditions are met.
+Used by objects that can create supply warehouse effects upon creation or when specific conditions are met. This is a **create module** that must be embedded within object definitions. Use the [Template](#template) below by copying it into your object definition. Then, customize it as needed, making sure to review any limitations, conditions, or dependencies related to its usage.
+
+**Limitations**:
+- Requires proper supply system integration for functionality
+- Cannot function without proper create and supply systems
+- Supply warehouse creation is limited to object creation events
+- Requires proper supply templates for effects
+
+**Conditions**:
+- Multiple instances behavior: Multiple SupplyWarehouseCreate modules can exist independently, each creating different supply warehouse effects
+- Always active once assigned to an object
+- Triggers during onCreate and onBuildComplete events
+- Creates supply warehouse capabilities for new objects
+
+**Dependencies**:
+- Depends on the create system for object creation events
+- Requires proper supply system for effect creation
+- Inherits all functionality from CreateModule
 
 ## Table of Contents
 
@@ -18,42 +35,54 @@ Used by objects that can create supply warehouse effects upon creation or when s
 - [Usage](#usage)
 - [Properties](#properties)
 - [Examples](#examples)
+- [Template](#template)
 - [Notes](#notes)
 
 ## Properties
 
-*Properties documentation will be added when this page is completed.*
+SupplyWarehouseCreate does not expose any additional INI-parsable properties beyond those inherited from CreateModule. The module handles supply warehouse creation through internal logic and supply system integration.
 
 ## Examples
 
-### Example 1: Supplies Supply Warehouse Create
+### Basic Supply Warehouse Create
 ```ini
 Behavior = SupplyWarehouseCreate ModuleTag_05
-  ;nothing
+  ; No additional properties required
 End
 ```
 
-### Example 2: Supplies Supply Warehouse Create Alternative
+### Alternative Supply Warehouse Create
 ```ini
 Behavior = SupplyWarehouseCreate ModuleTag_03
-  ;nothing
+  ; Supply warehouse creation handled internally
 End
 ```
 
-### Example 3: Supplies Supply Warehouse Create Third
+### Third Supply Warehouse Create
 ```ini
 Behavior = SupplyWarehouseCreate ModuleTag_04
-  ;nothing
+  ; Supply warehouse initialization handled internally
+End
+```
+
+## Template
+
+```ini
+Behavior = SupplyWarehouseCreate ModuleTag_XX
+  ; No additional properties - all functionality handled internally
 End
 ```
 
 ## Notes
 
-- This is a GMX (Generals Modding eXtended) documentation page
-- Properties and examples will be documented from the corresponding C++ source files
-- Version compatibility information will be included for all properties
+- SupplyWarehouseCreate initializes supply warehouse capabilities for objects during creation
+- The module handles supply warehouse setup and integration internally
+- Supply warehouse creation is coordinated with the overall supply system
+- This creates proper supply warehouse initialization for new objects and structures
 
 ## Source Files
+
+**Base Class:** [`CreateModule`](../../GeneralsMD/Code/GameEngine/Include/GameLogic/Module/CreateModule.h)
 
 - Header: [`GeneralsMD/Code/GameEngine/Include/GameLogic/Module/CreateModule.h`](../../GeneralsMD/Code/GameEngine/Include/GameLogic/Module/CreateModule.h)
 - Source: [`GeneralsMD/Code/GameEngine/Source/GameLogic/Object/Create/SupplyWarehouseCreate.cpp`](../../GeneralsMD/Code/GameEngine/Source/GameLogic/Object/Create/SupplyWarehouseCreate.cpp)

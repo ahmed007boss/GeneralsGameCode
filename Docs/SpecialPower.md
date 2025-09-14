@@ -4,7 +4,7 @@
 
 **⚠️ Work In Progress (WIP) ⚠️**
 
-This documentation page is currently under development. The SpecialPower class represents special abilities and powers that can be activated by players, including superweapons, tactical abilities, and other unique game mechanics.
+This documentation page is currently under development. The SpecialPower INI file contains special power configuration settings and parameters for special abilities and power systems.
 
 ## Status
 
@@ -23,13 +23,22 @@ This documentation page is currently under development. The SpecialPower class r
 
 ## Related Documentation
 
-- [CommandButton](CommandButton.md) - References SpecialPower templates
+- [Object](Object.md) - Special powers affect objects
 - [Weapon](Weapon.md) - Special powers can use weapons
-- [Object](Object.md) - Special powers can target objects
+- [ObjectCreationList](ObjectCreationList.md) - Special powers can create objects
 
 ---
 
 **Note**: This page will be completed as part of the GMX documentation effort. For now, refer to the existing game files and source code for SpecialPower template information.
+
+## Example Structure
+
+```ini
+SpecialPower
+  ; Special power configuration parameters
+  ; Power types, activation rules, etc.
+End
+```
 
 ## Source Files
 

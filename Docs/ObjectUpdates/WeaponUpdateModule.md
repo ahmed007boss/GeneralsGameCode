@@ -1,14 +1,32 @@
 # WeaponUpdateModule
 
-*This documentation is a work in progress (WIP) and will be completed as part of the GMX project.*
+WeaponUpdateModule provides the base functionality for all weapon update modules in the game engine.
 
 ## Overview
 
-WeaponUpdateModule provides weapon update functionality for objects that need weapon-related updates and management.
+The `WeaponUpdateModule` class serves as the base class for all weapon update modules in the game engine. It provides the fundamental weapon update functionality, weapon update management, and weapon update system integration. This module is the foundation for all weapon update-based behaviors and capabilities. This module is commonly used as a base for all weapon update modules, weapon update systems, and weapon update-based functionality.
 
 ## Usage
 
-Used by objects that need weapon updates, weapon state management, or weapon-related update systems.
+Used as the base class for all weapon update modules in the game engine. This is a **base weapon update module** that provides the foundation for all weapon update-based functionality. All specific weapon update modules inherit from this base class. Use specific weapon update modules that inherit from this base class instead of using this directly.
+
+**Limitations**:
+- WeaponUpdateModule operations are limited by weapon update parameters and weapon update system capabilities
+- Weapon update activation depends on proper weapon update system integration
+- Weapon update management is controlled by weapon update parameters and system capabilities
+- Weapon update effectiveness varies based on weapon update capabilities
+
+**Conditions**:
+- WeaponUpdateModule manages weapon update operations and weapon update system coordination
+- The module handles weapon update activation, weapon update management, and weapon update system integration
+- Weapon update operations provide weapon update capabilities and weapon update system capabilities
+- Weapon update management creates realistic weapon update system operations
+- **Multiple instances behavior**: Multiple instances can coexist; each operates independently with its own weapon update parameters
+
+**Dependencies**:
+- Uses weapon update system for weapon update activation
+- Integrates with weapon update system for weapon update capabilities
+- Uses weapon update coordination system for weapon update management
 
 ## Table of Contents
 
@@ -16,22 +34,53 @@ Used by objects that need weapon updates, weapon state management, or weapon-rel
 - [Usage](#usage)
 - [Properties](#properties)
 - [Examples](#examples)
+- [Template](#template)
 - [Notes](#notes)
+- [Source Files](#source-files)
+- [Changes History](#changes-history)
+- [Status](#status)
+  - [Reviews (0)](#modder-reviews)
 
 ## Properties
 
-*Properties documentation will be added when this page is completed.*
+*Properties documentation will be added when this page is completed from the corresponding C++ source files.*
 
 ## Examples
-*WeaponUpdateModule is a base class and not used directly in INI files. It serves as the parent class for all WeaponUpdate modules.*
+
+*No examples of WeaponUpdateModule were found in the INI files.*
+
+## Template
+
+```ini
+Behavior = WeaponUpdateModule ModuleTag_XX
+  ; Properties will be documented from source files
+End
+```
 
 ## Notes
 
-- This is a GMX (Generals Modding eXtended) documentation page
-- Properties and examples will be documented from the corresponding C++ source files
-- Version compatibility information will be included for all properties
+- WeaponUpdateModule provides weapon update operations and weapon update system coordination capabilities
+- The module manages weapon update activation, weapon update management, and weapon update system integration
+- Weapon update operations provide essential weapon update capabilities and weapon update system capabilities
+- Weapon update management creates realistic weapon update system operations and coordination
+- This module is commonly used as a base for all weapon update modules, weapon update systems, and weapon update-based functionality
+- Weapon update coordination ensures efficient weapon update and system integration operations
 
 ## Source Files
 
-- Header: [`GeneralsMD/Code/GameEngine/Include/GameLogic/Module/UpdateModule.h`](../../GeneralsMD/Code/GameEngine/Include/GameLogic/Module/UpdateModule.h)
+**Base Class:** [`UpdateModule`](../../GeneralsMD/Code/GameEngine/Include/GameLogic/Module/UpdateModule.h)
+
+- Header: [`GeneralsMD/Code/GameEngine/Include/GameLogic/Module/WeaponUpdateModule.h`](../../GeneralsMD/Code/GameEngine/Include/GameLogic/Module/WeaponUpdateModule.h)
 - Source: [`GeneralsMD/Code/GameEngine/Source/GameLogic/Object/Update/WeaponUpdateModule.cpp`](../../GeneralsMD/Code/GameEngine/Source/GameLogic/Object/Update/WeaponUpdateModule.cpp)
+
+## Changes History
+
+- No Changes done since 1.04
+
+## Status
+
+- **Documentation Status**: AI Generated Pending Reviews 
+- **Last Updated**: [Current Date] by @ahmed Salah using AI
+
+### Modder Reviews 
+- No Reviews done yet

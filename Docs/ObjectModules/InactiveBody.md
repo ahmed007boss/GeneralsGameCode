@@ -1,16 +1,33 @@
 # InactiveBody
 
-*This documentation is a work in progress (WIP) and will be completed as part of the GMX project.*
+InactiveBody provides an indestructible body system for objects that cannot be damaged or affected by the world.
 
 ## Overview
 
-InactiveBody provides inactive health mechanics for objects that cannot take damage or be destroyed.
-
-**Base Class:** [`BodyModule`](../../GeneralsMD/Code/GameEngine/Include/GameLogic/Module/BodyModule.h)
+The `InactiveBody` class provides a body system for objects that are effectively indestructible and cannot be damaged or affected by normal game mechanics. These objects are marked as "effectively dead" and bypass most health and damage calculations. This behavior is commonly used for decorative objects, terrain features, and objects that should not interact with the damage system.
 
 ## Usage
 
-Used by objects that need to be invulnerable to damage, such as terrain features or indestructible structures.
+Used by objects that should be indestructible and unaffected by damage, such as decorative objects, terrain features, or special objects that should not interact with the damage system. This is a **body module** that must be embedded within object definitions. Use the [Template](#template) below by copying it into your object definition. Then, customize it as needed, making sure to review any limitations, conditions, or dependencies related to its usage.
+
+**Limitations**:
+- InactiveBody objects cannot be damaged or healed
+- The behavior bypasses all armor and damage calculations
+- Objects with InactiveBody are marked as "effectively dead"
+- The behavior provides no health management functionality
+- Objects cannot change damage states or be affected by veterancy
+
+**Conditions**:
+- InactiveBody provides indestructible body functionality
+- The behavior automatically marks objects as "effectively dead"
+- All damage and healing attempts are ignored
+- Armor systems and damage states are not applicable
+- The behavior bypasses all health-related calculations
+- **Multiple instances behavior**: Only one body module should exist per object; multiple instances may cause conflicts in health management
+
+**Dependencies**:
+- Requires the object system to function correctly
+- The behavior relies on the damage system for interface compatibility
 
 ## Table of Contents
 
@@ -18,43 +35,53 @@ Used by objects that need to be invulnerable to damage, such as terrain features
 - [Usage](#usage)
 - [Properties](#properties)
 - [Examples](#examples)
+- [Template](#template)
 - [Notes](#notes)
 
 ## Properties
 
-*Properties documentation will be added when this page is completed.*
+InactiveBody has no additional properties beyond those inherited from BodyModule.
 
 ## Examples
 
-### Example 1: System Object Inactive
+### Decorative Object
 ```ini
-Body = InactiveBody ModuleTag_02
-  ;nothing
+Body = InactiveBody ModuleTag_Decorative
 End
 ```
 
-### Example 2: Terrain Feature Inactive
+### Terrain Feature
 ```ini
-Body = InactiveBody ModuleTag_02
-  MaxHealth = 0
-  InitialHealth = 0
+Body = InactiveBody ModuleTag_Terrain
 End
 ```
 
-### Example 3: Invulnerable Structure
+### Special Indestructible Object
 ```ini
-Body = InactiveBody ModuleTag_02
-  ; Invulnerable to all damage types
+Body = InactiveBody ModuleTag_Indestructible
+End
+```
+
+## Template
+
+```ini
+Body = InactiveBody ModuleTag_XX
+  ; No additional properties - uses base BodyModule properties
 End
 ```
 
 ## Notes
 
-- This is a GMX (Generals Modding eXtended) documentation page
-- Properties and examples will be documented from the corresponding C++ source files
-- Version compatibility information will be included for all properties
+- InactiveBody provides indestructible body functionality
+- The behavior automatically marks objects as "effectively dead"
+- All damage and healing attempts are ignored
+- Armor systems and damage states are not applicable
+- The behavior bypasses all health-related calculations
+- This is commonly used for decorative objects and terrain features
 
 ## Source Files
 
-- Header: [`GeneralsMD/Code/GameEngine/Include/GameLogic/Module/BodyModule.h`](../../GeneralsMD/Code/GameEngine/Include/GameLogic/Module/BodyModule.h)
+**Base Class:** [`BodyModule`](../../GeneralsMD/Code/GameEngine/Include/GameLogic/Module/BodyModule.h)
+
+- Header: [`GeneralsMD/Code/GameEngine/Include/GameLogic/Module/InactiveBody.h`](../../GeneralsMD/Code/GameEngine/Include/GameLogic/Module/InactiveBody.h)
 - Source: [`GeneralsMD/Code/GameEngine/Source/GameLogic/Object/Body/InactiveBody.cpp`](../../GeneralsMD/Code/GameEngine/Source/GameLogic/Object/Body/InactiveBody.cpp)

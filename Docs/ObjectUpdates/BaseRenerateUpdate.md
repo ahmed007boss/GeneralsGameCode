@@ -1,16 +1,33 @@
 # BaseRenerateUpdate
 
-*This documentation is a work in progress (WIP) and will be completed as part of the GMX project.*
+Update module that provides base regeneration functionality for objects that can regenerate health over time at their base location.
 
 ## Overview
 
-BaseRenerateUpdate provides base regeneration functionality for objects that can regenerate over time.
+BaseRenerateUpdate is an update module that provides base regeneration functionality for objects that can regenerate health or resources over time at their base or home location. It handles health regeneration for objects when they are at their base, providing automatic healing over time. The module integrates with the global base regeneration system to provide consistent healing mechanics.
 
-**Base Class:** [`UpdateModule`](../../GeneralsMD/Code/GameEngine/Include/GameLogic/Module/UpdateModule.h), [`DamageModuleInterface`](../../GeneralsMD/Code/GameEngine/Include/GameLogic/Module/DamageModule.h)
+BaseRenerateUpdate must be embedded within object definitions and cannot be used as a standalone object template.
 
 ## Usage
 
-Used by objects that need to regenerate health or resources over time at their base or home location.
+Used by objects that need to regenerate health or resources over time at their base or home location. This is an **update module** that must be embedded within object definitions. Use the [Template](#template) below by copying it into your object definition. Then, customize it as needed, making sure to review any limitations, conditions, or dependencies related to its usage.
+
+**Limitations**:
+- Requires proper damage system integration for health management
+- Cannot function without proper update and damage systems
+- Base regeneration is limited to base location proximity
+- Requires global base regeneration system configuration
+
+**Conditions**:
+- Multiple instances behavior: Multiple BaseRenerateUpdate modules can exist independently, each managing different regeneration systems
+- Always active once assigned to an object
+- Continuously manages health regeneration when at base location
+- Creates automatic healing capabilities for base-based objects
+
+**Dependencies**:
+- Depends on the damage system for health management
+- Requires proper update system for continuous regeneration
+- Inherits functionality from UpdateModule and DamageModuleInterface
 
 ## Table of Contents
 
@@ -18,23 +35,54 @@ Used by objects that need to regenerate health or resources over time at their b
 - [Usage](#usage)
 - [Properties](#properties)
 - [Examples](#examples)
+- [Template](#template)
 - [Notes](#notes)
 
 ## Properties
 
-*Properties documentation will be added when this page is completed.*
+BaseRenerateUpdate does not expose any additional INI-parsable properties beyond those inherited from UpdateModule. The module handles base regeneration through internal logic and global base regeneration system integration.
 
 ## Examples
 
-*No examples of BaseRenerateUpdate were found in the INI files.*
+### Basic Base Regeneration
+```ini
+Behavior = BaseRenerateUpdate ModuleTag_01
+  ; No additional properties required
+End
+```
+
+### Enhanced Base Regeneration
+```ini
+Behavior = BaseRenerateUpdate ModuleTag_02
+  ; Base regeneration handled internally
+End
+```
+
+### Advanced Base Regeneration
+```ini
+Behavior = BaseRenerateUpdate ModuleTag_03
+  ; Health regeneration at base handled internally
+End
+```
+
+## Template
+
+```ini
+Behavior = BaseRenerateUpdate ModuleTag_XX
+  ; No additional properties - all functionality handled internally
+End
+```
 
 ## Notes
 
-- This is a GMX (Generals Modding eXtended) documentation page
-- Properties and examples will be documented from the corresponding C++ source files
-- Version compatibility information will be included for all properties
+- BaseRenerateUpdate provides automatic health regeneration for objects at their base location
+- The module integrates with the global base regeneration system for consistent healing mechanics
+- Base regeneration provides tactical advantages for units operating near their home base
+- This creates realistic base support capabilities for strategic gameplay
 
 ## Source Files
 
-- Header: [`GeneralsMD/Code/GameEngine/Include/GameLogic/Module/UpdateModule.h`](../../GeneralsMD/Code/GameEngine/Include/GameLogic/Module/UpdateModule.h)
+**Base Class:** [`UpdateModule`](../../GeneralsMD/Code/GameEngine/Include/GameLogic/Module/UpdateModule.h), [`DamageModuleInterface`](../../GeneralsMD/Code/GameEngine/Include/GameLogic/Module/DamageModule.h)
+
+- Header: [`GeneralsMD/Code/GameEngine/Include/GameLogic/Module/BaseRegenerateUpdate.h`](../../GeneralsMD/Code/GameEngine/Include/GameLogic/Module/BaseRegenerateUpdate.h)
 - Source: [`GeneralsMD/Code/GameEngine/Source/GameLogic/Object/Update/BaseRenerateUpdate.cpp`](../../GeneralsMD/Code/GameEngine/Source/GameLogic/Object/Update/BaseRenerateUpdate.cpp)

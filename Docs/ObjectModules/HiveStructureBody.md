@@ -1,71 +1,125 @@
 # HiveStructureBody
 
-*This documentation is a work in progress (WIP) and will be completed as part of the GMX project.*
+Structure body module that propagates damage to slaves when available, otherwise absorbs or takes the damage itself.
 
 ## Overview
 
-HiveStructureBody provides specialized body mechanics for hive-like structures with unique health and damage systems.
+HiveStructureBody is a specialized structure body module that can redirect incoming damage to slave objects (created by SpawnBehavior) or contained objects (via ContainModule) instead of taking the damage itself. When no slaves are available, it can either absorb the damage completely or take it normally. This creates a "hive mind" effect where the main structure is protected by its minions.
 
-**Base Class:** [`StructureBody`](../../GeneralsMD/Code/GameEngine/Include/GameLogic/Module/StructureBody.h)
+HiveStructureBody must be embedded within object definitions and cannot be used as a standalone object template.
 
 ## Usage
 
-Used by hive structures that have special health mechanics, such as distributed health across multiple components.
+Used by structures that should redirect incoming damage to slave objects or contained objects instead of taking the damage themselves. This is a **body module** that must be embedded within object definitions. Use the [Template](#template) below by copying it into your object definition. Then, customize it as needed, making sure to review any limitations, conditions, or dependencies related to its usage.
 
-## Table of Contents
+**Limitations**:
+- Requires either a SpawnBehavior module or ContainModule to function
+- Can only propagate damage to existing slave/contained objects
+- Damage propagation only works for specified damage types
+- Only one body module per object
 
-- [Overview](#overview)
-- [Usage](#usage)
-- [Properties](#properties)
-- [Examples](#examples)
-- [Notes](#notes)
+**Conditions**:
+- Multiple instances behavior: Multiple HiveStructureBody modules cannot exist - only one body module per object
+- Always active once assigned to an object
+- Damage propagation requires active slaves or contained objects
+- Creates a "hive mind" effect where the main structure is protected by its minions
+
+**Dependencies**:
+- Requires SpawnBehavior module or ContainModule for slave/contained object access
+- Inherits all properties and functionality from StructureBody
+- Depends on proper damage type flag definitions
 
 ## Properties
 
-*Properties documentation will be added when this page is completed.*
+### Damage Propagation
+
+#### `PropagateDamageTypesToSlavesWhenExisting` *(v1.04)*
+- **Type**: `DamageTypeFlags` (bit flags)
+- **Description**: Damage types that should be redirected to slave/contained objects when they are available. When set, incoming damage of these types is transferred to the closest slave/contained object. When empty (default), no damage propagation occurs
+- **Default**: `0` (none)
+- **Example**: `PropagateDamageTypesToSlavesWhenExisting = EXPLOSION BALLISTIC`
+
+#### `SwallowDamageTypesIfSlavesNotExisting` *(v1.04)*
+- **Type**: `DamageTypeFlags` (bit flags)
+- **Description**: Damage types that should be completely absorbed when no slaves/contained objects are available. When set, these damage types are negated and cause no effect. When empty (default), all damage is taken normally when no slaves exist
+- **Default**: `0` (none)
+- **Example**: `SwallowDamageTypesIfSlavesNotExisting = EXPLOSION`
 
 ## Examples
 
-### Example 1: AT Site Hive Structure
+### Hive Structure with Explosion Protection
 ```ini
-Body = HiveStructureBody ModuleTag_Body01
-  MaxHealth = 2200.0
-  InitialHealth = 2200.0
-  PropagateDamageTypesToSlavesWhenExisting = NONE +SMALL_ARMS +SNIPER +POISON +RADIATION +SURRENDER +MICROWAVE
-  SwallowDamageTypesIfSlavesNotExisting = NONE +SNIPER +POISON +SURRENDER
-  SubdualDamageCap = 1200
-  SubdualDamageHealRate = 500
-  SubdualDamageHealAmount = 100
+Body = HiveStructureBody ModuleTag_01
+  ; Inherited from StructureBody/ActiveBody
+  MaxHealth = 2000.0
+  InitialHealth = 2000.0
+  
+  ; Damage Propagation
+  PropagateDamageTypesToSlavesWhenExisting = EXPLOSION BALLISTIC
+  SwallowDamageTypesIfSlavesNotExisting = EXPLOSION
+End
+
+Behavior = SpawnBehavior ModuleTag_02
+  SpawnNumber = 3
+  SpawnReplaceDelay = 10000
+  SpawnUpgrade = Upgrade_HiveSpawn
 End
 ```
 
-### Example 2: Dushka Nest Hive Structure
+### Transport with Damage Redirection
 ```ini
-Body = HiveStructureBody ModuleTag_04
+Body = HiveStructureBody ModuleTag_03
+  ; Inherited from StructureBody/ActiveBody
   MaxHealth = 1500.0
   InitialHealth = 1500.0
-  PropagateDamageTypesToSlavesWhenExisting = NONE +SMALL_ARMS +SNIPER +POISON +RADIATION +SURRENDER +MICROWAVE
-  SwallowDamageTypesIfSlavesNotExisting = NONE +SNIPER +POISON +SURRENDER
+  
+  ; Damage Propagation
+  PropagateDamageTypesToSlavesWhenExisting = BALLISTIC
+  SwallowDamageTypesIfSlavesNotExisting = 0
+End
+
+Module = ContainModule ModuleTag_04
+  Max = 5
+  Initial = 0
 End
 ```
 
-### Example 3: Stinger Site Hive Structure
+## Template
+
 ```ini
-Body = HiveStructureBody ModuleTag_04
-  MaxHealth = 1800.0
-  InitialHealth = 1800.0
-  PropagateDamageTypesToSlavesWhenExisting = NONE +SMALL_ARMS +SNIPER +POISON +RADIATION +SURRENDER +MICROWAVE
-  SwallowDamageTypesIfSlavesNotExisting = NONE +SNIPER +POISON +SURRENDER
+Body = HiveStructureBody ModuleTag_XX
+  ; Inherits all StructureBody/ActiveBody properties
+  MaxHealth = 100.0                  ; // maximum health points *(v1.04)*
+  InitialHealth = 100.0              ; // starting health points *(v1.04)*
+
+  ; Subdual Damage Settings (Generals Zero Hour only)
+  SubdualDamageCap = 0.0             ; // maximum subdual damage *(v1.04, Generals Zero Hour only)*
+  SubdualDamageHealRate = 0          ; // subdual damage heal rate *(v1.04, Generals Zero Hour only)*
+  SubdualDamageHealAmount = 0.0      ; // subdual damage heal amount *(v1.04, Generals Zero Hour only)*
+
+  ; Electronic Warfare Settings (Generals Zero Hour only)
+  EWDamageCap = 0.0                  ; // maximum electronic warfare damage *(v1.04, Generals Zero Hour only)*
+  EWDamageHealRate = 0               ; // electronic warfare damage heal rate *(v1.04, Generals Zero Hour only)*
+  EWDamageHealAmount = 0.0           ; // electronic warfare damage heal amount *(v1.04, Generals Zero Hour only)*
+
+  ; Damage Propagation
+  PropagateDamageTypesToSlavesWhenExisting = 0 ; // damage types to redirect to slaves *(v1.04)*
+  SwallowDamageTypesIfSlavesNotExisting = 0    ; // damage types to absorb when no slaves *(v1.04)*
 End
 ```
 
 ## Notes
 
-- This is a GMX (Generals Modding eXtended) documentation page
-- Properties and examples will be documented from the corresponding C++ source files
-- Version compatibility information will be included for all properties
+- HiveStructureBody requires either SpawnBehavior or ContainModule to function properly
+- Damage propagation only occurs when slaves/contained objects are available
+- The closest slave/contained object to the damage source receives the damage
+- Damage absorption (swallowing) only occurs when no slaves exist and the damage type matches
+- If no slaves exist and damage type doesn't match swallow criteria, damage is taken normally
+- Creates interesting tactical scenarios where destroying slaves makes the hive vulnerable
 
 ## Source Files
 
-- Header: [`GeneralsMD/Code/GameEngine/Include/GameLogic/Module/BodyModule.h`](../../GeneralsMD/Code/GameEngine/Include/GameLogic/Module/BodyModule.h)
+**Base Class:** [`StructureBody`](../../GeneralsMD/Code/GameEngine/Include/GameLogic/Module/StructureBody.h)
+
+- Header: [`GeneralsMD/Code/GameEngine/Include/GameLogic/Module/HiveStructureBody.h`](../../GeneralsMD/Code/GameEngine/Include/GameLogic/Module/HiveStructureBody.h)
 - Source: [`GeneralsMD/Code/GameEngine/Source/GameLogic/Object/Body/HiveStructureBody.cpp`](../../GeneralsMD/Code/GameEngine/Source/GameLogic/Object/Body/HiveStructureBody.cpp)

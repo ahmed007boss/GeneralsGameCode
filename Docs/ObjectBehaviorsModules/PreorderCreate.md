@@ -1,56 +1,72 @@
 # PreorderCreate
 
-*This documentation is a work in progress (WIP) and will be completed as part of the GMX project.*
+Create module that sets preorder status on buildings when they are completed, based on the player's preorder status.
 
 ## Overview
 
-PreorderCreate provides functionality for preordering objects or units when creation conditions are met.
+PreorderCreate is a create module that manages preorder status for buildings when they are completed. It checks if the controlling player has preordered the game and sets the appropriate model condition state accordingly. This creates visual differentiation between preorder and regular versions of buildings, providing special recognition for players who preordered the game.
 
-**Base Class:** [`CreateModule`](../../GeneralsMD/Code/GameEngine/Include/GameLogic/Module/CreateModule.h)
+PreorderCreate must be embedded within object definitions and cannot be used as a standalone object template.
 
 ## Usage
 
-Used by objects that can preorder other objects or units for production or deployment.
+Used by buildings that should have different visual appearances based on whether the player preordered the game. This is a **create module** that must be embedded within object definitions. Use the [Template](#template) below by copying it into your object definition. Then, customize it as needed, making sure to review any limitations, conditions, or dependencies related to its usage.
 
-## Table of Contents
+**Limitations**:
+- Only affects buildings with model condition states
+- Cannot function without proper player preorder status tracking
+- Only applies visual changes, no gameplay effects
+- Requires proper model condition state support
 
-- [Overview](#overview)
-- [Usage](#usage)
-- [Properties](#properties)
-- [Examples](#examples)
-- [Notes](#notes)
+**Conditions**:
+- Multiple instances behavior: Multiple PreorderCreate modules can exist independently, each managing different preorder effects
+- Always active once assigned to an object
+- Triggers during onBuildComplete events
+- Creates exclusive visual content for preorder players
+
+**Dependencies**:
+- Requires objects with model condition state support
+- Depends on player preorder status tracking
+- Inherits all functionality from CreateModule
 
 ## Properties
 
-*Properties documentation will be added when this page is completed.*
+This module does not expose any INI-parsable properties.
 
 ## Examples
 
-### Example 1: GLA Command Center Preorder Create
+### Basic Preorder Building
 ```ini
-Behavior = PreorderCreate ModuleTag_PreorderCreate
+Create = PreorderCreate ModuleTag_01
 End
 ```
 
-### Example 2: GLA Chemical Lab Preorder Create
+### Preorder-Only Building
 ```ini
-Behavior = PreorderCreate ModuleTag_PreorderCreate
+Create = PreorderCreate ModuleTag_02
 End
 ```
 
-### Example 3: China Propaganda Center Preorder Create
+## Template
+
 ```ini
-Behavior = PreorderCreate ModuleTag_PreorderCreate
+Create = PreorderCreate ModuleTag_XX
+  ; No additional properties
 End
 ```
 
 ## Notes
 
-- This is a GMX (Generals Modding eXtended) documentation page
-- Properties and examples will be documented from the corresponding C++ source files
-- Version compatibility information will be included for all properties
+- PreorderCreate manages preorder status for buildings when construction completes
+- Sets MODELCONDITION_PREORDER state for preorder players
+- Provides visual recognition for preorder players
+- Commonly used for special buildings and structures
+- The module automatically handles preorder status based on player status
+- Creates exclusive visual content for preorder players
 
 ## Source Files
 
-- Header: [`GeneralsMD/Code/GameEngine/Include/GameLogic/Module/CreateModule.h`](../../GeneralsMD/Code/GameEngine/Include/GameLogic/Module/CreateModule.h)
+**Base Class:** [`CreateModule`](../../GeneralsMD/Code/GameEngine/Include/GameLogic/Module/CreateModule.h)
+
+- Header: [`GeneralsMD/Code/GameEngine/Include/GameLogic/Module/PreorderCreate.h`](../../GeneralsMD/Code/GameEngine/Include/GameLogic/Module/PreorderCreate.h)
 - Source: [`GeneralsMD/Code/GameEngine/Source/GameLogic/Object/Create/PreorderCreate.cpp`](../../GeneralsMD/Code/GameEngine/Source/GameLogic/Object/Create/PreorderCreate.cpp)

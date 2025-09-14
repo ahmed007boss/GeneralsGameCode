@@ -1,16 +1,31 @@
 # KeepObjectDie
 
-*This documentation is a work in progress (WIP) and will be completed as part of the GMX project.*
+KeepObjectDie provides a death behavior that keeps the object in the world as rubble instead of destroying it.
 
 ## Overview
 
-KeepObjectDie provides death mechanics that keep the object alive in a special state rather than destroying it.
-
-**Base Class:** [`DieModule`](../../GeneralsMD/Code/GameEngine/Include/GameLogic/Module/DieModule.h)
+The `KeepObjectDie` class is a simple death module that prevents objects from being completely destroyed when they die. Instead of removing the object from the game world, it allows the object to remain as rubble or debris. This behavior is commonly used for civilian buildings, structures, and objects that should leave visual remains when destroyed.
 
 ## Usage
 
-Used by objects that need to enter a special state upon "death" rather than being completely destroyed.
+Used by objects that should remain in the world as rubble when destroyed, such as civilian buildings, structures, or objects that need visual remains. This is a **die module** that must be embedded within object definitions. Use the [Template](#template) below by copying it into your object definition. Then, customize it as needed, making sure to review any limitations, conditions, or dependencies related to its usage.
+
+**Limitations**:
+- KeepObjectDie only prevents object destruction when the object dies
+- The behavior provides no additional effects beyond keeping the object in the world
+- Objects remain in their current state when they die
+- The behavior requires the death system to function properly
+
+**Conditions**:
+- KeepObjectDie allows objects to remain in the world as rubble when they die
+- The behavior integrates with the death system for conditional activation
+- Objects keep their current visual state and position when they die
+- The behavior supports conditional activation based on death types and conditions
+- **Multiple instances behavior**: Only one instance should be used per object; multiple instances are unnecessary since object keeping is a single action
+
+**Dependencies**:
+- Requires the death system to function correctly
+- The behavior relies on the object's current state for visual appearance
 
 ## Table of Contents
 
@@ -18,41 +33,54 @@ Used by objects that need to enter a special state upon "death" rather than bein
 - [Usage](#usage)
 - [Properties](#properties)
 - [Examples](#examples)
+- [Template](#template)
 - [Notes](#notes)
 
 ## Properties
 
-*Properties documentation will be added when this page is completed.*
+KeepObjectDie has no additional properties beyond those inherited from DieModule (death types, veterancy levels, status requirements, etc.).
 
 ## Examples
 
-### Example 1: America CINE Unit Keep Object Die
+### Civilian Building Rubble
 ```ini
-; never truly destroyed, even when reduced to zero health. Also note that garrisonable
-; buildings automatically stick around because GarrisonContain has it's own DieModule
-Behavior = KeepObjectDie ModuleTag_IWantRubble
+Die = KeepObjectDie ModuleTag_Rubble
 End
 ```
 
-### Example 2: America CINE Unit Keep Object Die Alternative
+### Conditional Rubble
 ```ini
-Behavior = KeepObjectDie ModuleTag_IWantRubble
+Die = KeepObjectDie ModuleTag_ConditionalRubble
+  DeathTypes = NONE +EXPLODED +BURNED
 End
 ```
 
-### Example 3: GLA CINE Unit Keep Object Die
+### Structure Rubble
 ```ini
-Behavior = KeepObjectDie ModuleTag_IWantRubble
+Die = KeepObjectDie ModuleTag_StructureRubble
+  DeathTypes = NONE +CRUSHED
+End
+```
+
+## Template
+
+```ini
+Die = KeepObjectDie ModuleTag_XX
+  ; No additional properties - uses base DieModule properties
 End
 ```
 
 ## Notes
 
-- This is a GMX (Generals Modding eXtended) documentation page
-- Properties and examples will be documented from the corresponding C++ source files
-- Version compatibility information will be included for all properties
+- KeepObjectDie allows objects to remain in the world as rubble when they die
+- The behavior integrates with the death system for conditional activation
+- Objects keep their current visual state and position when they die
+- The behavior supports conditional activation based on death types and conditions
+- This behavior is commonly used for civilian buildings and structures that should leave visual remains
 
 ## Source Files
 
-- Header: [`GeneralsMD/Code/GameEngine/Include/GameLogic/Module/DieModule.h`](../../GeneralsMD/Code/GameEngine/Include/GameLogic/Module/DieModule.h)
+**Base Class:** [`DieModule`](../../GeneralsMD/Code/GameEngine/Include/GameLogic/Module/DieModule.h)
+
+- Header: [`GeneralsMD/Code/GameEngine/Include/GameLogic/Module/KeepObjectDie.h`](../../GeneralsMD/Code/GameEngine/Include/GameLogic/Module/KeepObjectDie.h)
 - Source: [`GeneralsMD/Code/GameEngine/Source/GameLogic/Object/Die/KeepObjectDie.cpp`](../../GeneralsMD/Code/GameEngine/Source/GameLogic/Object/Die/KeepObjectDie.cpp)

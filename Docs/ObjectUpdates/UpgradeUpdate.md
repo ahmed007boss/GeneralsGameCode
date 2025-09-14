@@ -1,14 +1,32 @@
 # UpgradeUpdate
 
-*This documentation is a work in progress (WIP) and will be completed as part of the GMX project.*
+UpgradeUpdate provides upgrade functionality for objects that can manage upgrades or provide upgrade capabilities.
 
 ## Overview
 
-UpgradeUpdate provides upgrade functionality for objects that can be upgraded or provide upgrades.
+The `UpgradeUpdate` class manages upgrade operations for objects that can manage upgrades, provide upgrade capabilities, or handle upgrade systems. It handles upgrade activation, upgrade management, and upgrade system integration. This update is commonly used by objects that provide upgrade capabilities, upgrade systems, and units with upgrade management functionality.
 
 ## Usage
 
-Used by objects that can be upgraded, provide upgrades to other objects, or manage upgrade systems.
+Used by objects that can manage upgrades, provide upgrade capabilities, or handle upgrade systems. This is an **update module** that must be embedded within object definitions. Use the [Template](#template) below by copying it into your object definition. Then, customize it as needed, making sure to review any limitations, conditions, or dependencies related to its usage.
+
+**Limitations**:
+- Upgrade operations are limited by upgrade parameters and upgrade system capabilities
+- Upgrade activation depends on proper update system integration
+- Upgrade management is controlled by upgrade parameters and system capabilities
+- Upgrade effectiveness varies based on upgrade capabilities
+
+**Conditions**:
+- UpgradeUpdate manages upgrade operations and upgrade system coordination
+- The update handles upgrade activation, upgrade management, and upgrade system integration
+- Upgrade operations provide upgrade capabilities and upgrade system capabilities
+- Upgrade management creates realistic upgrade system operations
+- **Multiple instances behavior**: Multiple instances can coexist; each operates independently with its own upgrade parameters
+
+**Dependencies**:
+- Uses update system for upgrade update activation
+- Integrates with upgrade system for upgrade capabilities
+- Uses upgrade coordination system for upgrade management
 
 ## Table of Contents
 
@@ -16,24 +34,53 @@ Used by objects that can be upgraded, provide upgrades to other objects, or mana
 - [Usage](#usage)
 - [Properties](#properties)
 - [Examples](#examples)
+- [Template](#template)
 - [Notes](#notes)
+- [Source Files](#source-files)
+- [Changes History](#changes-history)
+- [Status](#status)
+  - [Reviews (0)](#modder-reviews)
 
 ## Properties
 
-*Properties documentation will be added when this page is completed.*
+*Properties documentation will be added when this page is completed from the corresponding C++ source files.*
 
 ## Examples
-*UpgradeUpdate is a base class and not used directly in INI files. It serves as the parent class for all Upgrade modules.*
 
-*Examples will be added when this page is completed.*
+*No examples of UpgradeUpdate were found in the INI files.*
+
+## Template
+
+```ini
+Behavior = UpgradeUpdate ModuleTag_XX
+  ; Properties will be documented from source files
+End
+```
 
 ## Notes
 
-- This is a GMX (Generals Modding eXtended) documentation page
-- Properties and examples will be documented from the corresponding C++ source files
-- Version compatibility information will be included for all properties
+- UpgradeUpdate provides upgrade operations and upgrade system coordination capabilities
+- The update manages upgrade activation, upgrade management, and upgrade system integration
+- Upgrade operations provide essential upgrade capabilities and upgrade system capabilities
+- Upgrade management creates realistic upgrade system operations and coordination
+- This update is commonly used by objects that provide upgrade capabilities, upgrade systems, and upgrade management units
+- Upgrade coordination ensures efficient upgrade and system integration operations
 
 ## Source Files
 
-- Header: [`GeneralsMD/Code/GameEngine/Include/GameLogic/Module/UpdateModule.h`](../../GeneralsMD/Code/GameEngine/Include/GameLogic/Module/UpdateModule.h)
+**Base Class:** [`UpdateModule`](../../GeneralsMD/Code/GameEngine/Include/GameLogic/Module/UpdateModule.h)
+
+- Header: [`GeneralsMD/Code/GameEngine/Include/GameLogic/Module/UpgradeUpdate.h`](../../GeneralsMD/Code/GameEngine/Include/GameLogic/Module/UpgradeUpdate.h)
 - Source: [`GeneralsMD/Code/GameEngine/Source/GameLogic/Object/Update/UpgradeUpdate.cpp`](../../GeneralsMD/Code/GameEngine/Source/GameLogic/Object/Update/UpgradeUpdate.cpp)
+
+## Changes History
+
+- No Changes done since 1.04
+
+## Status
+
+- **Documentation Status**: AI Generated Pending Reviews 
+- **Last Updated**: [Current Date] by @ahmed Salah using AI
+
+### Modder Reviews 
+- No Reviews done yet
