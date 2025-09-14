@@ -103,8 +103,9 @@ enum CommandOption CPP_11(: Int)
 	USES_MINE_CLEARING_WEAPONSET= 0x00200000,	// uses the special mine-clearing weaponset, even if not current
 	CAN_USE_WAYPOINTS						= 0x00400000, // button has option to use a waypoint path
 	MUST_BE_STOPPED							= 0x00800000, // Unit must be stopped in order to be able to use button.
-
-	NEED_UPGRADE_TO_APPEAR = 0x01600000, // command requires upgrade to be enabled
+	NEED_UPGRADE_TO_APPEAR = 0x01000000, // command requires upgrade to be enabled
+	// TheSuperHackers @feature Ahmed Salah 27/06/2025 Enable select-all buttons when special powers are available
+	ENABLE_SELECT_ALL_BUTTON_IF_ANY_POWER_AVAILABLE = 0x02000000, // If of type GUI_COMMAND_SELECT_ALL_UNITS_OF_TYPE and any special Power available the button should be enabled 
 
 	NUM_COMMAND_OPTIONS						// keep this last
 };
@@ -140,8 +141,8 @@ static const char *TheCommandOptionNames[] =
 	"USES_MINE_CLEARING_WEAPONSET",
 	"CAN_USE_WAYPOINTS",
 	"MUST_BE_STOPPED",
-
 	"NEED_UPGRADE_TO_APPEAR",
+	"ENABLE_SELECT_ALL_BUTTON_IF_ANY_POWER_AVAILABLE",
 	NULL
 };
 #endif  // end DEFINE_COMMAND_OPTION_NAMES

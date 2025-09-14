@@ -4264,25 +4264,56 @@ void ControlBar::updateSpecialPowerShortcut( void )
 
 				UnsignedInt mostReadyPercentage;
 				obj = ThePlayerList->getLocalPlayer()->findMostReadyShortcutSpecialPowerForThing( command->getThingTemplate(), mostReadyPercentage );
-				if( obj )
+				// TheSuperHackers @feature Ahmed Salah 27/06/2025 Check if select-all button should be enabled when special powers are available
+				Bool enableButtonIfAnyPowerAvailable = BitIsSet(command->getOptions(), ENABLE_SELECT_ALL_BUTTON_IF_ANY_POWER_AVAILABLE) == false;
+				if( obj  )
 				{
-					//Ugh... hacky.
-					//Look for a command button for a special power and if so, then get the command availability for it.
-					const CommandSet *commandSet = TheControlBar->findCommandSet( obj->getCommandSetString() );
-					if( commandSet )
+					if (enableButtonIfAnyPowerAvailable)
 					{
-						for( Int commandIndex = 0; commandIndex < MAX_COMMANDS_PER_SET; commandIndex++ )
+						availability = COMMAND_RESTRICTED;
+						const CommandSet* commandSet = TheControlBar->findCommandSet(obj->getCommandSetString());
+						if (commandSet)
 						{
-							const CommandButton *evalButton = commandSet->getCommandButton( commandIndex );
-							GameWindow *evalButtonWin = m_commandWindows[ commandIndex ];
-							if( evalButton && evalButton->getCommandType() == GUI_COMMAND_SPECIAL_POWER )
+
+							for (Int commandIndex = 0; commandIndex < MAX_COMMANDS_PER_SET; commandIndex++)
 							{
-								//We want to evaluate the special powerbutton... but apply the clock overlay to our button!
-								availability = getCommandAvailability( evalButton, obj, evalButtonWin, win );
-								break;
+								const CommandButton* evalButton = commandSet->getCommandButton(commandIndex);
+								GameWindow* evalButtonWin = m_commandWindows[commandIndex];
+								if (evalButton && evalButton->getCommandType() == GUI_COMMAND_SPECIAL_POWER)
+								{
+									//We want to evaluate the special powerbutton... but apply the clock overlay to our button!
+									availability = getCommandAvailability(evalButton, obj, evalButtonWin, win);
+									if (availability == COMMAND_AVAILABLE)
+									{
+										break;
+									}
+									
+								}
 							}
 						}
 					}
+					else
+					{
+						//Ugh... hacky.
+					//Look for a command button for a special power and if so, then get the command availability for it.
+						const CommandSet* commandSet = TheControlBar->findCommandSet(obj->getCommandSetString());
+						if (commandSet)
+						{
+
+							for (Int commandIndex = 0; commandIndex < MAX_COMMANDS_PER_SET; commandIndex++)
+							{
+								const CommandButton* evalButton = commandSet->getCommandButton(commandIndex);
+								GameWindow* evalButtonWin = m_commandWindows[commandIndex];
+								if (evalButton && evalButton->getCommandType() == GUI_COMMAND_SPECIAL_POWER)
+								{
+									//We want to evaluate the special powerbutton... but apply the clock overlay to our button!
+									availability = getCommandAvailability(evalButton, obj, evalButtonWin, win);
+									break;
+								}
+							}
+						}
+					}
+					
 				}
 			}
 		}
