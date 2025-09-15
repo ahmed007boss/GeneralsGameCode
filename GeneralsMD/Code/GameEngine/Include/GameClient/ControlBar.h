@@ -540,7 +540,7 @@ private:
 /** Command sets are collections of configurable command buttons.  They are used in the
 	* command context sensitive window in the battle user interface */
 //-------------------------------------------------------------------------------------------------
-enum { MAX_COMMANDS_PER_SET = 18 };  // user interface max is 14 (but internally it's 18 for script only buttons!)
+enum { MAX_COMMANDS_PER_SET = 30 };  // user interface max is 14 (but internally it's 18 for script only buttons!)
 enum { MAX_RIGHT_HUD_UPGRADE_CAMEOS = 5};
 enum {
 			 MAX_PURCHASE_SCIENCE_RANK_1 = 4,
