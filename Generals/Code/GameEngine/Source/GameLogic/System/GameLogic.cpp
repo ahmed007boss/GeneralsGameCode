@@ -40,6 +40,7 @@
 #include "Common/LatchRestore.h"
 #include "Common/MapObject.h"
 #include "Common/MultiplayerSettings.h"
+#include "Common/OSDisplay.h"
 #include "Common/PerfTimer.h"
 #include "Common/Player.h"
 #include "Common/PlayerList.h"
@@ -475,11 +476,8 @@ void GameLogic::reset( void )
 	}
 	m_forceGameStartByTimeOut = FALSE;
 
-	if(TheStatsCollector)
-	{
-		delete TheStatsCollector;
-		TheStatsCollector = NULL;
-	}
+	delete TheStatsCollector;
+	TheStatsCollector = NULL;
 
 	// clear any table of contents we have
 	m_objectTOC.clear();
@@ -974,13 +972,8 @@ void GameLogic::updateLoadProgress( Int progress )
 void GameLogic::deleteLoadScreen( void )
 {
 
-	if( m_loadScreen )
-	{
-
-		delete m_loadScreen;
-		m_loadScreen = NULL;
-
-	}
+	delete m_loadScreen;
+	m_loadScreen = NULL;
 
 }
 
@@ -991,12 +984,24 @@ void GameLogic::setGameLoading( Bool loading )
 
 // ------------------------------------------------------------------------------------------------
 // ------------------------------------------------------------------------------------------------
+void GameLogic::updateDisplayBusyState()
+{
+	const Bool busySystem = isInInteractiveGame() && !isGamePaused();
+	const Bool busyDisplay = busySystem && !TheGlobalData->m_headless;
+
+	OSDisplaySetBusyState(busyDisplay, busySystem);
+}
+
+// ------------------------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------------------
 void GameLogic::setGameMode( GameMode mode )
 {
 	GameMode prev = m_gameMode;
 	m_gameMode = mode;
 
 	TheMouse->onGameModeChanged(prev, mode);
+
+	updateDisplayBusyState();
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -1127,10 +1132,8 @@ void GameLogic::startNewGame( Bool saveGame )
 		}
 	} else {
 		if (m_gameMode == GAME_SINGLE_PLAYER)	{
-			if (TheSkirmishGameInfo) {
-				delete TheSkirmishGameInfo;
-				TheSkirmishGameInfo = NULL;
-			}
+			delete TheSkirmishGameInfo;
+			TheSkirmishGameInfo = NULL;
 		}
 	}
 
@@ -3746,6 +3749,8 @@ void GameLogic::setGamePaused( Bool paused, Bool pauseMusic, Bool pauseInput )
 	pauseGameSound(paused);
 	pauseGameMusic(paused && pauseMusic);
 	pauseGameInput(paused && pauseInput);
+
+	updateDisplayBusyState();
 }
 
 // ------------------------------------------------------------------------------------------------

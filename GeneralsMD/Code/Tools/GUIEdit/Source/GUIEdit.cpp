@@ -445,25 +445,15 @@ GUIEdit::GUIEdit( void )
 //=============================================================================
 GUIEdit::~GUIEdit( void )
 {
-	if (TheHeaderTemplateManager)
-	{
-		delete TheHeaderTemplateManager;
-		TheHeaderTemplateManager = NULL;
-	}
+	delete TheHeaderTemplateManager;
+	TheHeaderTemplateManager = NULL;
 
-	if (TheGameText)
-	{
-		delete TheGameText;
-		TheGameText = NULL;
-	}
+	delete TheGameText;
+	TheGameText = NULL;
 
 	// delete the IME Manager
-//	if ( TheIMEManager )
-//	{
-//		delete TheIMEManager;
-//		TheIMEManager = NULL;
-//	}
-
+//	delete TheIMEManager;
+//	TheIMEManager = NULL;
 
 	// all the shutdown routine
 	shutdown();
@@ -496,8 +486,6 @@ void GUIEdit::init( void )
 	TheArchiveFileSystem = new Win32BIGFileSystem;
 	TheFileSystem->init();
 
-	TheGlobalLanguageData = new GlobalLanguage;
-	TheGlobalLanguageData->init();
 	//---------------------------------------------------------------------------
 	// GUI tool specific initializations ----------------------------------------
 	//---------------------------------------------------------------------------
@@ -520,9 +508,13 @@ void GUIEdit::init( void )
 	// Game engine specific initializations -------------------------------------
 	//---------------------------------------------------------------------------
 
-	// create the name key generator
+	// create the global data
 	TheWritableGlobalData = new GlobalData;
 	TheWritableGlobalData->init();
+
+	// TheSuperHackers @info global language relies on global data being initialized
+	TheGlobalLanguageData = new GlobalLanguage;
+	TheGlobalLanguageData->init();
 
 	// create the message stream
 	TheMessageStream = new MessageStream;

@@ -1945,22 +1945,17 @@ ZoneBlock::~ZoneBlock()
 
 void ZoneBlock::freeZones(void)
 {
-	if (m_groundCliffZones) {
-		delete [] m_groundCliffZones;
-		m_groundCliffZones = NULL;
-	}
-	if (m_groundWaterZones) {
-		delete [] m_groundWaterZones;
-		m_groundWaterZones = NULL;
-	}
-	if (m_groundRubbleZones) {
-		delete [] m_groundRubbleZones;
-		m_groundRubbleZones = NULL;
-	}
-	if (m_crusherZones) {
-		delete [] m_crusherZones;
-		m_crusherZones = NULL;
-	}
+	delete [] m_groundCliffZones;
+	m_groundCliffZones = NULL;
+
+	delete [] m_groundWaterZones;
+	m_groundWaterZones = NULL;
+
+	delete [] m_groundRubbleZones;
+	m_groundRubbleZones = NULL;
+
+	delete [] m_crusherZones;
+	m_crusherZones = NULL;
 }
 
 /* Allocate zone equivalency arrays large enough to hold required entries.  If the arrays are already
@@ -2146,43 +2141,35 @@ PathfindZoneManager::~PathfindZoneManager()
 
 void PathfindZoneManager::freeZones()
 {
-	if (m_groundCliffZones) {
-		delete [] m_groundCliffZones;
-		m_groundCliffZones = NULL;
-	}
-	if (m_groundWaterZones) {
-		delete [] m_groundWaterZones;
-		m_groundWaterZones = NULL;
-	}
-	if (m_groundRubbleZones) {
-		delete [] m_groundRubbleZones;
-		m_groundRubbleZones = NULL;
-	}
-	if (m_terrainZones) {
-		delete [] m_terrainZones;
-		m_terrainZones = NULL;
-	}
-	if (m_crusherZones) {
-		delete [] m_crusherZones;
-		m_crusherZones = NULL;
-	}
-	if (m_hierarchicalZones) {
-		delete [] m_hierarchicalZones;
-		m_hierarchicalZones = NULL;
-	}
+	delete [] m_groundCliffZones;
+	m_groundCliffZones = NULL;
+
+	delete [] m_groundWaterZones;
+	m_groundWaterZones = NULL;
+
+	delete [] m_groundRubbleZones;
+	m_groundRubbleZones = NULL;
+
+	delete [] m_terrainZones;
+	m_terrainZones = NULL;
+
+	delete [] m_crusherZones;
+	m_crusherZones = NULL;
+
+	delete [] m_hierarchicalZones;
+	m_hierarchicalZones = NULL;
+
 	m_zonesAllocated = 0;
 }
 
 void PathfindZoneManager::freeBlocks()
 {
-	if (m_blockOfZoneBlocks) {
-		delete [] m_blockOfZoneBlocks;
-		m_blockOfZoneBlocks = NULL;
-	}
-	if (m_zoneBlocks) {
-		delete [] m_zoneBlocks;
-		m_zoneBlocks = NULL;
-	}
+	delete [] m_blockOfZoneBlocks;
+	m_blockOfZoneBlocks = NULL;
+
+	delete [] m_zoneBlocks;
+	m_zoneBlocks = NULL;
+
 	m_zoneBlockExtent.x = 0;
 	m_zoneBlockExtent.y = 0;
 }
@@ -2782,7 +2769,7 @@ PathfindLayer::~PathfindLayer()
 }
 
 /**
- * Returns true if the layer is avaialble for use.
+ * Returns true if the layer is available for use.
  */
 void PathfindLayer::reset(void)
 {
@@ -2798,10 +2785,10 @@ void PathfindLayer::reset(void)
 		delete [] m_layerCells;
 		m_layerCells = NULL;
 	}
-	if (m_blockOfMapCells) {
-		delete [] m_blockOfMapCells;
-		m_blockOfMapCells = NULL;
-	}
+
+	delete [] m_blockOfMapCells;
+	m_blockOfMapCells = NULL;
+
 	m_width = 0;
 	m_height = 0;
 	m_xOrigin = 0;
@@ -3396,14 +3383,11 @@ void Pathfinder::reset( void )
 	frameToShowObstacles = 0;
 	DEBUG_LOG(("Pathfind cell is %d bytes, PathfindCellInfo is %d bytes", sizeof(PathfindCell), sizeof(PathfindCellInfo)));
 
-	if (m_blockOfMapCells) {
-		delete []m_blockOfMapCells;
-		m_blockOfMapCells = NULL;
-	}
-	if (m_map) {
-		delete [] m_map;
-		m_map = NULL;
-	}
+	delete [] m_blockOfMapCells;
+	m_blockOfMapCells = NULL;
+
+	delete [] m_map;
+	m_map = NULL;
 
 	Int i;
 	for (i=0; i<=LAYER_LAST; i++) {
@@ -3853,71 +3837,6 @@ void Pathfinder::internal_classifyObjectFootprint( Object *obj, Bool insert )
 	if (cellBounds.hi.y > m_extent.hi.y) {
 		cellBounds.hi.y = m_extent.hi.y;
 	}
-
-
-
-	// Expand building bounds 1 cell.
-#define no_EXPAND_ONE_CELL
-#ifdef EXPAND_ONE_CELL
-	for( j=cellBounds.lo.y; j<=cellBounds.hi.y; j++ )
-	{
-		for( i=cellBounds.lo.x; i<=cellBounds.hi.x; i++ )
-		{
-			if (!insert) {
-				if (m_map[i][j].getType() == PathfindCell::CELL_IMPASSABLE) {
-					m_map[i][j].setType(PathfindCell::CELL_CLEAR);
-				}
-				m_map[i][j].setPinched(false);
-			}
-			if (!insert) {
-				if (m_map[i][j].isObstaclePresent(obj->getID())) {
-					m_map[i][j].removeObstacle( obj );
-				}
-				continue;
-			}
-			if (m_map[i][j].getType() == PathfindCell::CELL_CLEAR) {
-				Bool obstacleAdjacent = false;
-				Int k, l;
-				for (k=i-1; k<i+2; k++) {
-					if (k<m_extent.lo.x || k> m_extent.hi.x) continue;
-					for (l=j-1; l<j+2; l++) {
-						if (l<m_extent.lo.y || l> m_extent.hi.y) continue;
-						if ((k==i) && (l==j)) continue;
-						if ((k!=i) && (l!=j)) continue;
-						if (m_map[k][l].getType()!=PathfindCell::CELL_CLEAR)) {
-							objectAdjacent = true;
-							break;
-						}
-
-					}
-				}
-				if (obstacleAdjacent) {
-					m_map[i][j].setPinched(true);
-				}
-				// If the total open cells are < 2
-			}
-		}
-	}
-
-	if (insert) {
-		for( j=cellBounds.lo.y; j<=cellBounds.hi.y; j++ )
-		{
-			for( i=cellBounds.lo.x; i<=cellBounds.hi.x; i++ )
-			{
-				if (m_map[i][j].getPinched() && m_map[i][j].getType() == PathfindCell::CELL_CLEAR) {
-					ICoord2D pos;
-					pos.x = i;
-					pos.y = j;
-					m_map[i][j].setTypeAsObstacle( obj, false, pos );
-					//m_map[i][j].setType(PathfindCell::CELL_CLIFF);
-					m_map[i][j].setPinched(false);
-				}
-			}
-		}
-	}
-#endif
-
-
 
 	if (!insert) {
 		for( j=cellBounds.lo.y; j<=cellBounds.hi.y; j++ )
