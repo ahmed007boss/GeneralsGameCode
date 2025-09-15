@@ -1360,6 +1360,18 @@ const FieldParse CommandSet::m_commandSetFieldParseTable[] =
 	{ "16",			CommandSet::parseCommandButton, (void *)15,		offsetof( CommandSet, m_command ) },
 	{ "17",			CommandSet::parseCommandButton, (void *)16,		offsetof( CommandSet, m_command ) },
 	{ "18",			CommandSet::parseCommandButton, (void *)17,		offsetof( CommandSet, m_command ) },
+	{ "19",			CommandSet::parseCommandButton, (void *)18,		offsetof( CommandSet, m_command ) },
+	{ "20",			CommandSet::parseCommandButton, (void *)19,		offsetof( CommandSet, m_command ) },
+	{ "21",			CommandSet::parseCommandButton, (void *)20,		offsetof( CommandSet, m_command ) },
+	{ "22",			CommandSet::parseCommandButton, (void *)21,		offsetof( CommandSet, m_command ) },
+	{ "23",			CommandSet::parseCommandButton, (void *)22,		offsetof( CommandSet, m_command ) },
+	{ "24",			CommandSet::parseCommandButton, (void *)23,		offsetof( CommandSet, m_command ) },
+	{ "25",			CommandSet::parseCommandButton, (void *)24,		offsetof( CommandSet, m_command ) },
+	{ "26",			CommandSet::parseCommandButton, (void *)25,		offsetof( CommandSet, m_command ) },
+	{ "27",			CommandSet::parseCommandButton, (void *)26,		offsetof( CommandSet, m_command ) },
+	{ "28",			CommandSet::parseCommandButton, (void *)27,		offsetof( CommandSet, m_command ) },
+	{ "29",			CommandSet::parseCommandButton, (void *)28,		offsetof( CommandSet, m_command ) },
+	{ "30",			CommandSet::parseCommandButton, (void *)29,		offsetof( CommandSet, m_command ) },
 	{ NULL,			NULL,														 NULL,				0	}  // keep this last
 
 };
