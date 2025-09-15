@@ -45,7 +45,12 @@ public:
 class ScriptList;
 class ScriptGroup;
 class Script;
+class ScriptCondition;
+class ScriptAction;
+class OrCondition;
+class Condition;
 class Parameter;
+class SidesInfo;
 
 /** Class Definition for overridden Tree control that
     supports Right-click context sensitive menu.*/
@@ -130,6 +135,16 @@ protected:
 	Bool updateIcons(HTREEITEM hItem);
 	void markWaypoint(MapObject *pObj);
 
+	// TheSuperHackers @feature ScriptDialog 01/01/2025 Helper functions for structured text export
+	void exportSelectedScriptOrGroup(Script *pScript, ScriptGroup *pGroup);
+	Int exportAllScriptsToFolderStructure(const char* basePath);
+	Int exportScriptGroupToFolder(ScriptGroup *pGroup, const CString& parentPath);
+	Bool exportSingleScriptToFile(Script *pScript, const CString& filePath);
+	void exportScriptToText(Script *pScript, CString &output, Int scriptIndex);
+	void exportOrConditionToText(OrCondition *pOrCondition, CString &output, Int indentLevel);
+	void exportActionToText(ScriptAction *pAction, CString &output, Int indentLevel);
+	void exportParameterToText(Parameter *pParam, CString &output, Int indentLevel);
+
 	static Bool ParseObjectsDataChunk(DataChunkInput &file, DataChunkInfo *info, void *userData);
 	static Bool ParseObjectDataChunk(DataChunkInput &file, DataChunkInfo *info, void *userData);
 	static Bool ParsePolygonTriggersDataChunk(DataChunkInput &file, DataChunkInfo *info, void *userData);
@@ -153,6 +168,7 @@ protected:
 	afx_msg void OnAutoVerify();
 	afx_msg void OnSave();
 	afx_msg void OnLoad();
+	afx_msg void OnExportStructuredText();
 	afx_msg void OnDblclkScriptTree(NMHDR* pNMHDR, LRESULT* pResult);
 	virtual void OnOK();
 	virtual void OnCancel();

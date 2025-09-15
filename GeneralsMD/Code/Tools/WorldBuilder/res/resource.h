@@ -288,6 +288,7 @@
 #define IDC_SCRIPT_NAME                 1127
 #define IDC_VERIFY                      1127
 #define IDC_RICH_EDIT_HERE              1128
+#define IDC_EXPORT_STRUCTURED_TEXT      1140
 #define IDC_PATCH_GC                    1129
 #define IDC_CONDITION_TREE              1130
 #define IDC_CONDITION_LIST              1130

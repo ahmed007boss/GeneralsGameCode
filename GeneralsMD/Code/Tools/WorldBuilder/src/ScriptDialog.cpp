@@ -41,6 +41,7 @@
 #include "Common/ThingFactory.h"
 #include "WaypointOptions.h"
 #include "Common/UnicodeString.h"
+#include <shlobj.h>
 
 
 static const Int K_LOCAL_TEAMS_VERSION_1 = 1;
@@ -189,6 +190,7 @@ BEGIN_MESSAGE_MAP(ScriptDialog, CDialog)
 	ON_BN_CLICKED(IDC_AUTO_VERIFY, OnAutoVerify)
 	ON_BN_CLICKED(IDC_SAVE, OnSave)
 	ON_BN_CLICKED(IDC_LOAD, OnLoad)
+	ON_BN_CLICKED(IDC_EXPORT_STRUCTURED_TEXT, OnExportStructuredText)
 	ON_NOTIFY(NM_DBLCLK, IDC_SCRIPT_TREE, OnDblclkScriptTree)
 	ON_NOTIFY(TVN_BEGINDRAG, IDC_SCRIPT_TREE, OnBegindragScriptTree)
 	ON_COMMAND(ID_SCRIPTACTIVATE, OnScriptActivate)
@@ -197,6 +199,381 @@ BEGIN_MESSAGE_MAP(ScriptDialog, CDialog)
 	ON_WM_MOVE()
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
+
+// TheSuperHackers @feature ScriptDialog 01/01/2025 Add structured text export functionality
+void ScriptDialog::OnExportStructuredText()
+{
+	Script *pScript = getCurScript();
+	ScriptGroup *pGroup = getCurGroup();
+
+	// If specific script or group selected, export only that
+	if (pScript || pGroup) {
+		exportSelectedScriptOrGroup(pScript, pGroup);
+		return;
+	}
+
+	// No selection - export all scripts in folder structure
+	CFileDialog folderDlg(false, "", NULL, OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT | OFN_ENABLEHOOK,
+		"Select Export Folder||", this);
+
+	// Set up folder selection
+	BROWSEINFO bi = {0};
+	bi.lpszTitle = "Select folder to export all scripts";
+	bi.ulFlags = BIF_RETURNONLYFSDIRS | BIF_NEWDIALOGSTYLE;
+	
+	LPITEMIDLIST pidl = SHBrowseForFolder(&bi);
+	if (pidl == NULL) {
+		return; // User cancelled
+	}
+
+	char exportPath[_MAX_PATH];
+	if (!SHGetPathFromIDList(pidl, exportPath)) {
+		::AfxMessageBox("Invalid folder selected.", MB_OK | MB_ICONERROR);
+		CoTaskMemFree(pidl);
+		return;
+	}
+	CoTaskMemFree(pidl);
+
+	// Open document dialog may change working directory, change it back
+	char buf[_MAX_PATH];
+	::GetModuleFileName(NULL, buf, sizeof(buf));
+	char *pEnd = buf + strlen(buf);
+	while (pEnd != buf) {
+		if (*pEnd == '\\') {
+			*pEnd = 0;
+			break;
+		}
+		pEnd--;
+	}
+	::SetCurrentDirectory(buf);
+
+	// Export all scripts in folder structure
+	Int totalExported = exportAllScriptsToFolderStructure(exportPath);
+	
+	CString message;
+	message.Format("Exported %d scripts to folder structure in: %s", totalExported, exportPath);
+	::AfxMessageBox(message, MB_OK | MB_ICONINFORMATION);
+}
+
+// TheSuperHackers @feature ScriptDialog 01/01/2025 Export selected script or group to single file
+void ScriptDialog::exportSelectedScriptOrGroup(Script *pScript, ScriptGroup *pGroup)
+{
+	CFileDialog fileDlg(false, ".txt", NULL, OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT,
+		"Text files (.txt)|*.txt||", this);
+
+	Int result = fileDlg.DoModal();
+	if (IDCANCEL == result) {
+		return;
+	}
+
+	// Open document dialog may change working directory, change it back
+	char buf[_MAX_PATH];
+	::GetModuleFileName(NULL, buf, sizeof(buf));
+	char *pEnd = buf + strlen(buf);
+	while (pEnd != buf) {
+		if (*pEnd == '\\') {
+			*pEnd = 0;
+			break;
+		}
+		pEnd--;
+	}
+	::SetCurrentDirectory(buf);
+
+	CString path = fileDlg.GetPathName();
+	CFile theFile(path, CFile::modeCreate|CFile::modeWrite|CFile::shareDenyWrite);
+
+	try {
+		CString output;
+		
+		// Write header
+		output += "========================================\n";
+		output += "Command & Conquer Generals Script Export\n";
+		output += "========================================\n\n";
+
+		if (pScript) {
+			// Export single script
+			exportScriptToText(pScript, output, 0);
+		} else if (pGroup) {
+			// Export script group
+			output += "SCRIPT GROUP: " + CString(pGroup->getName().str()) + "\n";
+			output += "========================================\n\n";
+			
+			Script *pScr;
+			Int scriptIndex = 1;
+			for (pScr = pGroup->getScript(); pScr; pScr = pScr->getNext()) {
+				exportScriptToText(pScr, output, scriptIndex++);
+			}
+		}
+
+		// Write to file
+		theFile.Write(output, output.GetLength());
+		theFile.Close();
+
+		::AfxMessageBox("Script exported successfully to: " + path, MB_OK | MB_ICONINFORMATION);
+	}
+	catch (CFileException* e) {
+		::AfxMessageBox("Error writing file: " + path, MB_OK | MB_ICONERROR);
+		e->Delete();
+	}
+}
+
+// TheSuperHackers @feature ScriptDialog 01/01/2025 Export all scripts in hierarchical folder structure
+Int ScriptDialog::exportAllScriptsToFolderStructure(const char* basePath)
+{
+	Int totalExported = 0;
+	
+	// Create main export folder
+	CString exportBasePath = basePath;
+	exportBasePath += "\\ScriptExport";
+	CreateDirectory(exportBasePath, NULL);
+
+	// Export each player's scripts
+	for (Int playerIndex = 0; playerIndex < m_sides.getNumSides(); playerIndex++) {
+		SidesInfo *pSideInfo = m_sides.getSideInfo(playerIndex);
+		if (!pSideInfo) continue;
+
+		AsciiString playerName = pSideInfo->getDict()->getAsciiString(TheKey_playerName);
+		if (playerName.isEmpty()) {
+			playerName.format("Player_%d", playerIndex);
+		}
+
+		// Create player folder
+		CString playerPath = exportBasePath + "\\" + CString(playerName.str());
+		CreateDirectory(playerPath, NULL);
+
+		ScriptList *pScriptList = pSideInfo->getScriptList();
+		if (!pScriptList) continue;
+
+		// Export scripts directly under player (not in groups)
+		Script *pScript = pScriptList->getScript();
+		Int scriptIndex = 1;
+		while (pScript) {
+			CString scriptFileName;
+			scriptFileName.Format("%s\\%s.txt", playerPath, CString(pScript->getName().str()));
+			
+			if (exportSingleScriptToFile(pScript, scriptFileName)) {
+				totalExported++;
+			}
+			
+			pScript = pScript->getNext();
+			scriptIndex++;
+		}
+
+		// Export script groups
+		ScriptGroup *pGroup = pScriptList->getScriptGroup();
+		while (pGroup) {
+			totalExported += exportScriptGroupToFolder(pGroup, playerPath);
+			pGroup = pGroup->getNext();
+		}
+	}
+
+	return totalExported;
+}
+
+// TheSuperHackers @feature ScriptDialog 01/01/2025 Export script group to folder with its scripts
+Int ScriptDialog::exportScriptGroupToFolder(ScriptGroup *pGroup, const CString& parentPath)
+{
+	Int exported = 0;
+	
+	// Create group folder
+	CString groupPath = parentPath + "\\" + CString(pGroup->getName().str());
+	CreateDirectory(groupPath, NULL);
+
+	// Export each script in the group
+	Script *pScript = pGroup->getScript();
+	Int scriptIndex = 1;
+	while (pScript) {
+		CString scriptFileName;
+		scriptFileName.Format("%s\\%s.txt", groupPath, CString(pScript->getName().str()));
+		
+		if (exportSingleScriptToFile(pScript, scriptFileName)) {
+			exported++;
+		}
+		
+		pScript = pScript->getNext();
+		scriptIndex++;
+	}
+
+	return exported;
+}
+
+// TheSuperHackers @feature ScriptDialog 01/01/2025 Export single script to file
+Bool ScriptDialog::exportSingleScriptToFile(Script *pScript, const CString& filePath)
+{
+	if (!pScript) return false;
+
+	try {
+		CFile theFile(filePath, CFile::modeCreate|CFile::modeWrite|CFile::shareDenyWrite);
+		
+		CString output;
+		
+		// Write header
+		output += "========================================\n";
+		output += "Command & Conquer Generals Script Export\n";
+		output += "========================================\n\n";
+
+		// Export single script
+		exportScriptToText(pScript, output, 0);
+
+		// Write to file
+		theFile.Write(output, output.GetLength());
+		theFile.Close();
+
+		return true;
+	}
+	catch (CFileException* e) {
+		// Silent fail for individual files
+		e->Delete();
+		return false;
+	}
+}
+
+// TheSuperHackers @feature ScriptDialog 01/01/2025 Helper function to export individual script to text
+void ScriptDialog::exportScriptToText(Script *pScript, CString &output, Int scriptIndex)
+{
+	if (!pScript) return;
+
+	// Script header
+	if (scriptIndex > 0) {
+		CString scriptNum;
+		scriptNum.Format("Script #%d", scriptIndex);
+		output += scriptNum + "\n";
+		output += "----------------------------------------\n";
+	}
+	
+	output += "Name: " + CString(pScript->getName().str()) + "\n";
+	output += "Comment: " + CString(pScript->getComment().str()) + "\n";
+	output += "Description: " + CString(pScript->getUiText().str()) + "\n\n";
+
+	// Script properties
+	output += "Properties:\n";
+	output += "  Subroutine: " + CString(pScript->isSubroutine() ? "Yes" : "No") + "\n";
+	output += "  Active: " + CString(pScript->isActive() ? "Yes" : "No") + "\n";
+	output += "  One Shot: " + CString(pScript->isOneShot() ? "Yes" : "No") + "\n";
+	output += "  Difficulty Levels:\n";
+	output += "    Easy: " + CString(pScript->isEasy() ? "Yes" : "No") + "\n";
+	output += "    Normal: " + CString(pScript->isNormal() ? "Yes" : "No") + "\n";
+	output += "    Hard: " + CString(pScript->isHard() ? "Yes" : "No") + "\n\n";
+
+	// Script conditions
+	output += "Conditions:\n";
+	OrCondition *pOrCondition = pScript->getOrCondition();
+	if (pOrCondition) {
+		exportOrConditionToText(pOrCondition, output, 1);
+	} else {
+		output += "  (No conditions)\n";
+	}
+	output += "\n";
+
+	// Script actions (True branch)
+	output += "Actions (True Branch):\n";
+	ScriptAction *pAction = pScript->getAction();
+	if (pAction) {
+		exportActionToText(pAction, output, 1);
+	} else {
+		output += "  (No actions)\n";
+	}
+	output += "\n";
+
+	// Script actions (False branch)
+	output += "Actions (False Branch):\n";
+	ScriptAction *pFalseAction = pScript->getFalseAction();
+	if (pFalseAction) {
+		exportActionToText(pFalseAction, output, 1);
+	} else {
+		output += "  (No false actions)\n";
+	}
+	output += "\n";
+
+	output += "========================================\n\n";
+}
+
+// TheSuperHackers @feature ScriptDialog 01/01/2025 Helper function to export OR conditions to text
+void ScriptDialog::exportOrConditionToText(OrCondition *pOrCondition, CString &output, Int indentLevel)
+{
+	if (!pOrCondition) return;
+
+	CString indent = CString(' ', indentLevel * 2);
+	
+	output += indent + "OR Condition Group:\n";
+	
+	// Export AND conditions within this OR group
+	Condition *pCondition = pOrCondition->getFirstAndCondition();
+	while (pCondition) {
+		CString conditionType;
+		conditionType.Format("Condition Type: %d", (int)pCondition->getConditionType());
+		output += indent + "  AND Condition: " + conditionType + "\n";
+		
+		// Export parameters for this condition
+		Int numParams = pCondition->getNumParameters();
+		if (numParams > 0) {
+			output += indent + "    Parameters:\n";
+			for (Int i = 0; i < numParams; i++) {
+				Parameter *pParam = pCondition->getParameter(i);
+				if (pParam) {
+					exportParameterToText(pParam, output, indentLevel + 3);
+				}
+			}
+		}
+		
+		pCondition = pCondition->getNext();
+	}
+
+	// Export next OR condition
+	OrCondition *pNextOr = pOrCondition->getNextOrCondition();
+	if (pNextOr) {
+		output += indent + "  Next OR Group:\n";
+		exportOrConditionToText(pNextOr, output, indentLevel + 2);
+	}
+}
+
+// TheSuperHackers @feature ScriptDialog 01/01/2025 Helper function to export script actions to text
+void ScriptDialog::exportActionToText(ScriptAction *pAction, CString &output, Int indentLevel)
+{
+	if (!pAction) return;
+
+	CString indent = CString(' ', indentLevel * 2);
+	
+	CString actionType;
+	actionType.Format("Action Type: %d", (int)pAction->getActionType());
+	output += indent + "Action: " + actionType + "\n";
+	
+	// Export parameters
+	Int numParams = pAction->getNumParameters();
+	if (numParams > 0) {
+		output += indent + "  Parameters:\n";
+		for (Int i = 0; i < numParams; i++) {
+			Parameter *pParam = pAction->getParameter(i);
+			if (pParam) {
+				exportParameterToText(pParam, output, indentLevel + 2);
+			}
+		}
+	}
+
+	// Export sub-actions
+	ScriptAction *pSubAction = pAction->getNext();
+	if (pSubAction) {
+		output += indent + "  Sub-actions:\n";
+		exportActionToText(pSubAction, output, indentLevel + 2);
+	}
+}
+
+// TheSuperHackers @feature ScriptDialog 01/01/2025 Helper function to export parameters to text
+void ScriptDialog::exportParameterToText(Parameter *pParam, CString &output, Int indentLevel)
+{
+	if (!pParam) return;
+
+	CString indent = CString(' ', indentLevel * 2);
+	
+	// Get parameter type and value
+	Parameter::ParameterType paramType = pParam->getParameterType();
+	AsciiString paramValue = pParam->getString();
+	
+	CString paramTypeStr;
+	paramTypeStr.Format("Parameter Type: %d", (int)paramType);
+	output += indent + "Type: " + paramTypeStr + "\n";
+	output += indent + "Value: " + CString(paramValue.str()) + "\n";
+}
 
 /////////////////////////////////////////////////////////////////////////////
 // ScriptDialog message handlers
