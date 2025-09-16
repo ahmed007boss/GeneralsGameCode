@@ -538,63 +538,7 @@ void ControlBar::populatePurchaseScience( Player* player )
 }
 
 
-//-------------------------------------------------------------------------------------------------
-void CommandButton::parseEnablePrerequisites(INI* ini, void* instance, void* store, const void* userData)
-{
-	CommandButton* self = (CommandButton*)instance;
 
-	static const FieldParse myFieldParse[] =
-	{
-		{ "Object", ProductionPrerequisite::parsePrerequisiteUnit, 0, 0 },
-		{ "Science", ProductionPrerequisite::parsePrerequisiteScience,	0, 0 },
-		{ "ObjectNotExist", ProductionPrerequisite::parsePrerequisiteUnitConflict, 0, 0 },
-		{ "ScienceNotExist", ProductionPrerequisite::parsePrerequisiteScienceConflict,	0, 0 },
-		{ "Upgrade", ProductionPrerequisite::parsePrerequisiteUpgrade, 0, 0 },
-		{ "UpgradeNotExist", ProductionPrerequisite::parsePrerequisiteUpgradeConflict, 0, 0 },
-		{ 0, 0, 0, 0 }
-	};
-
-	if (ini->getLoadType() == INI_LOAD_CREATE_OVERRIDES)
-	{
-		self->m_enablePrereqInfo.clear();
-	}
-
-	ini->initFromINI(&self->m_enablePrereqInfo, myFieldParse);
-
-	// Resolve prerequisite names now so later const accesses don't need to mutate state
-	for (size_t i = 0; i < self->m_enablePrereqInfo.size(); ++i)
-	{
-		self->m_enablePrereqInfo[i].resolveNames();
-	}
-}
-void CommandButton::parseVisiblePrerequisites(INI* ini, void* instance, void* store, const void* userData)
-{
-	CommandButton* self = (CommandButton*)instance;
-
-	static const FieldParse myFieldParse[] =
-	{
-		{ "Object", ProductionPrerequisite::parsePrerequisiteUnit, 0, 0 },
-		{ "Science", ProductionPrerequisite::parsePrerequisiteScience,	0, 0 },
-		{ "ObjectNotExist", ProductionPrerequisite::parsePrerequisiteUnitConflict, 0, 0 },
-		{ "ScienceNotExist", ProductionPrerequisite::parsePrerequisiteScienceConflict,	0, 0 },
-		{ "Upgrade", ProductionPrerequisite::parsePrerequisiteUpgrade, 0, 0 },
-		{ "UpgradeNotExist", ProductionPrerequisite::parsePrerequisiteUpgradeConflict, 0, 0 },
-		{ 0, 0, 0, 0 }
-	};
-
-	if (ini->getLoadType() == INI_LOAD_CREATE_OVERRIDES)
-	{
-		self->m_visiblePrereqInfo.clear();
-	}
-
-	ini->initFromINI(&self->m_visiblePrereqInfo, myFieldParse);
-
-	// Resolve prerequisite names now so later const accesses don't need to mutate state
-	for (size_t i = 0; i < self->m_visiblePrereqInfo.size(); ++i)
-	{
-		self->m_visiblePrereqInfo[i].resolveNames();
-	}
-}
 
 //-------------------------------------------------------------------------------------------------
 /** Alternative button prerequisite parsing functions */
@@ -603,64 +547,43 @@ void CommandButton::parseAlternativeButton1Prerequisites(INI* ini, void* instanc
 {
 	// TheSuperHackers @refactor author 15/01/2025 Wrapper function for generic parsePrerequisites with resolveNames=TRUE
 	CommandButton* self = (CommandButton*)instance;
-
-	// Create a temporary vector to parse into
-	std::vector<ProductionPrerequisite> tempVector;
-	ProductionPrerequisite::parsePrerequisites(ini, &tempVector, NULL, NULL);
-	
-	// Add all parsed prerequisites to the CommandButton's vector
-	for (size_t i = 0; i < tempVector.size(); ++i)
-	{
-		self->m_alternativeButton1Prereq.push_back(tempVector[i]);
-	}
+	PlayerPrerequisite::parsePrerequisites(ini, &self->m_alternativeButton1Prereq, store, userData);
 }
 
 void CommandButton::parseAlternativeButton2Prerequisites(INI* ini, void* instance, void* store, const void* userData)
 {
 	// TheSuperHackers @refactor author 15/01/2025 Wrapper function for generic parsePrerequisites with resolveNames=TRUE
 	CommandButton* self = (CommandButton*)instance;
-
-	// Create a temporary vector to parse into
-	std::vector<ProductionPrerequisite> tempVector;
-	ProductionPrerequisite::parsePrerequisites(ini, &tempVector, NULL, NULL);
-	
-	// Add all parsed prerequisites to the CommandButton's vector
-	for (size_t i = 0; i < tempVector.size(); ++i)
-	{
-		self->m_alternativeButton2Prereq.push_back(tempVector[i]);
-	}
+	PlayerPrerequisite::parsePrerequisites(ini, &self->m_alternativeButton2Prereq, store, userData);
 }
 
 void CommandButton::parseAlternativeButton3Prerequisites(INI* ini, void* instance, void* store, const void* userData)
 {
 	// TheSuperHackers @refactor author 15/01/2025 Wrapper function for generic parsePrerequisites with resolveNames=TRUE
 	CommandButton* self = (CommandButton*)instance;
-
-	// Create a temporary vector to parse into
-	std::vector<ProductionPrerequisite> tempVector;
-	ProductionPrerequisite::parsePrerequisites(ini, &tempVector, NULL, NULL);
-	
-	// Add all parsed prerequisites to the CommandButton's vector
-	for (size_t i = 0; i < tempVector.size(); ++i)
-	{
-		self->m_alternativeButton3Prereq.push_back(tempVector[i]);
-	}
+	PlayerPrerequisite::parsePrerequisites(ini, &self->m_alternativeButton3Prereq, store, userData);
 }
 
 void CommandButton::parseAlternativeButton4Prerequisites(INI* ini, void* instance, void* store, const void* userData)
 {
-	// TheSuperHackers @refactor author 15/01/2025 Wrapper function for generic parsePrerequisites with resolveNames=TRUE
+	// TheSuperHackers @alternative Ahmed Salah 27/06/2025 Parse prerequisites for alternative button 4
 	CommandButton* self = (CommandButton*)instance;
+	PlayerPrerequisite::parsePrerequisites(ini, &self->m_alternativeButton4Prereq, store, userData);
+}
 
-	// Create a temporary vector to parse into
-	std::vector<ProductionPrerequisite> tempVector;
-	ProductionPrerequisite::parsePrerequisites(ini, &tempVector, NULL, NULL);
-	
-	// Add all parsed prerequisites to the CommandButton's vector
-	for (size_t i = 0; i < tempVector.size(); ++i)
-	{
-		self->m_alternativeButton4Prereq.push_back(tempVector[i]);
-	}
+//-------------------------------------------------------------------------------------------------
+// TheSuperHackers @refactor author 15/01/2025 Implement missing prerequisite parsing methods
+void CommandButton::parseEnablePrerequisites(INI* ini, void* instance, void* /*store*/, const void* /*userData*/)
+{
+	CommandButton* button = (CommandButton*)instance;
+	PlayerPrerequisite::parsePrerequisites(ini, &button->m_enablePrereqInfo, NULL, NULL);
+}
+
+//-------------------------------------------------------------------------------------------------
+void CommandButton::parseVisiblePrerequisites(INI* ini, void* instance, void* /*store*/, const void* /*userData*/)
+{
+	CommandButton* button = (CommandButton*)instance;
+	PlayerPrerequisite::parsePrerequisites(ini, &button->m_visiblePrereqInfo, NULL, NULL);
 }
 
 //---------------------------------------------

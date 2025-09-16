@@ -628,47 +628,11 @@ void ThingTemplate::parseIntList(INI* ini, void* instance, void* store, const vo
 }
 
 //-------------------------------------------------------------------------------------------------
-static void parsePrerequisiteUnit(INI* ini, void* instance, void* /*store*/, const void* /*userData*/)
-{
-	std::vector<ProductionPrerequisite>* v = (std::vector<ProductionPrerequisite>*)instance;
-
-	ProductionPrerequisite prereq;
-	Bool orUnitWithPrevious = FALSE;
-	for (const char* token = ini->getNextToken(); token != NULL; token = ini->getNextTokenOrNull())
-	{
-		prereq.addUnitPrereq(AsciiString(token), orUnitWithPrevious);
-		orUnitWithPrevious = TRUE;
-	}
-
-	v->push_back(prereq);
-}
-
-//-------------------------------------------------------------------------------------------------
-static void parsePrerequisiteScience(INI* ini, void* instance, void* /*store*/, const void* /*userData*/)
-{
-	std::vector<ProductionPrerequisite>* v = (std::vector<ProductionPrerequisite>*)instance;
-
-	ProductionPrerequisite prereq;
-	prereq.addSciencePrereq(INI::scanScience(ini->getNextToken()));
-
-	v->push_back(prereq);
-}
-
-//-------------------------------------------------------------------------------------------------
-// TheSuperHackers @refactor author 15/01/2025 Wrapper function for generic parsePrerequisites with resolveNames=FALSE
-void ThingTemplate::parsePrerequisites(INI* ini, void* instance, void* /*store*/, const void* /*userData*/)
+// TheSuperHackers @refactor author 15/01/2025 Implement ThingTemplate::parsePrerequisites method
+void ThingTemplate::parsePrerequisites(INI* ini, void* instance, void* store, const void* userData)
 {
 	ThingTemplate* self = (ThingTemplate*)instance;
-
-	// Create a temporary vector to parse into
-	std::vector<ProductionPrerequisite> tempVector;
-	ProductionPrerequisite::parsePrerequisites(ini, &tempVector, NULL, NULL, FALSE);
-	
-	// Add all parsed prerequisites to the ThingTemplate's vector
-	for (size_t i = 0; i < tempVector.size(); ++i)
-	{
-		self->m_prereqInfo.push_back(tempVector[i]);
-	}
+	ProductionPrerequisite::parsePrerequisites(ini, &self->m_prereqInfo, store, userData);
 }
 
 //-------------------------------------------------------------------------------------------Static

@@ -52,6 +52,7 @@
 #include "Common/GameMemory.h"
 #include "Common/GameCommon.h"
 #include "Common/Science.h"
+#include "Common/PlayerPrerequisite.h"
 //#include "GameClient/ControlBar.h"
 
 //-----------------------------------------------------------------------------
@@ -59,102 +60,25 @@ class ThingTemplate;
 class Player;
 
 //-----------------------------------------------------------------------------
-class ProductionPrerequisite
+// TheSuperHackers @refactor author 15/01/2025 ProductionPrerequisite now inherits from PlayerPrerequisite base class
+class ProductionPrerequisite : public PlayerPrerequisite
 {
 public:
 
 	ProductionPrerequisite();
 	~ProductionPrerequisite();
 
-	/// init to safe default values.
-	void init();
+	// All functionality is now inherited from PlayerPrerequisite base class
+	// Static parsing functions delegate to base class
+	static void parsePrerequisites(INI* ini, void* instance, void* store, const void* userData);
 
-	void resetSciences(void) { m_prereqSciences.clear(); }
-	void addSciencePrereq(ScienceType science) { m_prereqSciences.push_back(science); }
-
-	void resetUnits(void) { m_prereqUnits.clear(); }
-	void addUnitPrereq(AsciiString units, Bool orUnitWithPrevious);
-	void addUnitPrereq(const std::vector<AsciiString>& units);
-
-
-	void resetSciencesConflict(void) { m_prereqSciencesConflict.clear(); }
-	void addSciencePrereqConflict(ScienceType science) { m_prereqSciencesConflict.push_back(science); }
-
-	void resetUnitsConflict(void) { m_prereqUnitsConflict.clear(); }
-	void addUnitPrereqConflict(AsciiString units, Bool orUnitWithPrevious);
-	void addUnitPrereqConflict(const std::vector<AsciiString>& units);
-
-	void resetUpgrades(void) { m_prereqUpgradesNames.clear(); m_prereqUpgradesMask.clear(); }
-	void addUpgradePrereq(AsciiString upgrade);
-
-	void resetUpgradesConflict(void) { m_prereqUpgradesNamesConflict.clear(); m_prereqUpgradesMaskConflict.clear(); }
-	void addUpgradePrereqConflict(AsciiString upgrade);
-
-
-	/// called after all ThingTemplates have been loaded.
-	void resolveNames();
-
-	/// returns an asciistring which is a list of all the prerequisites
-	/// not satisfied yet
-	UnicodeString getRequiresList(const Player *player) const;
-
-	/// returns an asciistring which is a list of all the conflict prerequisites
-	/// that are currently satisfied (and thus blocking this prerequisite)
-	UnicodeString getConflictList(const Player *player) const;
-
-	/// return true iff the player satisfies our set of prerequisites
-	Bool isSatisfied(const Player *player) const;
-
-	/**
-		return the BuildFacilityTemplate, if any.
-
-		if this template needs no build facility, null is returned.
-
-		if the template needs a build facility but the given player doesn't have any in existence,
-		null will be returned.
-
-		you may not pass 'null' for player.
-	*/
-	const ThingTemplate *getExistingBuildFacilityTemplate( const Player *player ) const;
-
-	Int getAllPossibleBuildFacilityTemplates(const ThingTemplate* tmpls[], Int maxtmpls) const;
-
+private:
 	static void parsePrerequisiteScience(INI* ini, void* instance, void* /*store*/, const void* /*userData*/);
 	static void parsePrerequisiteUnit(INI* ini, void* instance, void* /*store*/, const void* /*userData*/);
 	static void parsePrerequisiteScienceConflict(INI* ini, void* instance, void* /*store*/, const void* /*userData*/);
 	static void parsePrerequisiteUnitConflict(INI* ini, void* instance, void* /*store*/, const void* /*userData*/);
 	static void parsePrerequisiteUpgrade(INI* ini, void* instance, void* /*store*/, const void* /*userData*/);
 	static void parsePrerequisiteUpgradeConflict(INI* ini, void* instance, void* /*store*/, const void* /*userData*/);
-	static void parsePrerequisites(INI* ini, void* instance, void* store, const void* userData, Bool resolveNames = TRUE);
-
-private:
-
-	enum
-	{
-		UNIT_OR_WITH_PREV = 0x01	// if set, unit is "or-ed" with prev unit, so that either one's presence satisfies
-	};
-
-	struct PrereqUnitRec
-	{
-		const ThingTemplate*	unit;
-		Int										flags;
-		AsciiString						name;
-	};
-
-	enum { MAX_PREREQ = 32 };
-	Int calcNumPrereqUnitsOwned(const Player *player, Int counts[MAX_PREREQ]) const;
-
-	std::vector<PrereqUnitRec>	m_prereqUnits;
-	ScienceVec									m_prereqSciences;
-
-	std::vector<PrereqUnitRec>	m_prereqUnitsConflict;
-	ScienceVec									m_prereqSciencesConflict;
-
-	mutable std::vector<AsciiString>	m_prereqUpgradesNames;
-	mutable UpgradeMaskType						m_prereqUpgradesMask;
-
-	mutable std::vector<AsciiString>	m_prereqUpgradesNamesConflict;
-	mutable UpgradeMaskType						m_prereqUpgradesMaskConflict;
 };
 
 //-----------------------------------------------------------------------------

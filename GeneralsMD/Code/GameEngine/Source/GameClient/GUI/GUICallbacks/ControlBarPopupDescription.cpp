@@ -71,7 +71,7 @@
 #include "Common/BuildAssistant.h"
 #include "Common/Player.h"
 #include "Common/PlayerList.h"
-#include "Common/ProductionPrerequisite.h"
+#include "Common/PlayerPrerequisite.h"
 #include "Common/SpecialPower.h"
 #include "Common/ThingTemplate.h"
 #include "Common/Upgrade.h"
@@ -496,7 +496,7 @@ void ControlBar::populateBuildTooltipLayout(const CommandButton* commandButton, 
 	UnicodeString conflictsFormat = UnicodeString::TheEmptyString, conflictsList;
 	Bool firstRequirement = true;
 	Bool firstConflicts = true;
-	const ProductionPrerequisite* prereq;
+	const PlayerPrerequisite* prereq;
 	Bool fireScienceButton = false;
 	UnsignedInt costToBuild = 0;
 

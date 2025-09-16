@@ -37,7 +37,7 @@
 #include "Common/GameType.h"
 #include "Common/Overridable.h"
 #include "Common/Science.h"
-#include "Common/ProductionPrerequisite.h"
+#include "Common/PlayerPrerequisite.h"
 #include "GameClient/Color.h"
 
 // FORWARD REFERENCES /////////////////////////////////////////////////////////////////////////////
@@ -352,8 +352,8 @@ public:
 	const UpgradeTemplate* getRequiredUpgradeToAppear() const { return m_requiredUpgradeToAppear;	};
 	const UpgradeTemplate* getConflictUpgradeToDisappear() const { return m_conflictUpgradeToDisappear; };
 
-	std::vector<ProductionPrerequisite>	m_enablePrereqInfo;
-	std::vector<ProductionPrerequisite>	m_visiblePrereqInfo;
+	std::vector<PlayerPrerequisite>	m_enablePrereqInfo;
+	std::vector<PlayerPrerequisite>	m_visiblePrereqInfo;
 	Bool m_prereqInfoResloved;
 
 	GUICommandType getCommandType() const { return m_command; }
@@ -406,10 +406,10 @@ public:
 
 
 	Int getEnablePrereqCount() const {	return m_enablePrereqInfo.size();	}
-	const ProductionPrerequisite* getNthEnablePrereq(Int i) const { return &m_enablePrereqInfo[i]; }
+	const PlayerPrerequisite* getNthEnablePrereq(Int i) const { return &m_enablePrereqInfo[i]; }
 
 	Int getVisiblePrereqCount() const { return m_visiblePrereqInfo.size(); }
-	const ProductionPrerequisite* getNthVisiblePrereq(Int i) const { return &m_visiblePrereqInfo[i]; }
+	const PlayerPrerequisite* getNthVisiblePrereq(Int i) const { return &m_visiblePrereqInfo[i]; }
 
 	void setName(const AsciiString& n) { m_name = n; }
 
@@ -505,10 +505,10 @@ private:
 	AsciiString							m_alternativeButton4Name;					///< name for alternative button 4
 
 	// Prerequisites for alternative buttons
-	std::vector<ProductionPrerequisite>	m_alternativeButton1Prereq;				///< prerequisites for alternative button 1
-	std::vector<ProductionPrerequisite>	m_alternativeButton2Prereq;				///< prerequisites for alternative button 2
-	std::vector<ProductionPrerequisite>	m_alternativeButton3Prereq;				///< prerequisites for alternative button 3
-	std::vector<ProductionPrerequisite>	m_alternativeButton4Prereq;				///< prerequisites for alternative button 4
+	std::vector<PlayerPrerequisite>	m_alternativeButton1Prereq;				///< prerequisites for alternative button 1
+	std::vector<PlayerPrerequisite>	m_alternativeButton2Prereq;				///< prerequisites for alternative button 2
+	std::vector<PlayerPrerequisite>	m_alternativeButton3Prereq;				///< prerequisites for alternative button 3
+	std::vector<PlayerPrerequisite>	m_alternativeButton4Prereq;				///< prerequisites for alternative button 4
 
 	// Cached button references (assigned once when first accessed)
 	mutable const CommandButton*			m_leftClickCtrlButton;						///< cached button for Ctrl+left-click

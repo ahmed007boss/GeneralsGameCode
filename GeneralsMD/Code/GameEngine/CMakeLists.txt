@@ -87,6 +87,7 @@ set(GAMEENGINE_SRC
     Include/Common/Player.h
     Include/Common/PlayerList.h
     Include/Common/PlayerTemplate.h
+    Include/Common/PlayerPrerequisite.h
     Include/Common/ProductionPrerequisite.h
     Include/Common/QuickmatchPreferences.h
     Include/Common/QuotedPrintable.h
@@ -621,6 +622,7 @@ set(GAMEENGINE_SRC
     Source/Common/RTS/Player.cpp
     Source/Common/RTS/PlayerList.cpp
     Source/Common/RTS/PlayerTemplate.cpp
+    Source/Common/RTS/PlayerPrerequisite.cpp
     Source/Common/RTS/ProductionPrerequisite.cpp
     Source/Common/RTS/ResourceGatheringManager.cpp
     Source/Common/RTS/Science.cpp
