@@ -241,14 +241,7 @@ Bool PlayerPrerequisite::isSatisfied(const Player* player) const
 	Int cnt = calcNumPrereqUnitsOwned(player, ownCount);
 
 	// fix up the "or" cases. (start at 1!)
-	for (i = 1; i < cnt; i++)
-	{
-		if (m_prereqUnits[i].flags & UNIT_OR_WITH_PREV)
-		{
-			ownCount[i] += ownCount[i - 1];	// lump 'em together for prereq purposes
-			ownCount[i - 1] = -1;						// flag for "ignore me"
-		}
-	}
+	handleOrLogic(ownCount, cnt, m_prereqUnits);
 
 	for (i = 0; i < cnt; i++)
 	{
@@ -276,14 +269,7 @@ Bool PlayerPrerequisite::isSatisfied(const Player* player) const
 	}
 
 	// fix up the "or" cases. (start at 1!)
-	for (i = 1; i < cnt2; i++)
-	{
-		if (m_prereqUnitsConflict[i].flags & UNIT_OR_WITH_PREV)
-		{
-			ownCount2[i] += ownCount2[i - 1];	// lump 'em together for conflict purposes
-			ownCount2[i - 1] = -1;						// flag for "ignore me"
-		}
-	}
+	handleOrLogicConflict(ownCount2, cnt2, m_prereqUnitsConflict);
 
 	for (i = 0; i < cnt2; i++)
 	{
@@ -331,24 +317,10 @@ Bool PlayerPrerequisite::isSatisfied(const Player* player) const
 		
 		while (!remaining.isEmpty())
 		{
-			// Get the next KindOf name
 			AsciiString kindOfName;
-			if (!remaining.nextToken(&kindOfName, " "))
+			Int count;
+			if (!parseKindOfCountPair(remaining, kindOfName, count))
 				break;
-			
-			// Get the count
-			AsciiString countStr;
-			Int count = 1;
-			if (remaining.nextToken(&countStr, " "))
-			{
-				count = atoi(countStr.str());
-			}
-			else
-			{
-				// Last token, use remaining string
-				count = atoi(remaining.str());
-				remaining.clear();
-			}
 			
 			// Check if player has enough of this KindOf type
 			KindOfType kindOfType = (KindOfType)INI::scanIndexList(kindOfName.str(), KindOfMaskType::getBitNames());
@@ -375,24 +347,10 @@ Bool PlayerPrerequisite::isSatisfied(const Player* player) const
 		
 		while (!remaining.isEmpty())
 		{
-			// Get the next KindOf name
 			AsciiString kindOfName;
-			if (!remaining.nextToken(&kindOfName, " "))
+			Int count;
+			if (!parseKindOfCountPair(remaining, kindOfName, count))
 				break;
-			
-			// Get the count
-			AsciiString countStr;
-			Int count = 1;
-			if (remaining.nextToken(&countStr, " "))
-			{
-				count = atoi(countStr.str());
-			}
-			else
-			{
-				// Last token, use remaining string
-				count = atoi(remaining.str());
-				remaining.clear();
-			}
 			
 			// Check if player has the maximum count of this KindOf type
 			KindOfType kindOfType = (KindOfType)INI::scanIndexList(kindOfName.str(), KindOfMaskType::getBitNames());
@@ -419,36 +377,14 @@ Bool PlayerPrerequisite::isSatisfied(const Player* player) const
 		
 		while (!remaining.isEmpty())
 		{
-			// Get the next KindOf name
 			AsciiString kindOfName;
-			if (!remaining.nextToken(&kindOfName, " "))
+			AsciiString levelStr;
+			Int count;
+			if (!parseKindOfLevelCountTriple(remaining, kindOfName, levelStr, count))
 				break;
 			
 			// Get the veterancy level
-			AsciiString levelStr;
-			VeterancyLevel minLevel = LEVEL_REGULAR;
-			if (remaining.nextToken(&levelStr, " "))
-			{
-				minLevel = (VeterancyLevel)INI::scanIndexList(levelStr.str(), TheVeterancyNames);
-			}
-			else
-			{
-				break; // Invalid format
-			}
-			
-			// Get the count
-			AsciiString countStr;
-			Int count = 1;
-			if (remaining.nextToken(&countStr, " "))
-			{
-				count = atoi(countStr.str());
-			}
-			else
-			{
-				// Last token, use remaining string
-				count = atoi(remaining.str());
-				remaining.clear();
-			}
+			VeterancyLevel minLevel = (VeterancyLevel)INI::scanIndexList(levelStr.str(), TheVeterancyNames);
 			
 			// Check if player has the minimum count of this KindOf type with the specified veterancy level
 			KindOfType kindOfType = (KindOfType)INI::scanIndexList(kindOfName.str(), KindOfMaskType::getBitNames());
@@ -475,36 +411,14 @@ Bool PlayerPrerequisite::isSatisfied(const Player* player) const
 		
 		while (!remaining.isEmpty())
 		{
-			// Get the next KindOf name
 			AsciiString kindOfName;
-			if (!remaining.nextToken(&kindOfName, " "))
+			AsciiString levelStr;
+			Int count;
+			if (!parseKindOfLevelCountTriple(remaining, kindOfName, levelStr, count))
 				break;
 			
 			// Get the veterancy level
-			AsciiString levelStr;
-			VeterancyLevel minLevel = LEVEL_REGULAR;
-			if (remaining.nextToken(&levelStr, " "))
-			{
-				minLevel = (VeterancyLevel)INI::scanIndexList(levelStr.str(), TheVeterancyNames);
-			}
-			else
-			{
-				break; // Invalid format
-			}
-			
-			// Get the count
-			AsciiString countStr;
-			Int count = 1;
-			if (remaining.nextToken(&countStr, " "))
-			{
-				count = atoi(countStr.str());
-			}
-			else
-			{
-				// Last token, use remaining string
-				count = atoi(remaining.str());
-				remaining.clear();
-			}
+			VeterancyLevel minLevel = (VeterancyLevel)INI::scanIndexList(levelStr.str(), TheVeterancyNames);
 			
 			// Check if player has the maximum count of this KindOf type with the specified veterancy level
 			KindOfType kindOfType = (KindOfType)INI::scanIndexList(kindOfName.str(), KindOfMaskType::getBitNames());
@@ -668,13 +582,14 @@ UnicodeString PlayerPrerequisite::getRequiresList(const Player* player) const
 	}
 	//
 	// account for the "or" unit cases, start for loop at 1
+	handleOrLogic(ownCount, cnt, m_prereqUnits);
+	
+	// Set OR requirements flags for display purposes
 	for (i = 1; i < cnt; i++)
 	{
 		if (m_prereqUnits[i].flags & UNIT_OR_WITH_PREV)
 		{
 			orRequirements[i] = TRUE;     // set the flag for this unit to be "ored" with previous
-			ownCount[i] += ownCount[i - 1];	// lump 'em together for prereq purposes
-			ownCount[i - 1] = -1;						// flag for "ignore me"
 		}
 	}
 
@@ -841,16 +756,7 @@ UnicodeString PlayerPrerequisite::getRequiresList(const Player* player) const
 				// Add to missing requirements
 				if (!missingRequirements.isEmpty())
 					missingRequirements.concat(L" or ");
-				// Convert count to UnicodeString using format
-				UnicodeString countStr;
-				countStr.format(L"%d", count);
-				missingRequirements.concat(countStr);
-				missingRequirements.concat(L" of ");
-				AsciiString kindOfKey;
-				kindOfKey.format("KINDOF:%s", kindOfName.str());
-				UnicodeString kindOfDisplayName = TheGameText->fetch(kindOfKey.str());
-				kindOfDisplayName.toLower();
-				missingRequirements.concat(kindOfDisplayName);
+				missingRequirements.concat(formatKindOfDisplayText(kindOfName, count));
 			}
 		}
 		
@@ -923,27 +829,7 @@ UnicodeString PlayerPrerequisite::getRequiresList(const Player* player) const
 				// Add to missing requirements
 				if (!missingRequirements.isEmpty())
 					missingRequirements.concat(L" or ");
-				// Convert count to UnicodeString using format
-				UnicodeString countStr;
-				countStr.format(L"%d", count);
-				missingRequirements.concat(countStr);
-				missingRequirements.concat(L" of ");
-				
-				// Add KindOf display name
-				AsciiString kindOfKey;
-				kindOfKey.format("KINDOF:%s", kindOfName.str());
-				UnicodeString kindOfDisplayName = TheGameText->fetch(kindOfKey.str());
-				kindOfDisplayName.toLower();
-				missingRequirements.concat(kindOfDisplayName);
-				
-				// Add veterancy level display name in parentheses
-				missingRequirements.concat(L" (");
-				AsciiString levelKey;
-				levelKey.format("VETERANCY:%s", levelStr.str());
-				UnicodeString levelDisplayName = TheGameText->fetch(levelKey.str());
-				levelDisplayName.toLower();
-				missingRequirements.concat(levelDisplayName);
-				missingRequirements.concat(L")");
+				missingRequirements.concat(formatKindOfWithLevelDisplayText(kindOfName, levelStr, count));
 			}
 		}
 		
@@ -1000,13 +886,14 @@ UnicodeString PlayerPrerequisite::getConflictList(const Player* player) const
 	}
 
 	// account for the "or" unit cases, start for loop at 1
+	handleOrLogicConflict(ownCount, cnt, m_prereqUnitsConflict);
+	
+	// Set OR requirements flags for display purposes
 	for (i = 1; i < cnt; i++)
 	{
 		if (m_prereqUnitsConflict[i].flags & UNIT_OR_WITH_PREV)
 		{
 			orRequirements[i] = TRUE;     // set the flag for this unit to be "ored" with previous
-			ownCount[i] += ownCount[i - 1];	// lump 'em together for conflict purposes
-			ownCount[i - 1] = -1;						// flag for "ignore me"
 		}
 	}
 
@@ -1164,16 +1051,7 @@ UnicodeString PlayerPrerequisite::getConflictList(const Player* player) const
 				// Add to missing requirements
 				if (!missingRequirements.isEmpty())
 					missingRequirements.concat(L" or ");
-				// Convert count to UnicodeString using format
-				UnicodeString countStr;
-				countStr.format(L"%d", count);
-				missingRequirements.concat(countStr);
-				missingRequirements.concat(L" of ");
-				AsciiString kindOfKey;
-				kindOfKey.format("KINDOF:%s", kindOfName.str());
-				UnicodeString kindOfDisplayName = TheGameText->fetch(kindOfKey.str());
-				kindOfDisplayName.toLower();
-				missingRequirements.concat(kindOfDisplayName);
+				missingRequirements.concat(formatKindOfDisplayText(kindOfName, count));
 			}			
 		}
 
@@ -1236,27 +1114,7 @@ UnicodeString PlayerPrerequisite::getConflictList(const Player* player) const
 				// Add to missing requirements
 				if (!missingRequirements.isEmpty())
 					missingRequirements.concat(L" or ");
-				// Convert count to UnicodeString using format
-				UnicodeString countStr;
-				countStr.format(L"%d", count);
-				missingRequirements.concat(countStr);
-				missingRequirements.concat(L" of ");
-				
-				// Add KindOf display name
-				AsciiString kindOfKey;
-				kindOfKey.format("KINDOF:%s", kindOfName.str());
-				UnicodeString kindOfDisplayName = TheGameText->fetch(kindOfKey.str());
-				kindOfDisplayName.toLower();
-				missingRequirements.concat(kindOfDisplayName);
-				
-				// Add veterancy level display name in parentheses
-				missingRequirements.concat(L" (");
-				AsciiString levelKey;
-				levelKey.format("VETERANCY:%s", levelStr.str());
-				UnicodeString levelDisplayName = TheGameText->fetch(levelKey.str());
-				levelDisplayName.toLower();
-				missingRequirements.concat(levelDisplayName);
-				missingRequirements.concat(L")");
+				missingRequirements.concat(formatKindOfWithLevelDisplayText(kindOfName, levelStr, count));
 			}
 		}
 		
@@ -1427,13 +1285,7 @@ void PlayerPrerequisite::parsePrerequisiteMinCountKindOfUnit(INI* ini, void* ins
 
 	PlayerPrerequisite prereq;
 	// Parse the entire line as one token (e.g., "TANK 4 STRUCTURE 3")
-	AsciiString fullLine;
-	for (const char* token = ini->getNextToken(); token != NULL; token = ini->getNextTokenOrNull())
-	{
-		if (!fullLine.isEmpty())
-			fullLine.concat(" ");
-		fullLine.concat(token);
-	}
+	AsciiString fullLine = parseFullLineFromINI(ini);
 	prereq.addMinCountKindOfUnitPrereq(fullLine);
 
 	v->push_back(prereq);
@@ -1446,13 +1298,7 @@ void PlayerPrerequisite::parsePrerequisiteMaxCountKindOfUnit(INI* ini, void* ins
 
 	PlayerPrerequisite prereq;
 	// Parse the entire line as one token (e.g., "TANK 4 STRUCTURE 3")
-	AsciiString fullLine;
-	for (const char* token = ini->getNextToken(); token != NULL; token = ini->getNextTokenOrNull())
-	{
-		if (!fullLine.isEmpty())
-			fullLine.concat(" ");
-		fullLine.concat(token);
-	}
+	AsciiString fullLine = parseFullLineFromINI(ini);
 	prereq.addMaxCountKindOfUnitPrereq(fullLine);
 
 	v->push_back(prereq);
@@ -1465,13 +1311,7 @@ void PlayerPrerequisite::parsePrerequisiteMinCountKindOfUnitWithLevel(INI* ini, 
 
 	PlayerPrerequisite prereq;
 	// Parse the entire line as one token (e.g., "TANK LEVEL_VETERAN 4 STRUCTURE LEVEL_REGULAR 3")
-	AsciiString fullLine;
-	for (const char* token = ini->getNextToken(); token != NULL; token = ini->getNextTokenOrNull())
-	{
-		if (!fullLine.isEmpty())
-			fullLine.concat(" ");
-		fullLine.concat(token);
-	}
+	AsciiString fullLine = parseFullLineFromINI(ini);
 	prereq.addMinCountKindOfUnitWithLevelPrereq(fullLine);
 
 	v->push_back(prereq);
@@ -1484,6 +1324,20 @@ void PlayerPrerequisite::parsePrerequisiteMaxCountKindOfUnitWithLevel(INI* ini, 
 
 	PlayerPrerequisite prereq;
 	// Parse the entire line as one token (e.g., "TANK LEVEL_VETERAN 4 STRUCTURE LEVEL_REGULAR 3")
+	AsciiString fullLine = parseFullLineFromINI(ini);
+	prereq.addMaxCountKindOfUnitWithLevelPrereq(fullLine);
+
+	v->push_back(prereq);
+}
+
+//=============================================================================
+// Helper methods for refactoring repeated code
+//=============================================================================
+
+//-------------------------------------------------------------------------------------------------
+// Parse entire line from INI as a single token
+AsciiString PlayerPrerequisite::parseFullLineFromINI(INI* ini)
+{
 	AsciiString fullLine;
 	for (const char* token = ini->getNextToken(); token != NULL; token = ini->getNextTokenOrNull())
 	{
@@ -1491,9 +1345,140 @@ void PlayerPrerequisite::parsePrerequisiteMaxCountKindOfUnitWithLevel(INI* ini, 
 			fullLine.concat(" ");
 		fullLine.concat(token);
 	}
-	prereq.addMaxCountKindOfUnitWithLevelPrereq(fullLine);
+	return fullLine;
+}
 
-	v->push_back(prereq);
+//-------------------------------------------------------------------------------------------------
+// Handle OR logic for regular prerequisites
+void PlayerPrerequisite::handleOrLogic(Int ownCount[], Int cnt, const std::vector<PrereqUnitRec>& prereqUnits)
+{
+	// fix up the "or" cases. (start at 1!)
+	for (Int i = 1; i < cnt; i++)
+	{
+		if (prereqUnits[i].flags & UNIT_OR_WITH_PREV)
+		{
+			ownCount[i] += ownCount[i - 1];	// lump 'em together for prereq purposes
+			ownCount[i - 1] = -1;						// flag for "ignore me"
+		}
+	}
+}
+
+//-------------------------------------------------------------------------------------------------
+// Handle OR logic for conflict prerequisites
+void PlayerPrerequisite::handleOrLogicConflict(Int ownCount[], Int cnt, const std::vector<PrereqUnitRec>& prereqUnits)
+{
+	// fix up the "or" cases. (start at 1!)
+	for (Int i = 1; i < cnt; i++)
+	{
+		if (prereqUnits[i].flags & UNIT_OR_WITH_PREV)
+		{
+			ownCount[i] += ownCount[i - 1];	// lump 'em together for conflict purposes
+			ownCount[i - 1] = -1;						// flag for "ignore me"
+		}
+	}
+}
+
+//-------------------------------------------------------------------------------------------------
+// Parse KindOf name and count pair from string
+Bool PlayerPrerequisite::parseKindOfCountPair(AsciiString& remaining, AsciiString& kindOfName, Int& count)
+{
+	// Get the next KindOf name
+	if (!remaining.nextToken(&kindOfName, " "))
+		return false;
+	
+	// Get the count
+	AsciiString countStr;
+	count = 1;
+	if (remaining.nextToken(&countStr, " "))
+	{
+		count = atoi(countStr.str());
+	}
+	else
+	{
+		// Last token, use remaining string
+		count = atoi(remaining.str());
+		remaining.clear();
+	}
+	return true;
+}
+
+//-------------------------------------------------------------------------------------------------
+// Parse KindOf name, level, and count triple from string
+Bool PlayerPrerequisite::parseKindOfLevelCountTriple(AsciiString& remaining, AsciiString& kindOfName, AsciiString& levelStr, Int& count)
+{
+	// Get the next KindOf name
+	if (!remaining.nextToken(&kindOfName, " "))
+		return false;
+	
+	// Get the veterancy level
+	if (!remaining.nextToken(&levelStr, " "))
+		return false;
+	
+	// Get the count
+	AsciiString countStr;
+	count = 1;
+	if (remaining.nextToken(&countStr, " "))
+	{
+		count = atoi(countStr.str());
+	}
+	else
+	{
+		// Last token, use remaining string
+		count = atoi(remaining.str());
+		remaining.clear();
+	}
+	return true;
+}
+
+//-------------------------------------------------------------------------------------------------
+// Format KindOf display text
+UnicodeString PlayerPrerequisite::formatKindOfDisplayText(const AsciiString& kindOfName, Int count)
+{
+	UnicodeString result;
+	// Convert count to UnicodeString using format
+	UnicodeString countStr;
+	countStr.format(L"%d", count);
+	result.concat(countStr);
+	result.concat(L" of ");
+	
+	// Add KindOf display name
+	AsciiString kindOfKey;
+	kindOfKey.format("KINDOF:%s", kindOfName.str());
+	UnicodeString kindOfDisplayName = TheGameText->fetch(kindOfKey.str());
+	kindOfDisplayName.toLower();
+	result.concat(kindOfDisplayName);
+	
+	return result;
+}
+
+//-------------------------------------------------------------------------------------------------
+// Format KindOf with level display text
+UnicodeString PlayerPrerequisite::formatKindOfWithLevelDisplayText(const AsciiString& kindOfName, const AsciiString& levelStr, Int count)
+{
+	UnicodeString result;
+	// Convert count to UnicodeString using format
+	UnicodeString countStr;
+	countStr.format(L"%d", count);
+	result.concat(countStr);
+	result.concat(L" of ");
+	
+	// Add KindOf display name
+	AsciiString kindOfKey;
+	kindOfKey.format("KINDOF:%s", kindOfName.str());
+	UnicodeString kindOfDisplayName = TheGameText->fetch(kindOfKey.str());
+	kindOfDisplayName.toLower();
+	result.concat(kindOfDisplayName);
+	
+	// Add veterancy level display name in parentheses
+	result.concat(L" (");
+	AsciiString levelKey;
+	levelKey.format("VETERANCY:%s", levelStr.str());
+	UnicodeString levelDisplayName = TheGameText->fetch(levelKey.str());
+	levelDisplayName.toLower();
+	result.concat(levelDisplayName);
+	result.concat(L")");
+	
+	return result;
 }
 
 

@@ -196,6 +196,15 @@ private :
 	static void parsePrerequisiteMinCountKindOfUnitWithLevel(INI* ini, void* instance, void* /*store*/, const void* /*userData*/);
 	static void parsePrerequisiteMaxCountKindOfUnitWithLevel(INI* ini, void* instance, void* /*store*/, const void* /*userData*/);
 
+	// Helper methods for refactoring repeated code
+	static AsciiString parseFullLineFromINI(INI* ini);
+	static void handleOrLogic(Int ownCount[], Int cnt, const std::vector<PrereqUnitRec>& prereqUnits);
+	static void handleOrLogicConflict(Int ownCount[], Int cnt, const std::vector<PrereqUnitRec>& prereqUnits);
+	static Bool parseKindOfCountPair(AsciiString& remaining, AsciiString& kindOfName, Int& count);
+	static Bool parseKindOfLevelCountTriple(AsciiString& remaining, AsciiString& kindOfName, AsciiString& levelStr, Int& count);
+	static UnicodeString formatKindOfDisplayText(const AsciiString& kindOfName, Int count);
+	static UnicodeString formatKindOfWithLevelDisplayText(const AsciiString& kindOfName, const AsciiString& levelStr, Int count);
+
 };
 
 //-----------------------------------------------------------------------------
