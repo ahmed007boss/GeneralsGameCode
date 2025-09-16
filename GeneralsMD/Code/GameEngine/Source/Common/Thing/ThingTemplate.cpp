@@ -655,23 +655,20 @@ static void parsePrerequisiteScience(INI* ini, void* instance, void* /*store*/, 
 }
 
 //-------------------------------------------------------------------------------------------------
-void ThingTemplate::parsePrerequisites(INI* ini, void* instance, void* store, const void* userData)
+// TheSuperHackers @refactor author 15/01/2025 Wrapper function for generic parsePrerequisites with resolveNames=FALSE
+void ThingTemplate::parsePrerequisites(INI* ini, void* instance, void* /*store*/, const void* /*userData*/)
 {
 	ThingTemplate* self = (ThingTemplate*)instance;
 
-	static const FieldParse myFieldParse[] =
+	// Create a temporary vector to parse into
+	std::vector<ProductionPrerequisite> tempVector;
+	ProductionPrerequisite::parsePrerequisites(ini, &tempVector, NULL, NULL, FALSE);
+	
+	// Add all parsed prerequisites to the ThingTemplate's vector
+	for (size_t i = 0; i < tempVector.size(); ++i)
 	{
-		{ "Object", parsePrerequisiteUnit, 0, 0 },
-		{ "Science", parsePrerequisiteScience,	0, 0 },
-		{ 0, 0, 0, 0 }
-	};
-
-	if (ini->getLoadType() == INI_LOAD_CREATE_OVERRIDES)
-	{
-		self->m_prereqInfo.clear();
+		self->m_prereqInfo.push_back(tempVector[i]);
 	}
-
-	ini->initFromINI(&self->m_prereqInfo, myFieldParse);
 }
 
 //-------------------------------------------------------------------------------------------Static

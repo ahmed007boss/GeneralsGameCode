@@ -710,3 +710,39 @@ void ProductionPrerequisite::parsePrerequisiteUpgradeConflict(INI* ini, void* in
 
 	v->push_back(prereq);
 }
+
+//-------------------------------------------------------------------------------------------------
+// TheSuperHackers @refactor author 15/01/2025 Made parsePrerequisites generic with optional resolveNames parameter
+void ProductionPrerequisite::parsePrerequisites(INI* ini, void* instance, void* store, const void* userData, Bool resolveNames)
+{
+	// This function is designed to work with offsetof - instance points directly to the vector
+	std::vector<ProductionPrerequisite>* prereqVector = (std::vector<ProductionPrerequisite>*)instance;
+
+	static const FieldParse myFieldParse[] =
+	{
+		{ "Object", ProductionPrerequisite::parsePrerequisiteUnit, 0, 0 },
+		{ "Science", ProductionPrerequisite::parsePrerequisiteScience,	0, 0 },
+		{ "ObjectNotExist", ProductionPrerequisite::parsePrerequisiteUnitConflict, 0, 0 },
+		{ "ScienceNotExist", ProductionPrerequisite::parsePrerequisiteScienceConflict,	0, 0 },
+		{ "Upgrade", ProductionPrerequisite::parsePrerequisiteUpgrade, 0, 0 },
+		{ "UpgradeNotExist", ProductionPrerequisite::parsePrerequisiteUpgradeConflict, 0, 0 },
+		{ 0, 0, 0, 0 }
+	};
+
+	if (ini->getLoadType() == INI_LOAD_CREATE_OVERRIDES)
+	{
+		prereqVector->clear();
+	}
+
+	ini->initFromINI(prereqVector, myFieldParse);
+
+	// Resolve prerequisite names now so later const accesses don't need to mutate state (if enabled)
+	if (resolveNames)
+	{
+		for (size_t i = 0; i < prereqVector->size(); ++i)
+		{
+			(*prereqVector)[i].resolveNames();
+		}
+	}
+}
+

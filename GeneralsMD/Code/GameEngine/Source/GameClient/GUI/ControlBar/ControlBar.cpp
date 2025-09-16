@@ -601,123 +601,68 @@ void CommandButton::parseVisiblePrerequisites(INI* ini, void* instance, void* st
 //-------------------------------------------------------------------------------------------------
 void CommandButton::parseAlternativeButton1Prerequisites(INI* ini, void* instance, void* store, const void* userData)
 {
-	// TheSuperHackers @alternative Ahmed Salah 27/06/2025 Parse prerequisites for alternative button 1
+	// TheSuperHackers @refactor author 15/01/2025 Wrapper function for generic parsePrerequisites with resolveNames=TRUE
 	CommandButton* self = (CommandButton*)instance;
 
-	static const FieldParse myFieldParse[] =
+	// Create a temporary vector to parse into
+	std::vector<ProductionPrerequisite> tempVector;
+	ProductionPrerequisite::parsePrerequisites(ini, &tempVector, NULL, NULL);
+	
+	// Add all parsed prerequisites to the CommandButton's vector
+	for (size_t i = 0; i < tempVector.size(); ++i)
 	{
-		{ "Object", ProductionPrerequisite::parsePrerequisiteUnit, 0, 0 },
-		{ "Science", ProductionPrerequisite::parsePrerequisiteScience,	0, 0 },
-		{ "ObjectNotExist", ProductionPrerequisite::parsePrerequisiteUnitConflict, 0, 0 },
-		{ "ScienceNotExist", ProductionPrerequisite::parsePrerequisiteScienceConflict,	0, 0 },
-		{ "Upgrade", ProductionPrerequisite::parsePrerequisiteUpgrade, 0, 0 },
-		{ "UpgradeNotExist", ProductionPrerequisite::parsePrerequisiteUpgradeConflict, 0, 0 },
-		{ 0, 0, 0, 0 }
-	};
-
-	if (ini->getLoadType() == INI_LOAD_CREATE_OVERRIDES)
-	{
-		self->m_alternativeButton1Prereq.clear();
-	}
-
-	ini->initFromINI(&self->m_alternativeButton1Prereq, myFieldParse);
-
-	// Resolve prerequisite names now so later const accesses don't need to mutate state
-	for (size_t i = 0; i < self->m_alternativeButton1Prereq.size(); ++i)
-	{
-		self->m_alternativeButton1Prereq[i].resolveNames();
+		self->m_alternativeButton1Prereq.push_back(tempVector[i]);
 	}
 }
 
 void CommandButton::parseAlternativeButton2Prerequisites(INI* ini, void* instance, void* store, const void* userData)
 {
-	// TheSuperHackers @alternative Ahmed Salah 27/06/2025 Parse prerequisites for alternative button 2
+	// TheSuperHackers @refactor author 15/01/2025 Wrapper function for generic parsePrerequisites with resolveNames=TRUE
 	CommandButton* self = (CommandButton*)instance;
 
-	static const FieldParse myFieldParse[] =
+	// Create a temporary vector to parse into
+	std::vector<ProductionPrerequisite> tempVector;
+	ProductionPrerequisite::parsePrerequisites(ini, &tempVector, NULL, NULL);
+	
+	// Add all parsed prerequisites to the CommandButton's vector
+	for (size_t i = 0; i < tempVector.size(); ++i)
 	{
-		{ "Object", ProductionPrerequisite::parsePrerequisiteUnit, 0, 0 },
-		{ "Science", ProductionPrerequisite::parsePrerequisiteScience,	0, 0 },
-		{ "ObjectNotExist", ProductionPrerequisite::parsePrerequisiteUnitConflict, 0, 0 },
-		{ "ScienceNotExist", ProductionPrerequisite::parsePrerequisiteScienceConflict,	0, 0 },
-		{ "Upgrade", ProductionPrerequisite::parsePrerequisiteUpgrade, 0, 0 },
-		{ "UpgradeNotExist", ProductionPrerequisite::parsePrerequisiteUpgradeConflict, 0, 0 },
-		{ 0, 0, 0, 0 }
-	};
-
-	if (ini->getLoadType() == INI_LOAD_CREATE_OVERRIDES)
-	{
-		self->m_alternativeButton2Prereq.clear();
-	}
-
-	ini->initFromINI(&self->m_alternativeButton2Prereq, myFieldParse);
-
-	// Resolve prerequisite names now so later const accesses don't need to mutate state
-	for (size_t i = 0; i < self->m_alternativeButton2Prereq.size(); ++i)
-	{
-		self->m_alternativeButton2Prereq[i].resolveNames();
+		self->m_alternativeButton2Prereq.push_back(tempVector[i]);
 	}
 }
 
 void CommandButton::parseAlternativeButton3Prerequisites(INI* ini, void* instance, void* store, const void* userData)
 {
-	// TheSuperHackers @alternative Ahmed Salah 27/06/2025 Parse prerequisites for alternative button 3
+	// TheSuperHackers @refactor author 15/01/2025 Wrapper function for generic parsePrerequisites with resolveNames=TRUE
 	CommandButton* self = (CommandButton*)instance;
 
-	static const FieldParse myFieldParse[] =
+	// Create a temporary vector to parse into
+	std::vector<ProductionPrerequisite> tempVector;
+	ProductionPrerequisite::parsePrerequisites(ini, &tempVector, NULL, NULL);
+	
+	// Add all parsed prerequisites to the CommandButton's vector
+	for (size_t i = 0; i < tempVector.size(); ++i)
 	{
-		{ "Object", ProductionPrerequisite::parsePrerequisiteUnit, 0, 0 },
-		{ "Science", ProductionPrerequisite::parsePrerequisiteScience,	0, 0 },
-		{ "ObjectNotExist", ProductionPrerequisite::parsePrerequisiteUnitConflict, 0, 0 },
-		{ "ScienceNotExist", ProductionPrerequisite::parsePrerequisiteScienceConflict,	0, 0 },
-		{ "Upgrade", ProductionPrerequisite::parsePrerequisiteUpgrade, 0, 0 },
-		{ "UpgradeNotExist", ProductionPrerequisite::parsePrerequisiteUpgradeConflict, 0, 0 },
-		{ 0, 0, 0, 0 }
-	};
-
-	if (ini->getLoadType() == INI_LOAD_CREATE_OVERRIDES)
-	{
-		self->m_alternativeButton3Prereq.clear();
-	}
-
-	ini->initFromINI(&self->m_alternativeButton3Prereq, myFieldParse);
-
-	// Resolve prerequisite names now so later const accesses don't need to mutate state
-	for (size_t i = 0; i < self->m_alternativeButton3Prereq.size(); ++i)
-	{
-		self->m_alternativeButton3Prereq[i].resolveNames();
+		self->m_alternativeButton3Prereq.push_back(tempVector[i]);
 	}
 }
 
 void CommandButton::parseAlternativeButton4Prerequisites(INI* ini, void* instance, void* store, const void* userData)
 {
-	// TheSuperHackers @alternative Ahmed Salah 27/06/2025 Parse prerequisites for alternative button 4
+	// TheSuperHackers @refactor author 15/01/2025 Wrapper function for generic parsePrerequisites with resolveNames=TRUE
 	CommandButton* self = (CommandButton*)instance;
 
-	static const FieldParse myFieldParse[] =
+	// Create a temporary vector to parse into
+	std::vector<ProductionPrerequisite> tempVector;
+	ProductionPrerequisite::parsePrerequisites(ini, &tempVector, NULL, NULL);
+	
+	// Add all parsed prerequisites to the CommandButton's vector
+	for (size_t i = 0; i < tempVector.size(); ++i)
 	{
-		{ "Object", ProductionPrerequisite::parsePrerequisiteUnit, 0, 0 },
-		{ "Science", ProductionPrerequisite::parsePrerequisiteScience,	0, 0 },
-		{ "ObjectNotExist", ProductionPrerequisite::parsePrerequisiteUnitConflict, 0, 0 },
-		{ "ScienceNotExist", ProductionPrerequisite::parsePrerequisiteScienceConflict,	0, 0 },
-		{ "Upgrade", ProductionPrerequisite::parsePrerequisiteUpgrade, 0, 0 },
-		{ "UpgradeNotExist", ProductionPrerequisite::parsePrerequisiteUpgradeConflict, 0, 0 },
-		{ 0, 0, 0, 0 }
-	};
-
-	if (ini->getLoadType() == INI_LOAD_CREATE_OVERRIDES)
-	{
-		self->m_alternativeButton4Prereq.clear();
-	}
-
-	ini->initFromINI(&self->m_alternativeButton4Prereq, myFieldParse);
-
-	// Resolve prerequisite names now so later const accesses don't need to mutate state
-	for (size_t i = 0; i < self->m_alternativeButton4Prereq.size(); ++i)
-	{
-		self->m_alternativeButton4Prereq[i].resolveNames();
+		self->m_alternativeButton4Prereq.push_back(tempVector[i]);
 	}
 }
+
 //---------------------------------------------
 //       Prerequisite
 //---------------------------------------------

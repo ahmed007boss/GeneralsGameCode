@@ -48,6 +48,7 @@
 //-----------------------------------------------------------------------------
 //           Includes
 //-----------------------------------------------------------------------------
+#include "Lib/BaseType.h"
 #include "Common/GameMemory.h"
 #include "Common/GameCommon.h"
 #include "Common/Science.h"
@@ -124,6 +125,7 @@ public:
 	static void parsePrerequisiteUnitConflict(INI* ini, void* instance, void* /*store*/, const void* /*userData*/);
 	static void parsePrerequisiteUpgrade(INI* ini, void* instance, void* /*store*/, const void* /*userData*/);
 	static void parsePrerequisiteUpgradeConflict(INI* ini, void* instance, void* /*store*/, const void* /*userData*/);
+	static void parsePrerequisites(INI* ini, void* instance, void* store, const void* userData, Bool resolveNames = TRUE);
 
 private:
 
