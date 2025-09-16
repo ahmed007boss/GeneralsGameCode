@@ -1787,18 +1787,17 @@ Int Player::countBuildings(void)
 }
 
 //=============================================================================
-Int Player::countObjects(KindOfMaskType setMask, KindOfMaskType clearMask)
+Int Player::countObjects(KindOfMaskType setMask, KindOfMaskType clearMask, VeterancyLevel minVeterancyLevel) 
 {
 	int retVal = 0;
 
 	for (PlayerTeamList::const_iterator it = m_playerTeamPrototypes.begin();
 			 it != m_playerTeamPrototypes.end(); ++it)
 	{
-		retVal += (*it)->countObjects(setMask, clearMask);
+		retVal += (*it)->countObjects(setMask, clearMask, minVeterancyLevel);
 	}
 	return retVal;
 }
-
 //=============================================================================
 Object *Player::findClosestByKindOf( Object *queryObject, KindOfMaskType setMask, KindOfMaskType clearMask )
 {

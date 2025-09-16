@@ -82,6 +82,8 @@ void PlayerPrerequisite::init()
 	m_prereqKindOfUnitsMaskConflict.clear();
 	m_prereqMinCountKindOfUnitsNames.clear();
 	m_prereqMaxCountKindOfUnitsNames.clear();
+	m_prereqMinCountKindOfUnitsWithLevelNames.clear();
+	m_prereqMaxCountKindOfUnitsWithLevelNames.clear();
 }
 
 //=============================================================================
@@ -408,6 +410,118 @@ Bool PlayerPrerequisite::isSatisfied(const Player* player) const
 			return false; // Player doesn't have the required max count
 	}
 
+	// Check min count KindOf prerequisites with veterancy level
+	for (size_t i = 0; i < m_prereqMinCountKindOfUnitsWithLevelNames.size(); i++)
+	{
+		// Parse the string format: "KINDOFXXX LEVEL_VETERAN 4 KINDOFYYY LEVEL_REGULAR 3"
+		AsciiString remaining = m_prereqMinCountKindOfUnitsWithLevelNames[i];
+		Bool hasEnough = false;
+		
+		while (!remaining.isEmpty())
+		{
+			// Get the next KindOf name
+			AsciiString kindOfName;
+			if (!remaining.nextToken(&kindOfName, " "))
+				break;
+			
+			// Get the veterancy level
+			AsciiString levelStr;
+			VeterancyLevel minLevel = LEVEL_REGULAR;
+			if (remaining.nextToken(&levelStr, " "))
+			{
+				minLevel = (VeterancyLevel)INI::scanIndexList(levelStr.str(), TheVeterancyNames);
+			}
+			else
+			{
+				break; // Invalid format
+			}
+			
+			// Get the count
+			AsciiString countStr;
+			Int count = 1;
+			if (remaining.nextToken(&countStr, " "))
+			{
+				count = atoi(countStr.str());
+			}
+			else
+			{
+				// Last token, use remaining string
+				count = atoi(remaining.str());
+				remaining.clear();
+			}
+			
+			// Check if player has the minimum count of this KindOf type with the specified veterancy level
+			KindOfType kindOfType = (KindOfType)INI::scanIndexList(kindOfName.str(), KindOfMaskType::getBitNames());
+			KindOfMaskType kindOfMask = MAKE_KINDOF_MASK(kindOfType);
+			Int playerCount = const_cast<Player*>(player)->countObjects(kindOfMask, KindOfMaskType(), minLevel);
+			
+			if (playerCount >= count)
+			{
+				hasEnough = true;
+				break; // At least one min count requirement is satisfied
+			}
+		}
+		
+		if (!hasEnough)
+			return false; // Player doesn't have the required min count
+	}
+
+	// Check max count KindOf prerequisites with veterancy level
+	for (size_t i = 0; i < m_prereqMaxCountKindOfUnitsWithLevelNames.size(); i++)
+	{
+		// Parse the string format: "KINDOFXXX LEVEL_VETERAN 4 KINDOFYYY LEVEL_REGULAR 3"
+		AsciiString remaining = m_prereqMaxCountKindOfUnitsWithLevelNames[i];
+		Bool hasMaxCount = false;
+		
+		while (!remaining.isEmpty())
+		{
+			// Get the next KindOf name
+			AsciiString kindOfName;
+			if (!remaining.nextToken(&kindOfName, " "))
+				break;
+			
+			// Get the veterancy level
+			AsciiString levelStr;
+			VeterancyLevel minLevel = LEVEL_REGULAR;
+			if (remaining.nextToken(&levelStr, " "))
+			{
+				minLevel = (VeterancyLevel)INI::scanIndexList(levelStr.str(), TheVeterancyNames);
+			}
+			else
+			{
+				break; // Invalid format
+			}
+			
+			// Get the count
+			AsciiString countStr;
+			Int count = 1;
+			if (remaining.nextToken(&countStr, " "))
+			{
+				count = atoi(countStr.str());
+			}
+			else
+			{
+				// Last token, use remaining string
+				count = atoi(remaining.str());
+				remaining.clear();
+			}
+			
+			// Check if player has the maximum count of this KindOf type with the specified veterancy level
+			KindOfType kindOfType = (KindOfType)INI::scanIndexList(kindOfName.str(), KindOfMaskType::getBitNames());
+			KindOfMaskType kindOfMask = MAKE_KINDOF_MASK(kindOfType);
+			Int playerCount = const_cast<Player*>(player)->countObjects(kindOfMask, KindOfMaskType(), minLevel);
+			
+			if (playerCount >= count)
+			{
+				hasMaxCount = true;
+				break; // At least one max count requirement is satisfied
+			}
+		}
+		
+		if (hasMaxCount)
+			return false; // Player doesn't have the required max count
+	}
+
 	return true;
 }
 
@@ -513,6 +627,18 @@ void PlayerPrerequisite::addMinCountKindOfUnitPrereq(AsciiString kindOfName)
 void PlayerPrerequisite::addMaxCountKindOfUnitPrereq(AsciiString kindOfName)
 {
 	m_prereqMaxCountKindOfUnitsNames.push_back(kindOfName);
+}
+
+//-------------------------------------------------------------------------------------------------
+void PlayerPrerequisite::addMinCountKindOfUnitWithLevelPrereq(AsciiString kindOfName)
+{
+	m_prereqMinCountKindOfUnitsWithLevelNames.push_back(kindOfName);
+}
+
+//-------------------------------------------------------------------------------------------------
+void PlayerPrerequisite::addMaxCountKindOfUnitWithLevelPrereq(AsciiString kindOfName)
+{
+	m_prereqMaxCountKindOfUnitsWithLevelNames.push_back(kindOfName);
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -741,6 +867,98 @@ UnicodeString PlayerPrerequisite::getRequiresList(const Player* player) const
 		}
 	}
 
+	// Check min count KindOf prerequisites with veterancy level
+	for (size_t i = 0; i < m_prereqMinCountKindOfUnitsWithLevelNames.size(); i++)
+	{
+		// Parse the string format: "KINDOFXXX LEVEL_VETERAN 4 KINDOFYYY LEVEL_REGULAR 3"
+		AsciiString remaining = m_prereqMinCountKindOfUnitsWithLevelNames[i];
+		Bool hasEnough = false;
+		UnicodeString missingRequirements;
+		
+		while (!remaining.isEmpty())
+		{
+			// Get the next KindOf name
+			AsciiString kindOfName;
+			if (!remaining.nextToken(&kindOfName, " "))
+				break;
+			
+			// Get the veterancy level
+			AsciiString levelStr;
+			VeterancyLevel minLevel = LEVEL_REGULAR;
+			if (remaining.nextToken(&levelStr, " "))
+			{
+				minLevel = (VeterancyLevel)INI::scanIndexList(levelStr.str(), TheVeterancyNames);
+			}
+			else
+			{
+				break; // Invalid format
+			}
+			
+			// Get the count
+			AsciiString countStr;
+			Int count = 1;
+			if (remaining.nextToken(&countStr, " "))
+			{
+				count = atoi(countStr.str());
+			}
+			else
+			{
+				// Last token, use remaining string
+				count = atoi(remaining.str());
+				remaining.clear();
+			}
+			
+			// Check if player has enough of this KindOf type with the specified veterancy level
+			KindOfType kindOfType = (KindOfType)INI::scanIndexList(kindOfName.str(), KindOfMaskType::getBitNames());
+			KindOfMaskType kindOfMask = MAKE_KINDOF_MASK(kindOfType);
+			Int playerCount = const_cast<Player*>(player)->countObjects(kindOfMask, KindOfMaskType(), minLevel);
+			
+			if (playerCount >= count)
+			{
+				hasEnough = true;
+				break; // At least one KindOf requirement is satisfied
+			}
+			else
+			{
+				// Add to missing requirements
+				if (!missingRequirements.isEmpty())
+					missingRequirements.concat(L" or ");
+				// Convert count to UnicodeString using format
+				UnicodeString countStr;
+				countStr.format(L"%d", count);
+				missingRequirements.concat(countStr);
+				missingRequirements.concat(L" of ");
+				
+				// Add KindOf display name
+				AsciiString kindOfKey;
+				kindOfKey.format("KINDOF:%s", kindOfName.str());
+				UnicodeString kindOfDisplayName = TheGameText->fetch(kindOfKey.str());
+				kindOfDisplayName.toLower();
+				missingRequirements.concat(kindOfDisplayName);
+				
+				// Add veterancy level display name in parentheses
+				missingRequirements.concat(L" (");
+				AsciiString levelKey;
+				levelKey.format("VETERANCY:%s", levelStr.str());
+				UnicodeString levelDisplayName = TheGameText->fetch(levelKey.str());
+				levelDisplayName.toLower();
+				missingRequirements.concat(levelDisplayName);
+				missingRequirements.concat(L")");
+			}
+		}
+		
+		if (!hasEnough)
+		{
+			// format name appropriately with 'returns' if necessary
+			if (firstRequirement)
+				firstRequirement = false;
+			else
+				missingRequirements.concat(L"\n");
+
+			// add it to the list
+			requiresList.concat(missingRequirements);
+		}
+	}
 
 	// return final list
 	return requiresList;
@@ -966,6 +1184,88 @@ UnicodeString PlayerPrerequisite::getConflictList(const Player* player) const
 		}
 	}
 
+	// Check max count KindOf prerequisites with veterancy level
+	for (size_t i = 0; i < m_prereqMaxCountKindOfUnitsWithLevelNames.size(); i++)
+	{
+		// Parse the string format: "KINDOFXXX LEVEL_VETERAN 4 KINDOFYYY LEVEL_REGULAR 3"
+		AsciiString remaining = m_prereqMaxCountKindOfUnitsWithLevelNames[i];
+		Bool hasMaxCount = false;
+		UnicodeString missingRequirements;
+		
+		while (!remaining.isEmpty())
+		{
+			// Get the next KindOf name
+			AsciiString kindOfName;
+			if (!remaining.nextToken(&kindOfName, " "))
+				break;
+			
+			// Get the veterancy level
+			AsciiString levelStr;
+			VeterancyLevel minLevel = LEVEL_REGULAR;
+			if (remaining.nextToken(&levelStr, " "))
+			{
+				minLevel = (VeterancyLevel)INI::scanIndexList(levelStr.str(), TheVeterancyNames);
+			}
+			else
+			{
+				break; // Invalid format
+			}
+			
+			// Get the count
+			AsciiString countStr;
+			Int count = 1;
+			if (remaining.nextToken(&countStr, " "))
+			{
+				count = atoi(countStr.str());
+			}
+			else
+			{
+				// Last token, use remaining string
+				count = atoi(remaining.str());
+				remaining.clear();
+			}
+			
+			// Check if player has the maximum count of this KindOf type with the specified veterancy level
+			KindOfType kindOfType = (KindOfType)INI::scanIndexList(kindOfName.str(), KindOfMaskType::getBitNames());
+			KindOfMaskType kindOfMask = MAKE_KINDOF_MASK(kindOfType);
+			Int playerCount = const_cast<Player*>(player)->countObjects(kindOfMask, KindOfMaskType(), minLevel);
+			
+			if (playerCount >= count)
+			{
+				hasMaxCount = true;
+				// Add to missing requirements
+				if (!missingRequirements.isEmpty())
+					missingRequirements.concat(L" or ");
+				// Convert count to UnicodeString using format
+				UnicodeString countStr;
+				countStr.format(L"%d", count);
+				missingRequirements.concat(countStr);
+				missingRequirements.concat(L" of ");
+				
+				// Add KindOf display name
+				AsciiString kindOfKey;
+				kindOfKey.format("KINDOF:%s", kindOfName.str());
+				UnicodeString kindOfDisplayName = TheGameText->fetch(kindOfKey.str());
+				kindOfDisplayName.toLower();
+				missingRequirements.concat(kindOfDisplayName);
+				
+				// Add veterancy level display name in parentheses
+				missingRequirements.concat(L" (");
+				AsciiString levelKey;
+				levelKey.format("VETERANCY:%s", levelStr.str());
+				UnicodeString levelDisplayName = TheGameText->fetch(levelKey.str());
+				levelDisplayName.toLower();
+				missingRequirements.concat(levelDisplayName);
+				missingRequirements.concat(L")");
+			}
+		}
+		
+		if (hasMaxCount)
+		{
+			conflictList.concat(missingRequirements);
+		}
+	}
+
 	// return final list
 	return conflictList;
 }
@@ -993,11 +1293,14 @@ void PlayerPrerequisite::parsePrerequisites(INI* ini, void* instance, void* stor
 		{ "PlayerUpgradeExist", PlayerPrerequisite::parsePrerequisiteUpgrade, 0, 0 },
 		{ "PlayerUpgradeNotExist", PlayerPrerequisite::parsePrerequisiteUpgradeConflict, 0, 0 },
 
-		{ "PlayerKindOfObjectExists", PlayerPrerequisite::parsePrerequisiteKindOfUnit, 	KindOfMaskType::getBitNames(), 0 },
-		{ "PlayerObjectKindOfNotExist", PlayerPrerequisite::parsePrerequisiteKindOfUnitConflict, 	KindOfMaskType::getBitNames(), 0 },
+		{ "PlayerKindOfObjectExists", PlayerPrerequisite::parsePrerequisiteKindOfUnit, 	0, 0 },
+		{ "PlayerObjectKindOfNotExist", PlayerPrerequisite::parsePrerequisiteKindOfUnitConflict, 	0, 0 },
 
-		{ "PlayerMinCountKindOfObjectExist", PlayerPrerequisite::parsePrerequisiteMinCountKindOfUnit, 	KindOfMaskType::getBitNames(), 0 },
-		{ "PlayerMaxCountKindOfObjectExist", PlayerPrerequisite::parsePrerequisiteMaxCountKindOfUnit, 	KindOfMaskType::getBitNames(), 0 },
+		{ "PlayerMinCountKindOfObjectExist", PlayerPrerequisite::parsePrerequisiteMinCountKindOfUnit, 	0, 0 },
+		{ "PlayerMaxCountKindOfObjectExist", PlayerPrerequisite::parsePrerequisiteMaxCountKindOfUnit, 	0, 0 },
+
+		{ "PlayerMinCountKindOfObjectWithLevelExist", PlayerPrerequisite::parsePrerequisiteMinCountKindOfUnitWithLevel, 	0, 0 },
+		{ "PlayerMaxCountKindOfObjectWithLevelExist", PlayerPrerequisite::parsePrerequisiteMaxCountKindOfUnitWithLevel, 	0, 0 },
 
 		
 		{ 0, 0, 0, 0 }
@@ -1151,6 +1454,44 @@ void PlayerPrerequisite::parsePrerequisiteMaxCountKindOfUnit(INI* ini, void* ins
 		fullLine.concat(token);
 	}
 	prereq.addMaxCountKindOfUnitPrereq(fullLine);
+
+	v->push_back(prereq);
+}
+
+//-------------------------------------------------------------------------------------------------
+void PlayerPrerequisite::parsePrerequisiteMinCountKindOfUnitWithLevel(INI* ini, void* instance, void* /*store*/, const void* /*userData*/)
+{
+	std::vector<PlayerPrerequisite>* v = (std::vector<PlayerPrerequisite>*)instance;
+
+	PlayerPrerequisite prereq;
+	// Parse the entire line as one token (e.g., "TANK LEVEL_VETERAN 4 STRUCTURE LEVEL_REGULAR 3")
+	AsciiString fullLine;
+	for (const char* token = ini->getNextToken(); token != NULL; token = ini->getNextTokenOrNull())
+	{
+		if (!fullLine.isEmpty())
+			fullLine.concat(" ");
+		fullLine.concat(token);
+	}
+	prereq.addMinCountKindOfUnitWithLevelPrereq(fullLine);
+
+	v->push_back(prereq);
+}
+
+//-------------------------------------------------------------------------------------------------
+void PlayerPrerequisite::parsePrerequisiteMaxCountKindOfUnitWithLevel(INI* ini, void* instance, void* /*store*/, const void* /*userData*/)
+{
+	std::vector<PlayerPrerequisite>* v = (std::vector<PlayerPrerequisite>*)instance;
+
+	PlayerPrerequisite prereq;
+	// Parse the entire line as one token (e.g., "TANK LEVEL_VETERAN 4 STRUCTURE LEVEL_REGULAR 3")
+	AsciiString fullLine;
+	for (const char* token = ini->getNextToken(); token != NULL; token = ini->getNextTokenOrNull())
+	{
+		if (!fullLine.isEmpty())
+			fullLine.concat(" ");
+		fullLine.concat(token);
+	}
+	prereq.addMaxCountKindOfUnitWithLevelPrereq(fullLine);
 
 	v->push_back(prereq);
 }

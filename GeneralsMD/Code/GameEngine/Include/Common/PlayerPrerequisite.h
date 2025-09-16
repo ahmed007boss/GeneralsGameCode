@@ -103,6 +103,12 @@ public:
 	void resetMaxCountKindOfUnits(void) { m_prereqMaxCountKindOfUnitsNames.clear(); }
 	void addMaxCountKindOfUnitPrereq(AsciiString kindOfName);
 
+	void resetMinCountKindOfUnitsWithLevel(void) { m_prereqMinCountKindOfUnitsWithLevelNames.clear(); }
+	void addMinCountKindOfUnitWithLevelPrereq(AsciiString kindOfName);
+
+	void resetMaxCountKindOfUnitsWithLevel(void) { m_prereqMaxCountKindOfUnitsWithLevelNames.clear(); }
+	void addMaxCountKindOfUnitWithLevelPrereq(AsciiString kindOfName);
+
 
 	/// called after all ThingTemplates have been loaded.
 	virtual void resolveNames();
@@ -173,6 +179,9 @@ protected:
 	mutable std::vector<AsciiString>	m_prereqMinCountKindOfUnitsNames;
 	mutable std::vector<AsciiString>	m_prereqMaxCountKindOfUnitsNames;
 
+	mutable std::vector<AsciiString>	m_prereqMinCountKindOfUnitsWithLevelNames;
+	mutable std::vector<AsciiString>	m_prereqMaxCountKindOfUnitsWithLevelNames;
+
 private :
 	static void parsePrerequisiteScience(INI* ini, void* instance, void* /*store*/, const void* /*userData*/);
 	static void parsePrerequisiteUnit(INI* ini, void* instance, void* /*store*/, const void* /*userData*/);
@@ -184,6 +193,8 @@ private :
 	static void parsePrerequisiteKindOfUnitConflict(INI* ini, void* instance, void* /*store*/, const void* /*userData*/);
 	static void parsePrerequisiteMinCountKindOfUnit(INI* ini, void* instance, void* /*store*/, const void* /*userData*/);
 	static void parsePrerequisiteMaxCountKindOfUnit(INI* ini, void* instance, void* /*store*/, const void* /*userData*/);
+	static void parsePrerequisiteMinCountKindOfUnitWithLevel(INI* ini, void* instance, void* /*store*/, const void* /*userData*/);
+	static void parsePrerequisiteMaxCountKindOfUnitWithLevel(INI* ini, void* instance, void* /*store*/, const void* /*userData*/);
 
 };
 
