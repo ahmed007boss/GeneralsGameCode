@@ -30,6 +30,7 @@ static PoolSizeRec PoolSizes[] =
 	{ "ObjectSellInfo", 16, 16 },
 	{ "ProductionPrerequisitePool", 1024, 32 },
 	{ "PlayerPrerequisitePool", 1024, 32 },
+	{ "ObjectPrerequisitePool", 1024, 32 },
 	{ "RadarObject", 512, 32 },
 	{ "ResourceGatheringManager", 16, 16 },
 	{ "SightingInfo", 8192, 2048 },// Looks big, but all 3000 objects used to have 4 just built in.

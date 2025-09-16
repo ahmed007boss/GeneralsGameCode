@@ -89,6 +89,7 @@ set(GAMEENGINE_SRC
     Include/Common/PlayerTemplate.h
     Include/Common/PlayerPrerequisite.h
     Include/Common/ProductionPrerequisite.h
+    Include/Common/ObjectPrerequisite.h
     Include/Common/QuickmatchPreferences.h
     Include/Common/QuotedPrintable.h
     Include/Common/Radar.h
@@ -624,6 +625,7 @@ set(GAMEENGINE_SRC
     Source/Common/RTS/PlayerTemplate.cpp
     Source/Common/RTS/PlayerPrerequisite.cpp
     Source/Common/RTS/ProductionPrerequisite.cpp
+    Source/Common/RTS/ObjectPrerequisite.cpp
     Source/Common/RTS/ResourceGatheringManager.cpp
     Source/Common/RTS/Science.cpp
     Source/Common/RTS/ScoreKeeper.cpp
