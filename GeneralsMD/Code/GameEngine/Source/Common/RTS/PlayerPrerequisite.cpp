@@ -48,6 +48,7 @@
 #include "Common/Player.h"
 #include "Common/ThingFactory.h"
 #include "Common/ThingTemplate.h"
+#include "Common/KindOf.h"
 #include "GameLogic/Object.h"
 #include "GameClient/Drawable.h"
 #include "GameClient/GameText.h"
@@ -75,6 +76,10 @@ void PlayerPrerequisite::init()
 	m_prereqUpgradesMask.clear();
 	m_prereqUpgradesNamesConflict.clear();
 	m_prereqUpgradesMaskConflict.clear();
+	m_prereqKindOfUnitsNames.clear();
+	m_prereqKindOfUnitsMask.clear();
+	m_prereqKindOfUnitsNamesConflict.clear();
+	m_prereqKindOfUnitsMaskConflict.clear();
 }
 
 //=============================================================================
@@ -141,6 +146,20 @@ void PlayerPrerequisite::resolveNames()
 			throw INI_INVALID_DATA;
 		}
 		m_prereqUpgradesMaskConflict.set(theTemplate->getUpgradeMask());
+	}
+
+	// Resolve prerequisite KindOf units
+	for (it = m_prereqKindOfUnitsNames.begin(); it != m_prereqKindOfUnitsNames.end(); ++it)
+	{
+		KindOfType kindOfType = (KindOfType)INI::scanIndexList(it->str(), KindOfMaskType::getBitNames());
+		m_prereqKindOfUnitsMask.set(kindOfType);
+	}
+
+	// Resolve conflict prerequisite KindOf units
+	for (it = m_prereqKindOfUnitsNamesConflict.begin(); it != m_prereqKindOfUnitsNamesConflict.end(); ++it)
+	{
+		KindOfType kindOfType = (KindOfType)INI::scanIndexList(it->str(), KindOfMaskType::getBitNames());
+		m_prereqKindOfUnitsMaskConflict.set(kindOfType);
 	}
 }
 
@@ -285,6 +304,20 @@ Bool PlayerPrerequisite::isSatisfied(const Player* player) const
 			return false;
 	}
 
+	// Check KindOf prerequisites
+	if (m_prereqKindOfUnitsMask.any())
+	{
+		if (const_cast<Player*>(player)->countObjects(m_prereqKindOfUnitsMask, KindOfMaskType()) == 0)
+			return false;
+	}
+
+	// Check conflicting KindOf prerequisites
+	if (m_prereqKindOfUnitsMaskConflict.any())
+	{
+		if (const_cast<Player*>(player)->countObjects(m_prereqKindOfUnitsMaskConflict, KindOfMaskType()) > 0)
+			return false;
+	}
+
 	return true;
 }
 
@@ -366,6 +399,18 @@ void PlayerPrerequisite::addUpgradePrereq(AsciiString upgrade)
 void PlayerPrerequisite::addUpgradePrereqConflict(AsciiString upgrade)
 {
 	m_prereqUpgradesNamesConflict.push_back(upgrade);
+}
+
+//-------------------------------------------------------------------------------------------------
+void PlayerPrerequisite::addKindOfUnitPrereq(AsciiString kindOfName)
+{
+	m_prereqKindOfUnitsNames.push_back(kindOfName);
+}
+
+//-------------------------------------------------------------------------------------------------
+void PlayerPrerequisite::addKindOfUnitPrereqConflict(AsciiString kindOfName)
+{
+	m_prereqKindOfUnitsNamesConflict.push_back(kindOfName);
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -490,6 +535,35 @@ UnicodeString PlayerPrerequisite::getRequiresList(const Player* player) const
 						// add it to the list
 						requiresList.concat(upgradeName);
 					}
+				}
+			}
+		}
+	}
+
+	// Check KindOf prerequisites
+	if (m_prereqKindOfUnitsMask.any())
+	{
+		if (const_cast<Player*>(player)->countObjects(m_prereqKindOfUnitsMask, KindOfMaskType()) == 0)
+		{
+			// Check each KindOf individually to show specific names
+			for (std::vector<AsciiString>::const_iterator it = m_prereqKindOfUnitsNames.begin(); it != m_prereqKindOfUnitsNames.end(); ++it)
+			{
+				KindOfType kindOfType = (KindOfType)INI::scanIndexList(it->str(), KindOfMaskType::getBitNames());
+				KindOfMaskType kindOfMask = MAKE_KINDOF_MASK(kindOfType);
+				if (const_cast<Player*>(player)->countObjects(kindOfMask, KindOfMaskType()) == 0)
+				{
+					AsciiString kindOfKey;
+					kindOfKey.format("KINDOF:%s", it->str());
+					UnicodeString kindOfName = TheGameText->fetch(kindOfKey.str());
+
+					// format name appropriately with 'returns' if necessary
+					if (firstRequirement)
+						firstRequirement = false;
+					else
+						kindOfName.concat(L"\n");
+
+					// add it to the list
+					requiresList.concat(kindOfName);
 				}
 			}
 		}
@@ -630,6 +704,35 @@ UnicodeString PlayerPrerequisite::getConflictList(const Player* player) const
 		}
 	}
 
+	// Check conflicting KindOf prerequisites
+	if (m_prereqKindOfUnitsMaskConflict.any())
+	{
+		if (const_cast<Player*>(player)->countObjects(m_prereqKindOfUnitsMaskConflict, KindOfMaskType()) > 0)
+		{
+			// Check each KindOf individually to show specific names
+			for (std::vector<AsciiString>::const_iterator it = m_prereqKindOfUnitsNamesConflict.begin(); it != m_prereqKindOfUnitsNamesConflict.end(); ++it)
+			{
+				KindOfType kindOfType = (KindOfType)INI::scanIndexList(it->str(), KindOfMaskType::getBitNames());
+				KindOfMaskType kindOfMask = MAKE_KINDOF_MASK(kindOfType);
+				if (const_cast<Player*>(player)->countObjects(kindOfMask, KindOfMaskType()) > 0)
+				{
+					AsciiString kindOfKey;
+					kindOfKey.format("KINDOF:%s", it->str());
+					UnicodeString kindOfName = TheGameText->fetch(kindOfKey.str());
+
+					// format name appropriately with 'returns' if necessary
+					if (firstConflict)
+						firstConflict = false;
+					else
+						kindOfName.concat(L"\n");
+
+					// add it to the list
+					conflictList.concat(kindOfName);
+				}
+			}
+		}
+	}
+
 	// return final list
 	return conflictList;
 }
@@ -649,12 +752,18 @@ void PlayerPrerequisite::parsePrerequisites(INI* ini, void* instance, void* stor
 		{ "Science", PlayerPrerequisite::parsePrerequisiteScience,	0, 0 },// to support backward compatibility
 
 		{ "PlayerObjectExists", PlayerPrerequisite::parsePrerequisiteUnit, 0, 0 },
-		{ "PlayerScienceExists", PlayerPrerequisite::parsePrerequisiteScience,	0, 0 },
 		{ "PlayerObjectNotExist", PlayerPrerequisite::parsePrerequisiteUnitConflict, 0, 0 },
+
+		{ "PlayerScienceExists", PlayerPrerequisite::parsePrerequisiteScience,	0, 0 },
 		{ "PlayerScienceNotExist", PlayerPrerequisite::parsePrerequisiteScienceConflict,	0, 0 },
+		
 		{ "PlayerUpgradeExist", PlayerPrerequisite::parsePrerequisiteUpgrade, 0, 0 },
 		{ "PlayerUpgradeNotExist", PlayerPrerequisite::parsePrerequisiteUpgradeConflict, 0, 0 },
 
+		{ "PlayerKindOfObjectExists", PlayerPrerequisite::parsePrerequisiteKindOfUnit, 	KindOfMaskType::getBitNames(), 0 },
+		{ "PlayerObjectKindOfNotExist", PlayerPrerequisite::parsePrerequisiteKindOfUnitConflict, 	KindOfMaskType::getBitNames(), 0 },
+
+		
 		{ 0, 0, 0, 0 }
 	};
 
@@ -746,6 +855,28 @@ void PlayerPrerequisite::parsePrerequisiteUpgradeConflict(INI* ini, void* instan
 
 	PlayerPrerequisite prereq;
 	prereq.addUpgradePrereqConflict(AsciiString(ini->getNextToken()));
+
+	v->push_back(prereq);
+}
+
+//-------------------------------------------------------------------------------------------------
+void PlayerPrerequisite::parsePrerequisiteKindOfUnit(INI* ini, void* instance, void* /*store*/, const void* /*userData*/)
+{
+	std::vector<PlayerPrerequisite>* v = (std::vector<PlayerPrerequisite>*)instance;
+
+	PlayerPrerequisite prereq;
+	prereq.addKindOfUnitPrereq(AsciiString(ini->getNextToken()));
+
+	v->push_back(prereq);
+}
+
+//-------------------------------------------------------------------------------------------------
+void PlayerPrerequisite::parsePrerequisiteKindOfUnitConflict(INI* ini, void* instance, void* /*store*/, const void* /*userData*/)
+{
+	std::vector<PlayerPrerequisite>* v = (std::vector<PlayerPrerequisite>*)instance;
+
+	PlayerPrerequisite prereq;
+	prereq.addKindOfUnitPrereqConflict(AsciiString(ini->getNextToken()));
 
 	v->push_back(prereq);
 }
