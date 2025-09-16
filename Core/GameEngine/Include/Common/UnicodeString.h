@@ -262,6 +262,11 @@ public:
 	void trimEnd(const WideChar c);
 
 	/**
+	  Make the string lowercase
+	*/
+	void toLower(void);
+
+	/**
 		Remove the final character in the string. If the string is empty,
 		do nothing. (This is a rather dorky method, but used a lot in
 		text editing, thus its presence here.)

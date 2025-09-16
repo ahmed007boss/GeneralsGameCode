@@ -80,6 +80,8 @@ void PlayerPrerequisite::init()
 	m_prereqKindOfUnitsMask.clear();
 	m_prereqKindOfUnitsNamesConflict.clear();
 	m_prereqKindOfUnitsMaskConflict.clear();
+	m_prereqMinCountKindOfUnitsNames.clear();
+	m_prereqMaxCountKindOfUnitsNames.clear();
 }
 
 //=============================================================================
@@ -318,6 +320,94 @@ Bool PlayerPrerequisite::isSatisfied(const Player* player) const
 			return false;
 	}
 
+	// Check min count KindOf prerequisites
+	for (size_t i = 0; i < m_prereqMinCountKindOfUnitsNames.size(); i++)
+	{
+		// Parse the string format: "KINDOFXXX 4 KINDOFYYY 3"
+		AsciiString remaining = m_prereqMinCountKindOfUnitsNames[i];
+		Bool hasEnough = false;
+		
+		while (!remaining.isEmpty())
+		{
+			// Get the next KindOf name
+			AsciiString kindOfName;
+			if (!remaining.nextToken(&kindOfName, " "))
+				break;
+			
+			// Get the count
+			AsciiString countStr;
+			Int count = 1;
+			if (remaining.nextToken(&countStr, " "))
+			{
+				count = atoi(countStr.str());
+			}
+			else
+			{
+				// Last token, use remaining string
+				count = atoi(remaining.str());
+				remaining.clear();
+			}
+			
+			// Check if player has enough of this KindOf type
+			KindOfType kindOfType = (KindOfType)INI::scanIndexList(kindOfName.str(), KindOfMaskType::getBitNames());
+			KindOfMaskType kindOfMask = MAKE_KINDOF_MASK(kindOfType);
+			Int playerCount = const_cast<Player*>(player)->countObjects(kindOfMask, KindOfMaskType());
+			
+			if (playerCount >= count)
+			{
+				hasEnough = true;
+				break; // At least one KindOf requirement is satisfied
+			}
+		}
+		
+		if (!hasEnough)
+			return false;
+	}
+
+	// Check max count KindOf prerequisites
+	for (size_t i = 0; i < m_prereqMaxCountKindOfUnitsNames.size(); i++)
+	{
+		// Parse the string format: "KINDOFXXX 4 KINDOFYYY 3"
+		AsciiString remaining = m_prereqMaxCountKindOfUnitsNames[i];
+		Bool hasMaxCount = false;
+		
+		while (!remaining.isEmpty())
+		{
+			// Get the next KindOf name
+			AsciiString kindOfName;
+			if (!remaining.nextToken(&kindOfName, " "))
+				break;
+			
+			// Get the count
+			AsciiString countStr;
+			Int count = 1;
+			if (remaining.nextToken(&countStr, " "))
+			{
+				count = atoi(countStr.str());
+			}
+			else
+			{
+				// Last token, use remaining string
+				count = atoi(remaining.str());
+				remaining.clear();
+			}
+			
+			// Check if player has the maximum count of this KindOf type
+			KindOfType kindOfType = (KindOfType)INI::scanIndexList(kindOfName.str(), KindOfMaskType::getBitNames());
+			KindOfMaskType kindOfMask = MAKE_KINDOF_MASK(kindOfType);
+			Int playerCount = const_cast<Player*>(player)->countObjects(kindOfMask, KindOfMaskType());
+			
+			if (playerCount >= count)
+			{
+				hasMaxCount = true;
+				break; // At least one max count requirement is satisfied
+			}
+		}
+		
+		if (hasMaxCount)
+			return false; // Player doesn't have the required max count
+	}
+
 	return true;
 }
 
@@ -411,6 +501,18 @@ void PlayerPrerequisite::addKindOfUnitPrereq(AsciiString kindOfName)
 void PlayerPrerequisite::addKindOfUnitPrereqConflict(AsciiString kindOfName)
 {
 	m_prereqKindOfUnitsNamesConflict.push_back(kindOfName);
+}
+
+//-------------------------------------------------------------------------------------------------
+void PlayerPrerequisite::addMinCountKindOfUnitPrereq(AsciiString kindOfName)
+{
+	m_prereqMinCountKindOfUnitsNames.push_back(kindOfName);
+}
+
+//-------------------------------------------------------------------------------------------------
+void PlayerPrerequisite::addMaxCountKindOfUnitPrereq(AsciiString kindOfName)
+{
+	m_prereqMaxCountKindOfUnitsNames.push_back(kindOfName);
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -568,6 +670,77 @@ UnicodeString PlayerPrerequisite::getRequiresList(const Player* player) const
 			}
 		}
 	}
+
+	// Check min count KindOf prerequisites
+	for (size_t i = 0; i < m_prereqMinCountKindOfUnitsNames.size(); i++)
+	{
+		// Parse the string format: "KINDOFXXX 4 KINDOFYYY 3"
+		AsciiString remaining = m_prereqMinCountKindOfUnitsNames[i];
+		Bool hasEnough = false;
+		UnicodeString missingRequirements;
+		
+		while (!remaining.isEmpty())
+		{
+			// Get the next KindOf name
+			AsciiString kindOfName;
+			if (!remaining.nextToken(&kindOfName, " "))
+				break;
+			
+			// Get the count
+			AsciiString countStr;
+			Int count = 1;
+			if (remaining.nextToken(&countStr, " "))
+			{
+				count = atoi(countStr.str());
+			}
+			else
+			{
+				// Last token, use remaining string
+				count = atoi(remaining.str());
+				remaining.clear();
+			}
+			
+			// Check if player has enough of this KindOf type
+			KindOfType kindOfType = (KindOfType)INI::scanIndexList(kindOfName.str(), KindOfMaskType::getBitNames());
+			KindOfMaskType kindOfMask = MAKE_KINDOF_MASK(kindOfType);
+			Int playerCount = const_cast<Player*>(player)->countObjects(kindOfMask, KindOfMaskType());
+			
+			if (playerCount >= count)
+			{
+				hasEnough = true;
+				break; // At least one KindOf requirement is satisfied
+			}
+			else
+			{
+				// Add to missing requirements
+				if (!missingRequirements.isEmpty())
+					missingRequirements.concat(L" or ");
+				// Convert count to UnicodeString using format
+				UnicodeString countStr;
+				countStr.format(L"%d", count);
+				missingRequirements.concat(countStr);
+				missingRequirements.concat(L" of ");
+				AsciiString kindOfKey;
+				kindOfKey.format("KINDOF:%s", kindOfName.str());
+				UnicodeString kindOfDisplayName = TheGameText->fetch(kindOfKey.str());
+				kindOfDisplayName.toLower();
+				missingRequirements.concat(kindOfDisplayName);
+			}
+		}
+		
+		if (!hasEnough)
+		{
+			// format name appropriately with 'returns' if necessary
+			if (firstRequirement)
+				firstRequirement = false;
+			else
+				missingRequirements.concat(L"\n");
+
+			// add it to the list
+			requiresList.concat(missingRequirements);
+		}
+	}
+
 
 	// return final list
 	return requiresList;
@@ -733,6 +906,66 @@ UnicodeString PlayerPrerequisite::getConflictList(const Player* player) const
 		}
 	}
 
+	// Check max count KindOf prerequisites
+	for (size_t i = 0; i < m_prereqMaxCountKindOfUnitsNames.size(); i++)
+	{
+		// Parse the string format: "KINDOFXXX 4 KINDOFYYY 3"
+		AsciiString remaining = m_prereqMaxCountKindOfUnitsNames[i];
+		Bool hasMaxCount = false;
+		UnicodeString missingRequirements;
+
+		while (!remaining.isEmpty())
+		{
+			// Get the next KindOf name
+			AsciiString kindOfName;
+			if (!remaining.nextToken(&kindOfName, " "))
+				break;
+
+			// Get the count
+			AsciiString countStr;
+			Int count = 1;
+			if (remaining.nextToken(&countStr, " "))
+			{
+				count = atoi(countStr.str());
+			}
+			else
+			{
+				// Last token, use remaining string
+				count = atoi(remaining.str());
+				remaining.clear();
+			}
+
+			// Check if player has the maximum count of this KindOf type
+			KindOfType kindOfType = (KindOfType)INI::scanIndexList(kindOfName.str(), KindOfMaskType::getBitNames());
+			KindOfMaskType kindOfMask = MAKE_KINDOF_MASK(kindOfType);
+			Int playerCount = const_cast<Player*>(player)->countObjects(kindOfMask, KindOfMaskType());
+
+			if (playerCount >= count)
+			{
+				hasMaxCount = true;
+				// Add to missing requirements
+				if (!missingRequirements.isEmpty())
+					missingRequirements.concat(L" or ");
+				// Convert count to UnicodeString using format
+				UnicodeString countStr;
+				countStr.format(L"%d", count);
+				missingRequirements.concat(countStr);
+				missingRequirements.concat(L" of ");
+				AsciiString kindOfKey;
+				kindOfKey.format("KINDOF:%s", kindOfName.str());
+				UnicodeString kindOfDisplayName = TheGameText->fetch(kindOfKey.str());
+				kindOfDisplayName.toLower();
+				missingRequirements.concat(kindOfDisplayName);
+			}			
+		}
+
+		if (hasMaxCount)
+		{
+			conflictList.concat(missingRequirements);
+			
+		}
+	}
+
 	// return final list
 	return conflictList;
 }
@@ -762,6 +995,9 @@ void PlayerPrerequisite::parsePrerequisites(INI* ini, void* instance, void* stor
 
 		{ "PlayerKindOfObjectExists", PlayerPrerequisite::parsePrerequisiteKindOfUnit, 	KindOfMaskType::getBitNames(), 0 },
 		{ "PlayerObjectKindOfNotExist", PlayerPrerequisite::parsePrerequisiteKindOfUnitConflict, 	KindOfMaskType::getBitNames(), 0 },
+
+		{ "PlayerMinCountKindOfObjectExist", PlayerPrerequisite::parsePrerequisiteMinCountKindOfUnit, 	KindOfMaskType::getBitNames(), 0 },
+		{ "PlayerMaxCountKindOfObjectExist", PlayerPrerequisite::parsePrerequisiteMaxCountKindOfUnit, 	KindOfMaskType::getBitNames(), 0 },
 
 		
 		{ 0, 0, 0, 0 }
@@ -877,6 +1113,44 @@ void PlayerPrerequisite::parsePrerequisiteKindOfUnitConflict(INI* ini, void* ins
 
 	PlayerPrerequisite prereq;
 	prereq.addKindOfUnitPrereqConflict(AsciiString(ini->getNextToken()));
+
+	v->push_back(prereq);
+}
+
+//-------------------------------------------------------------------------------------------------
+void PlayerPrerequisite::parsePrerequisiteMinCountKindOfUnit(INI* ini, void* instance, void* /*store*/, const void* /*userData*/)
+{
+	std::vector<PlayerPrerequisite>* v = (std::vector<PlayerPrerequisite>*)instance;
+
+	PlayerPrerequisite prereq;
+	// Parse the entire line as one token (e.g., "TANK 4 STRUCTURE 3")
+	AsciiString fullLine;
+	for (const char* token = ini->getNextToken(); token != NULL; token = ini->getNextTokenOrNull())
+	{
+		if (!fullLine.isEmpty())
+			fullLine.concat(" ");
+		fullLine.concat(token);
+	}
+	prereq.addMinCountKindOfUnitPrereq(fullLine);
+
+	v->push_back(prereq);
+}
+
+//-------------------------------------------------------------------------------------------------
+void PlayerPrerequisite::parsePrerequisiteMaxCountKindOfUnit(INI* ini, void* instance, void* /*store*/, const void* /*userData*/)
+{
+	std::vector<PlayerPrerequisite>* v = (std::vector<PlayerPrerequisite>*)instance;
+
+	PlayerPrerequisite prereq;
+	// Parse the entire line as one token (e.g., "TANK 4 STRUCTURE 3")
+	AsciiString fullLine;
+	for (const char* token = ini->getNextToken(); token != NULL; token = ini->getNextTokenOrNull())
+	{
+		if (!fullLine.isEmpty())
+			fullLine.concat(" ");
+		fullLine.concat(token);
+	}
+	prereq.addMaxCountKindOfUnitPrereq(fullLine);
 
 	v->push_back(prereq);
 }

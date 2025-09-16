@@ -325,6 +325,25 @@ void UnicodeString::removeLastChar()
 }
 
 // -----------------------------------------------------
+void UnicodeString::toLower(void)
+{
+	validate();
+	if (m_data)
+	{
+		ensureUniqueBufferOfSize(getLength() + 1, true, NULL, NULL);
+		WideChar* str = peek();
+		for (int i = 0; str[i]; i++)
+		{
+			if (str[i] >= L'A' && str[i] <= L'Z')
+			{
+				str[i] = str[i] - L'A' + L'a';
+			}
+		}
+	}
+	validate();
+}
+
+// -----------------------------------------------------
 void UnicodeString::truncateBy(const Int charCount)
 {
 	validate();
