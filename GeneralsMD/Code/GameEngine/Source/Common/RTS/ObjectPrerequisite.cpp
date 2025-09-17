@@ -598,13 +598,14 @@ UnicodeString ObjectPrerequisite::getRequiresList(const Object* object) const
 						}
 					}
 				}
-				nearbyReq.concat(L" within ");
+				nearbyReq.concat(TheGameText->fetch("PREREQ:Within"));
+				nearbyReq.concat(L" ");
 				nearbyReq.concat(formatDistanceDisplayText(prereq.distance));
-				
+				nearbyReq.concat(TheGameText->fetch("PREREQ:Meter"));
 				// Add "or" before each item except the first
 				if (i > 0)
 				{
-					nearbyReq = L" or " + nearbyReq;
+					nearbyReq = TheGameText->fetch("PREREQ:Or") + L" " + nearbyReq;
 				}
 
 				if (firstRequirement)
