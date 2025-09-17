@@ -35,6 +35,7 @@
 // INCLUDES ///////////////////////////////////////////////////////////////////////////////////////
 #include "Common/AudioEventRTS.h"
 #include "Common/GameCommon.h"
+#include "Common/ObjectPrerequisite.h"
 
 #include "GameLogic/Damage.h"
 
@@ -454,8 +455,9 @@ public:
 	inline const WeaponBonusSet* getExtraBonus() const { return m_extraBonus; }
 	inline Int getShotsPerBarrel() const { return m_shotsPerBarrel; }
 	inline Int getAntiMask() const { return m_antiMask; }
-	inline KindOfMaskType  getTargetForbidKindOf() const { return m_targetForbidKindOf; }
-	inline KindOfMaskType  getTargetAllowedKindOf() const { return m_targetAllowedKindOf; }
+	inline const std::vector<ObjectPrerequisite>& getTargetPrerequisites() const { return m_targetPrerequisites; }
+	inline const std::vector<ObjectPrerequisite>& getShooterPrerequisites() const { return m_shooterPrerequisites; }
+	inline const std::vector<ObjectPrerequisite>& getRadiusDamageAffectsPrerequisites() const { return m_radiusDamageAffectsPrerequisites; }
 	inline BOOL canAttackWithoutTarget() const { return m_canAttackWithoutTarget; }
 	inline Bool isLeechRangeWeapon() const { return m_leechRangeWeapon; }
 	inline Bool isCapableOfFollowingWaypoint() const { return m_capableOfFollowingWaypoint; }
@@ -486,6 +488,9 @@ private:
 	static void parseWeaponBonusSet( INI* ini, void *instance, void * /*store*/, const void* /*userData*/ );
 	static void parseScatterTarget( INI* ini, void *instance, void * /*store*/, const void* /*userData*/ );
 	static void parseShotDelay( INI* ini, void *instance, void * /*store*/, const void* /*userData*/ );
+	static void parseTargetPrerequisites( INI* ini, void *instance, void * /*store*/, const void* /*userData*/ );
+	static void parseShooterPrerequisites( INI* ini, void *instance, void * /*store*/, const void* /*userData*/ );
+	static void parseRadiusDamageAffectsPrerequisites( INI* ini, void *instance, void * /*store*/, const void* /*userData*/ );
 
 	static const FieldParse TheWeaponTemplateFieldParseTable[];		///< the parse table for INI definition
 
@@ -540,8 +545,9 @@ private:
 	Int m_shotsPerBarrel;										///< If non zero, don't cycle through your launch points every shot, mod the shot by this to get even chucks of firing
 	Int m_antiMask;													///< what we can target
 	Int m_affectsMask;											///< what we can affect
-	KindOfMaskType m_targetAllowedKindOf;		///< objects must have at least one of these kind of bits set to be targeted
-	KindOfMaskType m_targetForbidKindOf;		///< objects must have NONE of these kind of bits set to be targeted
+	std::vector<ObjectPrerequisite> m_targetPrerequisites;		///< object prerequisites that must be satisfied for targeting
+	std::vector<ObjectPrerequisite> m_shooterPrerequisites;		///< object prerequisites that must be satisfied by the shooting object
+	std::vector<ObjectPrerequisite> m_radiusDamageAffectsPrerequisites;		///< object prerequisites that must be satisfied for radius damage to affect objects
 	Bool m_canAttackWithoutTarget;					///< Cat force Attack on ground or not
 	Int m_collideMask;											///< what we can collide with (projectiles only)
 	Bool m_damageDealtAtSelfPosition;				///< if T, weapon damage is done at source's position, not victim's pos. (useful for suicide weapons.)
@@ -592,8 +598,8 @@ public:
 
 //~Weapon();
 
-	// return true if this weapon can target this object
-	Bool isValidTarget( const Object* victim);
+	// return true if this weapon can be used by source against victim
+	Bool isValidWeaponUse( const Object* source, const Object* victim);
 
 	Bool fireWeapon(const Object *source, Object *target, ObjectID* projectileID = NULL);
 

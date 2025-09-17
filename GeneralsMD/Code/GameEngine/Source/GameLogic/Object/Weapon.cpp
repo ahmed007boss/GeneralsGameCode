@@ -209,8 +209,9 @@ const FieldParse WeaponTemplate::TheWeaponTemplateFieldParseTable[] =
 	{ "ShotsPerBarrel",						INI::parseInt,													NULL,							offsetof(WeaponTemplate, m_shotsPerBarrel) },
 	{ "DamageDealtAtSelfPosition",INI::parseBool,													NULL,							offsetof(WeaponTemplate, m_damageDealtAtSelfPosition) },
 	{ "RadiusDamageAffects",			INI::parseBitString32,	TheWeaponAffectsMaskNames,				offsetof(WeaponTemplate, m_affectsMask) },
-	{ "TargetAllowedKindOf",			KindOfMaskType::parseFromINI,	KindOfMaskType::getBitNames(),				offsetof(WeaponTemplate, m_targetAllowedKindOf) },
-	{ "TargetForbidKindOf",				KindOfMaskType::parseFromINI,	KindOfMaskType::getBitNames(),				offsetof(WeaponTemplate, m_targetForbidKindOf) },
+	{ "TargetPrerequisite",				WeaponTemplate::parseTargetPrerequisites,	NULL,								0 },
+	{ "ShooterPrerequisite",			WeaponTemplate::parseShooterPrerequisites,	NULL,								0 },
+	{ "RadiusDamageAffectsPrerequisite",	WeaponTemplate::parseRadiusDamageAffectsPrerequisites,	NULL,								0 },
 	{ "CanAttackWithoutTarget",		INI::parseBool,													NULL,							offsetof(WeaponTemplate, m_canAttackWithoutTarget) },
 	{ "ProjectileCollidesWith",		INI::parseBitString32,	TheWeaponCollideMaskNames,				offsetof(WeaponTemplate, m_collideMask) },
 	{ "AntiAirborneVehicle",			INI::parseBitInInt32,										(void*)WEAPON_ANTI_AIRBORNE_VEHICLE,	offsetof(WeaponTemplate, m_antiMask) },
@@ -307,8 +308,6 @@ WeaponTemplate::WeaponTemplate() : m_nextTemplate(NULL)
 	m_extraBonus										= NULL;
 	m_shotsPerBarrel								= 1;
 	m_antiMask											= WEAPON_ANTI_GROUND;	// but not air or projectile.
-	m_targetAllowedKindOf = MAKE_KINDOF_MASK(KINDOF_FIRST);
-	m_targetForbidKindOf = MAKE_KINDOF_MASK(KINDOF_FIRST);
 	m_canAttackWithoutTarget = true;
 	m_projectileStreamName.clear();
 	m_laserName.clear();
@@ -405,6 +404,30 @@ void WeaponTemplate::reset( void )
 	self->m_minDelayBetweenShots = ceilf(ConvertDurationFromMsecsToFrames((Real)self->m_minDelayBetweenShots));
 	self->m_maxDelayBetweenShots = ceilf(ConvertDurationFromMsecsToFrames((Real)self->m_maxDelayBetweenShots));
 
+}
+
+//-------------------------------------------------------------------------------------------------
+/*static*/ void WeaponTemplate::parseTargetPrerequisites( INI* ini, void *instance, void * /*store*/, const void* /*userData*/ )
+{
+	// TheSuperHackers @feature author 15/01/2025 Parse TargetPrerequisite using ObjectPrerequisite system
+	WeaponTemplate* self = (WeaponTemplate*)instance;
+	ObjectPrerequisite::parseObjectPrerequisites(ini, &self->m_targetPrerequisites, NULL, NULL);
+}
+
+//-------------------------------------------------------------------------------------------------
+/*static*/ void WeaponTemplate::parseShooterPrerequisites( INI* ini, void *instance, void * /*store*/, const void* /*userData*/ )
+{
+	// TheSuperHackers @feature author 15/01/2025 Parse ShooterPrerequisite using ObjectPrerequisite system
+	WeaponTemplate* self = (WeaponTemplate*)instance;
+	ObjectPrerequisite::parseObjectPrerequisites(ini, &self->m_shooterPrerequisites, NULL, NULL);
+}
+
+//-------------------------------------------------------------------------------------------------
+/*static*/ void WeaponTemplate::parseRadiusDamageAffectsPrerequisites( INI* ini, void *instance, void * /*store*/, const void* /*userData*/ )
+{
+	// TheSuperHackers @feature author 15/01/2025 Parse RadiusDamageAffectsPrerequisite using ObjectPrerequisite system
+	WeaponTemplate* self = (WeaponTemplate*)instance;
+	ObjectPrerequisite::parseObjectPrerequisites(ini, &self->m_radiusDamageAffectsPrerequisites, NULL, NULL);
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -745,39 +768,36 @@ Bool WeaponTemplate::shouldProjectileCollideWith(
 	return false;
 }
 //-------------------------------------------------------------------------------------------------
-Bool Weapon::isValidTarget( const Object* victim)
+Bool Weapon::isValidWeaponUse( const Object* source, const Object* victim)
 {
 	auto weaponTemplate = getTemplate();
 
+	// Check shooter prerequisites using ObjectPrerequisite system
+	const std::vector<ObjectPrerequisite>& shooterPrereqs = weaponTemplate->getShooterPrerequisites();
+	for (size_t i = 0; i < shooterPrereqs.size(); i++)
+	{
+		if (!shooterPrereqs[i].isSatisfied(source))
+			return false;
+	}
+
 	if (victim)
 	{
-
-	/*	if (obj->isAnyKindOf(modData->m_allowInsideKindOf) == FALSE ||
-			obj->isAnyKindOf(modData->m_forbidInsideKindOf) == TRUE)
+		// Check target prerequisites using ObjectPrerequisite system
+		const std::vector<ObjectPrerequisite>& targetPrereqs = weaponTemplate->getTargetPrerequisites();
+		for (size_t i = 0; i < targetPrereqs.size(); i++)
 		{
-			return false;
-		}*/
-	
-		auto allowed = weaponTemplate->getTargetAllowedKindOf();
-		auto forbidden = weaponTemplate->getTargetForbidKindOf();
-
-		// Check allowed kinds
-		if (allowed != MAKE_KINDOF_MASK(KINDOF_FIRST)) // replace with a real constant instead of MAKE_KINDOF_MASK(KINDOF_FIRST)
-		{
-			if (victim->isAnyKindOf(allowed) == FALSE )
+			if (!targetPrereqs[i].isSatisfied(victim))
 				return false;
 		}
-
-		// Check forbidden kinds
-		if (forbidden != MAKE_KINDOF_MASK(KINDOF_FIRST))
-		{
-			if (victim->isAnyKindOf(forbidden) == TRUE)
-				return false;
-		}
-
 	}
 	else {
-		return	weaponTemplate->canAttackWithoutTarget();
+		// If no target provided, ensure target is not mandatory
+		// If weapon has target prerequisites but can't attack without target, this is invalid
+		const std::vector<ObjectPrerequisite>& targetPrereqs = weaponTemplate->getTargetPrerequisites();
+		if (!targetPrereqs.empty() && !weaponTemplate->canAttackWithoutTarget())
+			return false;
+		
+		return weaponTemplate->canAttackWithoutTarget();
 	}
 	return true;
 }
@@ -832,6 +852,13 @@ UnsignedInt WeaponTemplate::fireWeaponTemplate
 	}
 
 	DEBUG_ASSERTCRASH((m_primaryDamage > 0)  ||  (victimObj == NULL), ("You can't really shoot a zero damage weapon at an Object.") );
+
+	// Validate weapon use before firing
+	if (firingWeapon && !firingWeapon->isValidWeaponUse(sourceObj, victimObj))
+	{
+		
+		return 0;
+	}
 
 	ObjectID sourceID = sourceObj->getID();
 	const Coord3D* sourcePos = sourceObj->getPosition();
@@ -1416,6 +1443,23 @@ void WeaponTemplate::dealDamageInternal(ObjectID sourceID, ObjectID victimID, co
 						if( !(affects & requiredMask) )
 						{
 							//Skip if we aren't affected by this weapon.
+							continue;
+						}
+
+						// Check radius damage affects prerequisites using ObjectPrerequisite system
+						const std::vector<ObjectPrerequisite>& radiusDamageAffectsPrereqs = getRadiusDamageAffectsPrerequisites();
+						Bool satisfiesPrerequisites = true;
+						for (size_t i = 0; i < radiusDamageAffectsPrereqs.size(); i++)
+						{
+							if (!radiusDamageAffectsPrereqs[i].isSatisfied(curVictim))
+							{
+								satisfiesPrerequisites = false;
+								break;
+							}
+						}
+						if (!satisfiesPrerequisites)
+						{
+							//Skip if object doesn't satisfy radius damage affects prerequisites
 							continue;
 						}
 					}

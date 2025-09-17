@@ -604,10 +604,10 @@ CanAttackResult WeaponSet::getAbleToUseWeaponAgainstTarget(AbleToAttackType atta
 	Bool hasAValidWeaponForVictim = FALSE;
 	for (Int slot = 0; slot < WEAPONSLOT_COUNT - 1; ++slot)
 	{
-		Weapon* weaponToTestForRange = m_weapons[m_curWeapon];
-		if (weaponToTestForRange)
+		Weapon* weaponToTest = m_weapons[slot];
+		if (weaponToTest)
 		{
-			bool isValidTarget = weaponToTestForRange->isValidTarget(victim);
+			bool isValidTarget = weaponToTest->isValidWeaponUse(source, victim);
 			if (isValidTarget)
 			{
 				hasAValidWeaponForVictim = TRUE;
