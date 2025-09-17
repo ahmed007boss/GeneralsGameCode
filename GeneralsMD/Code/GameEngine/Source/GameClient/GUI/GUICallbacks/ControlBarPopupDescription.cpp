@@ -72,6 +72,7 @@
 #include "Common/Player.h"
 #include "Common/PlayerList.h"
 #include "Common/PlayerPrerequisite.h"
+#include "Common/ObjectPrerequisite.h"
 #include "Common/SpecialPower.h"
 #include "Common/ThingTemplate.h"
 #include "Common/Upgrade.h"
@@ -645,7 +646,6 @@ void ControlBar::populateBuildTooltipLayout(const CommandButton* commandButton, 
 
 		}
 
-		//here update desc
 
 		// ask each prerequisite to give us a list of the non satisfied prerequisites
 		for (Int i = 0; i < commandButton->getEnablePrereqCount(); i++)
@@ -675,6 +675,41 @@ void ControlBar::populateBuildTooltipLayout(const CommandButton* commandButton, 
 				}
 				conflictsFormat.concat(conflictsList);
 
+			}
+		}
+
+		// Check enable caller unit prerequisites
+		Drawable* draw = TheInGameUI->getFirstSelectedDrawable();
+		Object* selectedObject = draw ? draw->getObject() : NULL;
+		if (selectedObject)
+		{
+			for (Int i = 0; i < commandButton->getEnableCallerUnitPrereqCount(); i++)
+			{
+				const ObjectPrerequisite* objPrereq = commandButton->getNthEnableCallerUnitPrereq(i);
+				if (!objPrereq->isSatisfied(selectedObject))
+				{
+					requiresList = objPrereq->getRequiresList(selectedObject);
+					conflictsList = objPrereq->getConflictList(selectedObject);
+					if (requiresList != UnicodeString::TheEmptyString)
+					{
+						// make sure to put in 'returns' to space things correctly
+						if (firstRequirement)
+							firstRequirement = false;
+						else
+							requiresFormat.concat(L", ");
+					}
+					requiresFormat.concat(requiresList);
+
+					if (conflictsList != UnicodeString::TheEmptyString)
+					{
+						// make sure to put in 'returns' to space things correctly
+						if (firstConflicts)
+							firstConflicts = false;
+						else
+							conflictsFormat.concat(L", ");
+					}
+					conflictsFormat.concat(conflictsList);
+				}
 			}
 		}
 

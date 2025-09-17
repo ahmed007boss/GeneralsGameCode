@@ -38,6 +38,7 @@
 #include "Common/Overridable.h"
 #include "Common/Science.h"
 #include "Common/PlayerPrerequisite.h"
+#include "Common/ObjectPrerequisite.h"
 #include "GameClient/Color.h"
 
 // FORWARD REFERENCES /////////////////////////////////////////////////////////////////////////////
@@ -347,13 +348,12 @@ public:
 	const bool isRequireElectronics() const { return m_isRequireElectronics; }
 
 
-	const UpgradeTemplate* getRequiredUpgradeToEnable() const { return  m_requiredUpgradeToEnable;	};
-	const UpgradeTemplate* getConflictUpgradeToDisable() const { return m_conflictUpgradeToDisappear;};
-	const UpgradeTemplate* getRequiredUpgradeToAppear() const { return m_requiredUpgradeToAppear;	};
-	const UpgradeTemplate* getConflictUpgradeToDisappear() const { return m_conflictUpgradeToDisappear; };
 
 	std::vector<PlayerPrerequisite>	m_enablePrereqInfo;
 	std::vector<PlayerPrerequisite>	m_visiblePrereqInfo;
+	std::vector<ObjectPrerequisite>	m_enableCallerUnitPrereqInfo;
+	std::vector<ObjectPrerequisite>	m_visibleCallerUnitPrereqInfo;
+
 	Bool m_prereqInfoResloved;
 
 	GUICommandType getCommandType() const { return m_command; }
@@ -411,6 +411,12 @@ public:
 	Int getVisiblePrereqCount() const { return m_visiblePrereqInfo.size(); }
 	const PlayerPrerequisite* getNthVisiblePrereq(Int i) const { return &m_visiblePrereqInfo[i]; }
 
+	Int getEnableCallerUnitPrereqCount() const { return m_enableCallerUnitPrereqInfo.size(); }
+	const ObjectPrerequisite* getNthEnableCallerUnitPrereq(Int i) const { return &m_enableCallerUnitPrereqInfo[i]; }
+
+	Int getVisibleCallerUnitPrereqCount() const { return m_visibleCallerUnitPrereqInfo.size(); }
+	const ObjectPrerequisite* getNthVisibleCallerUnitPrereq(Int i) const { return &m_visibleCallerUnitPrereqInfo[i]; }
+
 	void setName(const AsciiString& n) { m_name = n; }
 
 	void setButtonImage( const Image *image ) { m_buttonImage = image; }
@@ -430,6 +436,8 @@ public:
 
 	static void parseEnablePrerequisites(INI* ini, void* instance, void* /*store*/, const void* /*userData*/);
 	static void parseVisiblePrerequisites(INI* ini, void* instance, void* /*store*/, const void* /*userData*/);
+	static void parseEnableCallerUnitPrerequisites(INI* ini, void* instance, void* /*store*/, const void* /*userData*/);
+	static void parseVisibleCallerUnitPrerequisites(INI* ini, void* instance, void* /*store*/, const void* /*userData*/);
 
 	// Alternative button prerequisite parsing functions
 	static void parseAlternativeButton1Prerequisites(INI* ini, void* instance, void* /*store*/, const void* /*userData*/);
@@ -448,10 +456,6 @@ private:
 	const ThingTemplate*					m_thingTemplate;							///< for commands that use thing templates in command data
 
 	const UpgradeTemplate*				m_upgradeTemplate;						///< for commands that use upgrade templates in command data
-	const UpgradeTemplate*				m_requiredUpgradeToEnable;		///< for commands that use upgrade templates in command data
-	const UpgradeTemplate*				m_conflictUpgradeToDisable;		///< for commands that use upgrade templates in command data
-	const UpgradeTemplate*				m_requiredUpgradeToAppear;		///< for commands that use upgrade templates in command data
-	const UpgradeTemplate*				m_conflictUpgradeToDisappear;		///< for commands that use upgrade templates in command data
 
 	const SpecialPowerTemplate*		m_specialPower;								///< actual special power template
 	RadiusCursorType							m_radiusCursor;								///< radius cursor, if any
@@ -828,6 +832,9 @@ public:
 	Bool isDrivingContextUI( Drawable *draw ) const { return draw == m_currentSelectedDrawable; }
 
 	CommandAvailability getCommandAvailability(const CommandButton* command, Object* obj, GameWindow* win, GameWindow* applyToWin = NULL, Bool forceDisabledEvaluation = FALSE) const;
+
+	// Helper method to check prerequisites
+	CommandAvailability checkPrerequisites(const CommandButton* command, Object* obj, Player* player) const;
 	//-----------------------------------------------------------------------------------------------
 	// the remaining methods are used to construct the command buttons and command sets for
 	// the command bar

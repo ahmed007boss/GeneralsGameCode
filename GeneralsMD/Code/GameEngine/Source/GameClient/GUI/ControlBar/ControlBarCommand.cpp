@@ -1151,86 +1151,7 @@ CommandAvailability ControlBar::getCommandAvailability( const CommandButton *com
 		}
 	}
 
-	auto requiredUpgradeToAppear = command->getRequiredUpgradeToAppear();
-	if (requiredUpgradeToAppear)
-	{		
-			// upgrades come in the form of player upgrades and object upgrades
-			if (requiredUpgradeToAppear->getUpgradeType() == UPGRADE_TYPE_PLAYER)
-			{
-				if (player->hasUpgradeComplete(requiredUpgradeToAppear) == FALSE)
-					return COMMAND_HIDDEN;
-			}
-			else if (requiredUpgradeToAppear->getUpgradeType() == UPGRADE_TYPE_OBJECT &&
-				obj->hasUpgrade(requiredUpgradeToAppear) == FALSE)
-			{
-				return COMMAND_HIDDEN;
-			}	
-	}
 
-	auto conflictUpgradeToDisappear = command->getConflictUpgradeToDisappear();
-	if (conflictUpgradeToDisappear)
-	{
-		// upgrades come in the form of player upgrades and object upgrades
-		if (conflictUpgradeToDisappear->getUpgradeType() == UPGRADE_TYPE_PLAYER)
-		{
-			if (player->hasUpgradeComplete(conflictUpgradeToDisappear) == TRUE)
-				return COMMAND_HIDDEN;
-		}
-		else if (conflictUpgradeToDisappear->getUpgradeType() == UPGRADE_TYPE_OBJECT &&
-			obj->hasUpgrade(conflictUpgradeToDisappear) == TRUE)
-		{
-			return COMMAND_HIDDEN;
-		}
-	}
-
-
-	for (Int i = 0; i < command->getEnablePrereqCount(); i++)
-	{
-		const PlayerPrerequisite* pre = command->getNthEnablePrereq(i);
-		// Names are resolved at parse time; just check satisfaction here
-		if (pre->isSatisfied(player) == false)
-			return COMMAND_RESTRICTED;
-	}
-
-	for (Int i = 0; i < command->getVisiblePrereqCount(); i++)
-	{
-		const PlayerPrerequisite* pre = command->getNthVisiblePrereq(i);
-		// Names are resolved at parse time; just check satisfaction here
-		if (pre->isSatisfied(player) == false)
-			return COMMAND_HIDDEN;
-	}
-
-	auto requiredUpgradeToEnable = command->getRequiredUpgradeToEnable();
-	if (requiredUpgradeToEnable)
-	{
-		// upgrades come in the form of player upgrades and object upgrades
-		if (requiredUpgradeToEnable->getUpgradeType() == UPGRADE_TYPE_PLAYER)
-		{
-			if (player->hasUpgradeComplete(requiredUpgradeToEnable) == FALSE)
-				return COMMAND_RESTRICTED;
-		}
-		else if (requiredUpgradeToEnable->getUpgradeType() == UPGRADE_TYPE_OBJECT &&
-			obj->hasUpgrade(requiredUpgradeToEnable) == FALSE)
-		{
-			return COMMAND_RESTRICTED;
-		}
-	}
-
-	auto conflictUpgradeToDisable = command->getConflictUpgradeToDisable();
-	if (conflictUpgradeToDisable)
-	{
-		// upgrades come in the form of player upgrades and object upgrades
-		if (conflictUpgradeToDisable->getUpgradeType() == UPGRADE_TYPE_PLAYER)
-		{
-			if (player->hasUpgradeComplete(conflictUpgradeToDisable) == TRUE)
-				return COMMAND_RESTRICTED;
-		}
-		else if (conflictUpgradeToDisable->getUpgradeType() == UPGRADE_TYPE_OBJECT &&
-			obj->hasUpgrade(conflictUpgradeToDisable) == TRUE)
-		{
-			return COMMAND_RESTRICTED;
-		}
-	}
 
 	ProductionUpdateInterface *pu = obj->getProductionUpdateInterface();
 	if( pu && pu->firstProduction() && BitIsSet( command->getOptions(), NOT_QUEUEABLE ) )
@@ -1419,7 +1340,7 @@ CommandAvailability ControlBar::getCommandAvailability( const CommandButton *com
 			/// @Kris -- We need to show the button as always available for anything with a 0 clip reload time.
 			if( w && w->getClipReloadTime( obj ) == 0 )
 			{
-				return COMMAND_AVAILABLE;
+				return checkPrerequisites(command, obj, player);
 			}
 
 			if( w == NULL																	// No weapon
@@ -1452,7 +1373,7 @@ CommandAvailability ControlBar::getCommandAvailability( const CommandButton *com
 						&& !obj->testWeaponSetFlag(WEAPONSET_MINE_CLEARING_DETAIL)
 					)
 					{
-						return COMMAND_AVAILABLE;
+						return checkPrerequisites(command, obj, player);
 					}
 
 					// no weapon in the slot means "gray me out"
@@ -1606,7 +1527,7 @@ CommandAvailability ControlBar::getCommandAvailability( const CommandButton *com
 				{
 					WeaponSlotType wslot = draw->getObject()->getCurrentWeapon()->getWeaponSlot();
 					if (wslot != command->getWeaponSlot())
-						return COMMAND_AVAILABLE;
+						return checkPrerequisites(command, obj, player);
 				}
 			}
 
@@ -1624,14 +1545,14 @@ CommandAvailability ControlBar::getCommandAvailability( const CommandButton *com
 					return COMMAND_RESTRICTED;
 				}
 			}
-			return COMMAND_AVAILABLE;
+			return checkPrerequisites(command, obj, player);
 		}
 
 		case GUI_COMMAND_STOP:
 		{
 			if( !BitIsSet( command->getOptions(), OPTION_ONE ) )
 			{
-				return COMMAND_AVAILABLE;
+				return checkPrerequisites(command, obj, player);
 			}
 
 			//We're dealing with a strategy center stop button. Only show the button
@@ -1642,18 +1563,67 @@ CommandAvailability ControlBar::getCommandAvailability( const CommandButton *com
 			{
 				return COMMAND_RESTRICTED;
 			}
-			return COMMAND_AVAILABLE;
+			return checkPrerequisites(command, obj, player);
 		}
 
 		case GUI_COMMAND_SELECT_ALL_UNITS_OF_TYPE:
 		{
 			//We can *always* select a unit :)
-			return COMMAND_AVAILABLE;
+			return checkPrerequisites(command, obj, player);
 		}
 	}
 
-	// all is well with the command
-	return COMMAND_AVAILABLE;
+	// Check prerequisites and upgrade requirements
 
+	// all is well with the command
+	return checkPrerequisites(command, obj, player);
+
+}
+
+//-------------------------------------------------------------------------------------------------
+// Helper method to check prerequisites
+//-------------------------------------------------------------------------------------------------
+CommandAvailability ControlBar::checkPrerequisites(const CommandButton* command, Object* obj, Player* player) const
+{
+
+
+	// Check visible player prerequisites
+	for (Int i = 0; i < command->getVisiblePrereqCount(); i++)
+	{
+		const PlayerPrerequisite* pre = command->getNthVisiblePrereq(i);
+		// Names are resolved at parse time; just check satisfaction here
+		if (pre->isSatisfied(player) == false)
+			return COMMAND_HIDDEN;
+	}
+
+	// Check visible caller unit prerequisites
+	for (Int i = 0; i < command->getVisibleCallerUnitPrereqCount(); i++)
+	{
+		const ObjectPrerequisite* pre = command->getNthVisibleCallerUnitPrereq(i);
+		// Names are resolved at parse time; just check satisfaction here
+		if (pre->isSatisfied(obj) == false)
+			return COMMAND_HIDDEN;
+	}
+
+
+	// Check enable player prerequisites
+	for (Int i = 0; i < command->getEnablePrereqCount(); i++)
+	{
+		const PlayerPrerequisite* pre = command->getNthEnablePrereq(i);
+		// Names are resolved at parse time; just check satisfaction here
+		if (pre->isSatisfied(player) == false)
+			return COMMAND_RESTRICTED;
+	}
+
+	// Check enable caller unit prerequisites
+	for (Int i = 0; i < command->getEnableCallerUnitPrereqCount(); i++)
+	{
+		const ObjectPrerequisite* pre = command->getNthEnableCallerUnitPrereq(i);
+		// Names are resolved at parse time; just check satisfaction here
+		if (pre->isSatisfied(obj) == false)
+			return COMMAND_RESTRICTED;
+	}
+
+	return COMMAND_AVAILABLE;
 }
 

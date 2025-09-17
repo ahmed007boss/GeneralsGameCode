@@ -120,12 +120,10 @@ const FieldParse CommandButton::s_commandButtonFieldParseTable[] =
 	{ "RadiusCursorType",			INI::parseIndexList,				 TheRadiusCursorNames, offsetof( CommandButton, m_radiusCursor ) },
 	{ "UnitSpecificSound",		INI::parseAudioEventRTS,		 NULL, offsetof( CommandButton, m_unitSpecificSound ) },
 	{ "RequireElectronics",		INI::parseBool,							 NULL, offsetof( CommandButton, m_isRequireElectronics) },
-	{ "RequiredUpgradeToAppear",				INI::parseUpgradeTemplate,	 NULL, offsetof(CommandButton, m_requiredUpgradeToAppear) },
-	{ "ConflictUpgradeToDisappear",			INI::parseUpgradeTemplate,	 NULL, offsetof(CommandButton, m_conflictUpgradeToDisappear) },
-	{ "RequiredUpgradeToEnable",				INI::parseUpgradeTemplate,	 NULL, offsetof(CommandButton, m_requiredUpgradeToEnable) },
-	{ "ConflictUpgradeToDisable",			  INI::parseUpgradeTemplate,	 NULL, offsetof(CommandButton, m_conflictUpgradeToDisable) },
 	{ "EnablePrerequisites",				CommandButton::parseEnablePrerequisites,	0, 0 },
 	{ "VisiblePrerequisites",				CommandButton::parseVisiblePrerequisites,	0, 0 },
+	{ "EnableCallerPrerequisites",				CommandButton::parseEnableCallerUnitPrerequisites,	0, 0 },
+	{ "VisibleCallerPrerequisites",				CommandButton::parseVisibleCallerUnitPrerequisites,	0, 0 },
 
 	// Modifier key and click type button name strings
 	{ "LeftClickCtrlButton",					INI::parseAsciiString, NULL, offsetof( CommandButton, m_leftClickCtrlButtonName ) },
@@ -586,6 +584,21 @@ void CommandButton::parseVisiblePrerequisites(INI* ini, void* instance, void* /*
 	PlayerPrerequisite::parsePrerequisites(ini, &button->m_visiblePrereqInfo, NULL, NULL);
 }
 
+//-------------------------------------------------------------------------------------------------
+void CommandButton::parseEnableCallerUnitPrerequisites(INI* ini, void* instance, void* /*store*/, const void* /*userData*/)
+{
+	CommandButton* button = (CommandButton*)instance;
+	ObjectPrerequisite::parseObjectPrerequisites(ini, &button->m_enableCallerUnitPrereqInfo, NULL, NULL);
+}
+
+//-------------------------------------------------------------------------------------------------
+void CommandButton::parseVisibleCallerUnitPrerequisites(INI* ini, void* instance, void* /*store*/, const void* /*userData*/)
+{
+	CommandButton* button = (CommandButton*)instance;
+	ObjectPrerequisite::parseObjectPrerequisites(ini, &button->m_visibleCallerUnitPrereqInfo, NULL, NULL);
+}
+
+
 //---------------------------------------------
 //       Prerequisite
 //---------------------------------------------
@@ -682,10 +695,6 @@ CommandButton::CommandButton( void )
 	m_command = GUI_COMMAND_NONE;
 	m_thingTemplate = NULL;
 	m_upgradeTemplate = NULL;
-	m_conflictUpgradeToDisappear = NULL;
-	m_requiredUpgradeToAppear = NULL;
-	m_conflictUpgradeToDisable = NULL;
-	m_requiredUpgradeToEnable = NULL;
 	m_weaponSlot = PRIMARY_WEAPON;
 	m_maxShotsToFire = 0x7fffffff;	// huge number
 	m_science.clear();
