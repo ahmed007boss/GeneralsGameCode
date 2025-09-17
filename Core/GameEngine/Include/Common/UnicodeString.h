@@ -507,4 +507,28 @@ inline Bool operator>=(const UnicodeString& s1, const UnicodeString& s2)
 	return wcscmp(s1.str(), s2.str()) >= 0;
 }
 
+// -----------------------------------------------------
+inline UnicodeString operator+(const UnicodeString& s1, const UnicodeString& s2)
+{
+	UnicodeString result = s1;
+	result.concat(s2);
+	return result;
+}
+
+// -----------------------------------------------------
+inline UnicodeString operator+(const UnicodeString& s1, const WideChar* s2)
+{
+	UnicodeString result = s1;
+	result.concat(s2);
+	return result;
+}
+
+// -----------------------------------------------------
+inline UnicodeString operator+(const WideChar* s1, const UnicodeString& s2)
+{
+	UnicodeString result = s1;
+	result.concat(s2);
+	return result;
+}
+
 #endif // UNICODESTRING_H

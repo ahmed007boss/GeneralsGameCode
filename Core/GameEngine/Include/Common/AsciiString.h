@@ -600,4 +600,28 @@ inline Bool operator>=(const AsciiString& s1, const char* s2)
 	return strcmp(s1.str(), s2) >= 0;
 }
 
+// -----------------------------------------------------
+inline AsciiString operator+(const AsciiString& s1, const AsciiString& s2)
+{
+	AsciiString result = s1;
+	result.concat(s2);
+	return result;
+}
+
+// -----------------------------------------------------
+inline AsciiString operator+(const AsciiString& s1, const char* s2)
+{
+	AsciiString result = s1;
+	result.concat(s2);
+	return result;
+}
+
+// -----------------------------------------------------
+inline AsciiString operator+(const char* s1, const AsciiString& s2)
+{
+	AsciiString result = s1;
+	result.concat(s2);
+	return result;
+}
+
 #endif // ASCIISTRING_H
