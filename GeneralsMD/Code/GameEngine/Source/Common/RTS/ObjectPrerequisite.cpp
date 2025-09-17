@@ -86,6 +86,16 @@ void ObjectPrerequisite::init()
 	m_objectLevelMoreThan = -1;
 	m_objectLevelLessThan = -1;
 	
+	m_objectHasModelConditionFlagNames.clear();
+	m_objectHasNoModelConditionFlagNames.clear();
+	m_objectHasModelConditionFlags.clear();
+	m_objectHasNoModelConditionFlags.clear();
+	
+	m_objectHasStatusFlagNames.clear();
+	m_objectHasNoStatusFlagNames.clear();
+	m_objectHasStatusFlags.clear();
+	m_objectHasNoStatusFlags.clear();
+	
 	m_objectHasNearbyObjects.clear();
 	m_objectHasNoNearbyObjects.clear();
 }
@@ -150,6 +160,28 @@ void ObjectPrerequisite::resolveNames()
 		m_objectHasNotUpgradeMask.set(theTemplate->getUpgradeMask());
 	}
 
+	// Resolve model condition flag prerequisites
+	for (size_t i = 0; i < m_objectHasModelConditionFlagNames.size(); i++)
+	{
+		m_objectHasModelConditionFlags.setBitByName(m_objectHasModelConditionFlagNames[i].str());
+	}
+
+	for (size_t i = 0; i < m_objectHasNoModelConditionFlagNames.size(); i++)
+	{
+		m_objectHasNoModelConditionFlags.setBitByName(m_objectHasNoModelConditionFlagNames[i].str());
+	}
+
+	// Resolve status flag prerequisites
+	for (size_t i = 0; i < m_objectHasStatusFlagNames.size(); i++)
+	{
+		m_objectHasStatusFlags.setBitByName(m_objectHasStatusFlagNames[i].str());
+	}
+
+	for (size_t i = 0; i < m_objectHasNoStatusFlagNames.size(); i++)
+	{
+		m_objectHasNoStatusFlags.setBitByName(m_objectHasNoStatusFlagNames[i].str());
+	}
+
 	// Resolve nearby object prerequisites
 	for (size_t i = 0; i < m_objectHasNearbyObjects.size(); i++)
 	{
@@ -189,6 +221,7 @@ void ObjectPrerequisite::resolveNames()
 //-----------------------------------------------------------------------------
 Bool ObjectPrerequisite::isSatisfied(const Object* object) const
 {
+	
 	if (!object)
 		return false;
 
@@ -208,13 +241,13 @@ Bool ObjectPrerequisite::isSatisfied(const Object* object) const
 	// Check KindOf prerequisites
 	if (m_objectIsKindOfMask.any())
 	{
-		if (!object->isKindOfMulti(m_objectIsKindOfMask, KindOfMaskType()))
+		if (!object->isAnyKindOf(m_objectIsKindOfMask))
 			return false;
 	}
 
 	if (m_objectIsNoKindOfMask.any())
 	{
-		if (object->isKindOfMulti(KindOfMaskType(), m_objectIsNoKindOfMask))
+		if (object->isAnyKindOf( m_objectIsNoKindOfMask))
 			return false;
 	}
 
@@ -244,31 +277,87 @@ Bool ObjectPrerequisite::isSatisfied(const Object* object) const
 			return false;
 	}
 
-	// Check nearby object prerequisites
-	for (size_t i = 0; i < m_objectHasNearbyObjects.size(); i++)
+	// Check model condition flag prerequisites
+	Drawable* drawable = object->getDrawable();
+	if (drawable)
 	{
-		const NearbyObjectPrereq& prereq = m_objectHasNearbyObjects[i];
-		Object* nearbyObject = NULL;
+		ModelConditionFlags modelConditionFlags = drawable->getModelConditionFlags();
 		
-		if (!prereq.isKindOf)
+		// Check for required model condition flags
+		if (m_objectHasModelConditionFlags.any())
 		{
-			// Find specific object type
-			PartitionFilterThing filter(prereq.objectTemplate, true);
-			PartitionFilter* filters[] = { &filter, NULL };
-			nearbyObject = ThePartitionManager->getClosestObject(object->getPosition(), prereq.distance, FROM_CENTER_2D, filters);
-		}
-		else
-		{
-			// Find KindOf type
-			PartitionFilterAcceptByKindOf filter(prereq.kindOfMask, KindOfMaskType());
-			PartitionFilter* filters[] = { &filter, NULL };
-			nearbyObject = ThePartitionManager->getClosestObject(object->getPosition(), prereq.distance, FROM_CENTER_2D, filters);
+			if (modelConditionFlags.testForAny(m_objectHasModelConditionFlags) == FALSE)
+				return false;
 		}
 		
-		if (!nearbyObject)
+		// Check for forbidden model condition flags
+		if (m_objectHasNoModelConditionFlags.any())
+		{
+			if (modelConditionFlags.testForAny(m_objectHasNoModelConditionFlags) == TRUE)
+				return false;
+		}
+	}
+	else
+	{
+		// If object has no drawable, it can't have model condition flags
+		// So if any model condition flags are required, this fails
+		if (m_objectHasModelConditionFlags.any())
 			return false;
 	}
 
+	// Check status flag prerequisites
+	ObjectStatusMaskType objectStatusFlags = object->getStatusBits();
+	
+	// Check for required status flags
+	if (m_objectHasStatusFlags.any())
+	{
+		if (objectStatusFlags.testForAny(m_objectHasStatusFlags) == FALSE)
+			return false;
+	}
+	
+	// Check for forbidden status flags
+	if (m_objectHasNoStatusFlags.any())
+	{
+		if (objectStatusFlags.testForAny(m_objectHasNoStatusFlags) == TRUE)
+			return false;
+	}
+
+	// Check nearby object prerequisites (OR logic - any nearby object found is sufficient)
+	if (!m_objectHasNearbyObjects.empty())
+	{
+		Bool foundAnyNearby = false;
+		for (size_t i = 0; i < m_objectHasNearbyObjects.size(); i++)
+		{
+			const NearbyObjectPrereq& prereq = m_objectHasNearbyObjects[i];
+			Object* nearbyObject = NULL;
+			
+			if (!prereq.isKindOf)
+			{
+				// Find specific object type
+				PartitionFilterThing filter(prereq.objectTemplate, true);
+				PartitionFilter* filters[] = { &filter, NULL };
+				nearbyObject = ThePartitionManager->getClosestObject(object->getPosition(), prereq.distance, FROM_CENTER_2D, filters);
+			}
+			else
+			{
+				// Find KindOf type
+				PartitionFilterAcceptByKindOf filter(prereq.kindOfMask, KindOfMaskType());
+				PartitionFilter* filters[] = { &filter, NULL };
+				nearbyObject = ThePartitionManager->getClosestObject(object->getPosition(), prereq.distance, FROM_CENTER_2D, filters);
+			}
+			
+			if (nearbyObject)
+			{
+				foundAnyNearby = true;
+				break; // Found at least one, that's sufficient for OR logic
+			}
+		}
+		
+		if (!foundAnyNearby)
+			return false;
+	}
+
+	// Check no nearby object prerequisites (AND logic - none of the specified objects should be nearby)
 	for (size_t i = 0; i < m_objectHasNoNearbyObjects.size(); i++)
 	{
 		const NearbyObjectPrereq& prereq = m_objectHasNoNearbyObjects[i];
@@ -322,7 +411,7 @@ UnicodeString ObjectPrerequisite::getRequiresList(const Object* object) const
 	// Check KindOf prerequisites
 	if (m_objectIsKindOfMask.any())
 	{
-		if (!object->isKindOfMulti(m_objectIsKindOfMask, KindOfMaskType()))
+		if (!object->isAnyKindOf(m_objectIsKindOfMask))
 		{
 			for (size_t i = 0; i < m_objectIsKindOfNames.size(); i++)
 			{
@@ -392,53 +481,139 @@ UnicodeString ObjectPrerequisite::getRequiresList(const Object* object) const
 		}
 	}
 
-	// Check nearby object prerequisites
-	for (size_t i = 0; i < m_objectHasNearbyObjects.size(); i++)
+	// Check condition flag prerequisites
+	Drawable* drawable = object->getDrawable();
+	if (drawable)
 	{
-		const NearbyObjectPrereq& prereq = m_objectHasNearbyObjects[i];
-		Object* nearbyObject = NULL;
+		ModelConditionFlags modelConditionFlags = drawable->getModelConditionFlags();
 		
-		if (!prereq.isKindOf)
+		// Check for required model condition flags
+		if (m_objectHasModelConditionFlags.any())
 		{
-			PartitionFilterThing filter(prereq.objectTemplate, true);
-			PartitionFilter* filters[] = { &filter, NULL };
-			nearbyObject = ThePartitionManager->getClosestObject(object->getPosition(), prereq.distance, FROM_CENTER_2D, filters);
-		}
-		else
-		{
-			PartitionFilterAcceptByKindOf filter(prereq.kindOfMask, KindOfMaskType());
-			PartitionFilter* filters[] = { &filter, NULL };
-			nearbyObject = ThePartitionManager->getClosestObject(object->getPosition(), prereq.distance, FROM_CENTER_2D, filters);
-		}
-		
-		if (!nearbyObject)
-		{
-			UnicodeString nearbyReq;
-			if (!prereq.isKindOf)
+			if (!modelConditionFlags.testForAll(m_objectHasModelConditionFlags))
 			{
-				nearbyReq = formatObjectDisplayText(prereq.objectTemplate->getName());
-			}
-			else
-			{
-				// Find the KindOf name from the original names
-				for (size_t j = 0; j < m_objectIsKindOfNames.size(); j++)
+				// Add all required model condition flags to requirements list
+				for (size_t i = 0; i < m_objectHasModelConditionFlagNames.size(); i++)
 				{
-					KindOfType kindOfType = (KindOfType)INI::scanIndexList(m_objectIsKindOfNames[j].str(), KindOfMaskType::getBitNames());
-					if (MAKE_KINDOF_MASK(kindOfType) == prereq.kindOfMask)
-					{
-						nearbyReq = formatKindOfDisplayText(m_objectIsKindOfNames[j]);
-						break;
-					}
+					UnicodeString modelConditionFlagName = formatModelConditionFlagDisplayText(m_objectHasModelConditionFlagNames[i]);
+					if (firstRequirement)
+						firstRequirement = false;
+					else
+						modelConditionFlagName.concat(L"\n");
+					requiresList.concat(modelConditionFlagName);
 				}
 			}
-			nearbyReq.concat(L" within ");
-			nearbyReq.concat(formatDistanceDisplayText(prereq.distance));
+		}
+	}
+	else
+	{
+		// If object has no drawable, it can't have model condition flags
+		// So if any model condition flags are required, add them to requirements
+		if (m_objectHasModelConditionFlags.any())
+		{
+			for (size_t i = 0; i < m_objectHasModelConditionFlagNames.size(); i++)
+			{
+				UnicodeString modelConditionFlagName = formatModelConditionFlagDisplayText(m_objectHasModelConditionFlagNames[i]);
+				if (firstRequirement)
+					firstRequirement = false;
+				else
+					modelConditionFlagName.concat(L"\n");
+				requiresList.concat(modelConditionFlagName);
+			}
+		}
+	}
+
+	// Check status flag prerequisites
+	ObjectStatusMaskType objectStatusFlags = object->getStatusBits();
+	
+	// Check for required status flags
+	if (m_objectHasStatusFlags.any())
+	{
+		if (objectStatusFlags.testForAny(m_objectHasStatusFlags) == FALSE)
+		{
+			// Add all required status flags to requirements list
+			for (size_t i = 0; i < m_objectHasStatusFlagNames.size(); i++)
+			{
+				UnicodeString statusFlagName = formatStatusFlagDisplayText(m_objectHasStatusFlagNames[i]);
+				if (firstRequirement)
+					firstRequirement = false;
+				else
+					statusFlagName.concat(L"\n");
+				requiresList.concat(statusFlagName);
+			}
+		}
+	}
+
+	// Check nearby object prerequisites (OR logic - show all missing objects with "or" between them)
+	if (!m_objectHasNearbyObjects.empty())
+	{
+		Bool foundAnyNearby = false;
+		for (size_t i = 0; i < m_objectHasNearbyObjects.size(); i++)
+		{
+			const NearbyObjectPrereq& prereq = m_objectHasNearbyObjects[i];
+			Object* nearbyObject = NULL;
 			
-			if (firstRequirement)
-				firstRequirement = false;
+			if (!prereq.isKindOf)
+			{
+				PartitionFilterThing filter(prereq.objectTemplate, true);
+				PartitionFilter* filters[] = { &filter, NULL };
+				nearbyObject = ThePartitionManager->getClosestObject(object->getPosition(), prereq.distance, FROM_CENTER_2D, filters);
+			}
 			else
-				nearbyReq.concat(L"\n");
-			requiresList.concat(nearbyReq);
+			{
+				PartitionFilterAcceptByKindOf filter(prereq.kindOfMask, KindOfMaskType());
+				PartitionFilter* filters[] = { &filter, NULL };
+				nearbyObject = ThePartitionManager->getClosestObject(object->getPosition(), prereq.distance, FROM_CENTER_2D, filters);
+			}
+			
+			if (nearbyObject)
+			{
+				foundAnyNearby = true;
+				break; // Found at least one, that's sufficient for OR logic
+			}
+		}
+		
+		// If no nearby objects found, show all missing ones with "or" between them
+		if (!foundAnyNearby)
+		{
+			for (size_t i = 0; i < m_objectHasNearbyObjects.size(); i++)
+			{
+				const NearbyObjectPrereq& prereq = m_objectHasNearbyObjects[i];
+				UnicodeString nearbyReq;
+				
+				if (!prereq.isKindOf)
+				{
+					nearbyReq = formatObjectDisplayText(prereq.objectTemplate->getName());
+				}
+				else
+				{
+					// Find the KindOf name from the original names
+					for (size_t j = 0; j < m_objectIsKindOfNames.size(); j++)
+					{
+						KindOfType kindOfType = (KindOfType)INI::scanIndexList(m_objectIsKindOfNames[j].str(), KindOfMaskType::getBitNames());
+						if (MAKE_KINDOF_MASK(kindOfType) == prereq.kindOfMask)
+						{
+							nearbyReq = formatKindOfDisplayText(m_objectIsKindOfNames[j]);
+							break;
+						}
+					}
+				}
+				nearbyReq.concat(L" within ");
+				nearbyReq.concat(formatDistanceDisplayText(prereq.distance));
+				
+				// Add "or" before each item except the first
+				if (i > 0)
+				{
+					nearbyReq = L" or " + nearbyReq;
+				}
+
+				if (firstRequirement)
+					firstRequirement = false;
+				else
+					nearbyReq.concat(L"\n");
+
+				requiresList.concat(nearbyReq);
+			}
 		}
 	}
 
@@ -471,7 +646,7 @@ UnicodeString ObjectPrerequisite::getConflictList(const Object* object) const
 	// Check KindOf conflicts
 	if (m_objectIsNoKindOfMask.any())
 	{
-		if (object->isKindOfMulti(KindOfMaskType(), m_objectIsNoKindOfMask))
+		if (object->isAnyKindOf(m_objectIsNoKindOfMask))
 		{
 			for (size_t i = 0; i < m_objectIsNoKindOfNames.size(); i++)
 			{
@@ -508,6 +683,52 @@ UnicodeString ObjectPrerequisite::getConflictList(const Object* object) const
 						conflictList.concat(upgradeName);
 					}
 				}
+			}
+		}
+	}
+
+	// Check condition flag conflicts
+	Drawable* drawable = object->getDrawable();
+	if (drawable)
+	{
+		ModelConditionFlags modelConditionFlags = drawable->getModelConditionFlags();
+		
+		// Check for forbidden model condition flags
+		if (m_objectHasNoModelConditionFlags.any())
+		{
+			if (modelConditionFlags.testForAny(m_objectHasNoModelConditionFlags))
+			{
+				// Add all forbidden model condition flags to conflict list
+				for (size_t i = 0; i < m_objectHasNoModelConditionFlagNames.size(); i++)
+				{
+					UnicodeString modelConditionFlagName = formatModelConditionFlagDisplayText(m_objectHasNoModelConditionFlagNames[i]);
+					if (firstConflict)
+						firstConflict = false;
+					else
+						modelConditionFlagName.concat(L"\n");
+					conflictList.concat(modelConditionFlagName);
+				}
+			}
+		}
+	}
+
+	// Check status flag conflicts
+	ObjectStatusMaskType objectStatusFlags = object->getStatusBits();
+	
+	// Check for forbidden status flags
+	if (m_objectHasNoStatusFlags.any())
+	{
+		if (objectStatusFlags.testForAny(m_objectHasNoStatusFlags) == TRUE)
+		{
+			// Add all forbidden status flags to conflict list
+			for (size_t i = 0; i < m_objectHasNoStatusFlagNames.size(); i++)
+			{
+				UnicodeString statusFlagName = formatStatusFlagDisplayText(m_objectHasNoStatusFlagNames[i]);
+				if (firstConflict)
+					firstConflict = false;
+				else
+					statusFlagName.concat(L"\n");
+				conflictList.concat(statusFlagName);
 			}
 		}
 	}
@@ -668,6 +889,30 @@ void ObjectPrerequisite::addObjectHasNoNearbyKindOfPrereq(AsciiString kindOfName
 }
 
 //-------------------------------------------------------------------------------------------------
+void ObjectPrerequisite::addObjectHasModelConditionFlagPrereq(AsciiString modelConditionFlagName)
+{
+	m_objectHasModelConditionFlagNames.push_back(modelConditionFlagName);
+}
+
+//-------------------------------------------------------------------------------------------------
+void ObjectPrerequisite::addObjectHasNoModelConditionFlagPrereq(AsciiString modelConditionFlagName)
+{
+	m_objectHasNoModelConditionFlagNames.push_back(modelConditionFlagName);
+}
+
+//-------------------------------------------------------------------------------------------------
+void ObjectPrerequisite::addObjectHasStatusFlagPrereq(AsciiString statusFlagName)
+{
+	m_objectHasStatusFlagNames.push_back(statusFlagName);
+}
+
+//-------------------------------------------------------------------------------------------------
+void ObjectPrerequisite::addObjectHasNoStatusFlagPrereq(AsciiString statusFlagName)
+{
+	m_objectHasNoStatusFlagNames.push_back(statusFlagName);
+}
+
+//-------------------------------------------------------------------------------------------------
 void ObjectPrerequisite::parseObjectPrerequisites(INI* ini, void* instance, void* store, const void* userData)
 {
 	std::vector<ObjectPrerequisite>* prereqVector = (std::vector<ObjectPrerequisite>*)instance;
@@ -686,6 +931,10 @@ void ObjectPrerequisite::parseObjectPrerequisites(INI* ini, void* instance, void
 		{ "ObjectHasNearbyKindOf", ObjectPrerequisite::parseObjectHasNearbyKindOf, 0, 0 },
 		{ "ObjectHasNoNearbyObject", ObjectPrerequisite::parseObjectHasNoNearbyObject, 0, 0 },
 		{ "ObjectHasNoNearbyKindOf", ObjectPrerequisite::parseObjectHasNoNearbyKindOf, 0, 0 },
+		{ "ObjectHasModelConditionFlag", ObjectPrerequisite::parseObjectHasModelConditionFlag, 0, 0 },
+		{ "ObjectHasNoModelConditionFlag", ObjectPrerequisite::parseObjectHasNoModelConditionFlag, 0, 0 },
+		{ "ObjectHasStatusFlag", ObjectPrerequisite::parseObjectHasStatusFlag, 0, 0 },
+		{ "ObjectHasNoStatusFlag", ObjectPrerequisite::parseObjectHasNoStatusFlag, 0, 0 },
 		{ 0, 0, 0, 0 }
 	};
 
@@ -784,10 +1033,13 @@ void ObjectPrerequisite::parseObjectHasNearbyObject(INI* ini, void* instance, vo
 	AsciiString remaining = fullLine;
 	AsciiString objectName;
 	Real distance;
-	if (parseObjectDistancePair(remaining, objectName, distance))
+	
+	// Parse all object-distance pairs (OR logic)
+	while (parseObjectDistancePair(remaining, objectName, distance))
 	{
 		prereq.addObjectHasNearbyObjectPrereq(objectName, distance);
 	}
+	
 	v->push_back(prereq);
 }
 
@@ -800,10 +1052,13 @@ void ObjectPrerequisite::parseObjectHasNearbyKindOf(INI* ini, void* instance, vo
 	AsciiString remaining = fullLine;
 	AsciiString kindOfName;
 	Real distance;
-	if (parseKindOfDistancePair(remaining, kindOfName, distance))
+	
+	// Parse all KindOf-distance pairs (OR logic)
+	while (parseKindOfDistancePair(remaining, kindOfName, distance))
 	{
 		prereq.addObjectHasNearbyKindOfPrereq(kindOfName, distance);
 	}
+	
 	v->push_back(prereq);
 }
 
@@ -816,10 +1071,13 @@ void ObjectPrerequisite::parseObjectHasNoNearbyObject(INI* ini, void* instance, 
 	AsciiString remaining = fullLine;
 	AsciiString objectName;
 	Real distance;
-	if (parseObjectDistancePair(remaining, objectName, distance))
+	
+	// Parse all object-distance pairs (OR logic)
+	while (parseObjectDistancePair(remaining, objectName, distance))
 	{
 		prereq.addObjectHasNoNearbyObjectPrereq(objectName, distance);
 	}
+	
 	v->push_back(prereq);
 }
 
@@ -832,10 +1090,49 @@ void ObjectPrerequisite::parseObjectHasNoNearbyKindOf(INI* ini, void* instance, 
 	AsciiString remaining = fullLine;
 	AsciiString kindOfName;
 	Real distance;
-	if (parseKindOfDistancePair(remaining, kindOfName, distance))
+	
+	// Parse all KindOf-distance pairs (OR logic)
+	while (parseKindOfDistancePair(remaining, kindOfName, distance))
 	{
 		prereq.addObjectHasNoNearbyKindOfPrereq(kindOfName, distance);
 	}
+	
+	v->push_back(prereq);
+}
+
+//-------------------------------------------------------------------------------------------------
+void ObjectPrerequisite::parseObjectHasModelConditionFlag(INI* ini, void* instance, void* /*store*/, const void* /*userData*/)
+{
+	std::vector<ObjectPrerequisite>* v = (std::vector<ObjectPrerequisite>*)instance;
+	ObjectPrerequisite prereq;
+	prereq.addObjectHasModelConditionFlagPrereq(AsciiString(ini->getNextToken()));
+	v->push_back(prereq);
+}
+
+//-------------------------------------------------------------------------------------------------
+void ObjectPrerequisite::parseObjectHasNoModelConditionFlag(INI* ini, void* instance, void* /*store*/, const void* /*userData*/)
+{
+	std::vector<ObjectPrerequisite>* v = (std::vector<ObjectPrerequisite>*)instance;
+	ObjectPrerequisite prereq;
+	prereq.addObjectHasNoModelConditionFlagPrereq(AsciiString(ini->getNextToken()));
+	v->push_back(prereq);
+}
+
+//-------------------------------------------------------------------------------------------------
+void ObjectPrerequisite::parseObjectHasStatusFlag(INI* ini, void* instance, void* /*store*/, const void* /*userData*/)
+{
+	std::vector<ObjectPrerequisite>* v = (std::vector<ObjectPrerequisite>*)instance;
+	ObjectPrerequisite prereq;
+	prereq.addObjectHasStatusFlagPrereq(AsciiString(ini->getNextToken()));
+	v->push_back(prereq);
+}
+
+//-------------------------------------------------------------------------------------------------
+void ObjectPrerequisite::parseObjectHasNoStatusFlag(INI* ini, void* instance, void* /*store*/, const void* /*userData*/)
+{
+	std::vector<ObjectPrerequisite>* v = (std::vector<ObjectPrerequisite>*)instance;
+	ObjectPrerequisite prereq;
+	prereq.addObjectHasNoStatusFlagPrereq(AsciiString(ini->getNextToken()));
 	v->push_back(prereq);
 }
 
@@ -896,11 +1193,21 @@ Bool ObjectPrerequisite::parseKindOfDistancePair(AsciiString& remaining, AsciiSt
 UnicodeString ObjectPrerequisite::formatObjectDisplayText(const AsciiString& objectName)
 {
 	UnicodeString result;
-	AsciiString objectKey;
-	objectKey.format("OBJECT:%s", objectName.str());
-	UnicodeString objectDisplayName = TheGameText->fetch(objectKey.str());
-	objectDisplayName.toLower();
-	result.concat(objectDisplayName);
+	const ThingTemplate* objectTemplate = TheThingFactory->findTemplate(objectName);
+	if (objectTemplate)
+	{
+		UnicodeString objectDisplayName = objectTemplate->getDisplayName();
+		result.concat(objectDisplayName);
+	}
+	else
+	{
+		// Fallback to object name if template not found
+		AsciiString objectKey;
+		objectKey.format("OBJECT:%s", objectName.str());
+		UnicodeString objectDisplayName = TheGameText->fetch(objectKey.str());
+		objectDisplayName.toLower();
+		result.concat(objectDisplayName);
+	}
 	return result;
 }
 
@@ -923,5 +1230,31 @@ UnicodeString ObjectPrerequisite::formatDistanceDisplayText(Real distance)
 {
 	UnicodeString result;
 	result.format(L"%.0f", distance);
+	return result;
+}
+
+//-------------------------------------------------------------------------------------------------
+// Format condition flag display text
+UnicodeString ObjectPrerequisite::formatModelConditionFlagDisplayText(const AsciiString& modelConditionFlagName)
+{
+	UnicodeString result;
+	AsciiString modelConditionFlagKey;
+	modelConditionFlagKey.format("CONDITION:%s", modelConditionFlagName.str());
+	UnicodeString modelConditionFlagDisplayName = TheGameText->fetch(modelConditionFlagKey.str());
+	modelConditionFlagDisplayName.toLower();
+	result.concat(modelConditionFlagDisplayName);
+	return result;
+}
+
+//-------------------------------------------------------------------------------------------------
+// Format status flag display text
+UnicodeString ObjectPrerequisite::formatStatusFlagDisplayText(const AsciiString& statusFlagName)
+{
+	UnicodeString result;
+	AsciiString statusFlagKey;
+	statusFlagKey.format("STATUS:%s", statusFlagName.str());
+	UnicodeString statusFlagDisplayName = TheGameText->fetch(statusFlagKey.str());
+	statusFlagDisplayName.toLower();
+	result.concat(statusFlagDisplayName);
 	return result;
 }
