@@ -104,6 +104,14 @@ public:
 	void addObjectHasNoNearbyObjectPrereq(AsciiString objectName, Real distance);
 	void addObjectHasNoNearbyKindOfPrereq(AsciiString kindOfName, Real distance);
 
+	// Model condition flag prerequisites
+	void addObjectHasModelConditionFlagPrereq(AsciiString modelConditionFlagName);
+	void addObjectHasNoModelConditionFlagPrereq(AsciiString modelConditionFlagName);
+
+	// Status flag prerequisites
+	void addObjectHasStatusFlagPrereq(AsciiString statusFlagName);
+	void addObjectHasNoStatusFlagPrereq(AsciiString statusFlagName);
+
 	// Static parsing function
 	static void parseObjectPrerequisites(INI* ini, void* instance, void* store, const void* userData);
 
@@ -129,6 +137,18 @@ private:
 	// Level prerequisites
 	mutable Int							m_objectLevelMoreThan;
 	mutable Int							m_objectLevelLessThan;
+
+	// Model condition flag prerequisites
+	mutable std::vector<AsciiString>	m_objectHasModelConditionFlagNames;
+	mutable std::vector<AsciiString>	m_objectHasNoModelConditionFlagNames;
+	mutable ModelConditionFlags	m_objectHasModelConditionFlags;
+	mutable ModelConditionFlags	m_objectHasNoModelConditionFlags;
+
+	// Status flag prerequisites
+	mutable std::vector<AsciiString>	m_objectHasStatusFlagNames;
+	mutable std::vector<AsciiString>	m_objectHasNoStatusFlagNames;
+	mutable ObjectStatusMaskType	m_objectHasStatusFlags;
+	mutable ObjectStatusMaskType	m_objectHasNoStatusFlags;
 
 	// Nearby object prerequisites
 	struct NearbyObjectPrereq
@@ -157,6 +177,10 @@ private:
 	static void parseObjectHasNearbyKindOf(INI* ini, void* instance, void* /*store*/, const void* /*userData*/);
 	static void parseObjectHasNoNearbyObject(INI* ini, void* instance, void* /*store*/, const void* /*userData*/);
 	static void parseObjectHasNoNearbyKindOf(INI* ini, void* instance, void* /*store*/, const void* /*userData*/);
+	static void parseObjectHasModelConditionFlag(INI* ini, void* instance, void* /*store*/, const void* /*userData*/);
+	static void parseObjectHasNoModelConditionFlag(INI* ini, void* instance, void* /*store*/, const void* /*userData*/);
+	static void parseObjectHasStatusFlag(INI* ini, void* instance, void* /*store*/, const void* /*userData*/);
+	static void parseObjectHasNoStatusFlag(INI* ini, void* instance, void* /*store*/, const void* /*userData*/);
 
 	// Helper methods for refactoring repeated code
 	static AsciiString parseFullLineFromINI(INI* ini);
@@ -165,6 +189,8 @@ private:
 	static UnicodeString formatObjectDisplayText(const AsciiString& objectName);
 	static UnicodeString formatKindOfDisplayText(const AsciiString& kindOfName);
 	static UnicodeString formatDistanceDisplayText(Real distance);
+	static UnicodeString formatModelConditionFlagDisplayText(const AsciiString& modelConditionFlagName);
+	static UnicodeString formatStatusFlagDisplayText(const AsciiString& statusFlagName);
 };
 
 //-----------------------------------------------------------------------------
