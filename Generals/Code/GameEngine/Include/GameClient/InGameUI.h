@@ -98,7 +98,7 @@ enum RadiusCursorType CPP_11(: Int)
 	RADIUSCURSOR_SPYDRONE,
 
 
-	RADIUSCURSOR_COUNT	// keep last
+	RADIUSCURSOR_COUNT
 };
 
 #ifdef DEFINE_RADIUSCURSOR_NAMES
@@ -345,7 +345,6 @@ public:  // ********************************************************************
 		ACTIONTYPE_SET_RALLY_POINT,
 		ACTIONTYPE_COMBATDROP_INTO,
 
-		//Keep last.
 		NUM_ACTIONTYPES
 	};
 
@@ -613,7 +612,6 @@ protected:
 #ifdef RTS_DEBUG
 		DEBUG_HINT,
 #endif
-		NUM_HINT_TYPES  // keep this one last
 	};
 
 	// mouse mode interface
@@ -622,7 +620,6 @@ protected:
 		MOUSEMODE_DEFAULT = 0,
 		MOUSEMODE_BUILD_PLACE,
 		MOUSEMODE_GUI_COMMAND,
-		MOUSEMODE_MAX
 	};
 
 	enum { MAX_MOVE_HINTS = 256 };

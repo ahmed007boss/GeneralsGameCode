@@ -63,7 +63,7 @@ enum WeaponSetType CPP_11(: Int)
 	WEAPONSET_PLAYER_UPGRADE3,
 	WEAPONSET_PLAYER_UPGRADE4,
 
-	WEAPONSET_COUNT			///< keep last, please
+	WEAPONSET_COUNT
 };
 
 #endif /* __WEAPONSETTYPE_H__ */

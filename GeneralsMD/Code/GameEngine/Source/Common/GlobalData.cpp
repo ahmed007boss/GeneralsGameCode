@@ -526,7 +526,7 @@ GlobalData* GlobalData::m_theOriginal = NULL;
 	{ "DisableBuildTime",								INI::parseBool,				NULL,			offsetof( GlobalData, m_disableTime) },
 #endif
 
-	{ NULL,					NULL,						NULL,						0 }  // keep this last
+	{ NULL,					NULL,						NULL,						0 }
 
 };
 

@@ -58,7 +58,7 @@ enum ArmorSetType CPP_11(: Int)
 	ARMORSET_PLAYER_UPGRADE3,
 	ARMORSET_PLAYER_UPGRADE4,
 
-	ARMORSET_COUNT			///< keep last, please
+	ARMORSET_COUNT
 };
 
 //-------------------------------------------------------------------------------------------------

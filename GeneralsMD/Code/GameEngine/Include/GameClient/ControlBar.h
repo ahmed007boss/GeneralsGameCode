@@ -108,7 +108,7 @@ enum CommandOption CPP_11(: Int)
 	// TheSuperHackers @feature Ahmed Salah 27/06/2025 Enable select-all buttons when special powers are available
 	ENABLE_SELECT_ALL_BUTTON_IF_ANY_POWER_AVAILABLE = 0x02000000, // If of type GUI_COMMAND_SELECT_ALL_UNITS_OF_TYPE and any special Power available the button should be enabled 
 
-	NUM_COMMAND_OPTIONS						// keep this last
+	NUM_COMMAND_OPTIONS
 };
 
 #ifdef DEFINE_COMMAND_OPTION_NAMES
@@ -228,7 +228,7 @@ enum GUICommandType CPP_11(: Int)
 
 	// add more commands here, don't forget to update the string command list below too ...
 
-	GUI_COMMAND_NUM_COMMANDS							// keep this last
+	GUI_COMMAND_NUM_COMMANDS
 };
 
 #ifdef DEFINE_GUI_COMMMAND_NAMES
@@ -293,7 +293,7 @@ enum CommandButtonMappedBorderType CPP_11(: Int)
 	COMMAND_BUTTON_BORDER_ACTION,
 	COMMAND_BUTTON_BORDER_SYSTEM,
 
-	COMMAND_BUTTON_BORDER_COUNT // keep this last
+	COMMAND_BUTTON_BORDER_COUNT
 };
 
 static const LookupListRec CommandButtonMappedBorderTypeNames[] =
@@ -304,7 +304,7 @@ static const LookupListRec CommandButtonMappedBorderTypeNames[] =
 	{ "ACTION",				COMMAND_BUTTON_BORDER_ACTION },
 	{ "SYSTEM",				COMMAND_BUTTON_BORDER_SYSTEM },
 
-	{ NULL, 0	}// keep this last!
+	{ NULL, 0	}
 };
 //-------------------------------------------------------------------------------------------------
 /** Command buttons are used to load the buttons we place on throughout the command bar
@@ -729,8 +729,6 @@ enum ControlBarContext CPP_11(: Int)
 	CB_CONTEXT_OBSERVER_INFO,					///< for when we want to populate the player info
 	CB_CONTEXT_OBSERVER_LIST,					///< for when we want to update the observer list
 	CB_CONTEXT_OCL_TIMER,							///< Countdown for OCL spewers
-
-	NUM_CB_CONTEXTS
 };
 
 //-------------------------------------------------------------------------------------------------
