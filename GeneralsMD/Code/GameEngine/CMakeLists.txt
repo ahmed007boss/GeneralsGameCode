@@ -299,6 +299,7 @@ set(GAMEENGINE_SRC
     Include/GameLogic/Module/CrushDie.h
     Include/GameLogic/Module/DamageModule.h
     Include/GameLogic/Module/DamDie.h
+    Include/GameLogic/Module/DelayedUpgradeBehavior.h
     Include/GameLogic/Module/DefaultProductionExitUpdate.h
     Include/GameLogic/Module/DefectorSpecialPower.h
     Include/GameLogic/Module/DeletionUpdate.h
@@ -858,6 +859,7 @@ set(GAMEENGINE_SRC
     Source/GameLogic/Object/Behavior/BridgeTowerBehavior.cpp
     Source/GameLogic/Object/Behavior/BunkerBusterBehavior.cpp
     Source/GameLogic/Object/Behavior/CountermeasuresBehavior.cpp
+    Source/GameLogic/Object/Behavior/DelayedUpgradeBehavior.cpp
     Source/GameLogic/Object/Behavior/DumbProjectileBehavior.cpp
     Source/GameLogic/Object/Behavior/FireWeaponWhenDamagedBehavior.cpp
     Source/GameLogic/Object/Behavior/FireWeaponWhenDeadBehavior.cpp
