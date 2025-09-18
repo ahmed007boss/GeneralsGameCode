@@ -2702,7 +2702,26 @@ void InGameUI::createCommandHint( const GameMessage *msg )
 				{
 					case GameMessage::MSG_DO_MOVETO_HINT:
 					{
-						if( !drawSelectable && srcObj && srcObj->isLocallyControlled() && srcObj->isKindOf(KINDOF_STRUCTURE))
+						// TheSuperHackers @restriction Ahmed Salah 27/06/2025 Check if any selected unit is holding position
+						Bool anyUnitHoldingPosition = FALSE;
+						if( srcObj && srcObj->isLocallyControlled() )
+						{
+							const DrawableList *selected = getAllSelectedDrawables();
+							for( DrawableListCIt it = selected->begin(); it != selected->end(); ++it )
+							{
+								Drawable *draw = *it;
+								if( draw && draw->getObject() && draw->getObject()->isLocallyControlled() && 
+									draw->getObject()->isDisabledByType( DISABLED_HELD ) )
+								{
+									anyUnitHoldingPosition = TRUE;
+									break;
+								}
+							}
+						}
+						
+						if( anyUnitHoldingPosition )
+							setMouseCursor( Mouse::GENERIC_INVALID );
+						else if( !drawSelectable && srcObj && srcObj->isLocallyControlled() && srcObj->isKindOf(KINDOF_STRUCTURE))
 							setMouseCursor( Mouse::GENERIC_INVALID );
 						else if( drawSelectable && obj->isLocallyControlled() && !obj->isKindOf(KINDOF_MINE))
 							setMouseCursor( Mouse::SELECTING );
@@ -2716,11 +2735,32 @@ void InGameUI::createCommandHint( const GameMessage *msg )
 						break;
 					}
 					case GameMessage::MSG_DO_ATTACKMOVETO_HINT:
-						if( drawSelectable && obj->isLocallyControlled()  )
+					{
+						// TheSuperHackers @restriction Ahmed Salah 27/06/2025 Check if any selected unit is holding position
+						Bool anyUnitHoldingPosition = FALSE;
+						if( srcObj && srcObj->isLocallyControlled() )
+						{
+							const DrawableList *selected = getAllSelectedDrawables();
+							for( DrawableListCIt it = selected->begin(); it != selected->end(); ++it )
+							{
+								Drawable *draw = *it;
+								if( draw && draw->getObject() && draw->getObject()->isLocallyControlled() && 
+									draw->getObject()->isDisabledByType( DISABLED_HELD ) )
+								{
+									anyUnitHoldingPosition = TRUE;
+									break;
+								}
+							}
+						}
+						
+						if( anyUnitHoldingPosition )
+							setMouseCursor( Mouse::GENERIC_INVALID );
+						else if( drawSelectable && obj->isLocallyControlled()  )
 							setMouseCursor( Mouse::SELECTING );
 						else
 							setMouseCursor( Mouse::ATTACKMOVETO );
 						break;
+					}
 					case GameMessage::MSG_ADD_WAYPOINT_HINT:
 						setMouseCursor( Mouse::WAYPOINT );
 						break;

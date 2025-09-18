@@ -1035,6 +1035,30 @@ GameMessage::Type CommandTranslator::issueMoveToLocationCommand( const Coord3D *
 		{
 			msgType = GameMessage::MSG_DO_MOVETO;
 		}
+		
+		// TheSuperHackers @restriction Ahmed Salah 27/06/2025 Check if any selected unit is holding position
+		if( commandType == DO_COMMAND && (msgType == GameMessage::MSG_DO_MOVETO || msgType == GameMessage::MSG_DO_ATTACKMOVETO) )
+		{
+			Bool anyUnitHoldingPosition = FALSE;
+			const DrawableList *selected = TheInGameUI->getAllSelectedDrawables();
+			for( DrawableListCIt it = selected->begin(); it != selected->end(); ++it )
+			{
+				Drawable *draw = *it;
+				if( draw && draw->getObject() && draw->getObject()->isLocallyControlled() && 
+					draw->getObject()->isDisabledByType( DISABLED_HELD ) )
+				{
+					anyUnitHoldingPosition = TRUE;
+					break;
+				}
+			}
+			
+			if( anyUnitHoldingPosition )
+			{
+				// Units are holding position, don't issue move command
+				return GameMessage::MSG_INVALID;
+			}
+		}
+		
 		if( commandType == DO_COMMAND )
 		{
 			GameMessage *movemsg = TheMessageStream->appendMessage( msgType );

@@ -2175,10 +2175,11 @@ void AIGroup::groupAttackObjectPrivate( Bool forced, Object *victim, Int maxShot
 	for( i = m_memberList.begin(); i != m_memberList.end(); ++i )	{
 		Real dx, dy;
 		Coord3D unitPos = *((*i)->getPosition());
-		if ((*i)->isDisabledByType( DISABLED_HELD ) )
-		{
-			continue; // don't bother telling the occupants to move.
-		}
+		// TheSuperHackers @fix Ahmed Salah 27/06/2025 Allow units holding position to attack objects
+		// if ((*i)->isDisabledByType( DISABLED_HELD ) )
+		// {
+		//     continue; // don't bother telling the occupants to move.
+		// }
 		dx = unitPos.x - victimPos.x;
 		dy = unitPos.y - victimPos.y;
 		iter->insert((*i), dx*dx+dy*dy);
@@ -2898,6 +2899,66 @@ void AIGroup::groupToggleOvercharge( CommandSourceType cmdSource )
 			if( obi )
 				obi->toggle();
 
+		}
+
+	}
+
+}
+
+/**
+	* Tell all things in the group to toggle hold position (disabled status HELD)
+	*/
+void AIGroup::groupToggleHoldPosition( CommandSourceType cmdSource )
+{
+	std::list<Object *>::iterator i;
+	Object *obj;
+
+	for( i = m_memberList.begin(); i != m_memberList.end(); ++i )
+	{
+
+		// get object
+		obj = *i;
+
+		// Toggle hold position: if currently held, clear it; otherwise set it
+		if( obj->isDisabledByType( DISABLED_HELD ) )
+		{
+			obj->clearDisabled( DISABLED_HELD );
+		}
+		else
+		{
+			obj->setDisabled( DISABLED_HELD );
+		}
+
+	}
+
+}
+
+/**
+	* Tell all things in the group to enable hold position and guard from current position
+	*/
+void AIGroup::groupToggleHoldPositionAndGuard( CommandSourceType cmdSource )
+{
+	std::list<Object *>::iterator i;
+	Object *obj;
+
+	for( i = m_memberList.begin(); i != m_memberList.end(); ++i )
+	{
+
+		// get object
+		obj = *i;
+
+		// Enable hold position and guard: if not holding position, set it; always set guard
+		if( !obj->isDisabledByType( DISABLED_HELD ) )
+		{
+			obj->setDisabled( DISABLED_HELD );
+		}
+		
+		// Always set guard position at current location (whether already holding or not)
+		AIUpdateInterface *ai = obj->getAIUpdateInterface();
+		if (ai)
+		{
+			Coord3D currentPos = *obj->getPosition();
+			ai->aiGuardPosition( &currentPos, GUARDMODE_GUARD_WITHOUT_PURSUIT, cmdSource );
 		}
 
 	}

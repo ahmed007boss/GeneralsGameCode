@@ -1587,6 +1587,8 @@ void ControlBar::init( void )
 	// post process step after loading the command buttons and command sets
 	postProcessCommands();
 
+	// Programmatic command buttons would be created here if needed
+
 	// Init the scheme manager, this will call it's won INI init funciton.
 	m_controlBarSchemeManager = NEW ControlBarSchemeManager;
 	m_controlBarSchemeManager->init();
@@ -4348,3 +4350,4 @@ void ControlBar::setScaledViewportHeight()
 {
 	TheTacticalView->setHeight(TheDisplay->getHeight() * TheGlobalData->m_viewportHeightScale);
 }
+

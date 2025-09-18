@@ -1545,6 +1545,30 @@ void GameLogic::logicMessageDispatcher( GameMessage *msg, void *userData )
 
 		}
 
+		// --------------------------------------------------------------------------------------------
+		case GameMessage::MSG_TOGGLE_HOLD_POSITION:
+		{
+
+			// use the selected group
+			if( currentlySelectedGroup )
+				currentlySelectedGroup->groupToggleHoldPosition( CMD_FROM_PLAYER );
+
+			break;
+
+		}
+
+		// --------------------------------------------------------------------------------------------
+		case GameMessage::MSG_ENABLE_HOLD_POSITION_AND_GUARD:
+		{
+
+			// use the selected group
+			if( currentlySelectedGroup )
+				currentlySelectedGroup->groupToggleHoldPositionAndGuard( CMD_FROM_PLAYER );
+
+			break;
+
+		}
+
 #ifdef ALLOW_SURRENDER
 		// --------------------------------------------------------------------------------------------
 		case GameMessage::MSG_PICK_UP_PRISONER:

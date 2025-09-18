@@ -5400,7 +5400,7 @@ SpecialPowerModuleInterface *Object::getSpecialPowerModule( const SpecialPowerTe
 void Object::doSpecialPower( const SpecialPowerTemplate *specialPowerTemplate, UnsignedInt commandOptions, Bool forced )
 {
 
-	if (isDisabled())
+	if (isDisabled() && !isDisabledByType( DISABLED_HELD ))
 		return;
 
 	// sanity
@@ -5420,7 +5420,7 @@ void Object::doSpecialPower( const SpecialPowerTemplate *specialPowerTemplate, U
 void Object::doSpecialPowerAtObject( const SpecialPowerTemplate *specialPowerTemplate, Object *obj, UnsignedInt commandOptions, Bool forced )
 {
 
-	if (isDisabled())
+	if (isDisabled()&& !isDisabledByType( DISABLED_HELD ))
 		return;
 
 	// sanity
@@ -5440,7 +5440,7 @@ void Object::doSpecialPowerAtLocation( const SpecialPowerTemplate *specialPowerT
 																			 const Coord3D *loc, Real angle, UnsignedInt commandOptions, Bool forced )
 {
 
-	if (isDisabled())
+	if (isDisabled()&& !isDisabledByType( DISABLED_HELD ))
 		return;
 
 	// sanity
@@ -5460,7 +5460,7 @@ void Object::doSpecialPowerAtLocation( const SpecialPowerTemplate *specialPowerT
 void Object::doSpecialPowerUsingWaypoints( const SpecialPowerTemplate *specialPowerTemplate, const Waypoint *way, UnsignedInt commandOptions, Bool forced )
 {
 
-	if (isDisabled())
+	if (isDisabled()&& !isDisabledByType( DISABLED_HELD ))
 		return;
 
 	// sanity
@@ -5479,7 +5479,7 @@ void Object::doSpecialPowerUsingWaypoints( const SpecialPowerTemplate *specialPo
 //-------------------------------------------------------------------------------------------------
 void Object::doCommandButton( const CommandButton *commandButton, CommandSourceType cmdSource )
 {
-	if (isDisabled())
+	if (isDisabled()&& !isDisabledByType( DISABLED_HELD ))
 		return;
 
 	AIUpdateInterface *ai = getAIUpdateInterface();
@@ -5613,7 +5613,7 @@ void Object::doCommandButton( const CommandButton *commandButton, CommandSourceT
 //-------------------------------------------------------------------------------------------------
 void Object::doCommandButtonAtObject( const CommandButton *commandButton, Object *obj, CommandSourceType cmdSource )
 {
-	if (isDisabled())
+	if (isDisabled()&& !isDisabledByType( DISABLED_HELD ))
 		return;
 
 	AIUpdateInterface *ai = getAIUpdateInterface();
@@ -5738,7 +5738,7 @@ void Object::doCommandButtonAtObject( const CommandButton *commandButton, Object
 //-------------------------------------------------------------------------------------------------
 void Object::doCommandButtonAtPosition( const CommandButton *commandButton, const Coord3D *pos, CommandSourceType cmdSource )
 {
-	if (isDisabled())
+	if (isDisabled()&& !isDisabledByType( DISABLED_HELD ))
 		return;
 
 	AIUpdateInterface *ai = getAIUpdateInterface();

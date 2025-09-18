@@ -287,6 +287,25 @@ WindowMsgHandledType LeftHUDInput( GameWindow *window, UnsignedInt msg,
 				}
 				else if( command && command->getCommandType() == GUI_COMMAND_ATTACK_MOVE)
 				{
+					// TheSuperHackers @restriction Ahmed Salah 27/06/2025 Check if any selected unit is holding position
+					Bool anyUnitHoldingPosition = FALSE;
+					for( DrawableListCIt it = drawableList->begin(); it != drawableList->end(); ++it )
+					{
+						Drawable *draw = *it;
+						if( draw && draw->getObject() && draw->getObject()->isLocallyControlled() && 
+							draw->getObject()->isDisabledByType( DISABLED_HELD ) )
+						{
+							anyUnitHoldingPosition = TRUE;
+							break;
+						}
+					}
+					
+					if( anyUnitHoldingPosition )
+					{
+						// Units are holding position, don't issue attack move command
+						break;
+					}
+					
 					// Attack move has changed from a modifier to a command, so it moves up here.
 
 					GameMessage *msg = TheMessageStream->appendMessage( GameMessage::MSG_DO_ATTACKMOVETO );
@@ -297,6 +316,25 @@ WindowMsgHandledType LeftHUDInput( GameWindow *window, UnsignedInt msg,
 				}
 				else
 				{
+					// TheSuperHackers @restriction Ahmed Salah 27/06/2025 Check if any selected unit is holding position
+					Bool anyUnitHoldingPosition = FALSE;
+					for( DrawableListCIt it = drawableList->begin(); it != drawableList->end(); ++it )
+					{
+						Drawable *draw = *it;
+						if( draw && draw->getObject() && draw->getObject()->isLocallyControlled() && 
+							draw->getObject()->isDisabledByType( DISABLED_HELD ) )
+						{
+							anyUnitHoldingPosition = TRUE;
+							break;
+						}
+					}
+					
+					if( anyUnitHoldingPosition )
+					{
+						// Units are holding position, don't issue move command
+						break;
+					}
+					
 					GameMessage *newMsg = NULL;
 
 					// Do the superweapon stuff here, before issuing these other messages

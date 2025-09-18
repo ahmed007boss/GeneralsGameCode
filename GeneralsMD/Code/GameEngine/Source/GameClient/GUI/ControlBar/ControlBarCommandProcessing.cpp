@@ -143,27 +143,7 @@ CBCommandStatus ControlBar::processCommandUI( GameWindow *control,
 	const CommandButton* actualCommandButton = orgCommandButton;
 	if (ctrlPressed || altPressed || shiftPressed || isRightClick)
 	{
-		const CommandButton* modifierButton = actualCommandButton->getButtonForModifiers(ctrlPressed, altPressed, shiftPressed, isRightClick);
-		if (modifierButton)
-		{
-			auto obj = m_currentSelectedDrawable->getObject();
-			CommandAvailability availability = getCommandAvailability(modifierButton, obj, control);
-			if (availability == COMMAND_AVAILABLE)
-			{
-				// Use the modifier-specific button instead of the original button
-				actualCommandButton = modifierButton;
-			}
-			else
-			{
-				return CBC_COMMAND_NOT_USED;
-			}
-		}
-		else
-			if (isRightClick)
-			{
-				return CBC_COMMAND_NOT_USED;
-			}		
-		}
+	
 	
 	
 
@@ -181,6 +161,49 @@ CBCommandStatus ControlBar::processCommandUI( GameWindow *control,
 			switchToContext( CB_CONTEXT_NONE, NULL );
 		return CBC_COMMAND_NOT_USED;
 
+	}
+
+	const CommandButton* modifierButton = actualCommandButton->getButtonForModifiers(ctrlPressed, altPressed, shiftPressed, isRightClick);
+	if (modifierButton)
+	{
+		// TheSuperHackers @fix Ahmed Salah 27/06/2025 Handle null m_currentSelectedDrawable when multiple objects are selected
+		Object* obj = NULL;
+		if (m_currentSelectedDrawable)
+		{
+			obj = m_currentSelectedDrawable->getObject();
+		}
+		else
+		{
+			// When multiple objects are selected, get the first selected object for command availability checking
+			// TheSuperHackers @restriction Ahmed Salah 27/06/2025 Check if any selected unit is holding position
+			// this should be redone work on all units that has the ability to hold position
+			const DrawableList *selectedDrawables = TheInGameUI->getAllSelectedDrawables();
+			if (!selectedDrawables->empty())
+			{
+				Drawable *firstDrawable = selectedDrawables->front();
+				if (firstDrawable)
+				{
+					obj = firstDrawable->getObject();
+				}
+			}
+		}
+		
+		CommandAvailability availability = getCommandAvailability(modifierButton, obj, control);
+		if (availability == COMMAND_AVAILABLE)
+		{
+			// Use the modifier-specific button instead of the original button
+			actualCommandButton = modifierButton;
+		}
+		else
+		{
+			return CBC_COMMAND_NOT_USED;
+		}
+	}
+	else
+		if (isRightClick)
+		{
+			return CBC_COMMAND_NOT_USED;
+		}
 	}
 
 	// sanity
@@ -246,6 +269,20 @@ CBCommandStatus ControlBar::processCommandUI( GameWindow *control,
 
 	if( BitIsSet( actualCommandButton->getOptions(), COMMAND_OPTION_NEED_TARGET ) )
 	{
+		// TheSuperHackers @restriction Ahmed Salah 27/06/2025 Check if guard commands should guard in position when units are holding position
+		if( actualCommandButton->getCommandType() == GUI_COMMAND_GUARD ||
+			actualCommandButton->getCommandType() == GUI_COMMAND_GUARD_WITHOUT_PURSUIT ||
+			actualCommandButton->getCommandType() == GUI_COMMAND_GUARD_FLYING_UNITS_ONLY )
+		{
+			// Check if the current object is holding position
+			if( obj && obj->isDisabledByType( DISABLED_HELD ) )
+			{
+				// Guard in position instead of requiring target selection
+				TheMessageStream->appendMessage( GameMessage::MSG_ENABLE_HOLD_POSITION_AND_GUARD );
+				return CBC_COMMAND_USED;
+			}
+		}
+		
 		if (actualCommandButton->getOptions() & USES_MINE_CLEARING_WEAPONSET)
 		{
 			TheMessageStream->appendMessage( GameMessage::MSG_SET_MINE_CLEARING_DETAIL );
@@ -837,6 +874,20 @@ CBCommandStatus ControlBar::processCommandUI( GameWindow *control,
 				}
 			}
 			
+			break;
+		}
+
+		case GUI_COMMAND_TOGGLE_HOLD_POSITION:
+		{
+			// Toggle hold position (disabled status HELD) for selected objects
+			TheMessageStream->appendMessage( GameMessage::MSG_TOGGLE_HOLD_POSITION );
+			break;
+		}
+
+		case GUI_COMMAND_ENABLE_HOLD_POSITION_AND_GUARD:
+		{
+			// Toggle hold position and guard from current position for selected objects
+			TheMessageStream->appendMessage( GameMessage::MSG_ENABLE_HOLD_POSITION_AND_GUARD );
 			break;
 		}
 

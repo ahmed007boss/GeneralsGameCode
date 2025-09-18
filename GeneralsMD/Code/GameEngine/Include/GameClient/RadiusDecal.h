@@ -63,7 +63,6 @@ public:
 	void update();
 	void setPosition(const Coord3D& pos);
 	void setOpacity( const Real o );
-	void setColor(Color color);
 };
 
 // ------------------------------------------------------------------------------------------------
@@ -83,8 +82,6 @@ public:
 	RadiusDecalTemplate();
 
 	Bool valid() const { return m_name.isNotEmpty(); }
-	void setColor(Color color) { m_color = color; }
-	Color getColor() const { return m_color; }
 	void xferRadiusDecalTemplate( Xfer *xfer );
 
 	// please note: it is very important, for game/net sync reasons, to ensure that
@@ -95,7 +92,7 @@ public:
 	static void parseRadiusDecalTemplate(INI* ini, void *instance, void * store, const void* /*userData*/);
 
 	// DEBUG:
-	void debugPrint() const {
+	/*void debugPrint() const {
 		DEBUG_LOG(("-- m_name = %s\n", m_name.str()));
 		DEBUG_LOG(("-- m_shadowType = %d\n", m_shadowType));
 		DEBUG_LOG(("-- m_minOpacity = %f\n", m_minOpacity));
@@ -103,7 +100,7 @@ public:
 		DEBUG_LOG(("-- m_opacityThrobTime = %d\n", m_opacityThrobTime));
 		DEBUG_LOG(("-- m_color = %d\n", m_color));
 		DEBUG_LOG(("-- m_onlyVisibleToOwningPlayer = %d\n", m_onlyVisibleToOwningPlayer));
-	};
+	};*/
 };
 
 #endif

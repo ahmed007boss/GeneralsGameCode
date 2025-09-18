@@ -1093,7 +1093,10 @@ CommandAvailability ControlBar::getCommandAvailability( const CommandButton *com
 	{
 		disabled = false;
 	}
-
+	if (obj->getDisabledFlags().test(DISABLED_HELD))
+	{
+		disabled = false;
+	}
  	if (disabled && !forceDisabledEvaluation)
  	{
 
@@ -1104,7 +1107,8 @@ CommandAvailability ControlBar::getCommandAvailability( const CommandButton *com
 				commandType != GUI_COMMAND_BEACON_DELETE &&
 				commandType != GUI_COMMAND_SET_RALLY_POINT &&
 				commandType != GUI_COMMAND_STOP &&
-				commandType != GUI_COMMAND_SWITCH_WEAPON )
+				commandType != GUI_COMMAND_SWITCH_WEAPON &&
+				commandType != GUI_COMMAND_TOGGLE_HOLD_POSITION )
 		{
 			if( getCommandAvailability( command, obj, win, applyToWin, TRUE ) == COMMAND_HIDDEN )
 			{
@@ -1394,6 +1398,17 @@ CommandAvailability ControlBar::getCommandAvailability( const CommandButton *com
 			// always available
 			break;
 
+		// TheSuperHackers @restriction Ahmed Salah 27/06/2025 Disable move and attack move commands when holding position
+		case GUI_COMMAND_ATTACK_MOVE:
+		{
+			// Check if the current object is holding position
+			if( obj && obj->isDisabledByType( DISABLED_HELD ) )
+			{
+				return COMMAND_RESTRICTED;  // Disable attack move when unit is holding position
+			}
+			break;
+		}
+
 		case GUI_COMMAND_COMBATDROP:
 		{
 			if( getRappellerCount(obj) <= 0 )
@@ -1536,6 +1551,16 @@ CommandAvailability ControlBar::getCommandAvailability( const CommandButton *com
 			}
 
 			return COMMAND_ACTIVE;
+		}
+		// toggle hold position command
+		case GUI_COMMAND_TOGGLE_HOLD_POSITION:
+		{
+			// Check if the unit is currently holding position
+			if( obj->isDisabledByType( DISABLED_HELD ) )
+			{
+				return COMMAND_ACTIVE;  // Show as active/pressed when holding position
+			}
+			break;
 		}
 
 		case GUI_COMMAND_HACK_INTERNET:
