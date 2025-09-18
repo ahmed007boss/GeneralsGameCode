@@ -233,3 +233,12 @@ void RadiusDecal::setPosition(const Coord3D& pos)
 		m_decal->setPosition(pos.x, pos.y, pos.z);	//world space position of center of decal
 	}
 }
+
+// ------------------------------------------------------------------------------------------------
+void RadiusDecal::setColor(Color color)
+{
+	if (m_decal)
+	{
+		m_decal->setColor(color);
+	}
+}

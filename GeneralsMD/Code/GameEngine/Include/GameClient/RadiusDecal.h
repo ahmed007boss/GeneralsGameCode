@@ -63,6 +63,7 @@ public:
 	void update();
 	void setPosition(const Coord3D& pos);
 	void setOpacity( const Real o );
+	void setColor(Color color);
 };
 
 // ------------------------------------------------------------------------------------------------
@@ -82,6 +83,8 @@ public:
 	RadiusDecalTemplate();
 
 	Bool valid() const { return m_name.isNotEmpty(); }
+	void setColor(Color color) { m_color = color; }
+	Color getColor() const { return m_color; }
 	void xferRadiusDecalTemplate( Xfer *xfer );
 
 	// please note: it is very important, for game/net sync reasons, to ensure that

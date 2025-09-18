@@ -199,6 +199,7 @@ enum GUICommandType CPP_11(: Int)
 	GUI_COMMAND_PURCHASE_SCIENCE,					///< purchase science
 	GUI_COMMAND_HACK_INTERNET,						///< gain income from the ether (by hacking the internet)
 	GUI_COMMAND_TOGGLE_OVERCHARGE,				///< Overcharge command for power plants
+	GUI_COMMAND_TOGGLE_RANGE_DECAL,				///< Toggle weapon range decals on/off
 #ifdef ALLOW_SURRENDER
 	GUI_COMMAND_POW_RETURN_TO_PRISON,			///< POW Truck, return to prison
 #endif
@@ -259,6 +260,7 @@ static const char *TheGuiCommandNames[] =
 	"PURCHASE_SCIENCE",
 	"HACK_INTERNET",
 	"TOGGLE_OVERCHARGE",
+	"TOGGLE_RANGE_DECAL",
 #ifdef ALLOW_SURRENDER
 	"POW_RETURN_TO_PRISON",
 #endif

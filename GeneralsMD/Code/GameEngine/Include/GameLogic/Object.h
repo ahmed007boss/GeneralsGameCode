@@ -453,6 +453,11 @@ public:
 	Int getTransportSlotCount() const;
 	void friend_setContainedBy( Object *containedBy ) { m_containedBy = containedBy; }
 
+	// slaved objects management
+	void addSlavedObject( Object *slavedObject );
+	void removeSlavedObject( Object *slavedObject );
+	const std::vector<Object*>& getSlavedObjects() const { return m_slavedObjects; }
+
 	// Special Powers -------------------------------------------------------------------------------
 	SpecialPowerModuleInterface *getSpecialPowerModule( const SpecialPowerTemplate *specialPowerTemplate ) const;
 	void doSpecialPower( const SpecialPowerTemplate *specialPowerTemplate, UnsignedInt commandOptions, Bool forced = false );	///< execute power
@@ -494,6 +499,10 @@ public:
 
 	Weapon* getWeaponInWeaponSlot(WeaponSlotType wslot) const { return m_weaponSet.getWeaponInWeaponSlot(wslot); }
 	UnsignedInt getWeaponInWeaponSlotCommandSourceMask( WeaponSlotType wSlot ) const { return m_weaponSet.getNthCommandSourceMask( wSlot ); }
+	
+	// Range decal control
+	WeaponSlotType getRangeDecalShownForSlot() const { return m_rangeDecalShownForSlot; }
+	void setRangeDecalShownForSlot(WeaponSlotType slot) { m_rangeDecalShownForSlot = slot; }
 
 	// see if this current weapon set's weapons has shared reload times
 	Bool isReloadTimeShared() const { return m_weaponSet.isSharedReloadTime(); }
@@ -807,6 +816,9 @@ private:
 	ObjectID											m_xferContainedByID;	///< xfer uses IDs to store pointers and looks them up after
 	UnsignedInt										m_containedByFrame;	///< frame we were contained by m_containedBy
 
+	// Slaved objects management
+	std::vector<Object*>							m_slavedObjects;		///< List of objects that are slaved to this object
+
 	Real													m_constructionPercent;			///< for objects being built ... this is the amount completed (0.0 to 100.0)
 	UpgradeMaskType								m_objectUpgradesCompleted;	///< Bit field of upgrades locally completed.
 
@@ -822,6 +834,7 @@ private:
 	// Weapons & Damage -------------------------------------------------------------------------------------------------
 	WeaponSet											m_weaponSet;
 	WeaponSetFlags								m_curWeaponSetFlags;
+	WeaponSlotType								m_rangeDecalShownForSlot;	///< Which weapon slot should show range decals (-1 = no decals shown)
 	WeaponBonusConditionFlags			m_weaponBonusCondition;
 	Byte													m_lastWeaponCondition[WEAPONSLOT_COUNT];
 

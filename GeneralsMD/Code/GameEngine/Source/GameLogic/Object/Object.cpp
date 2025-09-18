@@ -217,7 +217,8 @@ Object::Object( const ThingTemplate *tt, const ObjectStatusMaskType &objectStatu
 	m_scriptStatus(0),
 	m_enteredOrExitedFrame(0),
 	m_visionSpiedMask (PLAYERMASK_NONE),
-	m_numTriggerAreasActive(0)
+	m_numTriggerAreasActive(0),
+	m_rangeDecalShownForSlot((WeaponSlotType)-1)
 {
 #if defined(RTS_DEBUG)
 	m_hasDiedAlready = false;
@@ -736,6 +737,44 @@ Int Object::getTransportSlotCount() const
 }
 
 //-------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------
+void Object::addSlavedObject( Object *slavedObject )
+{
+	if (slavedObject && slavedObject->getID() != INVALID_ID)
+	{
+		// Check if already in the list to avoid duplicates
+		for (std::vector<Object*>::iterator it = m_slavedObjects.begin(); it != m_slavedObjects.end(); ++it)
+		{
+			if (*it == slavedObject)
+				return; // Already in the list
+		}
+		
+		m_slavedObjects.push_back(slavedObject);
+	}
+}
+
+//-------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------
+void Object::removeSlavedObject( Object *slavedObject )
+{
+	if (slavedObject)
+	{
+		for (std::vector<Object*>::iterator it = m_slavedObjects.begin(); it != m_slavedObjects.end(); ++it)
+		{
+			if (*it == slavedObject)
+			{
+				m_slavedObjects.erase(it);
+				break;
+			}
+		}
+	}
+}
+
+//-------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------
+// getSlavedObjects() is now implemented as inline method in header file
+
+//-------------------------------------------------------------------------------------------------
 /** Run from GameLogic::destroyObject */
 //-------------------------------------------------------------------------------------------------
 void Object::onDestroy()
@@ -746,6 +785,9 @@ void Object::onDestroy()
 	{
 		m_containedBy->getContain()->removeFromContain( this );
 	}
+
+	// Clean up slaved object references - just clear the list without killing slaved objects
+	m_slavedObjects.clear();
 
 	//
 	// run the onDelete on all modules present so they each have an opportunity to cleanup

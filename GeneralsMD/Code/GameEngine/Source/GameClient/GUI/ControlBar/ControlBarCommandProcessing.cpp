@@ -55,6 +55,7 @@
 #include "GameLogic/GameLogic.h"
 #include "GameLogic/Object.h"
 #include "GameLogic/Module/ProductionUpdate.h"
+#include "GameLogic/Module/WeaponRangeDecalBehavior.h"
 
 
 
@@ -813,6 +814,32 @@ CBCommandStatus ControlBar::processCommandUI( GameWindow *control,
 
 		}
 
+		case GUI_COMMAND_TOGGLE_RANGE_DECAL:
+		{					
+			// Toggle range decals for selected objects
+			if (obj)
+			{	// Get the weapon slot from the command button
+				WeaponSlotType commandWeaponSlot = actualCommandButton->getWeaponSlot();
+
+				WeaponSlotType currentSlot = obj->getRangeDecalShownForSlot();
+				// Toggle: if currently showing this slot, turn off (set to -1), otherwise turn on
+				WeaponSlotType newSlot = (currentSlot == commandWeaponSlot) ? (WeaponSlotType)-1 : commandWeaponSlot;
+				obj->setRangeDecalShownForSlot(newSlot);
+				
+				// Notify WeaponRangeDecalBehavior modules to refresh their state
+				for (BehaviorModule** i = obj->getBehaviorModules(); *i; ++i)
+				{
+					WeaponRangeDecalBehavior* behavior = dynamic_cast<WeaponRangeDecalBehavior*>(*i);
+					if (behavior)
+					{
+						behavior->refreshDecalState();
+					}
+				}
+			}
+			
+			break;
+		}
+
 #ifdef ALLOW_SURRENDER
 		// ------------------------------------------------------------------------------------------------
 		case GUI_COMMAND_POW_RETURN_TO_PRISON:
@@ -855,6 +882,24 @@ CBCommandStatus ControlBar::processCommandUI( GameWindow *control,
 				pickAndPlayUnitVoiceResponse( TheInGameUI->getAllSelectedDrawables(), GameMessage::MSG_SWITCH_WEAPONS, &info );
 
 				msg->appendIntegerArgument( actualCommandButton->getWeaponSlot() );
+				
+				// Turn off range decals when switching weapons
+				if (obj)
+				{
+					// Turn off range decals for the current weapon slot
+					obj->setRangeDecalShownForSlot((WeaponSlotType)-1);
+					
+					// Notify WeaponRangeDecalBehavior modules to refresh their state
+					for (BehaviorModule** i = obj->getBehaviorModules(); *i; ++i)
+					{
+						WeaponRangeDecalBehavior* behavior = dynamic_cast<WeaponRangeDecalBehavior*>(*i);
+						if (behavior)
+						{
+							behavior->refreshDecalState();
+						}
+					}
+				}
+				
 				break;
 		}
 
@@ -885,6 +930,21 @@ CBCommandStatus ControlBar::processCommandUI( GameWindow *control,
 			msg->appendIntegerArgument( spTemplate->getID() );
 			msg->appendIntegerArgument( actualCommandButton->getOptions() );
 			msg->appendObjectIDArgument( obj->getID() );
+			
+			// Turn off range decals when using special powers from shortcut
+			// Turn off range decals for all weapon slots
+			obj->setRangeDecalShownForSlot((WeaponSlotType)-1);
+			
+			// Notify WeaponRangeDecalBehavior modules to refresh their state
+			for (BehaviorModule** i = obj->getBehaviorModules(); *i; ++i)
+			{
+				WeaponRangeDecalBehavior* behavior = dynamic_cast<WeaponRangeDecalBehavior*>(*i);
+				if (behavior)
+				{
+					behavior->refreshDecalState();
+				}
+			}
+			
 			break;
 
 		}
@@ -896,6 +956,24 @@ CBCommandStatus ControlBar::processCommandUI( GameWindow *control,
 			msg->appendIntegerArgument( actualCommandButton->getSpecialPowerTemplate()->getID() );
 			msg->appendIntegerArgument( actualCommandButton->getOptions() );
 			msg->appendObjectIDArgument( INVALID_ID );	// no specific source
+			
+			// Turn off range decals when using special powers
+			if (obj)
+			{
+				// Turn off range decals for all weapon slots
+				obj->setRangeDecalShownForSlot((WeaponSlotType)-1);
+				
+				// Notify WeaponRangeDecalBehavior modules to refresh their state
+				for (BehaviorModule** i = obj->getBehaviorModules(); *i; ++i)
+				{
+					WeaponRangeDecalBehavior* behavior = dynamic_cast<WeaponRangeDecalBehavior*>(*i);
+					if (behavior)
+					{
+						behavior->refreshDecalState();
+					}
+				}
+			}
+			
 			break;
 
 		}

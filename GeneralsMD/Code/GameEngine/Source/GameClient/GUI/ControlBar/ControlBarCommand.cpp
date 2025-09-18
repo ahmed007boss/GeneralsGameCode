@@ -1031,7 +1031,7 @@ CommandAvailability ControlBar::getCommandAvailability( const CommandButton *com
 		else
 			obj = NULL;
 	}
-
+	
 	//If we modify the button (like a gadget clock overlay), then sometimes we may wish to apply it to a specific different button.
 	//But if we don't specify anything (default), then make them the same.
 	if( !applyToWin )
@@ -1043,6 +1043,10 @@ CommandAvailability ControlBar::getCommandAvailability( const CommandButton *com
 		return COMMAND_HIDDEN;	// probably better than crashing....
 
 	Player *player = obj->getControllingPlayer();
+
+	if (command->getCommandType() == GUI_COMMAND_TOGGLE_RANGE_DECAL) {
+		return checkPrerequisites(command, obj, player);
+	}
 
 	if (obj->testScriptStatusBit(OBJECT_STATUS_SCRIPT_DISABLED) || obj->testScriptStatusBit(OBJECT_STATUS_SCRIPT_UNPOWERED))
 	{

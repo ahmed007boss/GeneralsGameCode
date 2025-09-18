@@ -144,6 +144,7 @@
 #include "GameLogic/Module/LifetimeUpdate.h"
 #include "GameLogic/Module/RadiusDecalUpdate.h"
 #include "GameLogic/Module/RadiusDecalBehavior.h"
+#include "GameLogic/Module/WeaponRangeDecalBehavior.h"
 #include "GameLogic/Module/AutoDepositUpdate.h"
 #include "GameLogic/Module/MissileAIUpdate.h"
 #include "GameLogic/Module/NeutronMissileUpdate.h"
@@ -401,8 +402,9 @@ void ModuleFactory::init( void )
 	addModule( LifetimeUpdate );
 	addModule( RadiusDecalUpdate );
 	addModule( RadiusDecalBehavior );
+	addModule( WeaponRangeDecalBehavior );
 	addModule( EMPUpdate );
-  addModule( LeafletDropBehavior );
+  	addModule( LeafletDropBehavior );
 	addModule( AutoDepositUpdate );
 	addModule( WeaponBonusUpdate );
 	addModule( MissileAIUpdate );
