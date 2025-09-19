@@ -63,6 +63,7 @@ public:
 	void update();
 	void setPosition(const Coord3D& pos);
 	void setOpacity( const Real o );
+	void setColor(Color color);
 };
 
 // ------------------------------------------------------------------------------------------------
@@ -90,6 +91,9 @@ public:
 	void createRadiusDecal(const Coord3D& pos, Real radius, const Player* owningPlayer, RadiusDecal& result) const;
 
 	static void parseRadiusDecalTemplate(INI* ini, void *instance, void * store, const void* /*userData*/);
+
+	void setColor(Color color);
+	Color getColor() const { return m_color; }
 
 	// DEBUG:
 	/*void debugPrint() const {

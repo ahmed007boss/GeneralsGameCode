@@ -242,3 +242,9 @@ void RadiusDecal::setColor(Color color)
 		m_decal->setColor(color);
 	}
 }
+
+// ------------------------------------------------------------------------------------------------
+void RadiusDecalTemplate::setColor(Color color)
+{
+	m_color = color;
+}
