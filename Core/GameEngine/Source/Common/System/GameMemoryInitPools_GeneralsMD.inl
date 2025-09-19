@@ -142,6 +142,7 @@ static PoolSizeRec PoolSizes[] =
 	{ "FireWeaponCollide", 2048, 32 },
 	{ "AdvancedCollide", 512, 32 },
 	{ "FireWeaponUpdate", 32, 32 },
+	{ "FireWeaponAdvancedUpdate", 32, 32 },
 	{ "FlammableUpdate", 512, 256 },
 	{ "FloatUpdate", 512, 128 },
 	{ "TensileFormationUpdate", 256, 32 },

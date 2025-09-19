@@ -341,6 +341,7 @@ set(GAMEENGINE_SRC
     Include/GameLogic/Module/AdvancedCollide.h
     Include/GameLogic/Module/FireWeaponPower.h
     Include/GameLogic/Module/FireWeaponUpdate.h
+    Include/GameLogic/Module/FireWeaponAdvancedUpdate.h
     Include/GameLogic/Module/FireWeaponWhenDamagedBehavior.h
     Include/GameLogic/Module/FireWeaponWhenDeadBehavior.h
     Include/GameLogic/Module/FlammableUpdate.h
@@ -1057,6 +1058,7 @@ set(GAMEENGINE_SRC
     Source/GameLogic/Object/Update/FireSpreadUpdate.cpp
     Source/GameLogic/Object/Update/FirestormDynamicGeometryInfoUpdate.cpp
     Source/GameLogic/Object/Update/FireWeaponUpdate.cpp
+    Source/GameLogic/Object/Update/FireWeaponAdvancedUpdate.cpp
     Source/GameLogic/Object/Update/FlammableUpdate.cpp
     Source/GameLogic/Object/Update/FloatUpdate.cpp
     Source/GameLogic/Object/Update/HeightDieUpdate.cpp
