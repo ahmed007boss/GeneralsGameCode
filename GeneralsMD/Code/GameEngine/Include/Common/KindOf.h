@@ -44,22 +44,22 @@
 enum KindOfType CPP_11(: Int)
 {
 	KINDOF_INVALID = -1,
-		KINDOF_FIRST = 0,
-		KINDOF_OBSTACLE = KINDOF_FIRST,	///< an obstacle to land-based pathfinders
-		KINDOF_SELECTABLE,							///< Actually means MOUSE-INTERACTABLE (doesn't mean you can select it!)
-		KINDOF_IMMOBILE,								///< fixed in location
-		KINDOF_CAN_ATTACK,							///< can attack
-		KINDOF_STICK_TO_TERRAIN_SLOPE,	///< should be stuck at ground level, aligned to terrain slope. requires that IMMOBILE bit is also set.
-		KINDOF_CAN_CAST_REFLECTIONS,		///< can cast reflections in water
-		KINDOF_SHRUBBERY,								///< tree, bush, etc.
-		KINDOF_STRUCTURE,								///< structure of some sort (buildable or not)
-		KINDOF_INFANTRY,								///< unit like soldier etc
-		KINDOF_VEHICLE,									///< unit like tank, jeep, plane, helicopter, etc.
-		KINDOF_AIRCRAFT,								///< unit like plane, helicopter, etc., that is predominantly a flyer. (hovercraft are NOT aircraft)
-		KINDOF_HUGE_VEHICLE,						///< unit that is, technically, a vehicle, but WAY larger than normal (eg, Overlord)
-		KINDOF_DOZER,										///< a dozer
-		KINDOF_HARVESTER,               ///< a harvester
-		KINDOF_COMMANDCENTER,						///< a command center
+	
+	KINDOF_OBSTACLE,								///< an obstacle to land-based pathfinders
+	KINDOF_SELECTABLE,							///< Actually means MOUSE-INTERACTABLE (doesn't mean you can select it!)
+	KINDOF_IMMOBILE,								///< fixed in location
+	KINDOF_CAN_ATTACK,							///< can attack
+	KINDOF_STICK_TO_TERRAIN_SLOPE,	///< should be stuck at ground level, aligned to terrain slope. requires that IMMOBILE bit is also set.
+	KINDOF_CAN_CAST_REFLECTIONS,		///< can cast reflections in water
+	KINDOF_SHRUBBERY,								///< tree, bush, etc.
+	KINDOF_STRUCTURE,								///< structure of some sort (buildable or not)
+	KINDOF_INFANTRY,								///< unit like soldier etc
+	KINDOF_VEHICLE,									///< unit like tank, jeep, plane, helicopter, etc.
+	KINDOF_AIRCRAFT,								///< unit like plane, helicopter, etc., that is predominantly a flyer. (hovercraft are NOT aircraft)
+	KINDOF_HUGE_VEHICLE,						///< unit that is, technically, a vehicle, but WAY larger than normal (eg, Overlord)
+	KINDOF_DOZER,										///< a dozer
+	KINDOF_HARVESTER,               ///< a harvester
+	KINDOF_COMMANDCENTER,						///< a command center
 #ifdef ALLOW_SURRENDER
 		KINDOF_PRISON,									///< a prison detention center kind of thing
 		KINDOF_COLLECTS_PRISON_BOUNTY,	///< when prisoners are delivered to these, the player gets money
@@ -219,8 +219,8 @@ enum KindOfType CPP_11(: Int)
 		KINDOF_EXTRA16,
 
 
-		KINDOF_COUNT										// total number of kindofs
-
+		KINDOF_COUNT,									// total number of kindofs
+		KINDOF_FIRST = 0,
 };
 
 typedef BitFlags<KINDOF_COUNT>	KindOfMaskType;

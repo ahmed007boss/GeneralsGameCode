@@ -3233,6 +3233,9 @@ void ControlBar::setPortraitByObject( Object *obj )
 
 		//Clear any overlay the portrait had on it.
 		GadgetButtonDrawOverlayImage( m_rightHUDCameoWindow, NULL );
+		//TheSuperHackers @overlay Ahmed Salah 27/06/2025 Clear all overlay images when clearing portrait overlay
+		GadgetButtonDrawOverlayImage2( m_rightHUDCameoWindow, NULL );
+		GadgetButtonDrawOverlayImage3( m_rightHUDCameoWindow, NULL );
 	}
 
 }

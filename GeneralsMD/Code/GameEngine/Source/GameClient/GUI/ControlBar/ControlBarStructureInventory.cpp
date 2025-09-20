@@ -155,6 +155,9 @@ void ControlBar::populateStructureInventory( Object *building )
 
 		// Clear any veterancy icon incase the unit leaves!
 		GadgetButtonDrawOverlayImage( m_commandWindows[ i ], NULL );
+		//TheSuperHackers @overlay Ahmed Salah 27/06/2025 Clear all overlay images when clearing structure inventory
+		GadgetButtonDrawOverlayImage2( m_commandWindows[ i ], NULL );
+		GadgetButtonDrawOverlayImage3( m_commandWindows[ i ], NULL );
 		//
 		// if the structure can hold a lesser amount inside it than what the GUI displays
 		// we will completely hide the buttons that can't contain anything

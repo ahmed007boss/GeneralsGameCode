@@ -119,18 +119,7 @@ inline Real maxf(Real a, Real b) { if (a > b) return a; else return b; }
 //-------------------------------------------------------------------------------------------------
 static void normAngle(Real &angle)
 {
-	if (angle < -10*PI) {
-		angle = 0;
-	}
-	if (angle > 10*PI) {
-		angle = 0;
-	}
-	while (angle < -PI) {
-		angle += 2*PI;
-	}
-	while (angle > PI) {
-		angle -= 2*PI;
-	}
+	angle = WWMath::Normalize_Angle(angle);
 }
 
 #define TERRAIN_SAMPLE_SIZE 40.0f
@@ -445,13 +434,9 @@ void W3DView::buildCameraTransform( Matrix3D *transform )
 						// WST 10.22.2002. Update the Listener positions used by audio system
 						//--------------------------------------------------------------------
 						Vector3 position = transform->Get_Translation();
-						m_pos.x = position.X;
-						m_pos.y = position.Y;
-						m_pos.z = position.Z;
-
-
-						//DEBUG_LOG(("mpos x%f, y%f, z%f", m_pos.x, m_pos.y, m_pos.z ));
-
+						Coord3D coord;
+						coord.set(position.X, position.Y, position.Z);
+						View::setPosition(&coord);
 						break;
 					}
 				}
@@ -559,6 +544,10 @@ void W3DView::setCameraTransform( void )
 {
 	if (TheGlobalData->m_headless)
 		return;
+
+	if (m_viewLockedUntilFrame > TheGameClient->getFrame())
+		return;
+
 	m_cameraHasMovedSinceRequest = true;
 	Matrix3D cameraTransform( 1 );
 
@@ -1342,40 +1331,44 @@ void W3DView::update(void)
 	 * scrolling), the zoom will move toward matching the desired height.
 	 */
 	// TheSuperHackers @tweak Can now also zoom when the game is paused.
+	// TheSuperHackers @tweak The camera zoom speed is now decoupled from the render update.
+	// TheSuperHackers @bugfix The camera terrain height adjustment now also works in replay playback.
+
 	m_terrainHeightUnderCamera = getHeightAroundPos(m_pos.x, m_pos.y);
 	m_currentHeightAboveGround = m_cameraOffset.z * m_zoom - m_terrainHeightUnderCamera;
+
 	if (TheTerrainLogic && TheGlobalData && TheInGameUI && m_okToAdjustHeight)
 	{
 		Real desiredHeight = (m_terrainHeightUnderCamera + m_heightAboveGround);
 		Real desiredZoom = desiredHeight / m_cameraOffset.z;
-  	if (didScriptedMovement || (TheGameLogic->isInReplayGame() && TheGlobalData->m_useCameraInReplay))
+
+  	if (didScriptedMovement)
   	{
   		// if we are in a scripted camera movement, take its height above ground as our desired height.
   		m_heightAboveGround = m_currentHeightAboveGround;
 			//DEBUG_LOG(("Frame %d: height above ground: %g %g %g %g", TheGameLogic->getFrame(), m_heightAboveGround,
 			//	m_cameraOffset.z, m_zoom, m_terrainHeightUnderCamera));
   	}
+
 		if (TheInGameUI->isScrolling())
 		{
 			// if scrolling, only adjust if we're too close or too far
 			if (m_scrollAmount.length() < m_scrollAmountCutoff || (m_currentHeightAboveGround < m_minHeightAboveGround) || (TheGlobalData->m_enforceMaxCameraHeight && m_currentHeightAboveGround > m_maxHeightAboveGround))
 			{
-				Real zoomAdj = (desiredZoom - m_zoom)*TheGlobalData->m_cameraAdjustSpeed;
-				if (fabs(zoomAdj) >= 0.0001)	// only do positive
+				Real zoomAdj = (desiredZoom - m_zoom) * TheGlobalData->m_cameraAdjustSpeed * TheGameEngine->getActualLogicTimeScaleOverFpsRatio();
+				if (fabs(zoomAdj) >= 0.0001f)	// only do positive
 				{
 					m_zoom += zoomAdj;
 					recalcCamera = true;
 				}
 			}
 		}
-		else
+		else if (!didScriptedMovement)
 		{
 			// we're not scrolling; settle toward desired height above ground
-			Real zoomAdj = (m_zoom - desiredZoom)*TheGlobalData->m_cameraAdjustSpeed;
-			Real zoomAdjAbs = fabs(zoomAdj);
-			if (zoomAdjAbs >= 0.0001 && !didScriptedMovement)
+			Real zoomAdj = (m_zoom - desiredZoom) * TheGlobalData->m_cameraAdjustSpeed * TheGameEngine->getActualLogicTimeScaleOverFpsRatio();
+			if (fabs(zoomAdj) >= 0.0001f)
 			{
-				//DEBUG_LOG(("W3DView::update() - m_zoom=%g, desiredHeight=%g", m_zoom, desiredZoom));
 				m_zoom -= zoomAdj;
 				recalcCamera = true;
 			}
@@ -1919,7 +1912,7 @@ void W3DView::setAngleAndPitchToDefault( void )
 	// call our base class, we are adding functionality
 	View::setAngleAndPitchToDefault();
 
-	this->m_FXPitch = 1.0;
+	m_FXPitch = 1.0;
 
 	// set the camera
 	setCameraTransform();
@@ -1941,19 +1934,7 @@ void W3DView::setDefaultView(Real pitch, Real angle, Real maxHeight)
 //-------------------------------------------------------------------------------------------------
 void W3DView::setHeightAboveGround(Real z)
 {
-	m_heightAboveGround = z;
-
-  // if our zoom is limited, we will stay within a predefined distance from the terrain
-	if( m_zoomLimited )
-	{
-
-		if (m_heightAboveGround < m_minHeightAboveGround)
-			m_heightAboveGround = m_minHeightAboveGround;
-
-		if (m_heightAboveGround > m_maxHeightAboveGround)
-			m_heightAboveGround = m_maxHeightAboveGround;
-
-	}
+	View::setHeightAboveGround(z);
 
 	m_doingMoveCameraOnWaypointPath = false;
 	m_CameraArrivedAtWaypointOnPathFlag = false;
@@ -1967,15 +1948,13 @@ void W3DView::setHeightAboveGround(Real z)
 
 //-------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------
+// TheSuperHackers @bugfix xezon 18/09/2025 setZoom is no longer clamped by a min and max zoom.
+// Instead the min and max camera height will be clamped elsewhere. Clamping the zoom would cause
+// issues with camera playback in replay playback where changes in terrain elevation would not raise
+// the camera height.
 void W3DView::setZoom(Real z)
 {
-	m_zoom = z;
-
-	if (m_zoom < m_minZoom)
-		m_zoom = m_minZoom;
-
-	if (m_zoom > m_maxZoom)
-		m_zoom = m_maxZoom;
+	View::setZoom(z);
 
 	m_doingMoveCameraOnWaypointPath = false;
 	m_CameraArrivedAtWaypointOnPathFlag = false;

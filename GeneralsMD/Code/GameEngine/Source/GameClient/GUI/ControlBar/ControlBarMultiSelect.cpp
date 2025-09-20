@@ -55,6 +55,9 @@ void ControlBar::resetCommonCommandData( void )
 		m_commonCommands[ i ] = NULL;
 		//Clear out any remnant overlays.
 		GadgetButtonDrawOverlayImage( m_commandWindows[ i ], NULL );
+		//TheSuperHackers @overlay Ahmed Salah 27/06/2025 Clear all overlay images when resetting common commands
+		GadgetButtonDrawOverlayImage2( m_commandWindows[ i ], NULL );
+		GadgetButtonDrawOverlayImage3( m_commandWindows[ i ], NULL );
 	}
 
 }

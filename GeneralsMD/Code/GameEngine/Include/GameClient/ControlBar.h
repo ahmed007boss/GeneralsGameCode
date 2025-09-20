@@ -108,11 +108,10 @@ enum CommandOption CPP_11(: Int)
 	// TheSuperHackers @feature Ahmed Salah 27/06/2025 Enable select-all buttons when special powers are available
 	ENABLE_SELECT_ALL_BUTTON_IF_ANY_POWER_AVAILABLE = 0x02000000, // If of type GUI_COMMAND_SELECT_ALL_UNITS_OF_TYPE and any special Power available the button should be enabled 
 
-	NUM_COMMAND_OPTIONS
 };
 
 #ifdef DEFINE_COMMAND_OPTION_NAMES
-static const char *TheCommandOptionNames[] =
+static const char *const TheCommandOptionNames[] =
 {
 	"NEED_TARGET_ENEMY_OBJECT",
 	"NEED_TARGET_NEUTRAL_OBJECT",
@@ -235,7 +234,7 @@ enum GUICommandType CPP_11(: Int)
 };
 
 #ifdef DEFINE_GUI_COMMMAND_NAMES
-static const char *TheGuiCommandNames[] =
+static const char *const TheGuiCommandNames[] =
 {
 	"NONE",
 	"DOZER_CONSTRUCT",
@@ -289,6 +288,7 @@ static const char *TheGuiCommandNames[] =
 
 	NULL
 };
+static_assert(ARRAY_SIZE(TheGuiCommandNames) == GUI_COMMAND_NUM_COMMANDS + 1, "Incorrect array size");
 #endif  // end DEFINE_GUI_COMMAND_NAMES
 
 enum CommandButtonMappedBorderType CPP_11(: Int)
@@ -312,6 +312,7 @@ static const LookupListRec CommandButtonMappedBorderTypeNames[] =
 
 	{ NULL, 0	}
 };
+static_assert(ARRAY_SIZE(CommandButtonMappedBorderTypeNames) == COMMAND_BUTTON_BORDER_COUNT + 1, "Incorrect array size");
 //-------------------------------------------------------------------------------------------------
 /** Command buttons are used to load the buttons we place on throughout the command bar
 	* interface in different context sensitive windows depending on the situation and

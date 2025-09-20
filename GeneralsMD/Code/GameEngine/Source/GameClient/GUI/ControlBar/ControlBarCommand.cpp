@@ -204,6 +204,9 @@ void ControlBar::doTransportInventoryUI( Object *transport, const CommandSet *co
 
 			//Clear any potential veterancy rank, or else we'll see it when it's empty!
 			GadgetButtonDrawOverlayImage( m_commandWindows[ i ], NULL );
+			//TheSuperHackers @overlay Ahmed Salah 27/06/2025 Clear all overlay images when clearing transport buttons
+			GadgetButtonDrawOverlayImage2( m_commandWindows[ i ], NULL );
+			GadgetButtonDrawOverlayImage3( m_commandWindows[ i ], NULL );
 
 			//Unmanned vehicles don't have any commands available -- in fact they are hidden!
  			if( transport->isDisabledByType( DISABLED_UNMANNED ) )
@@ -282,6 +285,11 @@ void ControlBar::populateCommand( Object *obj )
 		for( i = 0; i < MAX_COMMANDS_PER_SET; i++ )
 			if (m_commandWindows[ i ])
 			{
+				//Clear all overlay images when hiding buttons
+				//TheSuperHackers @overlay Ahmed Salah 27/06/2025 Clear overlay images when hiding command buttons
+				GadgetButtonDrawOverlayImage( m_commandWindows[ i ], NULL );
+				GadgetButtonDrawOverlayImage2( m_commandWindows[ i ], NULL );
+				GadgetButtonDrawOverlayImage3( m_commandWindows[ i ], NULL );
 				m_commandWindows[ i ]->winHide( TRUE );
 			}
 
@@ -318,7 +326,12 @@ void ControlBar::populateCommand( Object *obj )
 		// if button is not present, just hide the window
 		if( commandButton == NULL )
 		{
-
+			//Clear all overlay images when hiding individual buttons
+			//TheSuperHackers @overlay Ahmed Salah 27/06/2025 Clear overlay images when hiding individual command buttons
+			GadgetButtonDrawOverlayImage( m_commandWindows[ i ], NULL );
+			GadgetButtonDrawOverlayImage2( m_commandWindows[ i ], NULL );
+			GadgetButtonDrawOverlayImage3( m_commandWindows[ i ], NULL );
+			
 			// hide window on interface
 			m_commandWindows[ i ]->winHide( TRUE );
 
@@ -605,6 +618,9 @@ void ControlBar::populateBuildQueue( Object *producer )
 
 		//Clear any potential veterancy rank, or else we'll see it when it's empty!
 		GadgetButtonDrawOverlayImage( m_queueData[ i ].control, NULL );
+		//TheSuperHackers @overlay Ahmed Salah 27/06/2025 Clear all overlay images when clearing build queue buttons
+		GadgetButtonDrawOverlayImage2( m_queueData[ i ].control, NULL );
+		GadgetButtonDrawOverlayImage3( m_queueData[ i ].control, NULL );
 
 	}
 
@@ -886,6 +902,11 @@ void ControlBar::updateContextCommand( void )
 			GadgetButtonDrawOverlayImage( win, image );
 		}
 
+		//Clear overlay images first to prevent persistence from previous command sets
+		//TheSuperHackers @overlay Ahmed Salah 27/06/2025 Clear overlay images before setting new ones
+		GadgetButtonDrawOverlayImage2( win, NULL );
+		GadgetButtonDrawOverlayImage3( win, NULL );
+		
 		//Set overlay images from INI configuration
 		//TheSuperHackers @overlay Ahmed Salah 27/06/2025 Set overlay images from CommandButton INI properties
 		if( command->getOverlayImageName().isNotEmpty() )
