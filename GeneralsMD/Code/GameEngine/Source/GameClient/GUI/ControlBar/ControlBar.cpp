@@ -114,6 +114,8 @@ const FieldParse CommandButton::s_commandButtonFieldParseTable[] =
 	{ "PurchasedLabel",				INI::parseAsciiString,			 NULL, offsetof( CommandButton, m_purchasedLabel ) },
 	{ "ConflictingLabel",			INI::parseAsciiString,			 NULL, offsetof( CommandButton, m_conflictingLabel ) },
 	{ "ButtonImage",					INI::parseAsciiString,			 NULL, offsetof( CommandButton, m_buttonImageName ) },
+	{ "OverlayImage",					INI::parseAsciiString,			 NULL, offsetof( CommandButton, m_overlayImageName ) },
+	{ "OverlayImage2",					INI::parseAsciiString,			 NULL, offsetof( CommandButton, m_overlayImage2Name ) },
 	{ "CursorName",						INI::parseAsciiString,			 NULL, offsetof( CommandButton, m_cursorName ) },
 	{ "InvalidCursorName",		INI::parseAsciiString,       NULL, offsetof( CommandButton, m_invalidCursorName ) },
 	{ "ButtonBorderType",			INI::parseLookupList,				 CommandButtonMappedBorderTypeNames, offsetof( CommandButton, m_commandButtonBorder ) },
@@ -719,6 +721,8 @@ CommandButton::CommandButton( void )
 	m_options = 0;
 	m_purchasedLabel.clear();
 	m_textLabel.clear();
+	m_overlayImageName.clear();
+	m_overlayImage2Name.clear();
 	m_isRequireElectronics = false;
 	// End Add
 

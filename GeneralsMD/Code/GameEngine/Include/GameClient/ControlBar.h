@@ -350,6 +350,8 @@ public:
 	const AsciiString& getDescriptionLabel() const { return m_descriptionLabel; }
 	const AsciiString& getPurchasedLabel() const { return m_purchasedLabel; }
 	const AsciiString& getConflictingLabel() const { return m_conflictingLabel; }
+	const AsciiString& getOverlayImageName() const { return m_overlayImageName; }
+	const AsciiString& getOverlayImage2Name() const { return m_overlayImage2Name; }
 	const AudioEventRTS* getUnitSpecificSound() const { return &m_unitSpecificSound; }
 	const bool isRequireElectronics() const { return m_isRequireElectronics; }
 
@@ -480,6 +482,8 @@ private:
 	ScienceVec										m_science;										///< actual science
 	CommandButtonMappedBorderType	m_commandButtonBorder;
 	AsciiString										m_buttonImageName;
+	AsciiString										m_overlayImageName;						///< overlay image name for additional visual indicators
+	AsciiString										m_overlayImage2Name;					///< second overlay image name for additional visual indicators
 	GameWindow*										m_window;											///< used during the run-time assignment of a button to a gadget button window
 	AudioEventRTS									m_unitSpecificSound;					///< Unit sound played whenever button is clicked.
 

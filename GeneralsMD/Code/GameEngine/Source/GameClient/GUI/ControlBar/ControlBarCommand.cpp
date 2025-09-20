@@ -886,6 +886,25 @@ void ControlBar::updateContextCommand( void )
 			GadgetButtonDrawOverlayImage( win, image );
 		}
 
+		//Set overlay images from INI configuration
+		//TheSuperHackers @overlay Ahmed Salah 27/06/2025 Set overlay images from CommandButton INI properties
+		if( command->getOverlayImageName().isNotEmpty() )
+		{
+			const Image *overlayImage = TheMappedImageCollection->findImageByName( command->getOverlayImageName() );
+			if( overlayImage )
+			{
+				GadgetButtonDrawOverlayImage2( win, overlayImage );
+			}
+		}
+		if( command->getOverlayImage2Name().isNotEmpty() )
+		{
+			const Image *overlayImage2 = TheMappedImageCollection->findImageByName( command->getOverlayImage2Name() );
+			if( overlayImage2 )
+			{
+				GadgetButtonDrawOverlayImage3( win, overlayImage2 );
+			}
+		}
+
 		//
 		// for check-like commands we will keep the push button "pushed" or "unpushed" depending
 		// on the current running status of the command

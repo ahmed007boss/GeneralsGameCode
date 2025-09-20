@@ -34,6 +34,7 @@ A CommandButton definition on its own does nothing. It only becomes visible and 
 - [Properties](#properties)
   - [Basic Properties](#basic-properties)
   - [Display Properties](#display-properties)
+  - [Overlay Image Properties](#overlay-image-properties)
   - [Prerequisites and Requirements](#prerequisites-and-requirements)
   - [Modifier Key and Click Type Buttons](#modifier-key-and-click-type-buttons)
   - [Alternative Command Buttons (Prerequisite-Based Replacement)](#alternative-command-buttons-prerequisite-based-replacement)
@@ -52,6 +53,7 @@ A CommandButton definition on its own does nothing. It only becomes visible and 
   - [Weapon Switching Button](#weapon-switching-button)
   - [Science Purchase Button](#science-purchase-button)
   - [Complex Prerequisites Example](#complex-prerequisites-example)
+  - [Command Button with Overlay Images (New Feature)](#command-button-with-overlay-images-new-feature)
   - [Alternative Command Buttons (New Feature)](#alternative-command-buttons-new-feature)
   - [Modifier Key Button Example](#modifier-key-button-example)
   - [Fire Weapon Button](#fire-weapon-button)
@@ -160,11 +162,29 @@ A CommandButton definition on its own does nothing. It only becomes visible and 
 - **Format**: `CONTROLBAR:KeyName`
 - **Example**: `ConflictingLabel = "CONTROLBAR:ConflictsWithUpgrade"`
 
+### Overlay Image Properties
+
 #### `ButtonImage` *(v1.04)*
 
 - **Type**: `MappedImage`
 - **Description**: Image reference for the button icon (defined as MappedImage, not direct file path)
 - **Example**: `ButtonImage = "USAInfantry_ic"`
+
+#### `OverlayImage` *(GMX Upcoming)*
+
+- **Type**: `MappedImage`
+- **Description**: Additional overlay image drawn on top of the button for visual indicators (special abilities, status effects, etc.)
+- **Default**: Empty (no overlay)
+- **Example**: `OverlayImage = "SpecialAbilityOverlay"`
+- **Usage**: Used for displaying additional visual information like special abilities, cooldown indicators, or status effects
+
+#### `OverlayImage2` *(GMX Upcoming)*
+
+- **Type**: `MappedImage`
+- **Description**: Second additional overlay image drawn on top of the button for visual indicators
+- **Default**: Empty (no overlay)
+- **Example**: `OverlayImage2 = "StatusEffectOverlay"`
+- **Usage**: Used for displaying a second layer of visual information, such as multiple status effects or additional indicators
 
 #### `CursorName` *(v1.04)*
 
@@ -656,6 +676,21 @@ CommandButton Command_UpgradeChinaHelixPropagandaTower
 End
 ```
 
+### Command Button with Overlay Images (New Feature)
+
+```
+CommandButton Command_SpecialUnitWithOverlays
+  Command       = UNIT_BUILD
+  Object        = SpecialEliteUnit
+  TextLabel     = CONTROLBAR:BuildSpecialEliteUnit
+  ButtonImage   = EliteUnit_ic_L
+  OverlayImage  = VeterancyOverlay
+  OverlayImage2 = SpecialAbilityOverlay
+  ButtonBorderType        = BUILD
+  DescriptLabel           = CONTROLBAR:ToolTipBuildSpecialEliteUnit
+End
+```
+
 ### Alternative Command Buttons (New Feature)
 
 ```
@@ -744,6 +779,11 @@ End
 2. **Helpful tooltips** - Provide descriptive text that explains button functionality
 3. **Consistent cursor behavior** - Use appropriate cursor types for different command types
 4. **Sound feedback** - Add unit-specific sounds for better player feedback
+5. **Overlay Image Guidelines** - Use overlay images sparingly to avoid visual clutter
+   - Reserve `OverlayImage` for primary additional indicators (veterancy, special abilities)
+   - Use `OverlayImage2` for secondary indicators (status effects, cooldowns)
+   - Ensure overlay images are semi-transparent or small enough not to obscure the main button
+   - Test overlay combinations to ensure they remain readable
 
 ### Performance and Maintenance
 
@@ -767,6 +807,8 @@ CommandButton CommandButtonName
     TextLabel = CONTROLBAR:ButtonText        ; // Button text label *(v1.04)*
     DescriptLabel = CONTROLBAR:ButtonDesc    ; // Button description *(v1.04)*
     ButtonImage = ButtonIcon                 ; // Button icon image *(v1.04)*
+    OverlayImage = OverlayIcon1              ; // First overlay image *(GMX Upcoming)*
+    OverlayImage2 = OverlayIcon2             ; // Second overlay image *(GMX Upcoming)*
     ButtonBorderType = BUILD                 ; // Button border type *(v1.04)*
     CursorName = Attack                      ; // Valid target cursor *(v1.04)*
     InvalidCursorName = Invalid              ; // Invalid target cursor *(v1.04)*
@@ -821,12 +863,13 @@ End
 
 ## Changes History
 
+- **GMX Upcoming**: Added `OverlayImage` and `OverlayImage2` properties for additional visual indicators on command buttons
 - No Changes done since 1.04
 
 ## Status
 
-- **Documentation Status**: AI Generated Pending Reviews 
-- **Last Updated**: [Current Date] by @ahmed Salah using AI
+- **Documentation Status**: AI Generated - Updated with Overlay Image Properties
+- **Last Updated**: 27/06/2025 by @ahmed Salah using AI
 
 ### Modder Reviews 
 - No Reviews done yet

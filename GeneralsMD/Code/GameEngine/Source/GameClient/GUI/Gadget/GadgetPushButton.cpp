@@ -605,6 +605,8 @@ PushButtonData * getNewPushButtonData( void )
 	p->drawBorder = FALSE;
 	p->drawClock = NO_CLOCK;
 	p->overlayImage = NULL;
+	p->overlayImage2 = NULL;
+	p->overlayImage3 = NULL;
 	return p;
 }
 
@@ -679,6 +681,40 @@ void GadgetButtonDrawOverlayImage( GameWindow *g, const Image *image )
 		pData = getNewPushButtonData();
 	}
 	pData->overlayImage = image;
+	g->winSetUserData(pData);
+}
+
+// GadgetButtonDrawOverlayImage2 ======================================================
+/** Set to draw a second overlay image on the button */
+//=============================================================================
+void GadgetButtonDrawOverlayImage2( GameWindow *g, const Image *image )
+{
+	if( g == NULL )
+		return;
+
+	PushButtonData *pData = (PushButtonData *)g->winGetUserData();
+	if(!pData)
+	{
+		pData = getNewPushButtonData();
+	}
+	pData->overlayImage2 = image;
+	g->winSetUserData(pData);
+}
+
+// GadgetButtonDrawOverlayImage3 ======================================================
+/** Set to draw a third overlay image on the button */
+//=============================================================================
+void GadgetButtonDrawOverlayImage3( GameWindow *g, const Image *image )
+{
+	if( g == NULL )
+		return;
+
+	PushButtonData *pData = (PushButtonData *)g->winGetUserData();
+	if(!pData)
+	{
+		pData = getNewPushButtonData();
+	}
+	pData->overlayImage3 = image;
 	g->winSetUserData(pData);
 }
 
