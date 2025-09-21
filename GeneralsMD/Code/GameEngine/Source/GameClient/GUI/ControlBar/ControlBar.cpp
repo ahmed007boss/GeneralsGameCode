@@ -4449,14 +4449,18 @@ void ControlBar::initSpecialPowershortcutBar( Player *player)
 		id = TheNameKeyGenerator->nameToKey( windowName.str() );
 		m_specialPowerShortcutButtons[ i ] =
 			TheWindowManager->winGetWindowFromId( m_specialPowerShortcutParent, id );
-		m_specialPowerShortcutButtons[ i ]->winSetStatus( WIN_STATUS_USE_OVERLAY_STATES );
-		// Oh god... this is a total hack for shortcut buttons to handle rendering text top left corner...
-		m_specialPowerShortcutButtons[ i ]->winSetStatus( WIN_STATUS_SHORTCUT_BUTTON );
 
-		windowName.format( parentName, i+1 );
-		id = TheNameKeyGenerator->nameToKey( windowName.str() );
-		m_specialPowerShortcutButtonParents[ i ] =
-			TheWindowManager->winGetWindowFromId( m_specialPowerShortcutParent, id );
+		if (m_specialPowerShortcutButtons[i] != nullptr) {
+
+			m_specialPowerShortcutButtons[i]->winSetStatus(WIN_STATUS_USE_OVERLAY_STATES);
+			// Oh god... this is a total hack for shortcut buttons to handle rendering text top left corner...
+			m_specialPowerShortcutButtons[i]->winSetStatus(WIN_STATUS_SHORTCUT_BUTTON);
+
+			windowName.format(parentName, i + 1);
+			id = TheNameKeyGenerator->nameToKey(windowName.str());
+			m_specialPowerShortcutButtonParents[i] =
+				TheWindowManager->winGetWindowFromId(m_specialPowerShortcutParent, id);
+		}
 	}
 
 }
@@ -4666,16 +4670,18 @@ void ControlBar::populateSpecialPowerShortcut( Player *player)
 				}
 			}
 
-			// make sure the window is not hidden
-			m_specialPowerShortcutButtons[ currentButton ]->winHide( FALSE );
-			m_specialPowerShortcutButtonParents[ currentButton ]->winHide( FALSE );
-			// enable by default
-			m_specialPowerShortcutButtons[ currentButton ]->winEnable( TRUE );
-			m_specialPowerShortcutButtonParents[ currentButton ]->winEnable( TRUE );
+			if (m_specialPowerShortcutButtons[currentButton] != nullptr) {
+				// make sure the window is not hidden
+				m_specialPowerShortcutButtons[currentButton]->winHide(FALSE);
+				m_specialPowerShortcutButtonParents[currentButton]->winHide(FALSE);
+				// enable by default
+				m_specialPowerShortcutButtons[currentButton]->winEnable(TRUE);
+				m_specialPowerShortcutButtonParents[currentButton]->winEnable(TRUE);
 
-			// populate the visible button with data from the command button
-			setControlCommand( m_specialPowerShortcutButtons[ currentButton ], commandButton, NULL, -1 );
-			GadgetButtonSetAltSound(m_specialPowerShortcutButtons[ currentButton ], "GUIGenShortcutClick");
+				// populate the visible button with data from the command button
+				setControlCommand(m_specialPowerShortcutButtons[currentButton], commandButton, NULL, -1);
+				GadgetButtonSetAltSound(m_specialPowerShortcutButtons[currentButton], "GUIGenShortcutClick");
+			}
 			currentButton++;
 
 		}
@@ -4698,7 +4704,7 @@ Bool ControlBar::hasAnyShortcutSelection() const
 		const CommandButton *command;
 
 		win = m_specialPowerShortcutButtons[ i ];
-		if( win->winIsHidden() == TRUE )
+		if( win == nullptr || win->winIsHidden() == TRUE )
 			continue;
 
 		// get the command from the control
@@ -4760,7 +4766,7 @@ void ControlBar::updateSpecialPowerShortcut( void )
 		// get the window
 		win = m_specialPowerShortcutButtons[ i ];
 
-		if( win->winIsHidden() == TRUE )
+		if( win==nullptr || win->winIsHidden() == TRUE )
 			continue;
 		// get the command from the control
 		command = getCommandButtonFromUserData(win);
@@ -4884,7 +4890,7 @@ void ControlBar::drawSpecialPowerShortcutMultiplierText()
 		// get the window
 		win = m_specialPowerShortcutButtons[ i ];
 
-		if( win->winIsHidden() == TRUE )
+		if( win == nullptr || win->winIsHidden() == TRUE )
 			continue;
 		// get the command from the control
 		command = getCommandButtonFromUserData(win);
@@ -4963,7 +4969,7 @@ void ControlBar::showSpecialPowerShortcut( void )
 	Bool dontAnimate = TRUE;
 	for( Int i = 0; i < m_currentlyUsedSpecialPowersButtons; ++i )
 	{
-		if (m_specialPowerShortcutButtons[i]->winGetUserData())
+		if (m_specialPowerShortcutButtons[i] == nullptr || m_specialPowerShortcutButtons[i]->winGetUserData())
 		{
 			dontAnimate = FALSE;
 			break;
