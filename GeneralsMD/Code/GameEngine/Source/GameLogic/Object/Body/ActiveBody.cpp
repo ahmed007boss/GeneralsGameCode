@@ -59,6 +59,7 @@
 #include "GameLogic/Module/ContainModule.h"
 #include "GameLogic/Module/DamageModule.h"
 #include "GameLogic/Module/DieModule.h"
+#include "GameClient/GameText.h"
 
 
 
@@ -1758,4 +1759,20 @@ void ActiveBody::loadPostProcess( void )
 	// extend base class
 	BodyModule::loadPostProcess();
 
+}
+
+//-------------------------------------------------------------------------------------------------
+// TheSuperHackers @feature author 01/01/2025 Override getModuleDescription for UI display
+//-------------------------------------------------------------------------------------------------
+UnicodeString ActiveBodyModuleData::getModuleDescription() const
+{
+	if (!m_description)
+	{
+		Int maxHealth = static_cast<Int>(m_maxHealth);
+		UnicodeString formatString = TheGameText->fetch("MODULE:ACTIVEBODY_DESCRIPTION");
+		UnicodeString result;
+		result.format(formatString.str(), maxHealth);
+		m_description = new UnicodeString(result);
+	}
+	return *m_description;
 }

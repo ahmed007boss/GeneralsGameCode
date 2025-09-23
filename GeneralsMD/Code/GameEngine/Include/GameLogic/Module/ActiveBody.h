@@ -38,6 +38,7 @@
 #include "GameLogic/Damage.h"
 #include "GameLogic/Armor.h"
 #include "GameLogic/ArmorSet.h"
+#include "Common/UnicodeString.h"
 
 // FORWARD REFERENCES /////////////////////////////////////////////////////////////////////////////
 class BodyParticleSystem;
@@ -65,6 +66,12 @@ public:
 	ActiveBodyModuleData();
 
 	static void buildFieldParse(MultiIniFieldParse& p);
+
+	// TheSuperHackers @feature author 01/01/2025 Override getModuleDescription for UI display
+	virtual UnicodeString getModuleDescription() const;
+
+	// TheSuperHackers @feature author 01/01/2025 Override getModuleOrder for display ordering
+	virtual Int getModuleOrder() const { return 150; } // Second priority - shows after RebuildHoleBehavior
 };
 
 //-------------------------------------------------------------------------------------------------

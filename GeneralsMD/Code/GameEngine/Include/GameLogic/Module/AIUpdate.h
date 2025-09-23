@@ -210,6 +210,7 @@ public:
 	virtual Bool isAiModuleData() const { return true; }
 
 	const LocomotorTemplateVector* findLocomotorTemplateVector(LocomotorSetType t) const;
+	const LocomotorTemplateMap& getLocomotorTemplates(void) const {return m_locomotorTemplates;}
 	static void buildFieldParse(MultiIniFieldParse& p);
 	static void parseLocomotorSet( INI* ini, void *instance, void *store, const void* /*userData*/ );
 

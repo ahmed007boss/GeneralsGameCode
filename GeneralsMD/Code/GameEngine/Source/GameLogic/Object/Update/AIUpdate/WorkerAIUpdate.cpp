@@ -1473,3 +1473,18 @@ void WorkerAIUpdate::loadPostProcess( void )
  // extend base class
 	AIUpdateInterface::loadPostProcess();
 }
+
+//-------------------------------------------------------------------------------------------------
+// TheSuperHackers @feature author 01/01/2025 Override getModuleDescription for UI display
+//-------------------------------------------------------------------------------------------------
+UnicodeString WorkerAIUpdateModuleData::getModuleDescription() const
+{
+	if (!m_description)
+	{
+		UnicodeString formatString = TheGameText->fetch("MODULE:WORKERAI_DESCRIPTION");
+		UnicodeString result;
+		result.format(formatString.str(), m_maxBoxesData);
+		m_description = new UnicodeString(result);
+	}
+	return *m_description;
+}

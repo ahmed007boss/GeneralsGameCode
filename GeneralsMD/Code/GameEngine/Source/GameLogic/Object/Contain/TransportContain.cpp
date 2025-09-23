@@ -45,6 +45,7 @@
 #include "GameLogic/Module/TransportContain.h"
 #include "GameLogic/Object.h"
 #include "GameLogic/Weapon.h"
+#include "GameClient/GameText.h"
 
 
 // ------------------------------------------------------------------------------------------------
@@ -696,4 +697,43 @@ void TransportContain::loadPostProcess( void )
 	// extend base class
 	OpenContain::loadPostProcess();
 
+}
+
+//-------------------------------------------------------------------------------------------------
+// TheSuperHackers @feature author 01/01/2025 Override getModuleDescription for UI display
+//-------------------------------------------------------------------------------------------------
+UnicodeString TransportContainModuleData::getModuleDescription() const
+{
+	if (!m_description)
+	{
+		UnicodeString result;
+		
+		// TheSuperHackers @feature author 15/01/2025 Use separate string for healing description
+		UnicodeString transportDesc;
+		if (m_healthRegen > 0.0f)
+		{
+			transportDesc = TheGameText->fetch("MODULE:TRANSPORTCONTAIN_DESCRIPTION_WITH_HEAL");
+		}
+		else
+		{
+			transportDesc = TheGameText->fetch("MODULE:TRANSPORTCONTAIN_DESCRIPTION");
+		}
+		
+		UnicodeString formattedTransport;
+		formattedTransport.format(transportDesc.str(), m_slotCapacity);
+		result = formattedTransport;
+		
+		// Add passenger firing capability information
+		if (m_passengersAllowedToFire)
+		{
+			UnicodeString firingDesc = TheGameText->fetch("MODULE:TRANSPORTCONTAIN_FIRING_DESCRIPTION");
+			UnicodeString formattedFiring;
+			formattedFiring.format(firingDesc.str(), m_slotCapacity);
+			result += L"\n";
+			result += formattedFiring;
+		}
+		
+		m_description = new UnicodeString(result);
+	}
+	return *m_description;
 }

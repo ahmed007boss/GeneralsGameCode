@@ -197,7 +197,7 @@ void SpecialPowerStore::parseSpecialPowerDefinition( INI *ini )
 	{ "InitiateAtLocationSound",	INI::parseAudioEventRTS,					NULL,	offsetof( SpecialPowerTemplate, m_initiateAtLocationSound ) },
 	{ "PublicTimer",							INI::parseBool,										NULL, offsetof( SpecialPowerTemplate, m_publicTimer ) },
 	{ "Enum",											INI::parseIndexList,							SpecialPowerMaskType::getBitNames(), offsetof( SpecialPowerTemplate, m_type ) },
-	{ "CostPerUse",								INI::parseUnsignedInt,										NULL,		offsetof(SpecialPowerTemplate, m_usingCost) },
+	{ "CostPerUse",								INI::parseUnsignedInt,						NULL,		offsetof(SpecialPowerTemplate, m_usingCost) },
 	{ "DetectionTime",						INI::parseDurationUnsignedInt,		NULL,	offsetof( SpecialPowerTemplate, m_detectionTime ) },
 	{ "SharedSyncedTimer",				INI::parseBool,										NULL, offsetof( SpecialPowerTemplate, m_sharedNSync ) },
 	{ "ViewObjectDuration",				INI::parseDurationUnsignedInt,		NULL,	offsetof( SpecialPowerTemplate, m_viewObjectDuration ) },

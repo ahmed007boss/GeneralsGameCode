@@ -36,6 +36,7 @@
 #include "GameLogic/Damage.h"
 #include "GameLogic/ArmorSet.h"
 #include "GameLogic/Module/BehaviorModule.h"
+#include "Common/UnicodeString.h"
 
 //-------------------------------------------------------------------------------------------------
 /** OBJECT BODY MODULE base class */
@@ -119,6 +120,12 @@ public:
 	{
     BehaviorModuleData::buildFieldParse(p);
 	}
+
+	// TheSuperHackers @feature author 01/01/2025 Override getModuleDescription for UI display
+	virtual UnicodeString getModuleDescription() const;
+
+	// TheSuperHackers @feature author 01/01/2025 Override getModuleOrder for display ordering
+	virtual Int getModuleOrder() const { return 250; } // Third priority - shows after ActiveBody
 };
 
 //-------------------------------------------------------------------------------------------------

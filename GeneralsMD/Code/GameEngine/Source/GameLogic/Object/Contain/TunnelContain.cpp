@@ -42,6 +42,7 @@
 #include "GameLogic/Module/TunnelContain.h"
 #include "GameLogic/Object.h"
 #include "GameLogic/PartitionManager.h"
+#include "GameClient/GameText.h"
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -604,4 +605,28 @@ void TunnelContain::loadPostProcess( void )
 	// extend base class
 	OpenContain::loadPostProcess();
 
+}
+
+//-------------------------------------------------------------------------------------------------
+// TheSuperHackers @feature author 01/01/2025 Override getModuleDescription for UI display
+//-------------------------------------------------------------------------------------------------
+UnicodeString TunnelContainModuleData::getModuleDescription() const
+{
+	if (!m_description)
+	{
+		UnicodeString baseDescription;
+		
+		// TheSuperHackers @feature author 15/01/2025 Use separate string for healing description
+		if (m_framesForFullHeal > 1.0f)
+		{
+			baseDescription = TheGameText->fetch("MODULE:TUNNELCONTAIN_DESCRIPTION_WITH_HEAL");
+		}
+		else
+		{
+			baseDescription = TheGameText->fetch("MODULE:TUNNELCONTAIN_DESCRIPTION");
+		}
+		
+		m_description = new UnicodeString(baseDescription);
+	}
+	return *m_description;
 }

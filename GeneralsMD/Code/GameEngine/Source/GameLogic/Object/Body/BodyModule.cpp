@@ -31,6 +31,7 @@
 #include "PreRTS.h"
 #include "Common/Xfer.h"
 #include "GameLogic/Module/BodyModule.h"
+#include "GameClient/GameText.h"
 
 // ------------------------------------------------------------------------------------------------
 /** CRC */
@@ -73,4 +74,16 @@ void BodyModule::loadPostProcess( void )
 	// call base class
 	BehaviorModule::loadPostProcess();
 
+}
+
+//-------------------------------------------------------------------------------------------------
+// TheSuperHackers @feature author 01/01/2025 Override getModuleDescription for UI display
+//-------------------------------------------------------------------------------------------------
+UnicodeString BodyModuleData::getModuleDescription() const
+{
+	if (!m_description)
+	{
+		m_description = new UnicodeString(TheGameText->fetch("MODULE:BODYMODULE_DESCRIPTION"));
+	}
+	return *m_description;
 }

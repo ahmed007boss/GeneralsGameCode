@@ -466,6 +466,12 @@ public:
 	ModuleInfo& getDrawModuleInfo() { return m_drawModuleInfo; }
 	ModuleInfo& getClientUpdateModuleInfo() { return m_clientUpdateModuleInfo; }
 
+	// TheSuperHackers @feature author 01/01/2025 Get extended description from template modules
+	UnicodeString getExtendedDescription() const;
+
+	// TheSuperHackers @feature author 01/01/2025 Get KindOf description from thing types
+	UnicodeString getKindOfDescription() const;
+
 	const Image *getSelectedPortraitImage( void ) const { return m_selectedPortraitImage; }
 	const Image *getButtonImage( void ) const { return m_buttonImage; }
 
@@ -662,6 +668,7 @@ public:
 	AsciiString getUpgradeCameoName( Int n)const{ return m_upgradeCameoUpgradeNames[n];	}
 
 	const WeaponTemplateSetVector& getWeaponTemplateSets(void) const {return m_weaponTemplateSets;}
+	const ArmorTemplateSetVector&  getArmorTemplateSets(void) const {return m_armorTemplateSets;}
 
 protected:
 

@@ -39,6 +39,7 @@
 #include "GameLogic/Module/DieModule.h"
 #include "GameLogic/Module/CreateModule.h"
 #include "Common/GameMemory.h"
+#include "Common/UnicodeString.h"
 class Team;
 
 //-------------------------------------------------------------------------------------------------
@@ -73,6 +74,12 @@ public:
 		};
     p.add(dataFieldParse);
 	}
+
+	// TheSuperHackers @feature author 01/01/2025 Override getModuleDescription for UI display
+	virtual UnicodeString getModuleDescription() const;
+
+	// TheSuperHackers @feature author 01/01/2025 Override getModuleOrder for display ordering
+	virtual Int getModuleOrder() const { return 400; } // Fourth priority
 };
 
 class TunnelContain : public OpenContain, public CreateModuleInterface

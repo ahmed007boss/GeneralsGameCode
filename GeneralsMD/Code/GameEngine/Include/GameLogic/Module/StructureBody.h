@@ -35,6 +35,7 @@
 
 // INCLUDES ///////////////////////////////////////////////////////////////////////////////////////
 #include "GameLogic/Module/ActiveBody.h"
+#include "Common/UnicodeString.h"
 
 // FORWARD REFERENCES /////////////////////////////////////////////////////////////////////////////
 class Object;
@@ -55,6 +56,12 @@ public:
 		};
     p.add(dataFieldParse);
 	}
+
+	// TheSuperHackers @feature author 01/01/2025 Override getModuleDescription for UI display
+	virtual UnicodeString getModuleDescription() const override;
+
+	// TheSuperHackers @feature author 01/01/2025 Override getModuleOrder for display ordering
+	virtual Int getModuleOrder() const { return 200; } // Second priority - shows after RebuildHoleBehavior
 };
 
 //-------------------------------------------------------------------------------------------------

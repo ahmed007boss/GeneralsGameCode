@@ -35,6 +35,7 @@
 #include "Common/Module.h"
 #include "Common/GameType.h"
 #include "Common/DisabledTypes.h"
+#include "Common/UnicodeString.h"
 #include "GameLogic/Module/BehaviorModule.h"
 
 #define DIRECT_UPDATEMODULE_ACCESS
@@ -122,11 +123,11 @@ public:
 class UpdateModuleData : public BehaviorModuleData
 {
 public:
-
 	static void buildFieldParse(MultiIniFieldParse& p)
 	{
 		BehaviorModuleData::buildFieldParse(p);
 	}
+
 };
 
 //-------------------------------------------------------------------------------------------------

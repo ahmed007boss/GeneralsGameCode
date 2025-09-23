@@ -43,6 +43,7 @@
 #include "GameLogic/Object.h"
 #include "GameLogic/TerrainLogic.h"
 #include "Common/Team.h"
+#include "GameClient/GameText.h"
 
 
 
@@ -1123,4 +1124,19 @@ void ParkingPlaceBehavior::loadPostProcess( void )
 	// make sure we are awake... old save games let us sleep
 	//setWakeFrame(getObject(), UPDATE_SLEEP_NONE);
 
+}
+
+//-------------------------------------------------------------------------------------------------
+// TheSuperHackers @feature author 01/01/2025 Override getModuleDescription for UI display
+//-------------------------------------------------------------------------------------------------
+UnicodeString ParkingPlaceBehaviorModuleData::getModuleDescription() const
+{
+	if (!m_description)
+	{
+		UnicodeString formatString = TheGameText->fetch("MODULE:PARKINGPLACE_DESCRIPTION");
+		UnicodeString result;
+		result.format(formatString.str(), m_numRows * m_numCols);
+		m_description = new UnicodeString(result);
+	}
+	return *m_description;
 }

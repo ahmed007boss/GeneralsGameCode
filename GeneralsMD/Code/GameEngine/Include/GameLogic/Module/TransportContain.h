@@ -34,6 +34,7 @@
 
 // USER INCLUDES //////////////////////////////////////////////////////////////////////////////////
 #include "GameLogic/Module/OpenContain.h"
+#include "Common/UnicodeString.h"
 
 //-------------------------------------------------------------------------------------------------
 class TransportContainModuleData : public OpenContainModuleData
@@ -47,10 +48,10 @@ public:
 
 	Int								m_slotCapacity;								///< max units that can be inside us
 	Real							m_exitPitchRate;
-	AsciiString				m_exitBone;
-	InitialPayload		m_initialPayload;
+	AsciiString						m_exitBone;
+	InitialPayload					m_initialPayload;
 	Real							m_healthRegen;
-	UnsignedInt				m_exitDelay;
+	UnsignedInt						m_exitDelay;
 	Bool							m_scatterNearbyOnExit;
 	Bool							m_orientLikeContainerOnExit;
 	Bool							m_keepContainerVelocityOnExit;
@@ -64,6 +65,12 @@ public:
 
 	static void buildFieldParse(MultiIniFieldParse& p);
 	static void parseInitialPayload( INI* ini, void *instance, void *store, const void* /*userData*/ );
+
+	// TheSuperHackers @feature author 01/01/2025 Override getModuleDescription for UI display
+	virtual UnicodeString getModuleDescription() const;
+
+	// TheSuperHackers @feature author 01/01/2025 Override getModuleOrder for display ordering
+	virtual Int getModuleOrder() const { return 300; } // Third priority - shows after RebuildHoleBehavior and StructureBody
 
 };
 

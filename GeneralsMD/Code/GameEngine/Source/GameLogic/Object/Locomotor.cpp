@@ -275,6 +275,8 @@ static void calcDirectionToApplyThrust(
 //-------------------------------------------------------------------------------------------------
 LocomotorTemplate::LocomotorTemplate()
 {
+	m_name = AsciiString();
+	m_displayName = UnicodeString();
 	// these values mean "make the same as undamaged if not explicitly specified"
 	m_maxSpeedDamaged = -1.0f;
 	m_maxTurnRateDamaged = -1.0f;
@@ -350,6 +352,39 @@ LocomotorTemplate::LocomotorTemplate()
 	m_elevatorCorrectionDegree  = 0.0f;
 	m_elevatorCorrectionRate    = 0.0f;
 
+}
+
+//-------------------------------------------------------------------------------------------------
+UnicodeString LocomotorTemplate::getModuleDescription() const
+{
+	UnicodeString result;
+	
+	// Get the display name (either override or translated name)
+	if (!m_displayName.isEmpty())
+	{
+		result = m_displayName;
+		if (m_maxSpeed > 0.0f)
+		{
+			// Convert speed from units/frame to km/h
+			// Adjusted conversion factor for realistic speeds
+			Real speedInKmh = m_maxSpeed * 72.0f; // Direct conversion to km/h
+
+			// Format the speed with 1 decimal place
+			char speedBuffer[32];
+			sprintf(speedBuffer, " with max speed of %.1f km/h", speedInKmh);
+
+			UnicodeString speedText;
+			speedText.translate(AsciiString(speedBuffer));
+			result += speedText;
+		}
+	}
+	else
+	{
+		result = L"";
+	}
+
+	
+	return result;
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -437,6 +472,7 @@ const FieldParse* LocomotorTemplate::getFieldParse() const
 {
 	static const FieldParse TheFieldParse[] =
 	{
+		{ "DisplayName", INI::parseAndTranslateLabel, NULL, offsetof(LocomotorTemplate, m_displayName) },
 		{ "Surfaces", INI::parseBitString32, TheLocomotorSurfaceTypeNames, offsetof(LocomotorTemplate, m_surfaces) },
 		{ "Speed", INI::parseVelocityReal, NULL, offsetof(LocomotorTemplate, m_maxSpeed) },
 		{ "SpeedDamaged", INI::parseVelocityReal, NULL, offsetof( LocomotorTemplate, m_maxSpeedDamaged ) },

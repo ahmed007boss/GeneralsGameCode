@@ -90,6 +90,9 @@ public:
 		m_upgradeBoost.clear();
 	}
 
+	// TheSuperHackers @feature author 01/01/2025 Get auto deposit description for UI display
+	UnicodeString getModuleDescription() const;
+
 	static void buildFieldParse(MultiIniFieldParse& p)
 	{
     UpdateModuleData::buildFieldParse(p);

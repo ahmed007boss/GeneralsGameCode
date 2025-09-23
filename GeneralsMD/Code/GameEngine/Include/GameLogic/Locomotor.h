@@ -140,6 +140,12 @@ public:
 
 	void friend_setName(const AsciiString& n) { m_name = n; }
 
+	inline AsciiString getName() const { return m_name; }
+	inline const UnicodeString& getDisplayName() const { return m_displayName; }
+	inline void setDisplayName(const UnicodeString& newName) { m_displayName = newName; }
+
+	UnicodeString getModuleDescription() const;
+
 	void validate();
 
 protected:
@@ -154,6 +160,7 @@ private:
 		-- Forces:				(mass*dist)/(frame*frame)
 	*/
 	AsciiString								m_name;
+	UnicodeString							m_displayName;					///< Display Name
 	LocomotorSurfaceTypeMask	m_surfaces;							///< flags indicating the kinds of surfaces we can use
 	Real											m_maxSpeed;							///< max speed
 	Real											m_maxSpeedDamaged;			///< max speed when "damaged"
@@ -261,6 +268,8 @@ public:
 	inline LocomotorSurfaceTypeMask getLegalSurfaces() const { return m_template->m_surfaces; }
 
 	inline AsciiString getTemplateName() const { return m_template->m_name;}
+	inline AsciiString getName() const { return m_template->getName(); }
+	inline const UnicodeString& getDisplayName() const { return m_template->getDisplayName(); }
 	inline Real getMinSpeed() const { return m_template->m_minSpeed;}
 	inline Real getAccelPitchLimit() const { return m_template->m_accelPitchLimit;}	///< Maximum amount we will pitch up or down under acceleration (including recoil.)
 	inline Real getDecelPitchLimit() const { return m_template->m_decelPitchLimit;}	///< Maximum amount we will pitch down under deceleration (including recoil.)

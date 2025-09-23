@@ -557,10 +557,18 @@ void ControlBar::populateBuildTooltipLayout(const CommandButton* commandButton, 
 				}
 			}
 		}
-
+		if (thingTemplate)
+		{
+			UnicodeString kindOfDesc = thingTemplate->getKindOfDescription();
+			if (!kindOfDesc.isEmpty())
+			{
+				descrip = kindOfDesc + L"\n\n";
+			}
+		}
 		if (commandButton->getDescriptionLabel().isNotEmpty())
 		{
-			descrip = TheGameText->fetch(commandButton->getDescriptionLabel());
+
+			descrip += TheGameText->fetch(commandButton->getDescriptionLabel());
 
 			Drawable* draw = TheInGameUI->getFirstSelectedDrawable();
 			Object* selectedObject = draw ? draw->getObject() : NULL;
@@ -716,6 +724,17 @@ void ControlBar::populateBuildTooltipLayout(const CommandButton* commandButton, 
 	
 
 		name = TheGameText->fetch(commandButton->getTextLabel().str());
+
+		// Add KindOf description if available
+		// TheSuperHackers @tooltip author 15/01/2025 Add KindOf description to tooltip display
+		if (thingTemplate)
+		{
+			UnicodeString kindOfDesc = thingTemplate->getKindOfDescription();
+			if (!kindOfDesc.isEmpty())
+			{			
+				descrip += kindOfDesc;
+			}
+		}
 
 		if (thingTemplate && commandButton->getCommandType() != GUI_COMMAND_PURCHASE_SCIENCE)
 		{
@@ -895,6 +914,19 @@ void ControlBar::populateBuildTooltipLayout(const CommandButton* commandButton, 
 			
 		}
 
+		// Add module descriptions from template
+		// TheSuperHackers @tooltip author 01/01/2025 Append module descriptions to tooltip text
+		if (thingTemplate)
+		{
+			UnicodeString modulesDesc = thingTemplate->getExtendedDescription();
+			if (!modulesDesc.isEmpty())
+			{
+				if (!descrip.isEmpty())
+					descrip += L"\n\n";
+				descrip += modulesDesc;
+			}
+		}
+
 		// Add button alternatives for right-click and modifier key combinations
 		// TheSuperHackers @tooltip Ahmed Salah 27/06/2025 Append alternative command button descriptions to tooltip text
 		UnicodeString alternativesText = getButtonAlternativesText(commandButton, this);
@@ -987,6 +1019,7 @@ void ControlBar::populateBuildTooltipLayout(const CommandButton* commandButton, 
 			win->winHide(TRUE);
 		}
 	}
+
 
 	win = TheWindowManager->winGetWindowFromId(m_buildToolTipLayout->getFirstWindow(), TheNameKeyGenerator->nameToKey("ControlBarPopupDescription.wnd:StaticTextDescription"));
 	if (win)

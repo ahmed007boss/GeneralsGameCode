@@ -57,6 +57,8 @@ ArmorTemplate::ArmorTemplate()
 //-------------------------------------------------------------------------------------------------
 void ArmorTemplate::clear()
 {
+	m_name = AsciiString();
+	m_displayName = UnicodeString();
 	for (int i = 0; i < DAMAGE_NUM_TYPES; i++)
 	{
 		m_damageCoefficient[i] = 1.0f;
@@ -78,6 +80,34 @@ Real ArmorTemplate::adjustDamage(DamageType t, Real damage) const
 		damage = 0.0f;
 
 	return damage;
+}
+
+//-------------------------------------------------------------------------------------------------
+// TheSuperHackers @feature author 01/01/2025 Get armor description
+//-------------------------------------------------------------------------------------------------
+UnicodeString ArmorTemplate::getModuleDescription() const
+{
+	UnicodeString result;
+	
+	// Get the display name (either override or translated name)
+	UnicodeString armorName;
+	if (!m_displayName.isEmpty())
+	{
+		armorName = m_displayName;
+	}
+	else
+	{
+		armorName = L"";
+	}
+	
+	// Return in natural statement format
+	if (!armorName.isEmpty())
+	{
+		result = L"Protected by ";
+		result += armorName;
+	}
+	
+	return result;
 }
 
 //-------------------------------------------------------------------------------------------Static
@@ -136,7 +166,9 @@ const ArmorTemplate* ArmorStore::findArmorTemplate(AsciiString name) const
 {
 	static const FieldParse myFieldParse[] =
 	{
-		{ "Armor", ArmorTemplate::parseArmorCoefficients, NULL, 0 }
+		{ "DisplayName", INI::parseAndTranslateLabel, NULL, offsetof(ArmorTemplate, m_displayName) },
+		{ "Armor", ArmorTemplate::parseArmorCoefficients, NULL, 0 },
+		{ NULL, NULL, NULL, 0 }
 	};
 
 	const char *c = ini->getNextToken();

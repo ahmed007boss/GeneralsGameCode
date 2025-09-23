@@ -35,6 +35,7 @@
 // USER INCLUDES //////////////////////////////////////////////////////////////////////////////////
 #include "GameLogic/Module/OpenContain.h"
 #include "Common/ModelState.h"
+#include "Common/UnicodeString.h"
 
 //-------------------------------------------------------------------------------------------------
 // ------------------------------------------------------------------------------------------------
@@ -91,6 +92,11 @@ public:
 		self->m_initialRoster.count = count;
 	};
 
+	// TheSuperHackers @feature author 01/01/2025 Override getModuleDescription for UI display
+	virtual UnicodeString getModuleDescription() const;
+
+	// TheSuperHackers @feature author 01/01/2025 Override getModuleOrder for display ordering
+	virtual Int getModuleOrder() const { return 500; } // Fifth priority
 
 };
 

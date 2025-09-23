@@ -292,6 +292,9 @@ public:
 
 	BehaviorModule** getBehaviorModules() const { return m_behaviors; }
 
+	// TheSuperHackers @feature author 01/01/2025 Get extended description from actual module instances
+	UnicodeString getExtendedDescription() const;
+
 	BodyModuleInterface* getBodyModule() const { return m_body; }
 	ContainModuleInterface* getContain() const { return m_contain; }
   StealthUpdate*          getStealth() const { return m_stealth; }

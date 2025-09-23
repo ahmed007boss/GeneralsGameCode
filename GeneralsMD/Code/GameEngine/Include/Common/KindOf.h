@@ -161,7 +161,6 @@ enum KindOfType CPP_11(: Int)
 		KINDOF_FS_BARRACKS,							///< A barracks
 		KINDOF_FS_WARFACTORY,						///< A war factory or arms dealer.
 		KINDOF_FS_AIRFIELD,							///< An airfield.
-		KINDOF_AIRCRAFT_CARRIER,				///< An aircraft carrier.
 		KINDOF_NO_SELECT,								///< Can't select it but you can mouse over it to see it's health (drones!)
 		KINDOF_REJECT_UNMANNED,					///< Unit cannot enter an unmanned vehicle.
 		KINDOF_CANNOT_RETALIATE,				///< Unit will not retaliate if asked.
@@ -173,33 +172,69 @@ enum KindOfType CPP_11(: Int)
 
 		// NEW KINDOFs
 
-		KINDOF_TANK,
-		KINDOF_APC,
-		KINDOF_IFV,
-		KINDOF_TRUCK,
-		KINDOF_VTOL,
-		KINDOF_JET,
-		KINDOF_HELICOPTER,
-		KINDOF_HOT_AIR_BALLOON,
-		KINDOF_BLIMP,
-		KINDOF_LARGE_AIRCRAFT,
-		KINDOF_MEDIUM_AIRCRAFT,
-		KINDOF_SMALL_AIRCRAFT,
-		KINDOF_ARTILLERY,
-		KINDOF_HEAVY_ARTILLERY,
-		KINDOF_ANTI_AIR,
-		KINDOF_SAM,
-		KINDOF_SCOUT,
-		KINDOF_COMMANDO,
-		KINDOF_HEAVY_INFANTRY,
-		KINDOF_SUPERHEAVY_VEHICLE,
-		KINDOF_EW_RADAR,
-		KINDOF_EW_RADAR_JAMMER,
-		KINDOF_EW_RADIO_JAMMER,
-		KINDOF_EW_JAMMABLE,
-		KINDOF_EW_DIRECT_JAMMABLE,
-		KINDOF_EW_AREA_JAMMABLE,
-		KINDOF_EW_RADIO_JAMMABLE,
+		KINDOF_TANK,									///< Main battle tank or armored fighting vehicle.
+		KINDOF_APC,										///< Armored Personnel Carrier for transporting infantry.
+		KINDOF_IFV,										///< Infantry Fighting Vehicle with troop transport and combat capabilities.
+		KINDOF_TRUCK,									///< Utility truck for transport and logistics.
+		KINDOF_VTOL,									///< Vertical Take-Off and Landing aircraft.
+		KINDOF_JET,										///< Jet-powered aircraft.
+		KINDOF_FIGHTER,									///< Air superiority fighter aircraft.
+		KINDOF_TACTICAL_BOMBER,							///< Tactical bomber for battlefield targets.
+		KINDOF_STRATEGIC_BOMBER,						///< Strategic bomber for long-range missions.
+		KINDOF_MULTIROLE,								///< Multi-role aircraft capable of various missions.
+		KINDOF_INTERCEPTOR,								///< Interceptor aircraft for air defense.
+		KINDOF_HELICOPTER,								///< Helicopter aircraft.
+		KINDOF_ATTACK_HELICOPTER,						///< Attack helicopter for ground targets.
+		KINDOF_TRANSPORT_HELICOPTER,					///< Transport helicopter for troops and cargo.
+		KINDOF_SCOUT_HELICOPTER,						///< Scout helicopter for reconnaissance.
+		KINDOF_COMBAT_DRONE,							///< Combat drone for autonomous warfare.
+		KINDOF_RECONNAISSANCE_DRONE,					///< Reconnaissance drone for surveillance.
+		KINDOF_CARGO_DRONE,								///< Cargo drone for logistics and supply.
+		KINDOF_HOT_AIR_BALLOON,							///< Hot air balloon aircraft.
+		KINDOF_BLIMP,									///< Blimp or airship aircraft.
+		KINDOF_LARGE_AIRCRAFT,							///< Large aircraft category.
+		KINDOF_MEDIUM_AIRCRAFT,							///< Medium aircraft category.
+		KINDOF_SMALL_AIRCRAFT,							///< Small aircraft category.
+		KINDOF_ARTILLERY,								///< Artillery weapon system.
+		KINDOF_ROCKET_ARTILLERY,						///< Rocket artillery system.
+		KINDOF_MISSILE_ARTILLERY,						///< Missile artillery system.
+		KINDOF_GUN_ARTILLERY,							///< Gun-based artillery system.
+		KINDOF_BALLISTIC_MISSILE_LAUNCHER,			///< Ballistic missile launcher system.
+		KINDOF_BATTLESHIP,								///< Large capital warship.
+		KINDOF_CRUISER,									///< Medium-sized warship.
+		KINDOF_DESTROYER,								///< Fast escort warship.
+		KINDOF_FRIGATE,									///< Smaller escort warship.
+		KINDOF_SUBMARINE,								///< Underwater combat vessel.
+		KINDOF_AIRCRAFT_CARRIER,						///< An aircraft carrier.
+		KINDOF_PATROL_BOAT,								///< Small patrol vessel.
+		KINDOF_GUNBOAT,									///< Small armed patrol boat.
+		KINDOF_ANTI_AIRCRAFT,							///< Anti-aircraft defense system.		
+		KINDOF_ANTI_STRUCTURE,							///< Anti-structure weapon system.
+		KINDOF_ANTI_TANK,								///< Anti-tank weapon system.
+		KINDOF_ANTI_INFANTRY,							///< Anti-infantry weapon system.
+		KINDOF_ANTI_NAVAL,								///< Anti-naval weapon system.
+		KINDOF_TOWED,									///< Towed vehicle or weapon system.
+		KINDOF_SELF_PROPELLED,							///< Self-propelled vehicle or weapon system.
+		KINDOF_ANTI_AIRCRAFT_GUN,						///< Anti-aircraft gun weapon system.
+		KINDOF_SAM,										///< Surface-to-Air Missile system.
+		KINDOF_SCOUT,									///< Reconnaissance and scouting unit.
+		KINDOF_COMMANDO,								///< Elite special forces unit.
+		KINDOF_SPECIAL_FORCE_INFANTRY,					///< Special forces infantry unit.
+		KINDOF_HEAVY_INFANTRY,							///< Heavy infantry unit with enhanced armor.
+		KINDOF_LIGHT_VEHICLE,							///< Light weight category vehicle.
+		KINDOF_MEDIUM_VEHICLE,							///< Medium weight category vehicle.
+		KINDOF_HEAVY_VEHICLE,							///< Heavy weight category vehicle.
+		KINDOF_SUPERHEAVY_VEHICLE,						///< Super heavy weight category vehicle.
+		KINDOF_EW_RADAR,								///< Radar system.
+		KINDOF_EW_RADAR_JAMMER,							///< Electronic Warfare radar jamming system.
+		KINDOF_EW_RADIO_JAMMER,							///< Electronic Warfare radio jamming system.
+		KINDOF_EW_JAMMABLE,								///< Object that can be jammed by electronic warfare systems.
+		KINDOF_EW_DIRECT_JAMMABLE,						///< Object that can be directly jammed by electronic warfare.
+		KINDOF_EW_AREA_JAMMABLE,						///< Object that can be affected by area jamming.
+		KINDOF_EW_RADIO_JAMMABLE,						///< Object that can have its radio communications jammed.
+		KINDOF_LOITERING_MUNITION_LAUNCHER,				///< Loitering munition launcher system.
+		KINDOF_UNMANNED_AERIAL_CARRIER,					///< Unmanned aerial vehicle carrier system.
+		KINDOF_SUPPORT_UNIT,								///< Support unit providing assistance to other units.
 
 		KINDOF_EXTRA1,
 		KINDOF_EXTRA2,
@@ -226,6 +261,17 @@ enum KindOfType CPP_11(: Int)
 typedef BitFlags<KINDOF_COUNT>	KindOfMaskType;
 
 #define MAKE_KINDOF_MASK(k) KindOfMaskType(KindOfMaskType::kInit, (k))
+#define MAKE_KINDOF_MASK2(k,a) KindOfMaskType(KindOfMaskType::kInit, (k), (a))
+#define MAKE_KINDOF_MASK3(k,a,b) KindOfMaskType(KindOfMaskType::kInit, (k), (a), (b))
+#define MAKE_KINDOF_MASK4(k,a,b,c) KindOfMaskType(KindOfMaskType::kInit, (k), (a), (b), (c))
+#define MAKE_KINDOF_MASK5(k,a,b,c,d) KindOfMaskType(KindOfMaskType::kInit, (k), (a), (b), (c), (d))
+#define MAKE_KINDOF_MASK6(k,a,b,c,d,e) KindOfMaskType(KindOfMaskType::kInit, (k), (a), (b), (c), (d), (e))
+#define MAKE_KINDOF_MASK7(k,a,b,c,d,e,f) KindOfMaskType(KindOfMaskType::kInit, (k), (a), (b), (c), (d), (e), (f))
+#define MAKE_KINDOF_MASK8(k,a,b,c,d,e,f,g) KindOfMaskType(KindOfMaskType::kInit, (k), (a), (b), (c), (d), (e), (f), (g))
+#define MAKE_KINDOF_MASK9(k,a,b,c,d,e,f,g,h) KindOfMaskType(KindOfMaskType::kInit, (k), (a), (b), (c), (d), (e), (f), (g), (h))
+#define MAKE_KINDOF_MASK10(k,a,b,c,d,e,f,g,h,i) KindOfMaskType(KindOfMaskType::kInit, (k), (a), (b), (c), (d), (e), (f), (g), (h), (i))
+#define MAKE_KINDOF_MASK11(k,a,b,c,d,e,f,g,h,i,j) KindOfMaskType(KindOfMaskType::kInit, (k), (a), (b), (c), (d), (e), (f), (g), (h), (i), (j))
+#define MAKE_KINDOF_MASK12(k,a,b,c,d,e,f,g,h,i,j,l) KindOfMaskType(KindOfMaskType::kInit, (k), (a), (b), (c), (d), (e), (f), (g), (h), (i), (j), (l))
 
 inline Bool TEST_KINDOFMASK(const KindOfMaskType& m, KindOfType t)
 {

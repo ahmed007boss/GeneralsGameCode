@@ -105,6 +105,7 @@ void WeaponTemplateSet::clear()
 	m_isReloadTimeShared = false;
 	m_isWeaponLockSharedAcrossSets = FALSE;
 	m_types.clear();
+	m_description = NULL;
 	for (int i = 0; i < WEAPONSLOT_COUNT; ++i)
 	{
 		m_template[i] = NULL;
@@ -159,6 +160,7 @@ void WeaponTemplateSet::parseWeaponTemplateSet(INI* ini, const ThingTemplate* tt
 		{ "PreferredAgainst", WeaponTemplateSet::parsePreferredAgainst, NULL, 0 },
 		{ "ShareWeaponReloadTime", INI::parseBool, NULL, offsetof(WeaponTemplateSet, m_isReloadTimeShared) },
 		{ "WeaponLockSharedAcrossSets", INI::parseBool, NULL, offsetof(WeaponTemplateSet, m_isWeaponLockSharedAcrossSets) },
+		{ "Description", WeaponTemplateSet::parseDescription, NULL, 0 },
 		{ 0, 0, 0, 0 }
 	};
 
@@ -1160,5 +1162,157 @@ Bool WeaponSet::isSharedReloadTime() const
 	if (m_curWeaponTemplateSet)
 		return m_curWeaponTemplateSet->isSharedReloadTime();
 	return false;
+}
+
+//-------------------------------------------------------------------------------------------------
+// TheSuperHackers @feature author 01/01/2025 Parse weapon set description from INI
+//-------------------------------------------------------------------------------------------------
+void WeaponTemplateSet::parseDescription(INI* ini, void* instance, void* store, const void* userData)
+{
+	WeaponTemplateSet* weaponSet = static_cast<WeaponTemplateSet*>(instance);
+	if (!weaponSet->m_description)
+	{
+		weaponSet->m_description = new UnicodeString();
+	}
+	
+	// Parse the string from INI
+	const char* token = ini->getNextToken();
+	if (token)
+	{
+		// Translate the label
+		UnicodeString translated = TheGameText->fetch(token);
+		weaponSet->m_description->set(translated.str());
+	}
+}
+
+//-------------------------------------------------------------------------------------------------
+// TheSuperHackers @feature author 01/01/2025 Get weapon set description for UI display
+//-------------------------------------------------------------------------------------------------
+UnicodeString WeaponTemplateSet::getModuleDescription() const
+{
+	if (!m_description)
+	{
+		// Generate description based on actual weapon names
+		UnicodeString result;
+		UnicodeString weaponNames[WEAPONSLOT_COUNT];
+		Int weaponCount = 0;
+		Bool hasWeapons = false;
+		// Collect weapon names that have display names and are not set to "none" for AutoChooseSources
+		for (int i = 0; i < WEAPONSLOT_COUNT; ++i)
+		{
+			if (m_template[i] != NULL)
+			{
+				// Check if AutoChooseSources is not set to "none" (0x00000000)
+				if (m_autoChooseMask[i] != 0x00000000)
+				{
+					hasWeapons = true;
+					UnicodeString displayName = m_template[i]->getDisplayName();
+					if (!displayName.isEmpty())
+					{
+						weaponNames[weaponCount] = displayName;
+						weaponCount++;
+					}
+				}
+			}
+		}
+		
+		// Check for crate upgrade conditions
+		Bool isCrateUpgradeOne = m_types.test(WEAPONSET_CRATEUPGRADE_ONE);
+		Bool isCrateUpgradeTwo = m_types.test(WEAPONSET_CRATEUPGRADE_TWO);
+		
+		// Generate description based on weapon count
+		if (weaponCount == 0 && !hasWeapons)
+		{
+			if (isCrateUpgradeOne)
+			{
+				result = L"";
+			}
+			else if (isCrateUpgradeTwo)
+			{
+				result = L"";
+			}
+			else
+			{
+				result = TheGameText->fetch("WEAPONSET:NO_WEAPONS");
+			}
+		}
+		else if (weaponCount == 1)
+		{
+			UnicodeString formatString;
+			if (isCrateUpgradeOne)
+			{
+				formatString = TheGameText->fetch("WEAPONSET:CRATE_UPGRADE_ONE_SINGLE_WEAPON");
+			}
+			else if (isCrateUpgradeTwo)
+			{
+				formatString = TheGameText->fetch("WEAPONSET:CRATE_UPGRADE_TWO_SINGLE_WEAPON");
+			}
+			else
+			{
+				formatString = TheGameText->fetch("WEAPONSET:SINGLE_WEAPON");
+			}
+			result.format(formatString.str(), weaponNames[0].str());
+		}
+		else if (weaponCount == 2)
+		{
+			UnicodeString formatString;
+			if (isCrateUpgradeOne)
+			{
+				formatString = TheGameText->fetch("WEAPONSET:CRATE_UPGRADE_ONE_DUAL_WEAPONS");
+			}
+			else if (isCrateUpgradeTwo)
+			{
+				formatString = TheGameText->fetch("WEAPONSET:CRATE_UPGRADE_TWO_DUAL_WEAPONS");
+			}
+			else
+			{
+				formatString = TheGameText->fetch("WEAPONSET:DUAL_WEAPONS");
+			}
+			result.format(formatString.str(), weaponNames[0].str(), weaponNames[1].str());
+		}
+		else if (hasWeapons && weaponCount > 2)
+		{
+			// For 3+ weapons, build a list
+			UnicodeString formatString;
+			if (isCrateUpgradeOne)
+			{
+				formatString = TheGameText->fetch("WEAPONSET:CRATE_UPGRADE_ONE_MULTIPLE_WEAPONS");
+			}
+			else if (isCrateUpgradeTwo)
+			{
+				formatString = TheGameText->fetch("WEAPONSET:CRATE_UPGRADE_TWO_MULTIPLE_WEAPONS");
+			}
+			else
+			{
+				formatString = TheGameText->fetch("WEAPONSET:MULTIPLE_WEAPONS");
+			}
+			
+			UnicodeString weaponList;
+			for (Int i = 0; i < weaponCount; ++i)
+			{
+				if (i > 0)
+				{
+					if (i == weaponCount - 1)
+					{
+						weaponList += TheGameText->fetch("WEAPONSET:AND_SEPARATOR");
+					}
+					else
+					{
+						weaponList += TheGameText->fetch("WEAPONSET:COMMA_SEPARATOR");
+					}
+				}
+				weaponList += weaponNames[i];
+			}
+			
+			result.format(formatString.str(), weaponList.str());
+		}
+		else
+		{
+			result = L"";
+		}
+		
+		m_description = new UnicodeString(result);
+	}
+	return *m_description;
 }
 

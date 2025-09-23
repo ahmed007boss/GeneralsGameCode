@@ -17,6 +17,19 @@
 			"Dependencies/**": true,
 			"cmake/**": true,
 			
+		},
+		"search.exclude": {
+			"Generals/**": true,
+			"build/**": true,
+			".vscode/**": true,
+			".vs/**": true,
+			".github/**": true,
+			"resources/**": true,
+			"scripts/**": true,
+			"GeneralsReplays/**": true,
+			"Dependencies/**": true,
+			"cmake/**": true,
+			
 		}
 	}
 }

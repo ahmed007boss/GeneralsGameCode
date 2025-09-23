@@ -35,7 +35,9 @@
 #include "Common/ModelState.h"
 #include "Common/SparseMatchFinder.h"
 #include "Common/Snapshot.h"
+#include "Common/UnicodeString.h"
 #include "GameLogic/Damage.h"
+#include "GameClient/GameText.h"
 
 //-------------------------------------------------------------------------------------------------
 class INI;
@@ -136,15 +138,26 @@ private:
 	KindOfMaskType					m_preferredAgainst[WEAPONSLOT_COUNT];
 	Bool										m_isReloadTimeShared;
 	Bool										m_isWeaponLockSharedAcrossSets; ///< A weapon set so similar that it is safe to hold locks across
+	mutable UnicodeString*						m_description; ///< weapon set description for UI display
 
 	static void parseWeapon(INI* ini, void *instance, void *store, const void* userData);
 	static void parseAutoChoose(INI* ini, void *instance, void *store, const void* userData);
 	static void parsePreferredAgainst(INI* ini, void *instance, void *store, const void* userData);
+	static void parseDescription(INI* ini, void *instance, void *store, const void* userData);
 
 public:
 	inline WeaponTemplateSet()
 	{
 		clear();
+	}
+	
+	~WeaponTemplateSet()
+	{
+		if (m_description)
+		{
+			delete m_description;
+			m_description = NULL;
+		}
 	}
 
 	const ThingTemplate* friend_getThingTemplate() const { return m_thingTemplate; }	// only for WeaponSet::xfer
@@ -155,6 +168,9 @@ public:
 	Bool testWeaponSetFlag( WeaponSetType wst ) const;
 	Bool isSharedReloadTime( void ) const { return m_isReloadTimeShared; }
 	Bool isWeaponLockSharedAcrossSets() const {return m_isWeaponLockSharedAcrossSets; }
+
+	// TheSuperHackers @feature author 01/01/2025 Get weapon set description for UI display
+	UnicodeString getModuleDescription() const;
 
 	Bool hasAnyWeapons() const;
 	inline const WeaponTemplate* getNth(WeaponSlotType n) const { return m_template[n]; }

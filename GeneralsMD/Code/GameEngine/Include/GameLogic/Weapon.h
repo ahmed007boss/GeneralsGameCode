@@ -416,6 +416,8 @@ public:
 
 	inline Real getRequestAssistRange() const {return m_requestAssistRange;}
 	inline AsciiString getName() const { return m_name; }
+	inline const UnicodeString& getDisplayName() const { return m_displayName; }
+	inline void setDisplayName(const UnicodeString& newName) { m_displayName = newName; }
 	inline AsciiString getProjectileStreamName() const { return m_projectileStreamName; }
 	inline AsciiString getLaserName() const { return m_laserName; }
 	inline const AsciiString& getLaserBoneName() const { return m_laserBoneName; }
@@ -501,6 +503,7 @@ private:
 	static const FieldParse TheWeaponTemplateFieldParseTable[];		///< the parse table for INI definition
 
 	AsciiString m_name;											///< name for this weapon
+	UnicodeString m_displayName;					///< Display Name
 	NameKeyType m_nameKey;									///< unique name key for this weapon template
 	AsciiString m_projectileStreamName;			///< Name of object that tracks are stream, if we have one
 	AsciiString m_laserName;								///< Name of the laser object that persists.
@@ -705,6 +708,7 @@ public:
 	inline const WeaponTemplate* getTemplate() const { return m_template; }
 	inline WeaponSlotType getWeaponSlot() const { return m_wslot; }
 	inline AsciiString getName() const { return m_template->getName(); }
+	inline const UnicodeString& getDisplayName() const { return m_template->getDisplayName(); }
 	inline UnsignedInt getLastShotFrame() const { return m_lastFireFrame; }						///< frame a shot was last fired on
 	// If we are "reloading", then m_ammoInClip is a lie.  It will say full.
 	inline UnsignedInt getRemainingAmmo() const { return (getStatus() == RELOADING_CLIP) ? 0 : m_ammoInClip; }

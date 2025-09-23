@@ -60,7 +60,16 @@ public:
 	*/
 	Real adjustDamage(DamageType t, Real damage) const;
 
+	inline AsciiString getName() const { return m_name; }
+	inline const UnicodeString& getDisplayName() const { return m_displayName; }
+	inline void setDisplayName(const UnicodeString& newName) { m_displayName = newName; }
+	UnicodeString getModuleDescription() const;
+
 	static void parseArmorCoefficients( INI* ini, void *instance, void* /* store */, const void* userData );
+
+public:
+	AsciiString m_name;											///< name for this armor
+	UnicodeString m_displayName;					///< Display Name
 
 protected:
 
@@ -81,6 +90,9 @@ public:
 	{
 		return m_template ? m_template->adjustDamage(t, damage) : damage;
 	}
+
+	inline AsciiString getName() const { return m_template ? m_template->getName() : AsciiString(); }
+	inline const UnicodeString& getDisplayName() const { static UnicodeString empty; return m_template ? m_template->getDisplayName() : empty; }
 
 	inline void clear()
 	{

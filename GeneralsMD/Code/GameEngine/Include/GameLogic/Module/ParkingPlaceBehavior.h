@@ -36,6 +36,7 @@
 #include "GameLogic/Module/BehaviorModule.h"
 #include "GameLogic/Module/DieModule.h"
 #include "GameLogic/Module/UpdateModule.h"
+#include "Common/UnicodeString.h"
 
 //-------------------------------------------------------------------------------------------------
 class ParkingPlaceBehaviorModuleData : public UpdateModuleData
@@ -86,6 +87,12 @@ public:
 		};
 		p.add(dataFieldParse);
 	}
+
+	// TheSuperHackers @feature author 01/01/2025 Override getModuleDescription for UI display
+	virtual UnicodeString getModuleDescription() const;
+
+	// TheSuperHackers @feature author 01/01/2025 Override getModuleOrder for display ordering
+	virtual Int getModuleOrder() const { return 700; } // Seventh priority
 
 private:
 

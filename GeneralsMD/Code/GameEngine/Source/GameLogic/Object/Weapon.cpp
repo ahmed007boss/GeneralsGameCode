@@ -161,7 +161,7 @@ WeaponStore *TheWeaponStore = NULL;					///< the weapon store definition
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 const FieldParse WeaponTemplate::TheWeaponTemplateFieldParseTable[] =
 {
-
+	{ "DisplayName",							INI::parseAndTranslateLabel,						NULL,							offsetof(WeaponTemplate, m_displayName) },
 	{ "PrimaryDamage",						INI::parseReal,													NULL,							offsetof(WeaponTemplate, m_primaryDamage) },
 	{ "PrimaryDamageRadius",			INI::parseReal,													NULL,							offsetof(WeaponTemplate, m_primaryDamageRadius) },
 	{ "SecondaryDamage",					INI::parseReal,													NULL,							offsetof(WeaponTemplate, m_secondaryDamage) },
@@ -255,6 +255,7 @@ WeaponTemplate::WeaponTemplate() : m_nextTemplate(NULL)
 {
 
 	m_name													= "NoNameWeapon";
+	m_displayName										= UnicodeString();
 	m_nameKey												= NAMEKEY_INVALID;
 	m_primaryDamage									= 0.0f;
 	m_primaryDamageRadius						= 0.0f;
@@ -3596,4 +3597,3 @@ void WeaponBonusSet::appendBonuses(WeaponBonusConditionFlags flags, WeaponBonus&
 		this->m_bonus[i].appendBonuses(bonus);
 	}
 }
-

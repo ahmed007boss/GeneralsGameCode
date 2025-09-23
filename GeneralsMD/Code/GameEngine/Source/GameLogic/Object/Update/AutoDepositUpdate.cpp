@@ -289,3 +289,46 @@ void AutoDepositUpdate::loadPostProcess( void )
 	UpdateModule::loadPostProcess();
 
 }
+
+//-------------------------------------------------------------------------------------------------
+// TheSuperHackers @feature author 01/01/2025 Get auto deposit description for UI display
+//-------------------------------------------------------------------------------------------------
+UnicodeString AutoDepositUpdateModuleData::getModuleDescription() const
+{
+	// First check if there's a custom description set via INI
+	if (m_description)
+	{
+		return *m_description;
+	}
+	
+	// Generate dynamic description if no custom one is set
+	UnicodeString result;
+	
+	if (m_depositAmount <= 0)
+	{
+		// Cache empty result
+		m_description = new UnicodeString(result);
+		return result;
+	}
+	
+	// Calculate timing in seconds (m_depositFrame is in frames, assuming 30 FPS)
+	Real timingSeconds = (Real)m_depositFrame / 30.0f;
+	
+	// Create description based on deposit type using localized format strings
+	if (m_isActualMoney)
+	{
+		// Get localized format string for money generation
+		UnicodeString formatString = TheGameText->fetch("MODULE:AUTODEPOSIT_MONEY_DESCRIPTION");
+		result.format(formatString.str(), m_depositAmount, timingSeconds);
+	}
+	else
+	{
+		// Get localized format string for supply generation
+		UnicodeString formatString = TheGameText->fetch("MODULE:AUTODEPOSIT_SUPPLY_DESCRIPTION");
+		result.format(formatString.str(), m_depositAmount, timingSeconds);
+	}
+	
+	// Cache the generated result for future calls
+	m_description = new UnicodeString(result);
+	return result;
+}
