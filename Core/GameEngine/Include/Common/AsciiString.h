@@ -624,4 +624,20 @@ inline AsciiString operator+(const char* s1, const AsciiString& s2)
 	return result;
 }
 
+// -----------------------------------------------------
+// TheSuperHackers @feature author 01/01/2025 Added += operator for AsciiString
+inline AsciiString& operator+=(AsciiString& s1, const AsciiString& s2)
+{
+	s1.concat(s2);
+	return s1;
+}
+
+// -----------------------------------------------------
+// TheSuperHackers @feature author 01/01/2025 Added += operator for AsciiString
+inline AsciiString& operator+=(AsciiString& s1, const char* s2)
+{
+	s1.concat(s2);
+	return s1;
+}
+
 #endif // ASCIISTRING_H

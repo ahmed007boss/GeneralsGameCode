@@ -531,4 +531,20 @@ inline UnicodeString operator+(const WideChar* s1, const UnicodeString& s2)
 	return result;
 }
 
+// -----------------------------------------------------
+// TheSuperHackers @feature author 01/01/2025 Added += operator for UnicodeString
+inline UnicodeString& operator+=(UnicodeString& s1, const UnicodeString& s2)
+{
+	s1.concat(s2);
+	return s1;
+}
+
+// -----------------------------------------------------
+// TheSuperHackers @feature author 01/01/2025 Added += operator for UnicodeString
+inline UnicodeString& operator+=(UnicodeString& s1, const WideChar* s2)
+{
+	s1.concat(s2);
+	return s1;
+}
+
 #endif // UNICODESTRING_H
