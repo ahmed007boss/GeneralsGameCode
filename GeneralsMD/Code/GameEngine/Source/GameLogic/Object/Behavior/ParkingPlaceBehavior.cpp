@@ -411,9 +411,13 @@ void ParkingPlaceBehavior::calcPPInfo( ObjectID id, PPInfo *info )
 
 		for (std::vector<RunwayInfo>::iterator it = m_runways.begin(); it != m_runways.end(); ++it)
 		{
-			if (it->m_inUseBy == id && it->m_wasInLine)
+			if (it->m_inUseBy == id)
 			{
-				info->runwayStart = info->runwayPrep;
+				if (it->m_wasInLine)
+				{
+					info->runwayStart = info->runwayPrep;
+				}
+				break;
 			}
 		}
 	}
@@ -435,6 +439,7 @@ void ParkingPlaceBehavior::releaseSpace(ObjectID id)
 			it->m_postponedRunwayReservationForTakeoff = false;
 			if (pu)
 				pu->setHoldDoorOpen(it->m_door, false);
+			break;
 		}
 	}
 
@@ -462,11 +467,15 @@ void ParkingPlaceBehavior::transferRunwayReservationToNextInLineForTakeoff(Objec
 	purgeDead();
 	for (std::vector<RunwayInfo>::iterator it = m_runways.begin(); it != m_runways.end(); ++it)
 	{
-		if (it->m_inUseBy == id && it->m_nextInLineForTakeoff != INVALID_ID)
+		if (it->m_inUseBy == id)
 		{
-			it->m_inUseBy = it->m_nextInLineForTakeoff;
-			it->m_wasInLine = true;
-			it->m_nextInLineForTakeoff = INVALID_ID;
+			if (it->m_nextInLineForTakeoff != INVALID_ID)
+			{
+				it->m_inUseBy = it->m_nextInLineForTakeoff;
+				it->m_wasInLine = true;
+				it->m_nextInLineForTakeoff = INVALID_ID;
+			}
+			break;
 		}
 	}
 }

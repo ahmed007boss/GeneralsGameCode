@@ -344,10 +344,7 @@ Int W3DTreeBuffer::getPartitionBucket(const Coord3D &pos) const
 }
 
 //=============================================================================
-// W3DTreeBuffer::cull
-//=============================================================================
-/** Culls the trees, marking the visible flag.  If a tree becomes visible, it sets
-it's sortKey */
+// W3DTreeBuffer::updateSway
 //=============================================================================
 void W3DTreeBuffer::updateSway(const BreezeInfo& info)
 {
@@ -362,10 +359,8 @@ void W3DTreeBuffer::updateSway(const BreezeInfo& info)
 		m_swayOffsets[i].Z = C - 1.0f;
 	}
 
-	Real delta				= info.m_randomness * 0.5f;
-	for	(i=0; i<m_numTrees; i++) {
-		m_trees[i].swayType = 1+GameClientRandomValue(0, MAX_SWAY_TYPES-1);
-	}
+	Real delta = info.m_randomness * 0.5f;
+
 	for (i=0; i<MAX_SWAY_TYPES; i++) {
 		m_curSwayStep[i] = NUM_SWAY_ENTRIES / (Real)info.m_breezePeriod;
 		m_curSwayStep[i]	*= GameClientRandomValueReal(1.0f-delta, 1.0f+delta);
@@ -1443,14 +1438,14 @@ void W3DTreeBuffer::addTree(DrawableID id, Coord3D location, Real scale, Real an
 	m_trees[m_numTrees].bounds.Center *= m_trees[m_numTrees].scale;
 	m_trees[m_numTrees].bounds.Radius *= m_trees[m_numTrees].scale;
 	m_trees[m_numTrees].bounds.Center += m_trees[m_numTrees].location;
-	// Initially set it invisible.  cull will update it's visiblity flag.
+	// Initially set it invisible.  cull will update it's visibility flag.
 	m_trees[m_numTrees].visible = false;
 	m_trees[m_numTrees].drawableID = id;
 
 	m_trees[m_numTrees].firstIndex = 0;
 	m_trees[m_numTrees].bufferNdx = -1;
 
-	m_trees[m_numTrees].swayType = GameClientRandomValue(0, MAX_SWAY_TYPES-1);
+	m_trees[m_numTrees].swayType = GameClientRandomValue(1, MAX_SWAY_TYPES);
 	m_trees[m_numTrees].pushAside = 0;
 	m_trees[m_numTrees].lastFrameUpdated = 0;
 	m_trees[m_numTrees].pushAsideSource = INVALID_ID;
@@ -1604,12 +1599,12 @@ void W3DTreeBuffer::drawTrees(CameraClass * camera, RefRenderObjListIterator *pD
 			if (!m_trees[curTree].visible || !m_treeTypes[type].m_doShadow) {
 				continue;
 			}
-			Real factor = 1.0f;
+
 			if (m_trees[curTree].m_toppleState == TOPPLE_FALLING ||
 					m_trees[curTree].m_toppleState == TOPPLE_DOWN) {
 				continue;
 			}
-			m_shadow->setSize(m_treeTypes[type].m_shadowSize, -m_treeTypes[type].m_shadowSize*factor);
+			m_shadow->setSize(m_treeTypes[type].m_shadowSize, m_treeTypes[type].m_shadowSize);
 			m_shadow->setPosition(m_trees[curTree].location.X, m_trees[curTree].location.Y, m_trees[curTree].location.Z);
 			TheW3DProjectedShadowManager->queueDecal(m_shadow);
 		}
