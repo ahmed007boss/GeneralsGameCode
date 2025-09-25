@@ -138,7 +138,6 @@ CBCommandStatus ControlBar::processCommandUI( GameWindow *control,
 		return CBC_COMMAND_NOT_USED;
 	}
 
-
 	// Check if there's a specific button for this modifier combination
 	// TheSuperHackers @modifier Ahmed Salah 27/06/2025 Use temporary variable to handle const reassignment for modifier-based command buttons
 	const CommandButton* actualCommandButton = orgCommandButton;
@@ -146,8 +145,6 @@ CBCommandStatus ControlBar::processCommandUI( GameWindow *control,
 	{
 	
 	
-	
-
 	// sanity, we won't process messages if we have no source object,
 	// unless we're CB_CONTEXT_PURCHASE_SCIENCE or GUI_COMMAND_SPECIAL_POWER_FROM_SHORTCUT
 	if( m_currContext != CB_CONTEXT_MULTI_SELECT &&
@@ -303,7 +300,6 @@ CBCommandStatus ControlBar::processCommandUI( GameWindow *control,
 	}
 	else switch( actualCommandButton->getCommandType() )
 	{
-
 		//---------------------------------------------------------------------------------------------
 		case GUI_COMMAND_DOZER_CONSTRUCT:
 		{
@@ -787,14 +783,12 @@ CBCommandStatus ControlBar::processCommandUI( GameWindow *control,
 
 			}
 
-      //what if container is subdued... assert a logic failure, perhaps?
-
+      		//what if container is subdued... assert a logic failure, perhaps?
 			// send message to exit
 			GameMessage *exitMsg = TheMessageStream->appendMessage( GameMessage::MSG_EXIT );
 			exitMsg->appendObjectIDArgument( objWantingExit->getID() ); // 0 is the thing inside coming out
 
 			break;
-
 		}
 
 		//---------------------------------------------------------------------------------------------
@@ -830,17 +824,14 @@ CBCommandStatus ControlBar::processCommandUI( GameWindow *control,
 		case GUI_COMMAND_SET_RALLY_POINT:
 		{
 			break;
-
 		}
 
 		//---------------------------------------------------------------------------------------------
 		case GUI_COMMAND_SELL:
 		{
-
 			// command needs no additional data, send the message
 			TheMessageStream->appendMessage( GameMessage::MSG_SELL );
 			break;
-
 		}
 
 		// --------------------------------------------------------------------------------------------
@@ -860,21 +851,19 @@ CBCommandStatus ControlBar::processCommandUI( GameWindow *control,
 				WeaponSlotType commandWeaponSlot = actualCommandButton->getWeaponSlot();
 				if (commandWeaponSlot == NONE_WEAPON)
 				{
-					commandWeaponSlot = obj->getCurWeaponSlot();
+					commandWeaponSlot = obj->getCurWeaponSlot();				
 				}
 
 				WeaponSlotType currentSlot = obj->getRangeDecalShownForSlot();
 				// Toggle: if currently showing this slot, turn off (set to -1), otherwise turn on
 				WeaponSlotType newSlot = (currentSlot == commandWeaponSlot) ? (WeaponSlotType)-2 : commandWeaponSlot;
-				obj->setRangeDecalShownForSlot(newSlot);
-				
+				obj->setRangeDecalShownForSlot(newSlot);				
 				// Notify WeaponRangeDecalBehavior modules to refresh their state
 				if (!obj->refreshWeaponRangeDecalState())
 				{
 					DEBUG_ASSERTCRASH(0, ("No WeaponRangeDecalBehavior found on object '%s' when toggling range decal", obj->getTemplate()->getName().str()));
 				}
-			}
-			
+			}	
 			break;
 		}
 
@@ -1051,7 +1040,6 @@ CBCommandStatus ControlBar::processCommandUI( GameWindow *control,
 		{
 
 			// loop through all the sciences on the button and select the one we don't have
-
 			ScienceType	st = SCIENCE_INVALID;
 			Player *player = ThePlayerList->getLocalPlayer();
 			for(size_t i = 0; i < actualCommandButton->getScienceVec().size(); ++i)
