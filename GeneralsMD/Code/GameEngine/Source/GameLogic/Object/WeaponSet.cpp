@@ -51,6 +51,7 @@
 #include "GameLogic/Module/SpawnBehavior.h"
 
 #include "GameLogic/Weapon.h"
+#include "GameLogic/Module/InventoryBehavior.h"
 
 
 
@@ -323,7 +324,8 @@ void WeaponSet::updateWeaponSet(const Object* obj)
 			if (set->getNth((WeaponSlotType)i))
 			{
 				m_weapons[i] = TheWeaponStore->allocateNewWeapon(set->getNth((WeaponSlotType)i), (WeaponSlotType)i);
-				m_weapons[i]->loadAmmoNow(obj);	// start 'em all with full clips.
+				// TheSuperHackers @feature author 15/01/2025 Weapons start empty, must be reloaded before use
+				m_weapons[i]->loadAmmoNow(obj); // start 'em all with full clips.
 				m_filledWeaponSlotMask |= (1 << i);
 				m_totalAntiMask |= m_weapons[i]->getAntiMask();
 				m_totalDamageTypeMask.set(m_weapons[i]->getDamageType());
@@ -1077,7 +1079,7 @@ UnsignedInt WeaponSet::getMostPercentReadyToFireAnyWeapon() const
 //-------------------------------------------------------------------------------------------------
 // A special type of command demands that you use this (normally unchooseable) weapon
 // until told otherwise.
-Bool WeaponSet::setWeaponLock(WeaponSlotType weaponSlot, WeaponLockType lockType)
+Bool WeaponSet::setWeaponLock(WeaponSlotType weaponSlot, WeaponLockType lockType, const Object* obj)
 {
 	if (lockType == NOT_LOCKED)
 	{
@@ -1089,6 +1091,39 @@ Bool WeaponSet::setWeaponLock(WeaponSlotType weaponSlot, WeaponLockType lockType
 	// the old code was just plain wrong. (look at it in perforce and you'll see...)
 	if (m_weapons[weaponSlot] != NULL)
 	{
+		//// TheSuperHackers @feature author 15/01/2025 Empty clip and reload when switching weapons
+		//if (lockType == LOCKED_PERMANENTLY && m_curWeapon != weaponSlot && obj != NULL)
+		//{
+		//	// We're switching to a different weapon, return ammo to inventory and reload
+		//	if (m_weapons[m_curWeapon] != NULL)
+		//	{
+		//		Weapon* currentWeapon = m_weapons[m_curWeapon];
+		//		
+		//		// Check if current weapon consumes inventory items
+		//		const AsciiString& consumeInventory = currentWeapon->getTemplate()->getConsumeInventory();
+		//		if (!consumeInventory.isEmpty())
+		//		{
+		//			// Get inventory behavior using cached method
+		//			InventoryBehavior* inventoryBehavior = obj->getInventoryBehavior();
+		//			
+		//			if (inventoryBehavior)
+		//			{
+		//				// Return remaining ammo to inventory
+		//				Int remainingAmmo = currentWeapon->getRemainingAmmoIncludingReload();
+		//				if (remainingAmmo > 0)
+		//				{
+		//					inventoryBehavior->addItem(consumeInventory, remainingAmmo);
+		//				}
+		//			}
+		//		}
+		//		
+		//		//// Empty the current weapon's clip
+		//		//currentWeapon->setClipPercentFull(0.0f, true);
+		//		//// Reload the current weapon
+		//		//currentWeapon->reloadAmmo(obj);
+		//	}
+		//}
+
 		if (lockType == LOCKED_PERMANENTLY)
 		{
 			m_curWeapon = weaponSlot;

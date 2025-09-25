@@ -56,6 +56,7 @@
 #include "GameLogic/Object.h"
 #include "GameLogic/Module/ProductionUpdate.h"
 #include "GameLogic/Module/WeaponRangeDecalBehavior.h"
+#include "GameLogic/Module/InventoryBehavior.h"
 
 
 
@@ -857,20 +858,20 @@ CBCommandStatus ControlBar::processCommandUI( GameWindow *control,
 			if (obj)
 			{	// Get the weapon slot from the command button
 				WeaponSlotType commandWeaponSlot = actualCommandButton->getWeaponSlot();
+				if (commandWeaponSlot == NONE_WEAPON)
+				{
+					commandWeaponSlot = obj->getCurWeaponSlot();
+				}
 
 				WeaponSlotType currentSlot = obj->getRangeDecalShownForSlot();
 				// Toggle: if currently showing this slot, turn off (set to -1), otherwise turn on
-				WeaponSlotType newSlot = (currentSlot == commandWeaponSlot) ? (WeaponSlotType)-1 : commandWeaponSlot;
+				WeaponSlotType newSlot = (currentSlot == commandWeaponSlot) ? (WeaponSlotType)-2 : commandWeaponSlot;
 				obj->setRangeDecalShownForSlot(newSlot);
 				
 				// Notify WeaponRangeDecalBehavior modules to refresh their state
-				for (BehaviorModule** i = obj->getBehaviorModules(); *i; ++i)
+				if (!obj->refreshWeaponRangeDecalState())
 				{
-					WeaponRangeDecalBehavior* behavior = dynamic_cast<WeaponRangeDecalBehavior*>(*i);
-					if (behavior)
-					{
-						behavior->refreshDecalState();
-					}
+					DEBUG_ASSERTCRASH(0, ("No WeaponRangeDecalBehavior found on object '%s' when toggling range decal", obj->getTemplate()->getName().str()));
 				}
 			}
 			
@@ -932,13 +933,13 @@ CBCommandStatus ControlBar::processCommandUI( GameWindow *control,
 				info.m_weaponSlot = &slot;
 				pickAndPlayUnitVoiceResponse( TheInGameUI->getAllSelectedDrawables(), GameMessage::MSG_SWITCH_WEAPONS, &info );
 
-				msg->appendIntegerArgument( actualCommandButton->getWeaponSlot() );
+				msg->appendIntegerArgument( actualCommandButton->getWeaponSlot() );										
 				
 				// Turn off range decals when switching weapons
 				if (obj)
 				{
 					// Turn off range decals for the current weapon slot
-					obj->setRangeDecalShownForSlot((WeaponSlotType)-1);
+					obj->setRangeDecalShownForSlot((WeaponSlotType)-2);
 					
 					// Notify WeaponRangeDecalBehavior modules to refresh their state
 					for (BehaviorModule** i = obj->getBehaviorModules(); *i; ++i)
@@ -950,7 +951,8 @@ CBCommandStatus ControlBar::processCommandUI( GameWindow *control,
 						}
 					}
 				}
-				
+				// TheSuperHackers @feature author 15/01/2025 Mark UI dirty after weapon switching
+				markUIDirty();
 				break;
 		}
 
@@ -964,6 +966,21 @@ CBCommandStatus ControlBar::processCommandUI( GameWindow *control,
 
 			break;
 
+		}
+
+		//---------------------------------------------------------------------------------------------
+		case GUI_COMMAND_REPLENISH_INVENTORY_ITEM:
+		{
+			// TheSuperHackers @feature author 15/01/2025 Replenish inventory items via message stream
+			const AsciiString& itemToReplenish = actualCommandButton->getItemToReplenish();
+			
+			// Send message with item key length (0 means replenish all items)
+			GameMessage *msg = TheMessageStream->appendMessage( GameMessage::MSG_REPLENISH_INVENTORY_ITEM );
+			Int itemLength = itemToReplenish.isEmpty() ? 0 : itemToReplenish.getLength();
+			msg->appendIntegerArgument( itemLength );
+			
+			markUIDirty();
+			break;
 		}
 
 		//---------------------------------------------------------------------------------------------
@@ -984,7 +1001,7 @@ CBCommandStatus ControlBar::processCommandUI( GameWindow *control,
 			
 			// Turn off range decals when using special powers from shortcut
 			// Turn off range decals for all weapon slots
-			obj->setRangeDecalShownForSlot((WeaponSlotType)-1);
+			obj->setRangeDecalShownForSlot((WeaponSlotType)-2);
 			
 			// Notify WeaponRangeDecalBehavior modules to refresh their state
 			for (BehaviorModule** i = obj->getBehaviorModules(); *i; ++i)
@@ -1012,7 +1029,7 @@ CBCommandStatus ControlBar::processCommandUI( GameWindow *control,
 			if (obj)
 			{
 				// Turn off range decals for all weapon slots
-				obj->setRangeDecalShownForSlot((WeaponSlotType)-1);
+				obj->setRangeDecalShownForSlot((WeaponSlotType)-2);
 				
 				// Notify WeaponRangeDecalBehavior modules to refresh their state
 				for (BehaviorModule** i = obj->getBehaviorModules(); *i; ++i)

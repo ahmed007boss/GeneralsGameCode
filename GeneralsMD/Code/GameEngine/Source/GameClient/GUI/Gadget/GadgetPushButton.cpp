@@ -51,6 +51,7 @@
 #include "Common/Language.h"
 #include "Common/GameAudio.h"
 #include "GameClient/Gadget.h"
+#include "GameClient/DisplayString.h"
 #include "GameClient/GameWindowManager.h"
 #include "GameClient/InGameUI.h"
 
@@ -607,6 +608,7 @@ PushButtonData * getNewPushButtonData( void )
 	p->overlayImage = NULL;
 	p->overlayImage2 = NULL;
 	p->overlayImage3 = NULL;
+	p->overlayText = NULL;
 	return p;
 }
 
@@ -763,5 +765,22 @@ void GadgetButtonSetAltSound(GameWindow *g, AsciiString altSound )
 	}
 	pData->altSound = altSound;
 
+}
+
+// GadgetButtonDrawOverlayText ======================================================
+/** Set to draw a text overlay on the button */
+//=============================================================================
+void GadgetButtonDrawOverlayText( GameWindow *g, DisplayString *textString )
+{
+	if( g == NULL )
+		return;
+
+	PushButtonData *pData = (PushButtonData *)g->winGetUserData();
+	if(!pData)
+	{
+		pData = getNewPushButtonData();
+	}
+	pData->overlayText = textString; // Store the text string in overlayText field
+	g->winSetUserData(pData);
 }
 

@@ -51,6 +51,7 @@
 #include "GameLogic/Module/BattlePlanUpdate.h"
 #include "GameLogic/Module/VeterancyGainCreate.h"
 #include "GameLogic/Module/HackInternetAIUpdate.h"
+#include "GameLogic/Module/InventoryBehavior.h"
 #include "GameLogic/Weapon.h"
 
 #include "GameClient/InGameUI.h"
@@ -207,7 +208,7 @@ void ControlBar::doTransportInventoryUI( Object *transport, const CommandSet *co
 			//TheSuperHackers @overlay Ahmed Salah 27/06/2025 Clear all overlay images when clearing transport buttons
 			GadgetButtonDrawOverlayImage2( m_commandWindows[ i ], NULL );
 			GadgetButtonDrawOverlayImage3( m_commandWindows[ i ], NULL );
-
+			
 			//Unmanned vehicles don't have any commands available -- in fact they are hidden!
  			if( transport->isDisabledByType( DISABLED_UNMANNED ) )
  			{
@@ -290,6 +291,10 @@ void ControlBar::populateCommand( Object *obj )
 				GadgetButtonDrawOverlayImage( m_commandWindows[ i ], NULL );
 				GadgetButtonDrawOverlayImage2( m_commandWindows[ i ], NULL );
 				GadgetButtonDrawOverlayImage3( m_commandWindows[ i ], NULL );
+				
+				// TheSuperHackers @feature author 15/01/2025 Clear button text when hiding buttons
+				GadgetButtonSetText( m_commandWindows[ i ], UnicodeString( L"" ) );
+				
 				m_commandWindows[ i ]->winHide( TRUE );
 			}
 
@@ -315,7 +320,7 @@ void ControlBar::populateCommand( Object *obj )
 		// TheSuperHackers @alternative Ahmed Salah 27/06/2025 Check for alternative buttons that can replace the original button based on prerequisites
 		if (commandButton)
 		{
-			const CommandButton* alternativeButton = commandButton->getAlternativeButtonForPrerequisites(player);
+			const CommandButton* alternativeButton = commandButton->getAlternativeButtonForPrerequisites(player, obj);
 			if (alternativeButton)
 			{
 				// Replace the original button with the alternative button
@@ -331,6 +336,8 @@ void ControlBar::populateCommand( Object *obj )
 			GadgetButtonDrawOverlayImage( m_commandWindows[ i ], NULL );
 			GadgetButtonDrawOverlayImage2( m_commandWindows[ i ], NULL );
 			GadgetButtonDrawOverlayImage3( m_commandWindows[ i ], NULL );
+			// TheSuperHackers @feature author 15/01/2025 Clear button text when hiding individual buttons
+			GadgetButtonSetText( m_commandWindows[ i ], UnicodeString( L"" ) );
 			
 			// hide window on interface
 			m_commandWindows[ i ]->winHide( TRUE );
@@ -1376,13 +1383,27 @@ CommandAvailability ControlBar::getCommandAvailability( const CommandButton *com
 				return COMMAND_RESTRICTED;
 
 			// ask the ai if the weapon is ready to fire
-			const Weapon* w = obj->getWeaponInWeaponSlot( command->getWeaponSlot() );
+			const Weapon* w;
+			auto slot = command->getWeaponSlot();
+			if (slot == NONE_WEAPON )
+			{
+				w = obj->getCurrentWeapon();
+			}
+			else
+			{
+				w = obj->getWeaponInWeaponSlot(slot);
+			}
 
+			if (w && !w->hasEnoughInventoryToFire(obj))
+			{
+				return COMMAND_RESTRICTED;
+			}
 			// changed this to Log rather than Crash, because this can legitimately happen now for
 			// dozers and workers with mine-clearing stuff... (srj)
 			//DEBUG_ASSERTLOG( w, ("Unit %s's CommandButton %s is trying to access weaponslot %d, but doesn't have a weapon there in its FactionUnit ini entry.",
 			//	obj->getTemplate()->getName().str(), command->getName().str(), (Int)command->getWeaponSlot() ) );
-
+			//const Weapon* w = obj->getWeaponInWeaponSlot( command->getWeaponSlot() );
+			
 			UnsignedInt now = TheGameLogic->getFrame();
 
 			/// @Kris -- We need to show the button as always available for anything with a 0 clip reload time.
@@ -1600,6 +1621,70 @@ CommandAvailability ControlBar::getCommandAvailability( const CommandButton *com
 			{
 				return COMMAND_ACTIVE;  // Show as active/pressed when holding position
 			}
+			break;
+		}
+
+		case GUI_COMMAND_REPLENISH_INVENTORY_ITEM:
+		{
+			// TheSuperHackers @feature author 15/01/2025 Check cost for inventory replenishment
+			// Find the inventory behavior
+			InventoryBehavior* inventoryBehavior = obj->getInventoryBehavior();
+
+			if (!inventoryBehavior)
+				return COMMAND_RESTRICTED;
+
+			const InventoryBehaviorModuleData* moduleData = inventoryBehavior->getInventoryModuleData();
+			if (!moduleData)
+				return COMMAND_RESTRICTED;
+
+			const AsciiString& itemToReplenish = command->getItemToReplenish();
+			UnsignedInt totalCost = 0;
+			UnsignedInt totalNeededAmount = 0;
+			if (itemToReplenish.isEmpty())
+			{
+				// Calculate cost for all items
+				for (std::map<AsciiString, InventoryItemConfig>::const_iterator it = moduleData->m_inventoryItems.begin();
+					 it != moduleData->m_inventoryItems.end(); ++it)
+				{
+					const AsciiString& itemKey = it->first;
+					const InventoryItemConfig& config = it->second;
+					
+					Int neededAmount = obj->getInventoryReplenishAmount(itemKey);
+					
+					if (neededAmount > 0)
+					{
+						totalCost += neededAmount * config.costPerItem;
+						totalNeededAmount += neededAmount;
+					}
+				}
+				if (totalNeededAmount == 0)
+				{
+					return COMMAND_RESTRICTED;
+				}
+			}
+			else
+			{
+				// Calculate cost for specific item
+				Int neededAmount = obj->getInventoryReplenishAmount(itemToReplenish);
+				
+				if (neededAmount > 0)
+				{
+					Int costPerItem = moduleData->getCostPerItem(itemToReplenish);
+					totalCost = neededAmount * costPerItem;
+				}
+				else
+				{
+					return COMMAND_RESTRICTED;
+				}
+			}
+
+			// Check if player can afford the replenishment
+			if (totalCost > 0 && player->getMoney()->countMoney() < totalCost)
+			{
+				return COMMAND_CANT_AFFORD;
+			}
+
+			
 			break;
 		}
 

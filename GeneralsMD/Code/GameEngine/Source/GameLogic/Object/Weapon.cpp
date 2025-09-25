@@ -61,6 +61,7 @@
 #include "GameLogic/Module/BehaviorModule.h"
 #include "GameLogic/Module/BodyModule.h"
 #include "GameLogic/Module/ContainModule.h"
+#include "GameLogic/Module/InventoryBehavior.h"
 #include "GameLogic/Module/LaserUpdate.h"
 #include "GameLogic/Module/UpdateModule.h"
 #include "GameLogic/Module/SpecialPowerCompletionDie.h"
@@ -75,6 +76,7 @@
 #include "GameLogic/Module/ProjectileStreamUpdate.h"
 #include "GameLogic/Module/PhysicsUpdate.h"
 #include "GameLogic/TerrainLogic.h"
+#include "GameClient/ControlBar.h"
 
 #define RATIONALIZE_ATTACK_RANGE
 #define ATTACK_RANGE_IS_2D
@@ -242,6 +244,7 @@ const FieldParse WeaponTemplate::TheWeaponTemplateFieldParseTable[] =
 	{ "ContinueAttackRange",			INI::parseReal,													NULL,							offsetof(WeaponTemplate, m_continueAttackRange) },
 	{ "SuspendFXDelay",						INI::parseDurationUnsignedInt,					NULL,							offsetof(WeaponTemplate, m_suspendFXDelay) },
 	{ "MissileCallsOnDie",			INI::parseBool,													NULL,							offsetof(WeaponTemplate, m_dieOnDetonate) },
+	{ "ConsumeInventory",				INI::parseAsciiString,									NULL,							offsetof(WeaponTemplate, m_consumeInventory) },
 	{ NULL,												NULL,																		NULL,							0 }
 
 };
@@ -328,6 +331,7 @@ WeaponTemplate::WeaponTemplate() : m_nextTemplate(NULL)
 	m_damageStatusType							= OBJECT_STATUS_NONE;
 	m_suspendFXDelay								= 0;
 	m_dieOnDetonate						= FALSE;
+	m_consumeInventory.clear();
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -767,10 +771,37 @@ Bool WeaponTemplate::shouldProjectileCollideWith(
 
 	//DEBUG_LOG(("Rejecting projectile collision between %s and %s!",projectile->getTemplate()->getName().str(),thingWeCollidedWith->getTemplate()->getName().str()));
 	return false;
+}//-------------------------------------------------------------------------------------------------
+Bool Weapon::hasEnoughInventoryToFire(const Object* source) const {
+
+	// Check if weapon template is valid
+	if (!m_template)
+		return false;
+		
+	auto weaponTemplate = getTemplate();
+
+	// TheSuperHackers @feature author 15/01/2025 Check inventory consumption requirement
+	const AsciiString& consumeInventory = weaponTemplate->getConsumeInventory();
+	if (!consumeInventory.isEmpty())
+	{
+		// Check if source object has InventoryBehavior and enough items
+		InventoryBehavior* inventoryBehavior = source->getInventoryBehavior();
+
+		if (m_ammoInClip == 0 && (!inventoryBehavior || !inventoryBehavior->hasItem(consumeInventory, 1)))
+		{
+	return false;
+		}
+	}
+	
+	return true;
 }
 //-------------------------------------------------------------------------------------------------
 Bool Weapon::isValidWeaponUse( const Object* source, const Object* victim)
 {
+	// Check if weapon template is valid
+	if (!m_template)
+		return false;
+		
 	auto weaponTemplate = getTemplate();
 
 	// Check shooter prerequisites using ObjectPrerequisite system
@@ -780,6 +811,11 @@ Bool Weapon::isValidWeaponUse( const Object* source, const Object* victim)
 		if (!shooterPrereqs[i].isSatisfied(source))
 			return false;
 	}
+	if (!hasEnoughInventoryToFire(source))
+	{
+			return false;
+	}
+	
 
 	if (victim)
 	{
@@ -800,6 +836,9 @@ Bool Weapon::isValidWeaponUse( const Object* source, const Object* victim)
 		
 		return weaponTemplate->canAttackWithoutTarget();
 	}
+
+	
+
 	return true;
 }
 //-------------------------------------------------------------------------------------------------
@@ -853,13 +892,6 @@ UnsignedInt WeaponTemplate::fireWeaponTemplate
 	}
 
 	DEBUG_ASSERTCRASH((m_primaryDamage > 0)  ||  (victimObj == NULL), ("You can't really shoot a zero damage weapon at an Object.") );
-
-	// Validate weapon use before firing
-	if (firingWeapon && !firingWeapon->isValidWeaponUse(sourceObj, victimObj))
-	{
-		
-		return 0;
-	}
 
 	ObjectID sourceID = sourceObj->getID();
 	const Coord3D* sourcePos = sourceObj->getPosition();
@@ -1967,10 +1999,30 @@ void Weapon::rebuildScatterTargets()
 //-------------------------------------------------------------------------------------------------
 void Weapon::reloadWithBonus(const Object *sourceObj, const WeaponBonus& bonus, Bool loadInstantly)
 {
+	auto initialAmmoInClip = m_ammoInClip;
 	if (m_template->getClipSize() > 0
 			&& m_ammoInClip == m_template->getClipSize()
 			&& !sourceObj->isReloadTimeShared())
 		return;	// don't restart our reload delay.
+
+	// TheSuperHackers @feature author 15/01/2025 Check inventory consumption for reload
+	const AsciiString& consumeInventory = m_template->getConsumeInventory();
+
+	if (!consumeInventory.isEmpty())
+	{
+		InventoryBehavior* inventoryBehavior = sourceObj->getInventoryBehavior();
+
+		if (inventoryBehavior)
+		{
+			// Check if we have enough items to reload
+			Int reloadAmount = m_template->getClipSize() - initialAmmoInClip;
+			if (reloadAmount > 0 && !inventoryBehavior->hasItem(consumeInventory, reloadAmount))
+			{
+				m_status = OUT_OF_AMMO;
+				return;
+			}
+		}
+	}
 
 	m_ammoInClip = m_template->getClipSize();
 	if (m_ammoInClip <= 0)
@@ -1996,6 +2048,34 @@ void Weapon::reloadWithBonus(const Object *sourceObj, const WeaponBonus& bonus, 
 				weapon->setPossibleNextShotFrame(m_whenWeCanFireAgain);
 				//CRCDEBUG_LOG(("Just set m_whenWeCanFireAgain to %d in Weapon::reloadWithBonus 2", m_whenWeCanFireAgain));
 				weapon->setStatus(RELOADING_CLIP);
+			}
+		}
+	}
+
+	// TheSuperHackers @feature author 15/01/2025 Check inventory consumption for reload
+	if (!consumeInventory.isEmpty())
+	{
+		InventoryBehavior* inventoryBehavior = sourceObj->getInventoryBehavior();
+
+		if (inventoryBehavior)
+		{
+			// Check if we have enough items to reload
+			Int reloadAmount = m_template->getClipSize() - initialAmmoInClip;
+			// Consume the items needed for reload
+			if (reloadAmount > 0)
+			{
+				inventoryBehavior->consumeItem(consumeInventory, reloadAmount);
+				
+				// TheSuperHackers @feature author 15/01/2025 Mark UI dirty if object is owned and selected by player
+				Player* player = sourceObj->getControllingPlayer();
+				if (player && player->isLocalPlayer())
+				{
+					// Check if this object is currently selected
+					if (TheControlBar && TheControlBar->isObjectSelected(sourceObj))
+					{
+						TheControlBar->markUIDirty();
+					}
+				}
 			}
 		}
 	}
@@ -2478,6 +2558,23 @@ Real Weapon::estimateWeaponDamage(const Object *sourceObj, const Object *victimO
 //-------------------------------------------------------------------------------------------------
 void Weapon::newProjectileFired(const Object *sourceObj, const Object *projectile, const Object *victimObj, const Coord3D *victimPos )
 {
+	// TheSuperHackers @feature author 15/01/2025 Consume inventory when projectile is fired
+	// const AsciiString& consumeInventory = m_template->getConsumeInventory();
+	// if (!consumeInventory.isEmpty())
+	// {
+	// 	InventoryBehavior* inventoryBehavior = NULL;
+	// 	for (BehaviorModule** i = sourceObj->getBehaviorModules(); *i; ++i)
+	// 	{
+	// 		inventoryBehavior = InventoryBehavior::getInventoryBehavior(*i);
+	// 		if (inventoryBehavior)
+	// 			break;
+	// 	}
+
+	// 	if (inventoryBehavior)
+	// 	{
+	// 		inventoryBehavior->consumeItem(consumeInventory, 1);
+	// 	}
+	// }
 	// If I have a stream, I need to tell it about this new guy
 	if( m_template->getProjectileStreamName().isEmpty() )
 		return; // nope, no streak logic to do
@@ -2492,6 +2589,8 @@ void Weapon::newProjectileFired(const Object *sourceObj, const Object *projectil
 			return;
 		m_projectileStreamID = projectileStream->getID();
 	}
+
+	
 
 	//Check for projectile stream update
 	static NameKeyType key_ProjectileStreamUpdate = NAMEKEY("ProjectileStreamUpdate");
@@ -2784,6 +2883,11 @@ void Weapon::preFireWeapon( const Object *source, const Object *victim )
 //-------------------------------------------------------------------------------------------------
 Bool Weapon::fireWeapon(const Object *source, Object *target, ObjectID* projectileID)
 {
+	// Validate weapon use before firing
+	if (!isValidWeaponUse(source, target))
+	{
+		return true;
+	}
 	//CRCDEBUG_LOG(("Weapon::fireWeapon() for %s at %s", DescribeObject(source).str(), DescribeObject(target).str()));
 	return privateFireWeapon( source, target, NULL, false, false, 0, projectileID, TRUE );
 }
@@ -2792,6 +2896,11 @@ Bool Weapon::fireWeapon(const Object *source, Object *target, ObjectID* projecti
 // return true if we auto-reloaded our clip after firing.
 Bool Weapon::fireWeapon(const Object *source, const Coord3D* pos, ObjectID* projectileID)
 {
+	// Validate weapon use before firing
+	if (!isValidWeaponUse(source,nullptr))
+	{
+		return true;
+	}
 	//CRCDEBUG_LOG(("Weapon::fireWeapon() for %s", DescribeObject(source).str()));
 	return privateFireWeapon( source, NULL, pos, false, false, 0, projectileID, TRUE );
 }

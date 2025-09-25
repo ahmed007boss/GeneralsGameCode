@@ -112,6 +112,13 @@ public:
 	void addObjectHasStatusFlagPrereq(AsciiString statusFlagName);
 	void addObjectHasNoStatusFlagPrereq(AsciiString statusFlagName);
 
+	// Inventory item prerequisites
+	void addObjectHasAtLeastItemPrereq(AsciiString itemName, Int count);
+	void addObjectHasAtMostItemPrereq(AsciiString itemName, Int count);
+	void addObjectItemStorageFullPrereq(AsciiString itemName);
+	void addObjectItemStorageNotFullPrereq(AsciiString itemName);
+	void addObjectItemStorageEmptyPrereq(AsciiString itemName);
+
 	// Static parsing function
 	static void parseObjectPrerequisites(INI* ini, void* instance, void* store, const void* userData);
 
@@ -164,6 +171,19 @@ private:
 	mutable std::vector<NearbyObjectPrereq>	m_objectHasNearbyObjects;
 	mutable std::vector<NearbyObjectPrereq>	m_objectHasNoNearbyObjects;
 
+	// Inventory item prerequisites
+	struct ItemCountPrereq
+	{
+		AsciiString itemName;
+		Int requiredCount;
+	};
+
+	mutable std::vector<ItemCountPrereq>	m_objectHasAtLeastItems;
+	mutable std::vector<ItemCountPrereq>	m_objectHasAtMostItems;
+	mutable std::vector<AsciiString>		m_objectItemStorageFull;
+	mutable std::vector<AsciiString>		m_objectItemStorageNotFull;
+	mutable std::vector<AsciiString>		m_objectItemStorageEmpty;
+
 	// Helper methods
 	static void parseObjectIs(INI* ini, void* instance, void* /*store*/, const void* /*userData*/);
 	static void parseObjectIsNot(INI* ini, void* instance, void* /*store*/, const void* /*userData*/);
@@ -181,11 +201,17 @@ private:
 	static void parseObjectHasNoModelConditionFlag(INI* ini, void* instance, void* /*store*/, const void* /*userData*/);
 	static void parseObjectHasStatusFlag(INI* ini, void* instance, void* /*store*/, const void* /*userData*/);
 	static void parseObjectHasNoStatusFlag(INI* ini, void* instance, void* /*store*/, const void* /*userData*/);
+	static void parseHasAtLeastItem(INI* ini, void* instance, void* /*store*/, const void* /*userData*/);
+	static void parseHasAtMostItem(INI* ini, void* instance, void* /*store*/, const void* /*userData*/);
+	static void parseItemStorageFull(INI* ini, void* instance, void* /*store*/, const void* /*userData*/);
+	static void parseItemStorageNotFull(INI* ini, void* instance, void* /*store*/, const void* /*userData*/);
+	static void parseItemStorageEmpty(INI* ini, void* instance, void* /*store*/, const void* /*userData*/);
 
 	// Helper methods for refactoring repeated code
 	static AsciiString parseFullLineFromINI(INI* ini);
 	static Bool parseObjectDistancePair(AsciiString& remaining, AsciiString& objectName, Real& distance);
 	static Bool parseKindOfDistancePair(AsciiString& remaining, AsciiString& kindOfName, Real& distance);
+	static Bool parseItemCountPair(AsciiString& remaining, AsciiString& itemName, Int& count);
 	static UnicodeString formatObjectDisplayText(const AsciiString& objectName);
 	static UnicodeString formatKindOfDisplayText(const AsciiString& kindOfName);
 	static UnicodeString formatDistanceDisplayText(Real distance);

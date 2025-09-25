@@ -98,6 +98,12 @@ void ObjectPrerequisite::init()
 	
 	m_objectHasNearbyObjects.clear();
 	m_objectHasNoNearbyObjects.clear();
+	
+	m_objectHasAtLeastItems.clear();
+	m_objectHasAtMostItems.clear();
+	m_objectItemStorageFull.clear();
+	m_objectItemStorageNotFull.clear();
+	m_objectItemStorageEmpty.clear();
 }
 
 //=============================================================================
@@ -382,6 +388,122 @@ Bool ObjectPrerequisite::isSatisfied(const Object* object) const
 			return false;
 	}
 
+	// Check inventory item prerequisites
+	// HasAtLeastItem prerequisites (OR logic - any item count condition met is sufficient)
+	if (!m_objectHasAtLeastItems.empty())
+	{
+		Bool foundAnyAtLeast = false;
+		for (size_t i = 0; i < m_objectHasAtLeastItems.size(); i++)
+		{
+			const ItemCountPrereq& prereq = m_objectHasAtLeastItems[i];
+			Int currentCount = object->getTotalInventoryItemCount(prereq.itemName);
+			if (currentCount >= prereq.requiredCount)
+			{
+				foundAnyAtLeast = true;
+				break; // Found at least one, that's sufficient for OR logic
+			}
+		}
+		
+		if (!foundAnyAtLeast)
+			return false;
+	}
+
+	// HasAtMostItem prerequisites (OR logic - any item count condition met is sufficient)
+	if (!m_objectHasAtMostItems.empty())
+	{
+		Bool foundAnyAtMost = false;
+		for (size_t i = 0; i < m_objectHasAtMostItems.size(); i++)
+		{
+			const ItemCountPrereq& prereq = m_objectHasAtMostItems[i];
+			Int currentCount = object->getTotalInventoryItemCount(prereq.itemName);
+			if (currentCount <= prereq.requiredCount)
+			{
+				foundAnyAtMost = true;
+				break; // Found at least one, that's sufficient for OR logic
+			}
+		}
+		
+		if (!foundAnyAtMost)
+			return false;
+	}
+
+	// ItemStorageFull prerequisites (OR logic - any item storage full is sufficient)
+	if (!m_objectItemStorageFull.empty())
+	{
+		Bool foundAnyFull = false;
+		for (size_t i = 0; i < m_objectItemStorageFull.size(); i++)
+		{
+			const AsciiString& itemName = m_objectItemStorageFull[i];
+			Int currentCount = object->getTotalInventoryItemCount(itemName);
+			Int maxStorage = 0;
+			InventoryBehavior* inventoryBehavior = object->getInventoryBehavior();
+			if (inventoryBehavior)
+			{
+				const InventoryBehaviorModuleData* moduleData = inventoryBehavior->getInventoryModuleData();
+				if (moduleData)
+				{
+					maxStorage = moduleData->getMaxStorageCount(itemName);
+				}
+			}
+			if (maxStorage > 0 && currentCount >= maxStorage)
+			{
+				foundAnyFull = true;
+				break; // Found at least one, that's sufficient for OR logic
+			}
+		}
+		
+		if (!foundAnyFull)
+			return false;
+	}
+
+	// ItemStorageNotFull prerequisites (OR logic - any item storage not full is sufficient)
+	if (!m_objectItemStorageNotFull.empty())
+	{
+		Bool foundAnyNotFull = false;
+		for (size_t i = 0; i < m_objectItemStorageNotFull.size(); i++)
+		{
+			const AsciiString& itemName = m_objectItemStorageNotFull[i];
+			Int currentCount = object->getTotalInventoryItemCount(itemName);
+			Int maxStorage = 0;
+			InventoryBehavior* inventoryBehavior = object->getInventoryBehavior();
+			if (inventoryBehavior)
+			{
+				const InventoryBehaviorModuleData* moduleData = inventoryBehavior->getInventoryModuleData();
+				if (moduleData)
+				{
+					maxStorage = moduleData->getMaxStorageCount(itemName);
+				}
+			}
+			if (maxStorage > 0 && currentCount < maxStorage)
+			{
+				foundAnyNotFull = true;
+				break; // Found at least one, that's sufficient for OR logic
+			}
+		}
+		
+		if (!foundAnyNotFull)
+			return false;
+	}
+
+	// ItemStorageEmpty prerequisites (OR logic - any item storage empty is sufficient)
+	if (!m_objectItemStorageEmpty.empty())
+	{
+		Bool foundAnyEmpty = false;
+		for (size_t i = 0; i < m_objectItemStorageEmpty.size(); i++)
+		{
+			const AsciiString& itemName = m_objectItemStorageEmpty[i];
+			Int currentCount = object->getTotalInventoryItemCount(itemName);
+			if (currentCount == 0)
+			{
+				foundAnyEmpty = true;
+				break; // Found at least one, that's sufficient for OR logic
+			}
+		}
+		
+		if (!foundAnyEmpty)
+			return false;
+	}
+
 	return true;
 }
 
@@ -598,6 +720,7 @@ UnicodeString ObjectPrerequisite::getRequiresList(const Object* object) const
 						}
 					}
 				}
+				nearbyReq.concat(L" ");
 				nearbyReq.concat(TheGameText->fetch("PREREQ:Within"));
 				nearbyReq.concat(L" ");
 				nearbyReq.concat(formatDistanceDisplayText(prereq.distance));
@@ -614,6 +737,227 @@ UnicodeString ObjectPrerequisite::getRequiresList(const Object* object) const
 					nearbyReq.concat(L"\n");
 
 				requiresList.concat(nearbyReq);
+			}
+		}
+	}
+
+	// Check inventory item prerequisites
+	// HasAtLeastItem prerequisites (OR logic - show all missing items with "or" between them)
+	if (!m_objectHasAtLeastItems.empty())
+	{
+		Bool foundAnyAtLeast = false;
+		for (size_t i = 0; i < m_objectHasAtLeastItems.size(); i++)
+		{
+			const ItemCountPrereq& prereq = m_objectHasAtLeastItems[i];
+			Int currentCount = object->getTotalInventoryItemCount(prereq.itemName);
+			if (currentCount >= prereq.requiredCount)
+			{
+				foundAnyAtLeast = true;
+				break; // Found at least one, that's sufficient for OR logic
+			}
+		}
+		
+		// If no items meet the requirement, show all missing ones with "or" between them
+		if (!foundAnyAtLeast)
+		{
+			for (size_t i = 0; i < m_objectHasAtLeastItems.size(); i++)
+			{
+				const ItemCountPrereq& prereq = m_objectHasAtLeastItems[i];
+				UnicodeString itemReq;
+				itemReq.format(L"%s ≥ %d", formatObjectDisplayText(prereq.itemName).str(), prereq.requiredCount);
+				
+				// Add "or" before each item except the first
+				if (i > 0)
+				{
+					itemReq = TheGameText->fetch("PREREQ:Or") + L" " + itemReq;
+				}
+
+				if (firstRequirement)
+					firstRequirement = false;
+				else
+					itemReq.concat(L"\n");
+
+				requiresList.concat(itemReq);
+			}
+		}
+	}
+
+	// HasAtMostItem prerequisites (OR logic - show all missing items with "or" between them)
+	if (!m_objectHasAtMostItems.empty())
+	{
+		Bool foundAnyAtMost = false;
+		for (size_t i = 0; i < m_objectHasAtMostItems.size(); i++)
+		{
+			const ItemCountPrereq& prereq = m_objectHasAtMostItems[i];
+			Int currentCount = object->getTotalInventoryItemCount(prereq.itemName);
+			if (currentCount <= prereq.requiredCount)
+			{
+				foundAnyAtMost = true;
+				break; // Found at least one, that's sufficient for OR logic
+			}
+		}
+		
+		// If no items meet the requirement, show all missing ones with "or" between them
+		if (!foundAnyAtMost)
+		{
+			for (size_t i = 0; i < m_objectHasAtMostItems.size(); i++)
+			{
+				const ItemCountPrereq& prereq = m_objectHasAtMostItems[i];
+				UnicodeString itemReq;
+				itemReq.format(L"%s ≤ %d", formatObjectDisplayText(prereq.itemName).str(), prereq.requiredCount);
+				
+				// Add "or" before each item except the first
+				if (i > 0)
+				{
+					itemReq = TheGameText->fetch("PREREQ:Or") + L" " + itemReq;
+				}
+
+				if (firstRequirement)
+					firstRequirement = false;
+				else
+					itemReq.concat(L"\n");
+
+				requiresList.concat(itemReq);
+			}
+		}
+	}
+
+	// ItemStorageFull prerequisites (OR logic - show all missing items with "or" between them)
+	if (!m_objectItemStorageFull.empty())
+	{
+		Bool foundAnyFull = false;
+		for (size_t i = 0; i < m_objectItemStorageFull.size(); i++)
+		{
+			const AsciiString& itemName = m_objectItemStorageFull[i];
+			Int currentCount = object->getTotalInventoryItemCount(itemName);
+			Int maxStorage = 0;
+			InventoryBehavior* inventoryBehavior = object->getInventoryBehavior();
+			if (inventoryBehavior)
+			{
+				const InventoryBehaviorModuleData* moduleData = inventoryBehavior->getInventoryModuleData();
+				if (moduleData)
+				{
+					maxStorage = moduleData->getMaxStorageCount(itemName);
+				}
+			}
+			if (maxStorage > 0 && currentCount >= maxStorage)
+			{
+				foundAnyFull = true;
+				break; // Found at least one, that's sufficient for OR logic
+			}
+		}
+		
+		// If no items are full, show all missing ones with "or" between them
+		if (!foundAnyFull)
+		{
+			for (size_t i = 0; i < m_objectItemStorageFull.size(); i++)
+			{
+				const AsciiString& itemName = m_objectItemStorageFull[i];
+				UnicodeString itemReq;
+				itemReq.format(L"%s storage full", formatObjectDisplayText(itemName).str());
+				
+				// Add "or" before each item except the first
+				if (i > 0)
+				{
+					itemReq = TheGameText->fetch("PREREQ:Or") + L" " + itemReq;
+				}
+
+				if (firstRequirement)
+					firstRequirement = false;
+				else
+					itemReq.concat(L"\n");
+
+				requiresList.concat(itemReq);
+			}
+		}
+	}
+
+	// ItemStorageNotFull prerequisites (OR logic - show all missing items with "or" between them)
+	if (!m_objectItemStorageNotFull.empty())
+	{
+		Bool foundAnyNotFull = false;
+		for (size_t i = 0; i < m_objectItemStorageNotFull.size(); i++)
+		{
+			const AsciiString& itemName = m_objectItemStorageNotFull[i];
+			Int currentCount = object->getTotalInventoryItemCount(itemName);
+			Int maxStorage = 0;
+			InventoryBehavior* inventoryBehavior = object->getInventoryBehavior();
+			if (inventoryBehavior)
+			{
+				const InventoryBehaviorModuleData* moduleData = inventoryBehavior->getInventoryModuleData();
+				if (moduleData)
+				{
+					maxStorage = moduleData->getMaxStorageCount(itemName);
+				}
+			}
+			if (maxStorage > 0 && currentCount < maxStorage)
+			{
+				foundAnyNotFull = true;
+				break; // Found at least one, that's sufficient for OR logic
+			}
+		}
+		
+		// If no items are not full, show all missing ones with "or" between them
+		if (!foundAnyNotFull)
+		{
+			for (size_t i = 0; i < m_objectItemStorageNotFull.size(); i++)
+			{
+				const AsciiString& itemName = m_objectItemStorageNotFull[i];
+				UnicodeString itemReq;
+				itemReq.format(L"%s storage not full", formatObjectDisplayText(itemName).str());
+				
+				// Add "or" before each item except the first
+				if (i > 0)
+				{
+					itemReq = TheGameText->fetch("PREREQ:Or") + L" " + itemReq;
+				}
+
+				if (firstRequirement)
+					firstRequirement = false;
+				else
+					itemReq.concat(L"\n");
+
+				requiresList.concat(itemReq);
+			}
+		}
+	}
+
+	// ItemStorageEmpty prerequisites (OR logic - show all missing items with "or" between them)
+	if (!m_objectItemStorageEmpty.empty())
+	{
+		Bool foundAnyEmpty = false;
+		for (size_t i = 0; i < m_objectItemStorageEmpty.size(); i++)
+		{
+			const AsciiString& itemName = m_objectItemStorageEmpty[i];
+			Int currentCount = object->getTotalInventoryItemCount(itemName);
+			if (currentCount == 0)
+			{
+				foundAnyEmpty = true;
+				break; // Found at least one, that's sufficient for OR logic
+			}
+		}
+		
+		// If no items are empty, show all missing ones with "or" between them
+		if (!foundAnyEmpty)
+		{
+			for (size_t i = 0; i < m_objectItemStorageEmpty.size(); i++)
+			{
+				const AsciiString& itemName = m_objectItemStorageEmpty[i];
+				UnicodeString itemReq;
+				itemReq.format(L"%s storage empty", formatObjectDisplayText(itemName).str());
+				
+				// Add "or" before each item except the first
+				if (i > 0)
+				{
+					itemReq = TheGameText->fetch("PREREQ:Or") + L" " + itemReq;
+				}
+
+				if (firstRequirement)
+					firstRequirement = false;
+				else
+					itemReq.concat(L"\n");
+
+				requiresList.concat(itemReq);
 			}
 		}
 	}
@@ -914,6 +1258,42 @@ void ObjectPrerequisite::addObjectHasNoStatusFlagPrereq(AsciiString statusFlagNa
 }
 
 //-------------------------------------------------------------------------------------------------
+void ObjectPrerequisite::addObjectHasAtLeastItemPrereq(AsciiString itemName, Int count)
+{
+	ItemCountPrereq prereq;
+	prereq.itemName = itemName;
+	prereq.requiredCount = count;
+	m_objectHasAtLeastItems.push_back(prereq);
+}
+
+//-------------------------------------------------------------------------------------------------
+void ObjectPrerequisite::addObjectHasAtMostItemPrereq(AsciiString itemName, Int count)
+{
+	ItemCountPrereq prereq;
+	prereq.itemName = itemName;
+	prereq.requiredCount = count;
+	m_objectHasAtMostItems.push_back(prereq);
+}
+
+//-------------------------------------------------------------------------------------------------
+void ObjectPrerequisite::addObjectItemStorageFullPrereq(AsciiString itemName)
+{
+	m_objectItemStorageFull.push_back(itemName);
+}
+
+//-------------------------------------------------------------------------------------------------
+void ObjectPrerequisite::addObjectItemStorageNotFullPrereq(AsciiString itemName)
+{
+	m_objectItemStorageNotFull.push_back(itemName);
+}
+
+//-------------------------------------------------------------------------------------------------
+void ObjectPrerequisite::addObjectItemStorageEmptyPrereq(AsciiString itemName)
+{
+	m_objectItemStorageEmpty.push_back(itemName);
+}
+
+//-------------------------------------------------------------------------------------------------
 void ObjectPrerequisite::parseObjectPrerequisites(INI* ini, void* instance, void* store, const void* userData)
 {
 	std::vector<ObjectPrerequisite>* prereqVector = (std::vector<ObjectPrerequisite>*)instance;
@@ -936,6 +1316,11 @@ void ObjectPrerequisite::parseObjectPrerequisites(INI* ini, void* instance, void
 		{ "ObjectHasNoModelConditionFlag", ObjectPrerequisite::parseObjectHasNoModelConditionFlag, 0, 0 },
 		{ "ObjectHasStatusFlag", ObjectPrerequisite::parseObjectHasStatusFlag, 0, 0 },
 		{ "ObjectHasNoStatusFlag", ObjectPrerequisite::parseObjectHasNoStatusFlag, 0, 0 },
+		{ "HasAtLeastItem", ObjectPrerequisite::parseHasAtLeastItem, 0, 0 },     // True if the unit has ≥ a given number of a specific item
+		{ "HasAtMostItem", ObjectPrerequisite::parseHasAtMostItem, 0, 0 },       // True if the unit has ≤ a given number of a specific item
+		{ "ItemStorageFull", ObjectPrerequisite::parseItemStorageFull, 0, 0 },   // True if storage for a specific item is completely full
+		{ "ItemStorageNotFull", ObjectPrerequisite::parseItemStorageNotFull, 0, 0 }, // True if storage for a specific item is not full
+		{ "ItemStorageEmpty", ObjectPrerequisite::parseItemStorageEmpty, 0, 0 }, // True if storage for a specific item is completely empty
 		{ 0, 0, 0, 0 }
 	};
 
@@ -1137,6 +1522,109 @@ void ObjectPrerequisite::parseObjectHasNoStatusFlag(INI* ini, void* instance, vo
 	v->push_back(prereq);
 }
 
+//-------------------------------------------------------------------------------------------------
+void ObjectPrerequisite::parseHasAtLeastItem(INI* ini, void* instance, void* /*store*/, const void* /*userData*/)
+{
+	std::vector<ObjectPrerequisite>* v = (std::vector<ObjectPrerequisite>*)instance;
+	ObjectPrerequisite prereq;
+	AsciiString fullLine = parseFullLineFromINI(ini);
+	AsciiString remaining = fullLine;
+	AsciiString itemName;
+	Int count;
+	
+	// Parse all item-count pairs (OR logic)
+	while (parseItemCountPair(remaining, itemName, count))
+	{
+		prereq.addObjectHasAtLeastItemPrereq(itemName, count);
+	}
+	
+	v->push_back(prereq);
+}
+
+//-------------------------------------------------------------------------------------------------
+void ObjectPrerequisite::parseHasAtMostItem(INI* ini, void* instance, void* /*store*/, const void* /*userData*/)
+{
+	std::vector<ObjectPrerequisite>* v = (std::vector<ObjectPrerequisite>*)instance;
+	ObjectPrerequisite prereq;
+	AsciiString fullLine = parseFullLineFromINI(ini);
+	AsciiString remaining = fullLine;
+	AsciiString itemName;
+	Int count;
+	
+	// Parse all item-count pairs (OR logic)
+	while (parseItemCountPair(remaining, itemName, count))
+	{
+		prereq.addObjectHasAtMostItemPrereq(itemName, count);
+	}
+	
+	v->push_back(prereq);
+}
+
+//-------------------------------------------------------------------------------------------------
+void ObjectPrerequisite::parseItemStorageFull(INI* ini, void* instance, void* /*store*/, const void* /*userData*/)
+{
+	std::vector<ObjectPrerequisite>* v = (std::vector<ObjectPrerequisite>*)instance;
+	ObjectPrerequisite prereq;
+	AsciiString fullLine = parseFullLineFromINI(ini);
+	AsciiString remaining = fullLine;
+	AsciiString itemName;
+	
+	// Parse all item names (OR logic)
+	while (remaining.nextToken(&itemName, " "))
+	{
+		if (!itemName.isEmpty())
+		{
+			prereq.addObjectItemStorageFullPrereq(itemName);
+		}
+	}
+	
+	v->push_back(prereq);
+}
+
+//-------------------------------------------------------------------------------------------------
+void ObjectPrerequisite::parseItemStorageNotFull(INI* ini, void* instance, void* /*store*/, const void* /*userData*/)
+{
+	std::vector<ObjectPrerequisite>* v = (std::vector<ObjectPrerequisite>*)instance;
+	ObjectPrerequisite prereq;
+	AsciiString fullLine = parseFullLineFromINI(ini);
+	AsciiString remaining = fullLine;
+	AsciiString itemName;
+	
+	// Parse all item names (OR logic)
+	while (remaining.nextToken(&itemName, " "))
+	{
+		if (!itemName.isEmpty())
+		{
+			prereq.addObjectItemStorageNotFullPrereq(itemName);
+		}
+	}
+	
+	v->push_back(prereq);
+}
+
+//-------------------------------------------------------------------------------------------------
+void ObjectPrerequisite::parseItemStorageEmpty(INI* ini, void* instance, void* /*store*/, const void* /*userData*/)
+{
+	std::vector<ObjectPrerequisite>* v = (std::vector<ObjectPrerequisite>*)instance;
+	ObjectPrerequisite prereq;
+	AsciiString fullLine = parseFullLineFromINI(ini);
+	AsciiString remaining = fullLine;
+	AsciiString itemName;
+	
+	// Parse all item names (OR logic)
+	while (remaining.nextToken(&itemName, " "))
+	{
+		if (!itemName.isEmpty())
+		{
+			prereq.addObjectItemStorageEmptyPrereq(itemName);
+		}
+	}
+	
+	v->push_back(prereq);
+}
+
+//-------------------------------------------------------------------------------------------------
+
 //=============================================================================
 // Helper methods for refactoring repeated code
 //=============================================================================
@@ -1186,6 +1674,23 @@ Bool ObjectPrerequisite::parseKindOfDistancePair(AsciiString& remaining, AsciiSt
 		return false;
 	
 	distance = (Real)atof(distanceStr.str());
+	return true;
+}
+
+//-------------------------------------------------------------------------------------------------
+// Parse item name and count pair from string
+Bool ObjectPrerequisite::parseItemCountPair(AsciiString& remaining, AsciiString& itemName, Int& count)
+{
+	// Get the item name
+	if (!remaining.nextToken(&itemName, " "))
+		return false;
+	
+	// Get the count
+	AsciiString countStr;
+	if (!remaining.nextToken(&countStr, " "))
+		return false;
+	
+	count = atoi(countStr.str());
 	return true;
 }
 

@@ -206,6 +206,7 @@ enum GUICommandType CPP_11(: Int)
 #endif
 	GUI_COMMAND_COMBATDROP,								///< rappel contents to ground or bldg
 	GUI_COMMAND_SWITCH_WEAPON,						///< switch weapon use
+	GUI_COMMAND_REPLENISH_INVENTORY_ITEM,		///< TheSuperHackers @feature author 15/01/2025 replenish inventory items
 
 	//Context senstive command modes
 	GUICOMMANDMODE_HIJACK_VEHICLE,
@@ -269,6 +270,7 @@ static const char *const TheGuiCommandNames[] =
 #endif
 	"COMBATDROP",
 	"SWITCH_WEAPON",
+	"REPLENISH_INVENTORY_ITEM",
 	"HIJACK_VEHICLE",
 	"CONVERT_TO_CARBOMB",
 	"SABOTAGE_BUILDING",
@@ -353,6 +355,7 @@ public:
 	const AsciiString& getConflictingLabel() const { return m_conflictingLabel; }
 	const AsciiString& getOverlayImageName() const { return m_overlayImageName; }
 	const AsciiString& getOverlayImage2Name() const { return m_overlayImage2Name; }
+	const AsciiString& getItemToReplenish() const { return m_itemToReplenish; }
 	const AudioEventRTS* getUnitSpecificSound() const { return &m_unitSpecificSound; }
 	const bool isRequireElectronics() const { return m_isRequireElectronics; }
 
@@ -406,7 +409,7 @@ public:
 	const CommandButton* getButtonForModifiers(Bool ctrlPressed, Bool altPressed, Bool shiftPressed, Bool isRightClick) const;
 
 	// Get the appropriate alternative button based on prerequisites (replaces original button completely)
-	const CommandButton* getAlternativeButtonForPrerequisites(const Player* player) const;
+	const CommandButton* getAlternativeButtonForPrerequisites(const Player* player, const Object* object) const;
 
 	GameWindow* getWindow() const { return m_window;	}
 	Int getFlashCount() const { return m_flashCount; }
@@ -454,6 +457,12 @@ public:
 	static void parseAlternativeButton3Prerequisites(INI* ini, void* instance, void* /*store*/, const void* /*userData*/);
 	static void parseAlternativeButton4Prerequisites(INI* ini, void* instance, void* /*store*/, const void* /*userData*/);
 
+	// Alternative button object prerequisite parsing functions
+	static void parseAlternativeButton1ObjectPrerequisites(INI* ini, void* instance, void* /*store*/, const void* /*userData*/);
+	static void parseAlternativeButton2ObjectPrerequisites(INI* ini, void* instance, void* /*store*/, const void* /*userData*/);
+	static void parseAlternativeButton3ObjectPrerequisites(INI* ini, void* instance, void* /*store*/, const void* /*userData*/);
+	static void parseAlternativeButton4ObjectPrerequisites(INI* ini, void* instance, void* /*store*/, const void* /*userData*/);
+
 	// TheSuperHackers @alternative Ahmed Salah 27/06/2025 Helper function to check all alternative buttons
 	const CommandButton* getAlternativeButtonByIndex(Int index) const;
 
@@ -485,6 +494,7 @@ private:
 	AsciiString										m_buttonImageName;
 	AsciiString										m_overlayImageName;						///< overlay image name for additional visual indicators
 	AsciiString										m_overlayImage2Name;					///< second overlay image name for additional visual indicators
+	AsciiString										m_itemToReplenish;						///< TheSuperHackers @feature author 15/01/2025 Item key to replenish (empty means all items)
 	GameWindow*										m_window;											///< used during the run-time assignment of a button to a gadget button window
 	AudioEventRTS									m_unitSpecificSound;					///< Unit sound played whenever button is clicked.
 
@@ -524,6 +534,12 @@ private:
 	std::vector<PlayerPrerequisite>	m_alternativeButton2Prereq;				///< prerequisites for alternative button 2
 	std::vector<PlayerPrerequisite>	m_alternativeButton3Prereq;				///< prerequisites for alternative button 3
 	std::vector<PlayerPrerequisite>	m_alternativeButton4Prereq;				///< prerequisites for alternative button 4
+
+	// Object-based prerequisites for alternative buttons
+	std::vector<ObjectPrerequisite>	m_alternativeButton1ObjectPrereq;		///< object prerequisites for alternative button 1
+	std::vector<ObjectPrerequisite>	m_alternativeButton2ObjectPrereq;		///< object prerequisites for alternative button 2
+	std::vector<ObjectPrerequisite>	m_alternativeButton3ObjectPrereq;		///< object prerequisites for alternative button 3
+	std::vector<ObjectPrerequisite>	m_alternativeButton4ObjectPrereq;		///< object prerequisites for alternative button 4
 
 	// Cached button references (assigned once when first accessed)
 	mutable const CommandButton*			m_leftClickCtrlButton;						///< cached button for Ctrl+left-click
@@ -839,6 +855,9 @@ public:
 
 	/// is the drawable the currently selected drawable for the context sensitive UI?
 	Bool isDrivingContextUI( Drawable *draw ) const { return draw == m_currentSelectedDrawable; }
+
+	/// is the object currently selected in the control bar?
+	Bool isObjectSelected( const Object *obj ) const;
 
 	CommandAvailability getCommandAvailability(const CommandButton* command, Object* obj, GameWindow* win, GameWindow* applyToWin = NULL, Bool forceDisabledEvaluation = FALSE) const;
 

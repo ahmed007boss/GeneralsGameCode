@@ -467,6 +467,7 @@ public:
 	inline const std::vector<ObjectPrerequisite>& getShooterPrerequisites() const { return m_shooterPrerequisites; }
 	inline const std::vector<ObjectPrerequisite>& getRadiusDamageAffectsPrerequisites() const { return m_radiusDamageAffectsPrerequisites; }
 	inline BOOL canAttackWithoutTarget() const { return m_canAttackWithoutTarget; }
+	inline const AsciiString& getConsumeInventory() const { return m_consumeInventory; }
 	inline Bool isLeechRangeWeapon() const { return m_leechRangeWeapon; }
 	inline Bool isCapableOfFollowingWaypoint() const { return m_capableOfFollowingWaypoint; }
 	inline Bool isShowsAmmoPips() const { return m_isShowsAmmoPips; }
@@ -577,6 +578,7 @@ private:
 	ObjectStatusTypes m_damageStatusType;		///< If our damage is Status damage, the status we apply
 	UnsignedInt m_suspendFXDelay;						///< The fx can be suspended for any delay, in frames, then they will execute as normal
 	Bool m_dieOnDetonate;
+	AsciiString m_consumeInventory;						///< TheSuperHackers @feature author 15/01/2025 Key of inventory item to consume when firing
 
 	mutable HistoricWeaponDamageList m_historicDamage;
 };
@@ -609,7 +611,7 @@ public:
 
 	// return true if this weapon can be used by source against victim
 	Bool isValidWeaponUse( const Object* source, const Object* victim);
-
+	Bool hasEnoughInventoryToFire(const Object* source) const;
 	Bool fireWeapon(const Object *source, Object *target, ObjectID* projectileID = NULL);
 
 	// return true if we auto-reloaded our clip after firing.
@@ -712,6 +714,7 @@ public:
 	inline UnsignedInt getLastShotFrame() const { return m_lastFireFrame; }						///< frame a shot was last fired on
 	// If we are "reloading", then m_ammoInClip is a lie.  It will say full.
 	inline UnsignedInt getRemainingAmmo() const { return (getStatus() == RELOADING_CLIP) ? 0 : m_ammoInClip; }
+	inline UnsignedInt getRemainingAmmoIncludingReload() const { return (getStatus() == RELOADING_CLIP) ? getClipSize() : m_ammoInClip; }
 	inline WeaponReloadType getReloadType() const { return m_template->getReloadType(); }
 	inline Bool getAutoReloadsClip() const { return m_template->getAutoReloadsClip(); }
 	inline Real getAimDelta() const { return m_template->getAimDelta(); }

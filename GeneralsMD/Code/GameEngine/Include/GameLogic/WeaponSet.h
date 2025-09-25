@@ -123,7 +123,6 @@ enum WeaponSetConditionType CPP_11(: Int)
 	WSF_BETWEEN,
 	WSF_RELOADING,
 	WSF_PREATTACK,
-
 	WSF_COUNT
 };
 
@@ -256,7 +255,7 @@ public:
 	UnsignedInt getMostPercentReadyToFireAnyWeapon() const;
 	inline UnsignedInt getNthCommandSourceMask( WeaponSlotType n ) const { return m_curWeaponTemplateSet ? m_curWeaponTemplateSet->getNthCommandSourceMask( n ) : NULL; }
 
-	Bool setWeaponLock( WeaponSlotType weaponSlot, WeaponLockType lockType );
+	Bool setWeaponLock( WeaponSlotType weaponSlot, WeaponLockType lockType, const Object* obj = NULL );
 	void releaseWeaponLock(WeaponLockType lockType);
 	Bool isSharedReloadTime() const;
 

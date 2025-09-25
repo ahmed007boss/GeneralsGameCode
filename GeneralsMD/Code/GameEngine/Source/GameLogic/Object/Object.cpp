@@ -97,6 +97,7 @@
 #include "GameLogic/Module/ToppleUpdate.h"
 #include "GameLogic/Module/UpdateModule.h"
 #include "GameLogic/Module/UpgradeModule.h"
+#include "GameLogic/Module/WeaponRangeDecalBehavior.h"
 
 #include "GameLogic/Object.h"
 #include "GameLogic/PartitionManager.h"
@@ -218,7 +219,7 @@ Object::Object(const ThingTemplate* tt, const ObjectStatusMaskType& objectStatus
 	m_enteredOrExitedFrame(0),
 	m_visionSpiedMask(PLAYERMASK_NONE),
 	m_numTriggerAreasActive(0),
-	m_rangeDecalShownForSlot((WeaponSlotType)-1)
+	m_rangeDecalShownForSlot((WeaponSlotType)-2)
 {
 #if defined(RTS_DEBUG)
 	m_hasDiedAlready = false;
@@ -6560,4 +6561,79 @@ UnicodeString Object::getExtendedDescription() const
 	}
 	
 	return UnicodeString();
+}
+
+//-------------------------------------------------------------------------------------------------
+// TheSuperHackers @feature author 15/01/2025 Get amount needed to replenish inventory item
+//-------------------------------------------------------------------------------------------------
+Int Object::getInventoryReplenishAmount(const AsciiString& itemName) const
+{
+	InventoryBehavior* inventoryBehavior = getInventoryBehavior();
+	if (!inventoryBehavior)
+		return 0;
+
+	const InventoryBehaviorModuleData* moduleData = inventoryBehavior->getInventoryModuleData();
+	if (!moduleData)
+		return 0;
+
+	Int currentAmount = inventoryBehavior->getItemCount(itemName);
+	Int maxStorage = moduleData->getMaxStorageCount(itemName);
+	
+	Int ammoInClips = 0;
+	for (Int i = PRIMARY_WEAPON; i < WEAPONSLOT_COUNT; ++i)
+	{
+		Weapon* weapon = getWeaponInWeaponSlot((WeaponSlotType)i);
+		if (weapon && weapon->getTemplate() && weapon->getTemplate()->getConsumeInventory() == itemName)
+		{
+			ammoInClips += weapon->getRemainingAmmoIncludingReload();
+		}
+	}
+	
+	Int totalAvailable = currentAmount + ammoInClips;
+	return maxStorage - totalAvailable;
+}
+
+//-------------------------------------------------------------------------------------------------
+// TheSuperHackers @feature author 15/01/2025 Get total count of inventory item including weapon clips
+//-------------------------------------------------------------------------------------------------
+Int Object::getTotalInventoryItemCount(const AsciiString& itemName) const
+{
+	Int totalCount = 0;
+	
+	// Get count from inventory behavior
+	InventoryBehavior* inventoryBehavior = getInventoryBehavior();
+	if (inventoryBehavior)
+	{
+		totalCount += inventoryBehavior->getItemCount(itemName);
+	}
+	
+	// Add count from weapon clips that consume this item
+	for (Int i = PRIMARY_WEAPON; i < WEAPONSLOT_COUNT; ++i)
+	{
+		Weapon* weapon = getWeaponInWeaponSlot((WeaponSlotType)i);
+		if (weapon && weapon->getTemplate() && weapon->getTemplate()->getConsumeInventory() == itemName)
+		{
+			totalCount += weapon->getRemainingAmmoIncludingReload();
+		}
+	}
+	
+	return totalCount;
+}
+
+//-------------------------------------------------------------------------------------------------
+// TheSuperHackers @feature author 15/01/2025 Refresh decal state for weapon range decal behaviors
+//-------------------------------------------------------------------------------------------------
+Bool Object::refreshWeaponRangeDecalState()
+{
+	Bool foundAny = false;
+	for (BehaviorModule** i = getBehaviorModules(); *i; ++i)
+	{
+		WeaponRangeDecalBehavior* behavior = dynamic_cast<WeaponRangeDecalBehavior*>(*i);
+		if (behavior)
+		{
+			behavior->refreshDecalState();
+			foundAny = true;
+		}
+	}
+	return foundAny;
 }

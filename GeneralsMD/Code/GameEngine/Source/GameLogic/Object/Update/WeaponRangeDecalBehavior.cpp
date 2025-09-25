@@ -51,11 +51,11 @@ static void computeWeaponBonus(const Object* source, const WeaponTemplate* weapo
 	WeaponBonusConditionFlags flags = source->getWeaponBonusCondition();
 	flags |= extraBonusFlags;
 
-	if( source->getContainedBy() )
+	if (source->getContainedBy())
 	{
 		// We may be able to add in our container's flags
-		const ContainModuleInterface *theirContain = source->getContainedBy()->getContain();
-		if( theirContain && theirContain->isWeaponBonusPassedToPassengers() )
+		const ContainModuleInterface* theirContain = source->getContainedBy()->getContain();
+		if (theirContain && theirContain->isWeaponBonusPassedToPassengers())
 			flags |= theirContain->getWeaponBonusPassedToPassengers();
 	}
 
@@ -71,7 +71,7 @@ static void computeWeaponBonus(const Object* source, const WeaponTemplate* weapo
 
 WeaponRangeDecalBehaviorModuleData::WeaponRangeDecalBehaviorModuleData()
 {
-	m_weaponSlot = PRIMARY_WEAPON;		// Default to primary weapon slot
+	m_weaponSlot = NONE_WEAPON;		// Default to primary weapon slot
 	m_useSlavedObjectWeapon = FALSE;	// Default to using own weapon
 	m_specificWeaponName.clear();		// Default to no specific weapon
 }
@@ -105,7 +105,7 @@ WeaponRangeDecalBehavior::WeaponRangeDecalBehavior(Thing* thing, const ModuleDat
 	WeaponSlotType objectDecalSlot = getObject()->getRangeDecalShownForSlot();
 	WeaponSlotType moduleWeaponSlot = getWeaponRangeDecalBehaviorModuleData()->m_weaponSlot;
 
-	if (objectDecalSlot == moduleWeaponSlot)
+	if (objectDecalSlot == moduleWeaponSlot || (moduleWeaponSlot == NONE_WEAPON && objectDecalSlot != -2))
 	{
 		// Object wants to show decals for this slot - activate via upgrade system
 		giveSelfUpgrade();
@@ -161,12 +161,27 @@ void WeaponRangeDecalBehavior::createWeaponRangeDecals(void)
 		{
 			weaponOwner = slavedObjects[0]; // Use first slaved object
 		}
-		weapon = weaponOwner->getWeaponInWeaponSlot(data->m_weaponSlot);
+		if (data->m_weaponSlot == NONE_WEAPON)
+		{
+			weapon = weaponOwner->getCurrentWeapon();
+		}
+		else
+		{
+			weapon = weaponOwner->getWeaponInWeaponSlot(data->m_weaponSlot);
+		}
+
 	}
 	else
 	{
 		// Use own weapon from specified slot
-		weapon = weaponOwner->getWeaponInWeaponSlot(data->m_weaponSlot);
+		if (data->m_weaponSlot == NONE_WEAPON)
+		{
+			weapon = weaponOwner->getCurrentWeapon();
+		}
+		else
+		{
+			weapon = weaponOwner->getWeaponInWeaponSlot(data->m_weaponSlot);
+		}
 	}
 
 	if (!weapon && data->m_specificWeaponName.isEmpty())
@@ -187,13 +202,13 @@ void WeaponRangeDecalBehavior::createWeaponRangeDecals(void)
 		if (weaponTemplate)
 		{
 			minRange = weaponTemplate->getMinimumAttackRange();
-			
+
 			// Compute weapon bonus manually
 			WeaponBonus bonus;
 			computeWeaponBonus(weaponOwner, weaponTemplate, 0, bonus);
-			
+
 			Real baseRange = weaponTemplate->getAttackRange(bonus);
-			
+
 			// If attack range is 1 (contact weapon), use primary damage radius instead
 			if (baseRange <= 1.0f)
 			{
@@ -211,11 +226,11 @@ void WeaponRangeDecalBehavior::createWeaponRangeDecals(void)
 		weaponTemplate = weapon->getTemplate();
 		minRange = weaponTemplate->getMinimumAttackRange();
 		Real actualRange = weapon->getAttackRange(weaponOwner);
-		
+
 		// Get weapon bonus for damage radius calculation
 		WeaponBonus bonus;
 		computeWeaponBonus(weaponOwner, weaponTemplate, 0, bonus);
-		
+
 		// If attack range is 1 (contact weapon), use primary damage radius instead
 		if (actualRange <= 1.0f)
 		{
@@ -333,7 +348,7 @@ void WeaponRangeDecalBehavior::refreshDecalState()
 	WeaponSlotType objectDecalSlot = getObject()->getRangeDecalShownForSlot();
 	WeaponSlotType moduleWeaponSlot = getWeaponRangeDecalBehaviorModuleData()->m_weaponSlot;
 
-	if (objectDecalSlot == moduleWeaponSlot)
+	if (objectDecalSlot == moduleWeaponSlot || (moduleWeaponSlot == NONE_WEAPON && objectDecalSlot != -2))
 	{
 		// Object wants to show decals for this slot - activate via upgrade system
 		if (!isUpgradeActive()) {
@@ -372,7 +387,7 @@ UpdateSleepTime WeaponRangeDecalBehavior::update(void)
 	WeaponSlotType objectDecalSlot = getObject()->getRangeDecalShownForSlot();
 	WeaponSlotType moduleWeaponSlot = getWeaponRangeDecalBehaviorModuleData()->m_weaponSlot;
 
-	if (objectDecalSlot != moduleWeaponSlot) {
+	if (objectDecalSlot != moduleWeaponSlot && !(moduleWeaponSlot == NONE_WEAPON && objectDecalSlot != -2)) {
 		clearDecals();
 		return UPDATE_SLEEP_FOREVER;
 	}

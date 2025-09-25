@@ -62,6 +62,7 @@
 #include "GameLogic/Module/OpenContain.h"
 #include "GameLogic/Module/ProductionUpdate.h"
 #include "GameLogic/Module/SpecialPowerModule.h"
+#include "GameLogic/Module/InventoryBehavior.h"
 #include "GameLogic/ScriptActions.h"
 #include "GameLogic/ScriptEngine.h"
 #include "GameLogic/VictoryConditions.h"
@@ -532,6 +533,207 @@ void GameLogic::logicMessageDispatcher( GameMessage *msg, void *userData )
 			if( currentlySelectedGroup && currentlySelectedGroup->setWeaponLockForGroup( weaponSlot, LOCKED_TEMPORARILY ))
 			{
 				currentlySelectedGroup->groupAttackPosition( NULL, maxShotsToFire, CMD_FROM_PLAYER );
+			}
+
+			break;
+		}
+
+		//---------------------------------------------------------------------------------------------
+		case GameMessage::MSG_REPLENISH_INVENTORY_ITEM:
+		{
+			// TheSuperHackers @feature author 15/01/2025 Handle inventory replenishment message
+			Int itemLength = msg->getArgument( 0 )->integer;
+			AsciiString itemToReplenish;
+			
+			// Convert length back to string (0 means replenish all items)
+			if (itemLength != 0)
+			{
+				// Find the item key by length from the first selected object's inventory
+				if (currentlySelectedGroup && !currentlySelectedGroup->isEmpty())
+				{
+					const VecObjectID& selectedObjects = currentlySelectedGroup->getAllIDs();
+					if (!selectedObjects.empty())
+					{
+						Object* firstObj = TheGameLogic->findObjectByID(selectedObjects[0]);
+						if (firstObj)
+						{
+						InventoryBehavior* inventoryBehavior = firstObj->getInventoryBehavior();
+							
+							if (inventoryBehavior)
+							{
+								const InventoryBehaviorModuleData* moduleData = inventoryBehavior->getInventoryModuleData();
+								if (moduleData)
+								{
+									// Find the item key that matches the length
+									for (std::map<AsciiString, InventoryItemConfig>::const_iterator it = moduleData->m_inventoryItems.begin();
+										 it != moduleData->m_inventoryItems.end(); ++it)
+									{
+										if (it->first.getLength() == itemLength)
+										{
+											itemToReplenish = it->first;
+											break;
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+
+			// Process replenishment for all selected objects
+			if (currentlySelectedGroup)
+			{
+				const VecObjectID& selectedObjects = currentlySelectedGroup->getAllIDs();
+				for (VecObjectID::const_iterator it = selectedObjects.begin(); it != selectedObjects.end(); ++it)
+				{
+					Object* obj = TheGameLogic->findObjectByID(*it);
+					if (!obj)
+						continue;
+
+					// Get inventory behavior using cached method
+					InventoryBehavior* inventoryBehavior = obj->getInventoryBehavior();
+
+					if (!inventoryBehavior)
+						continue;
+
+					const InventoryBehaviorModuleData* moduleData = inventoryBehavior->getInventoryModuleData();
+					if (!moduleData)
+						continue;
+
+					Player* player = obj->getControllingPlayer();
+					if (!player)
+						continue;
+
+					UnsignedInt totalCost = 0;
+
+					if (itemToReplenish.isEmpty())
+					{
+						// Replenish all items
+						for (std::map<AsciiString, InventoryItemConfig>::const_iterator it = moduleData->m_inventoryItems.begin();
+							 it != moduleData->m_inventoryItems.end(); ++it)
+						{
+							const AsciiString& itemKey = it->first;
+							const InventoryItemConfig& config = it->second;
+							
+							Int neededAmount = obj->getInventoryReplenishAmount(itemKey);
+							
+							if (neededAmount > 0)
+							{
+								totalCost += neededAmount * config.costPerItem;
+							}
+						}
+					}
+					else
+					{
+						// Replenish specific item
+						Int neededAmount = obj->getInventoryReplenishAmount(itemToReplenish);
+						
+						if (neededAmount > 0)
+						{
+							Int costPerItem = moduleData->getCostPerItem(itemToReplenish);
+							totalCost = neededAmount * costPerItem;
+						}
+					}
+
+					// Check if player can afford the replenishment
+					if (player->getMoney()->countMoney() < totalCost)
+					{
+						TheEva->setShouldPlay(EVA_InsufficientFunds);
+						TheInGameUI->message("GUI:NotEnoughMoneyToBuild");
+						continue;
+					}
+
+					// Deduct cost and replenish items
+					player->getMoney()->withdraw(totalCost);
+
+					if (itemToReplenish.isEmpty())
+					{
+						// Replenish all items
+						for (std::map<AsciiString, InventoryItemConfig>::const_iterator it = moduleData->m_inventoryItems.begin();
+							 it != moduleData->m_inventoryItems.end(); ++it)
+						{
+							const AsciiString& itemKey = it->first;
+							const InventoryItemConfig& config = it->second;
+							
+							// TheSuperHackers @feature author 15/01/2025 Replenish with clip-first strategy
+							Int currentAmount = inventoryBehavior->getItemCount(itemKey);
+							Int maxStorage = config.maxStorageCount;
+							
+							// Find weapons that consume this item and need reloading
+							for (Int i = PRIMARY_WEAPON; i < WEAPONSLOT_COUNT; ++i)
+							{
+								Weapon* weapon = obj->getWeaponInWeaponSlot((WeaponSlotType)i);
+								if (weapon && weapon->getTemplate() && weapon->getTemplate()->getConsumeInventory() == itemKey)
+								{
+									// Check if weapon needs reloading
+									if (weapon->getRemainingAmmo() == 0)
+									{
+										Int clipSize = weapon->getTemplate()->getClipSize();
+										Int neededForClip = clipSize - currentAmount;
+										
+										if (neededForClip > 0)
+										{
+											// Add enough to fill one clip
+											inventoryBehavior->addItem(itemKey, neededForClip);
+											currentAmount += neededForClip;
+											
+											// Reload the weapon
+											weapon->reloadAmmo(obj);
+										}
+									}
+								}
+							}
+							
+							// Fill the rest of inventory to max capacity
+							Int remainingNeeded = maxStorage - currentAmount;
+							if (remainingNeeded > 0)
+							{
+								inventoryBehavior->addItem(itemKey, remainingNeeded);
+							}
+						}
+					}
+					else
+					{
+						// Replenish specific item
+						Int currentAmount = inventoryBehavior->getItemCount(itemToReplenish);
+						Int maxStorage = moduleData->getMaxStorageCount(itemToReplenish);
+						
+						// TheSuperHackers @feature author 15/01/2025 Replenish with clip-first strategy
+						// Find weapons that consume this item and need reloading
+						for (Int i = PRIMARY_WEAPON; i < WEAPONSLOT_COUNT; ++i)
+						{
+							Weapon* weapon = obj->getWeaponInWeaponSlot((WeaponSlotType)i);
+							if (weapon && weapon->getTemplate() && weapon->getTemplate()->getConsumeInventory() == itemToReplenish)
+							{
+								// Check if weapon needs reloading
+								if (weapon->getRemainingAmmo() == 0)
+								{
+									Int clipSize = weapon->getTemplate()->getClipSize();
+									Int neededForClip = clipSize - currentAmount;
+									
+									if (neededForClip > 0)
+									{
+										// Add enough to fill one clip
+										inventoryBehavior->addItem(itemToReplenish, neededForClip);
+										currentAmount += neededForClip;
+										
+										// Reload the weapon
+										weapon->reloadAmmo(obj);
+									}
+								}
+							}
+						}
+						
+						// Fill the rest of inventory to max capacity
+						Int remainingNeeded = maxStorage - currentAmount;
+						if (remainingNeeded > 0)
+						{
+							inventoryBehavior->addItem(itemToReplenish, remainingNeeded);
+						}
+					}
+
+				}
 			}
 
 			break;

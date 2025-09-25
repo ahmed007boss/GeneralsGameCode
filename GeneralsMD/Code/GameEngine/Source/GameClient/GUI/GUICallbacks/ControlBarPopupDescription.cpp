@@ -92,6 +92,7 @@
 #include "GameLogic/GameLogic.h"
 #include "GameLogic/Module/OverchargeBehavior.h"
 #include "GameLogic/Module/ProductionUpdate.h"
+#include "GameLogic/Module/InventoryBehavior.h"
 #include "GameLogic/ScriptEngine.h"
 
 #include "GameNetwork/NetworkInterface.h"
@@ -912,6 +913,71 @@ void ControlBar::populateBuildTooltipLayout(const CommandButton* commandButton, 
 				descrip.concat(TheGameText->fetch("TOOLTIP:TooltipNotEnoughMoneyToBuild"));
 			}
 			
+		}
+
+		// TheSuperHackers @feature author 15/01/2025 Handle inventory replenishment cost
+		if (commandButton->getCommandType() == GUI_COMMAND_REPLENISH_INVENTORY_ITEM)
+		{
+			// Get the current object for inventory calculation
+			Drawable* draw = TheInGameUI->getFirstSelectedDrawable();
+			Object* selectedObject = draw ? draw->getObject() : NULL;
+			
+			if (selectedObject)
+			{
+				// Find the inventory behavior
+				InventoryBehavior* inventoryBehavior = selectedObject->getInventoryBehavior();
+
+				if (inventoryBehavior)
+				{
+					const InventoryBehaviorModuleData* moduleData = inventoryBehavior->getInventoryModuleData();
+					if (moduleData)
+					{
+						const AsciiString& itemToReplenish = commandButton->getItemToReplenish();
+						UnsignedInt totalCost = 0;
+
+						if (itemToReplenish.isEmpty())
+						{
+							// Calculate cost for all items
+							for (std::map<AsciiString, InventoryItemConfig>::const_iterator it = moduleData->m_inventoryItems.begin();
+								 it != moduleData->m_inventoryItems.end(); ++it)
+							{
+								const AsciiString& itemKey = it->first;
+								const InventoryItemConfig& config = it->second;
+								
+								Int neededAmount = selectedObject->getInventoryReplenishAmount(itemKey);
+								
+								if (neededAmount > 0)
+								{
+									totalCost += neededAmount * config.costPerItem;
+								}
+							}
+						}
+						else
+						{
+							// Calculate cost for specific item
+							Int neededAmount = selectedObject->getInventoryReplenishAmount(itemToReplenish);
+							
+							if (neededAmount > 0)
+							{
+								Int costPerItem = moduleData->getCostPerItem(itemToReplenish);
+								totalCost = neededAmount * costPerItem;
+							}
+						}
+
+						costToBuild = totalCost;
+						if (costToBuild > 0)
+						{
+							cost.format(TheGameText->fetch("TOOLTIP:Cost"), costToBuild);
+						}
+
+						if (totalCost > 0 && player->getMoney()->countMoney() < totalCost)
+						{
+							descrip.concat(L"\n\n");
+							descrip.concat(TheGameText->fetch("TOOLTIP:TooltipNotEnoughMoneyToBuild"));
+						}
+					}
+				}
+			}
 		}
 
 		// Add module descriptions from template

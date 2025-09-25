@@ -173,6 +173,7 @@ enum Scorches CPP_11(: Int)
 //-------------------------------------------------------------------------------------------------
 enum WeaponSlotType CPP_11(: Int)
 {
+	NONE_WEAPON = -1,
 	PRIMARY_WEAPON = 0,
 	SECONDARY_WEAPON,
 	TERTIARY_WEAPON,

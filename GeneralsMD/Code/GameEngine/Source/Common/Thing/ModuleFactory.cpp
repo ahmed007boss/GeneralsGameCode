@@ -89,6 +89,7 @@
 #include "GameLogic/Module/MinefieldBehavior.h"
 #include "GameLogic/Module/BattleBusSlowDeathBehavior.h"
 #include "GameLogic/Module/JetSlowDeathBehavior.h"
+#include "GameLogic/Module/InventoryBehavior.h"
 
 // die includes
 #include "GameLogic/Module/CreateCrateDie.h"
@@ -373,7 +374,8 @@ void ModuleFactory::init( void )
 	addModule( JetSlowDeathBehavior );
 	addModule( RailroadBehavior );
 	addModule( SpawnBehavior );
-
+	// TheSuperHackers @feature author 15/01/2025 Add Inventory module
+	addModule( InventoryBehavior );
 	// die modules
 	addModule( DestroyDie );
 	addModule( FXListDie );

@@ -48,6 +48,7 @@
 #include "GameLogic/WeaponSet.h"
 #include "GameLogic/WeaponSetFlags.h"
 #include "GameLogic/Module/StealthUpdate.h"
+#include "GameLogic/Module/InventoryBehavior.h"
 
 //-----------------------------------------------------------------------------
 //           Forward References
@@ -502,10 +503,12 @@ public:
 
 	Weapon* getWeaponInWeaponSlot(WeaponSlotType wslot) const { return m_weaponSet.getWeaponInWeaponSlot(wslot); }
 	UnsignedInt getWeaponInWeaponSlotCommandSourceMask( WeaponSlotType wSlot ) const { return m_weaponSet.getNthCommandSourceMask( wSlot ); }
+	WeaponSlotType getCurWeaponSlot() const { return m_weaponSet.getCurWeaponSlot(); }
 	
 	// Range decal control
 	WeaponSlotType getRangeDecalShownForSlot() const { return m_rangeDecalShownForSlot; }
 	void setRangeDecalShownForSlot(WeaponSlotType slot) { m_rangeDecalShownForSlot = slot; }
+	Bool refreshWeaponRangeDecalState();
 
 	// see if this current weapon set's weapons has shared reload times
 	Bool isReloadTimeShared() const { return m_weaponSet.isSharedReloadTime(); }
@@ -569,9 +572,30 @@ public:
 	void clearWeaponSetFlag(WeaponSetType wst);
 	inline Bool testWeaponSetFlag(WeaponSetType wst) const { return m_curWeaponSetFlags.test(wst); }
 	inline const WeaponSetFlags& getWeaponSetFlags() const { return m_curWeaponSetFlags; }
-	Bool setWeaponLock( WeaponSlotType weaponSlot, WeaponLockType lockType ){ return m_weaponSet.setWeaponLock( weaponSlot, lockType ); }
+	Bool setWeaponLock( WeaponSlotType weaponSlot, WeaponLockType lockType ){ return m_weaponSet.setWeaponLock( weaponSlot, lockType, this ); }
 	void releaseWeaponLock(WeaponLockType lockType){ m_weaponSet.releaseWeaponLock(lockType); }
 	Bool isCurWeaponLocked() const { return m_weaponSet.isCurWeaponLocked(); }
+
+	// TheSuperHackers @feature author 15/01/2025 Get inventory behavior with caching
+	InventoryBehavior* getInventoryBehavior() const
+	{
+		if (!m_inventoryBehavior)
+		{
+			for (BehaviorModule** i = getBehaviorModules(); *i; ++i)
+			{
+				m_inventoryBehavior = InventoryBehavior::getInventoryBehavior(*i);
+				if (m_inventoryBehavior)
+					break;
+			}
+		}
+		return m_inventoryBehavior;
+	}
+
+	// TheSuperHackers @feature author 15/01/2025 Get amount needed to replenish inventory item
+	Int getInventoryReplenishAmount(const AsciiString& itemName) const;
+
+	// TheSuperHackers @feature author 15/01/2025 Get total count of inventory item including weapon clips
+	Int getTotalInventoryItemCount(const AsciiString& itemName) const;
 
 	void setArmorSetFlag(ArmorSetType ast);
 	void clearArmorSetFlag(ArmorSetType ast);
@@ -809,6 +833,7 @@ private:
 
 	AIUpdateInterface*						m_ai;	///< ai interface (if any), cached for handy access. (duplicate of entry in the module array!)
 	PhysicsBehavior*							m_physics;	///< physics interface (if any), cached for handy access. (duplicate of entry in the module array!)
+	mutable InventoryBehavior*						m_inventoryBehavior;	///< TheSuperHackers @feature author 15/01/2025 inventory behavior cached for handy access
 
 	PartitionData*								m_partitionData;	///< our PartitionData
 	RadarObject*									m_radarData;				///< radar data
