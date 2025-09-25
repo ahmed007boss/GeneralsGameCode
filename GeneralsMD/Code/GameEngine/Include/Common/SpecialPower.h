@@ -111,6 +111,7 @@ public:
 		m_id = id;
 	}
 	Bool canAffordUsingPower(Player* player) const;
+	Bool canAffordUsingPower(Player* player, Object* object) const;
 	AsciiString getName( void ) const { return getFO()->m_name; }
 	UnsignedInt getID( void ) const { return getFO()->m_id; }
 	SpecialPowerType getSpecialPowerType( void ) const { return getFO()->m_type; }
@@ -127,6 +128,7 @@ public:
 	Real getRadiusCursorRadius() const { return getFO()->m_radiusCursorRadius; }
 	Bool isShortcutPower() const { return getFO()->m_shortcutPower; }
 	AcademyClassificationType getAcademyClassificationType() const { return m_academyClassificationType; }
+	AsciiString getConsumeInventory() const { return getFO()->m_consumeInventory; }
 
 private:
 
@@ -149,6 +151,7 @@ private:
 	Bool							m_publicTimer;				///< display a countdown timer for this special power for all to see
 	Bool							m_sharedNSync;				///< If true, this is a special that is shared between all of a player's command centers
 	Bool							m_shortcutPower;		///< Is this shortcut power capable of being fired by the side panel?
+	AsciiString					m_consumeInventory;		///< TheSuperHackers @feature author 15/01/2025 Key of inventory item to consume when using special power
 
 	static const FieldParse m_specialPowerFieldParse[];		///< the parse table
 

@@ -3236,6 +3236,53 @@ void ControlBar::setControlCommand( GameWindow *button, const CommandButton *com
 		}
 	}
 
+	// TheSuperHackers @feature author 15/01/2025 Add inventory count to button text for special power commands
+	if (commandButton->getCommandType() == GUI_COMMAND_SPECIAL_POWER || 
+		commandButton->getCommandType() == GUI_COMMAND_SPECIAL_POWER_FROM_SHORTCUT ||
+		commandButton->getCommandType() == GUI_COMMAND_SPECIAL_POWER_CONSTRUCT ||
+		commandButton->getCommandType() == GUI_COMMAND_SPECIAL_POWER_CONSTRUCT_FROM_SHORTCUT)
+	{
+		// Get the current selected object to check its inventory
+		Object* currentObj = NULL;
+		if (m_currentSelectedDrawable)
+			currentObj = m_currentSelectedDrawable->getObject();
+		if (currentObj)
+		{
+			const SpecialPowerTemplate* specialPowerTemplate = commandButton->getSpecialPowerTemplate();
+			
+			if (specialPowerTemplate && !specialPowerTemplate->getConsumeInventory().isEmpty())
+			{
+				// Get inventory behavior using cached method
+				InventoryBehavior* inventoryBehavior = currentObj->getInventoryBehavior();
+				
+				if (inventoryBehavior)
+				{
+					const AsciiString& consumeInventory = specialPowerTemplate->getConsumeInventory();
+					Int itemCount = currentObj->getTotalInventoryItemCount(consumeInventory);
+					
+					// Get display name and max storage count from module data
+					const InventoryBehaviorModuleData* moduleData = inventoryBehavior->getInventoryModuleData();
+					if (moduleData) {
+						const UnicodeString& displayName = moduleData->getDisplayName(consumeInventory);
+						Int maxStorageCount = moduleData->getMaxStorageCount(consumeInventory);
+						
+						// Format text with display name and count (current/max)
+						UnicodeString newText;
+						newText.format(L"%s (%d/%d)", displayName.str(), itemCount, maxStorageCount);
+						
+						// Set the modified text
+						GadgetButtonSetText(button, newText);
+					}
+				}
+			}
+			else
+			{
+				// TheSuperHackers @feature author 15/01/2025 Reset to original text if special power doesn't consume inventory
+				GadgetButtonSetText(button, L"");
+			}
+		}
+	}
+
 	// save the command in the user data of the window
 	GadgetButtonSetData(button, (void*)commandButton);
 	//button->winSetUserData( commandButton );

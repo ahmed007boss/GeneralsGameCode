@@ -907,7 +907,7 @@ void ControlBar::populateBuildTooltipLayout(const CommandButton* commandButton, 
 				cost.format(TheGameText->fetch("TOOLTIP:Cost"), costToBuild);
 			}
 
-			if (!specialPowerTemplate->canAffordUsingPower(player))
+			if (!specialPowerTemplate->canAffordUsingPower(player, selectedObject))
 			{
 				descrip.concat(L"\n\n");
 				descrip.concat(TheGameText->fetch("TOOLTIP:TooltipNotEnoughMoneyToBuild"));

@@ -1529,7 +1529,7 @@ CommandAvailability ControlBar::getCommandAvailability( const CommandButton *com
 			// get special power module from the object to execute it
 			auto specialPowerTemplate = command->getSpecialPowerTemplate();
 
-			if (!specialPowerTemplate->canAffordUsingPower(player))
+			if (!specialPowerTemplate->canAffordUsingPower(player, obj))
 			{
 				return COMMAND_CANT_AFFORD;
 			}

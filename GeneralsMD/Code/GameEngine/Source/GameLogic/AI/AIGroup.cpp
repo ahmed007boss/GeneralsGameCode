@@ -48,6 +48,7 @@
 #include "GameLogic/Module/AIUpdate.h"
 #include "GameLogic/Module/BodyModule.h"
 #include "GameLogic/Module/ContainModule.h"
+#include "GameLogic/Module/InventoryBehavior.h"
 #include "GameLogic/Module/OverchargeBehavior.h"
 #include "GameLogic/Module/ProductionUpdate.h"
 #include "GameLogic/Module/SpawnBehavior.h"
@@ -2699,12 +2700,23 @@ void AIGroup::groupDoSpecialPower( UnsignedInt specialPowerID, UnsignedInt comma
 			{
 				if( TheActionManager->canDoSpecialPower( object, spTemplate, CMD_FROM_PLAYER, commandOptions ) )
 				{
-					// Check if player can afford the special power and withdraw cost
+					// Check if player can afford the special power and object has required inventory
 					Player *player = object->getControllingPlayer();
-					if( spTemplate->canAffordUsingPower( player ) )
+					if( spTemplate->canAffordUsingPower( player, object ) )
 					{
 						Money *money = player->getMoney();
 						money->withdraw( spTemplate->getUsingCost() );
+						
+						// Consume inventory items if required
+						const AsciiString& consumeInventory = spTemplate->getConsumeInventory();
+						if( !consumeInventory.isEmpty() )
+						{
+							InventoryBehavior* inventoryBehavior = object->getInventoryBehavior();
+							if( inventoryBehavior )
+							{
+								inventoryBehavior->consumeItem( consumeInventory, 1 );
+							}
+						}
 						
 						mod->doSpecialPower( commandOptions );
 
@@ -2755,12 +2767,23 @@ void AIGroup::groupDoSpecialPowerAtLocation( UnsignedInt specialPowerID, const C
 			{
 				if( TheActionManager->canDoSpecialPowerAtLocation( object, location, CMD_FROM_PLAYER, spTemplate, objectInWay, commandOptions ) )
 				{
-					// Check if player can afford the special power and withdraw cost
+					// Check if player can afford the special power and object has required inventory
 					Player *player = object->getControllingPlayer();
-					if( spTemplate->canAffordUsingPower( player ) )
+					if( spTemplate->canAffordUsingPower( player, object ) )
 					{
 						Money *money = player->getMoney();
 						money->withdraw( spTemplate->getUsingCost() );
+						
+						// Consume inventory items if required
+						const AsciiString& consumeInventory = spTemplate->getConsumeInventory();
+						if( !consumeInventory.isEmpty() )
+						{
+							InventoryBehavior* inventoryBehavior = object->getInventoryBehavior();
+							if( inventoryBehavior )
+							{
+								inventoryBehavior->consumeItem( consumeInventory, 1 );
+							}
+						}
 						
 						mod->doSpecialPowerAtLocation( location, angle, commandOptions );
 
@@ -2803,12 +2826,23 @@ void AIGroup::groupDoSpecialPowerAtObject( UnsignedInt specialPowerID, Object *t
 			{
 				if( TheActionManager->canDoSpecialPowerAtObject( object, target, CMD_FROM_PLAYER, spTemplate, commandOptions ) )
 				{
-					// Check if player can afford the special power and withdraw cost
+					// Check if player can afford the special power and object has required inventory
 					Player *player = object->getControllingPlayer();
-					if( spTemplate->canAffordUsingPower( player ) )
+					if( spTemplate->canAffordUsingPower( player, object ) )
 					{
 						Money *money = player->getMoney();
 						money->withdraw( spTemplate->getUsingCost() );
+						
+						// Consume inventory items if required
+						const AsciiString& consumeInventory = spTemplate->getConsumeInventory();
+						if( !consumeInventory.isEmpty() )
+						{
+							InventoryBehavior* inventoryBehavior = object->getInventoryBehavior();
+							if( inventoryBehavior )
+							{
+								inventoryBehavior->consumeItem( consumeInventory, 1 );
+							}
+						}
 						
 						mod->doSpecialPowerAtObject( target, commandOptions );
 

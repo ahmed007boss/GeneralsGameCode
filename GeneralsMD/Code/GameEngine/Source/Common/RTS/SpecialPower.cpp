@@ -205,6 +205,7 @@ void SpecialPowerStore::parseSpecialPowerDefinition( INI *ini )
 	{ "RadiusCursorRadius",				INI::parseReal,										NULL,	offsetof( SpecialPowerTemplate, m_radiusCursorRadius ) },
 	{ "ShortcutPower",						INI::parseBool,										NULL, offsetof( SpecialPowerTemplate, m_shortcutPower ) },
 	{ "AcademyClassify",					INI::parseIndexList,			TheAcademyClassificationTypeNames, offsetof( SpecialPowerTemplate, m_academyClassificationType ) },
+	{ "ConsumeInventory",					INI::parseAsciiString,							NULL, offsetof( SpecialPowerTemplate, m_consumeInventory ) },
 	{ NULL,	NULL, NULL,	0 }
 
 };
@@ -225,6 +226,7 @@ SpecialPowerTemplate::SpecialPowerTemplate()
 	m_radiusCursorRadius = 0;
 	m_shortcutPower = FALSE;
 	m_usingCost = 0;
+	m_consumeInventory = "";
 }  // end SpecialPowerTemplate
 
 //-------------------------------------------------------------------------------------------------
@@ -352,8 +354,8 @@ Bool SpecialPowerStore::canUseSpecialPower( Object *obj, const SpecialPowerTempl
 
 	}
 
-	// check if player can afford the special power
-	if( specialPowerTemplate->canAffordUsingPower( player ) == FALSE )
+	// check if player can afford the special power and object has required inventory
+	if( specialPowerTemplate->canAffordUsingPower( player, obj ) == FALSE )
 		return FALSE;
 
 	// I THINK THIS IS WHERE WE BAIL OUT IF A DIFFERENT CONYARD IS ALREADY CHARGIN THIS SPECIAL RIGHT NOW //LORENZEN
@@ -398,6 +400,34 @@ Bool SpecialPowerTemplate::canAffordUsingPower(Player* player) const
 	if (money->countMoney() < getUsingCost())
 	{
 		return FALSE;
+	}
+
+	return TRUE;  // all is well
+
+}  // end canAffordUsingPower
+
+//-------------------------------------------------------------------------------------------------
+/** does this player and object have all the necessary things to make this Using Power */
+//-------------------------------------------------------------------------------------------------
+Bool SpecialPowerTemplate::canAffordUsingPower(Player* player, Object* object) const
+{
+	// sanity check
+	if (player == NULL || object == NULL)
+		return FALSE;
+
+	// money check
+	Money* money = player->getMoney();
+	if (money->countMoney() < getUsingCost())
+	{
+		return FALSE;
+	}
+
+	// inventory check
+	const AsciiString& consumeInventory = getConsumeInventory();
+	if( !consumeInventory.isEmpty() )
+	{
+		if( object->getTotalInventoryItemCount( consumeInventory ) < 1 )
+			return FALSE;
 	}
 
 	return TRUE;  // all is well
