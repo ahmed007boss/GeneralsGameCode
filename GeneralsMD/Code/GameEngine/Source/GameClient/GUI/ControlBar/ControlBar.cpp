@@ -1048,7 +1048,11 @@ const CommandButton* CommandButton::getAlternativeButtonForPrerequisites(const P
 			}
 			
 			if (allPrereqsSatisfied)
-				return altButton1;
+			{
+				// TheSuperHackers @alternative Ahmed Salah 15/01/2025 Recursively check if this alternative button has its own alternatives
+				const CommandButton* recursiveAlt = altButton1->getAlternativeButtonForPrerequisites(player, object);
+				return recursiveAlt ? recursiveAlt : altButton1;
+			}
 		}
 	}
 
@@ -1089,7 +1093,11 @@ const CommandButton* CommandButton::getAlternativeButtonForPrerequisites(const P
 			}
 			
 			if (allPrereqsSatisfied)
-				return altButton2;
+			{
+				// TheSuperHackers @alternative Ahmed Salah 15/01/2025 Recursively check if this alternative button has its own alternatives
+				const CommandButton* recursiveAlt = altButton2->getAlternativeButtonForPrerequisites(player, object);
+				return recursiveAlt ? recursiveAlt : altButton2;
+			}
 		}
 	}
 
@@ -1130,7 +1138,11 @@ const CommandButton* CommandButton::getAlternativeButtonForPrerequisites(const P
 			}
 			
 			if (allPrereqsSatisfied)
-				return altButton3;
+			{
+				// TheSuperHackers @alternative Ahmed Salah 15/01/2025 Recursively check if this alternative button has its own alternatives
+				const CommandButton* recursiveAlt = altButton3->getAlternativeButtonForPrerequisites(player, object);
+				return recursiveAlt ? recursiveAlt : altButton3;
+			}
 		}
 	}
 
@@ -1171,7 +1183,11 @@ const CommandButton* CommandButton::getAlternativeButtonForPrerequisites(const P
 			}
 			
 			if (allPrereqsSatisfied)
-				return altButton4;
+			{
+				// TheSuperHackers @alternative Ahmed Salah 15/01/2025 Recursively check if this alternative button has its own alternatives
+				const CommandButton* recursiveAlt = altButton4->getAlternativeButtonForPrerequisites(player, object);
+				return recursiveAlt ? recursiveAlt : altButton4;
+			}
 		}
 	}
 
