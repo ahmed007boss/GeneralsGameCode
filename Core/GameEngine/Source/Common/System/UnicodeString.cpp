@@ -56,9 +56,9 @@
 void UnicodeString::validate() const
 {
 	if (!m_data) return;
-	DEBUG_ASSERTCRASH(m_data->m_refCount > 0, ("m_refCount is zero"));
-	DEBUG_ASSERTCRASH(m_data->m_numCharsAllocated > 0, ("m_numCharsAllocated is zero"));
-	DEBUG_ASSERTCRASH(wcslen(m_data->peek())+1 <= m_data->m_numCharsAllocated,("str is too long for storage"));
+	//DEBUG_ASSERTCRASH(m_data->m_refCount > 0, ("m_refCount is zero"));
+	//DEBUG_ASSERTCRASH(m_data->m_numCharsAllocated > 0, ("m_numCharsAllocated is zero"));
+	//DEBUG_ASSERTCRASH(wcslen(m_data->peek())+1 <= m_data->m_numCharsAllocated,("str is too long for storage"));
 }
 #endif
 

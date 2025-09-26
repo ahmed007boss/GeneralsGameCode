@@ -83,6 +83,37 @@ Real ArmorTemplate::adjustDamage(DamageType t, Real damage) const
 }
 
 //-------------------------------------------------------------------------------------------------
+// TheSuperHackers @feature author 01/01/2025 Get armor display name with fallback
+//-------------------------------------------------------------------------------------------------
+UnicodeString ArmorTemplate::getDisplayName() const
+{
+	if (!m_displayName.isEmpty())
+	{
+		return m_displayName;
+	}
+	else
+	{
+		// Fallback to empty string if display name is not set
+		return UnicodeString();
+	}
+}
+
+//-------------------------------------------------------------------------------------------------
+// TheSuperHackers @feature author 01/01/2025 Get armor display name with fallback
+//-------------------------------------------------------------------------------------------------
+UnicodeString Armor::getDisplayName() const
+{
+	if (m_template)
+	{
+		return m_template->getDisplayName();
+	}
+	else
+	{
+		return UnicodeString();
+	}
+}
+
+//-------------------------------------------------------------------------------------------------
 // TheSuperHackers @feature author 01/01/2025 Get armor description
 //-------------------------------------------------------------------------------------------------
 UnicodeString ArmorTemplate::getModuleDescription() const

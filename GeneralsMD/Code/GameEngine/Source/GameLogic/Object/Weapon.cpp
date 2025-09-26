@@ -84,9 +84,9 @@
 #define ATTACK_RANGE_IS_2D
 
 #ifdef ATTACK_RANGE_IS_2D
-const DistanceCalculationType ATTACK_RANGE_CALC_TYPE = FROM_BOUNDINGSPHERE_2D;
+	const DistanceCalculationType ATTACK_RANGE_CALC_TYPE = FROM_BOUNDINGSPHERE_2D;
 #else
-const DistanceCalculationType ATTACK_RANGE_CALC_TYPE = FROM_BOUNDINGSPHERE_3D;
+	const DistanceCalculationType ATTACK_RANGE_CALC_TYPE = FROM_BOUNDINGSPHERE_3D;
 #endif
 
 
@@ -207,7 +207,7 @@ const FieldParse WeaponTemplate::TheWeaponTemplateFieldParseTable[] =
 	{ "ContinuousFireOne",				INI::parseInt,													NULL,							offsetof(WeaponTemplate, m_continuousFireOneShotsNeeded) },
 	{ "ContinuousFireTwo",				INI::parseInt,													NULL,							offsetof(WeaponTemplate, m_continuousFireTwoShotsNeeded) },
 	{ "ContinuousFireCoast",			INI::parseDurationUnsignedInt,					NULL,							offsetof(WeaponTemplate, m_continuousFireCoastFrames) },
-	{ "AutoReloadWhenIdle",				INI::parseDurationUnsignedInt,					NULL,							offsetof(WeaponTemplate, m_autoReloadWhenIdleFrames) },
+ 	{ "AutoReloadWhenIdle",				INI::parseDurationUnsignedInt,					NULL,							offsetof(WeaponTemplate, m_autoReloadWhenIdleFrames) },
 	{ "ClipReloadTime",						INI::parseDurationUnsignedInt,					NULL,							offsetof(WeaponTemplate, m_clipReloadTime) },
 	{ "DelayBetweenShots",				WeaponTemplate::parseShotDelay,					NULL,							0 },
 	{ "ShotsPerBarrel",						INI::parseInt,													NULL,							offsetof(WeaponTemplate, m_shotsPerBarrel) },
@@ -235,7 +235,7 @@ const FieldParse WeaponTemplate::TheWeaponTemplateFieldParseTable[] =
 	{ "HistoricBonusRadius",			INI::parseReal,													NULL,							offsetof(WeaponTemplate, m_historicBonusRadius) },
 	{ "HistoricBonusCount",				INI::parseInt,													NULL,							offsetof(WeaponTemplate, m_historicBonusCount) },
 	{ "HistoricBonusWeapon",			INI::parseWeaponTemplate,								NULL,							offsetof(WeaponTemplate, m_historicBonusWeapon) },
-	{ "LeechRangeWeapon",					INI::parseBool,													NULL,							offsetof(WeaponTemplate, m_leechRangeWeapon) },
+	{ "LeechRangeWeapon",					INI::parseBool,													NULL,							offsetof(WeaponTemplate, m_leechRangeWeapon) },	
 	{ "ScatterTarget",						WeaponTemplate::parseScatterTarget,			NULL,							0 },
 	{ "CapableOfFollowingWaypoints", INI::parseBool,											NULL,							offsetof(WeaponTemplate, m_capableOfFollowingWaypoint) },
 	{ "ShowsAmmoPips",						INI::parseBool,													NULL,							offsetof(WeaponTemplate, m_isShowsAmmoPips) },
@@ -520,7 +520,7 @@ Real WeaponTemplate::getAttackRange(const WeaponBonus& bonus) const
 	if (r < 0.0f) r = 0.0f;
 	return r;
 #else
-	// fudge this a little to account for pathfinding roundoff & such
+// fudge this a little to account for pathfinding roundoff & such
 	const Real ATTACK_RANGE_FUDGE = 1.05f;
 	return m_attackRange * bonus.getField(WeaponBonus::RANGE) * ATTACK_RANGE_FUDGE;
 #endif
@@ -612,7 +612,7 @@ Bool WeaponTemplate::isContactWeapon() const
 	const Real UNDERSIZE = PATHFIND_CELL_SIZE_F * 0.25f;
 	return (m_attackRange - UNDERSIZE) < PATHFIND_CELL_SIZE_F;
 #else
-	// fudge this a little to account for pathfinding roundoff & such
+// fudge this a little to account for pathfinding roundoff & such
 	const Real ATTACK_RANGE_FUDGE = 1.05f;
 	return m_attackRange * ATTACK_RANGE_FUDGE < PATHFIND_CELL_SIZE_F;
 #endif
@@ -655,15 +655,15 @@ Real WeaponTemplate::estimateWeaponTemplateDamage(
 	}
 
 
-	// hmm.. must be shooting a firebase or such, if there is noone home to take the bullet, return 0!
+  // hmm.. must be shooting a firebase or such, if there is noone home to take the bullet, return 0!
 	if (victimObj->isKindOf(KINDOF_STRUCTURE) && damageType == DAMAGE_SNIPER)
-	{
+  {
 		if (victimObj->getContain())
-		{
+    {
 			if (victimObj->getContain()->getContainCount() == 0)
-				return 0.0f;
-		}
-	}
+        return 0.0f;
+    }
+  }
 
 
 
@@ -711,26 +711,26 @@ Bool WeaponTemplate::shouldProjectileCollideWith(
 	ObjectID intendedVictimID	// could be INVALID_ID for a position-shot
 ) const
 {
-	if (!projectile || !thingWeCollidedWith)
-		return false;
+ 	if (!projectile || !thingWeCollidedWith)
+ 		return false;
 
 	// if it's our intended victim, we want to collide with it, regardless of any other considerations.
 	if (intendedVictimID == thingWeCollidedWith->getID())
 		return true;
 
-	if (projectileLauncher != NULL)
-	{
+ 	if (projectileLauncher != NULL)
+ 	{
 
-		// Don't hit your own launcher, ever.
-		if (projectileLauncher == thingWeCollidedWith)
-			return false;
+ 		// Don't hit your own launcher, ever.
+ 		if (projectileLauncher == thingWeCollidedWith)
+ 			return false;
 
-		// If our launcher is inside something, and that something is 'thingWeCollidedWith' we won't collide
+ 		// If our launcher is inside something, and that something is 'thingWeCollidedWith' we won't collide
 		const Object* launcherContainedBy = projectileLauncher->getContainedBy();
 		if (launcherContainedBy == thingWeCollidedWith)
-			return false;
+ 			return false;
 
-	}
+ 	}
 
 	// never bother burning already-burned things. (srj)
 	if (getDamageType() == DAMAGE_FLAME || getDamageType() == DAMAGE_PARTICLE_BEAM)
@@ -803,7 +803,7 @@ Bool Weapon::hasEnoughInventoryToFire(const Object* source) const {
 	// Check if weapon template is valid
 	if (!m_template)
 		return false;
-
+		
 	auto weaponTemplate = getTemplate();
 
 	// TheSuperHackers @feature author 15/01/2025 Check inventory consumption requirement
@@ -815,10 +815,10 @@ Bool Weapon::hasEnoughInventoryToFire(const Object* source) const {
 
 		if (m_ammoInClip == 0 && (!inventoryBehavior || !inventoryBehavior->hasItem(consumeInventory, 1)))
 		{
-			return false;
+	return false;
 		}
 	}
-
+	
 	return true;
 }
 //-------------------------------------------------------------------------------------------------
@@ -827,7 +827,7 @@ Bool Weapon::isValidWeaponUse(const Object* source, const Object* victim)
 	// Check if weapon template is valid
 	if (!m_template)
 		return false;
-
+		
 	auto weaponTemplate = getTemplate();
 
 	// Check shooter prerequisites using ObjectPrerequisite system
@@ -839,9 +839,9 @@ Bool Weapon::isValidWeaponUse(const Object* source, const Object* victim)
 	}
 	if (!hasEnoughInventoryToFire(source))
 	{
-		return false;
+			return false;
 	}
-
+	
 
 	if (victim)
 	{
@@ -859,11 +859,11 @@ Bool Weapon::isValidWeaponUse(const Object* source, const Object* victim)
 		const std::vector<ObjectPrerequisite>& targetPrereqs = weaponTemplate->getTargetPrerequisites();
 		if (!targetPrereqs.empty() && !weaponTemplate->canAttackWithoutTarget())
 			return false;
-
+		
 		return weaponTemplate->canAttackWithoutTarget();
 	}
 
-
+	
 
 	return true;
 }
@@ -885,8 +885,8 @@ UnsignedInt WeaponTemplate::fireWeaponTemplate
 {
 
 	//-extraLogging
-#if defined(RTS_DEBUG)
-	AsciiString targetStr;
+	#if defined(RTS_DEBUG)
+		AsciiString targetStr;
 	if (TheGlobalData->m_extraLogging)
 	{
 		if (victimObj)
@@ -898,8 +898,8 @@ UnsignedInt WeaponTemplate::fireWeaponTemplate
 
 		DEBUG_LOG(("%d - WeaponTemplate::fireWeaponTemplate() begin - %s attacking %s",
 			TheGameLogic->getFrame(), sourceObj->getTemplate()->getName().str(), targetStr.str()));
-	}
-#endif
+		}
+	#endif
 	//end -extraLogging
 
 	//CRCDEBUG_LOG(("WeaponTemplate::fireWeaponTemplate() from %s", DescribeObject(sourceObj).str()));
@@ -908,10 +908,10 @@ UnsignedInt WeaponTemplate::fireWeaponTemplate
 	if (sourceObj == NULL || (victimObj == NULL && victimPos == NULL))
 	{
 		//-extraLogging
-#if defined(RTS_DEBUG)
+		#if defined(RTS_DEBUG)
 		if (TheGlobalData->m_extraLogging)
 			DEBUG_LOG(("FAIL 1 (sourceObj %d == NULL || (victimObj %d == NULL && victimPos %d == NULL)", sourceObj != 0, victimObj != 0, victimPos != 0));
-#endif
+		#endif
 		//end -extraLogging
 
 		return 0;
@@ -975,10 +975,10 @@ UnsignedInt WeaponTemplate::fireWeaponTemplate
 		distSqr = ThePartitionManager->getDistanceSquared(sourceObj, victimPos, ATTACK_RANGE_CALC_TYPE);
 	}
 
-	//	DEBUG_LOG(("WeaponTemplate::fireWeaponTemplate: firing weapon %s (source=%s, victim=%s)",
-	//		m_name.str(),sourceObj->getTemplate()->getName().str(),victimObj?victimObj->getTemplate()->getName().str():"NULL"));
+//	DEBUG_LOG(("WeaponTemplate::fireWeaponTemplate: firing weapon %s (source=%s, victim=%s)",
+//		m_name.str(),sourceObj->getTemplate()->getName().str(),victimObj?victimObj->getTemplate()->getName().str():"NULL"));
 
-		//Only perform this check if the weapon isn't a leech range weapon (which can have unlimited range!)
+	//Only perform this check if the weapon isn't a leech range weapon (which can have unlimited range!)
 	if (!ignoreRanges && !isLeechRangeWeapon())
 	{
 		Real attackRangeSqr = sqr(getAttackRange(bonus));
@@ -987,10 +987,10 @@ UnsignedInt WeaponTemplate::fireWeaponTemplate
 			//DEBUG_ASSERTCRASH(distSqr < 5*5 || distSqr < attackRangeSqr*1.2f, ("*** victim is out of range (%f vs %f) of this weapon -- why did we attempt to fire?",sqrtf(distSqr),sqrtf(attackRangeSqr)));
 
 			//-extraLogging
-#if defined(RTS_DEBUG)
+			#if defined(RTS_DEBUG)
 			if (TheGlobalData->m_extraLogging)
 				DEBUG_LOG(("FAIL 2 (distSqr %.2f > attackRangeSqr %.2f)", distSqr, attackRangeSqr));
-#endif
+			#endif
 			//end -extraLogging
 
 			return 0;
@@ -1009,10 +1009,10 @@ UnsignedInt WeaponTemplate::fireWeaponTemplate
 			DEBUG_ASSERTCRASH(distSqr > minAttackRangeSqr * 0.8f, ("*** victim is closer than min attack range (%f vs %f) of this weapon -- why did we attempt to fire?", sqrtf(distSqr), sqrtf(minAttackRangeSqr)));
 
 			//-extraLogging
-#if defined(RTS_DEBUG)
+			#if defined(RTS_DEBUG)
 			if (TheGlobalData->m_extraLogging)
 				DEBUG_LOG(("FAIL 3 (distSqr %.2f< minAttackRangeSqr %.2f - 0.5f && !isProjectileDetonation %d)", distSqr, minAttackRangeSqr, isProjectileDetonation));
-#endif
+			#endif
 			//end -extraLogging
 
 			return 0;
@@ -1054,14 +1054,14 @@ UnsignedInt WeaponTemplate::fireWeaponTemplate
 		else
 		{
 			handled = sourceObj->getDrawable()->handleWeaponFireFX(wslot,
-				specificBarrelToUse,
-				fx,
-				getWeaponSpeed(),
-				reAngle,
-				reDir,
-				&targetPos,
-				getPrimaryDamageRadius(bonus)
-			);
+																															specificBarrelToUse,
+																															fx,
+																															getWeaponSpeed(),
+																															reAngle,
+																															reDir,
+																															&targetPos,
+																															getPrimaryDamageRadius(bonus)
+																															);
 		}
 
 		if (handled == false && fx != NULL)
@@ -1176,10 +1176,10 @@ UnsignedInt WeaponTemplate::fireWeaponTemplate
 			}
 
 			//-extraLogging
-#if defined(RTS_DEBUG)
+			#if defined(RTS_DEBUG)
 			if (TheGlobalData->m_extraLogging)
 				DEBUG_LOG(("EARLY 4 (delayed damage applied now)"));
-#endif
+			#endif
 			//end -extraLogging
 
 
@@ -1197,10 +1197,10 @@ UnsignedInt WeaponTemplate::fireWeaponTemplate
 			}
 
 			//-extraLogging
-#if defined(RTS_DEBUG)
+			#if defined(RTS_DEBUG)
 			if (TheGlobalData->m_extraLogging)
 				DEBUG_LOG(("EARLY 5 (delaying damage applied until frame %d)", when));
-#endif
+			#endif
 			//end -extraLogging
 
 
@@ -1288,10 +1288,10 @@ UnsignedInt WeaponTemplate::fireWeaponTemplate
 
 		}
 		//-extraLogging
-#if defined(RTS_DEBUG)
+		#if defined(RTS_DEBUG)
 		if (TheGlobalData->m_extraLogging)
 			DEBUG_LOG(("DONE"));
-#endif
+		#endif
 		//end -extraLogging
 
 		return 0;
@@ -1365,7 +1365,7 @@ void WeaponTemplate::dealDamageInternal(ObjectID sourceID, ObjectID victimID, co
 
 		if (count >= m_historicBonusCount - 1)	// minus 1 since we include ourselves implicitly
 		{
-			TheWeaponStore->createAndFireTempWeapon(m_historicBonusWeapon, source, pos);
+		  TheWeaponStore->createAndFireTempWeapon(m_historicBonusWeapon, source, pos);
 
 			/** @todo E3 hack! Clear the list for now to make sure we don't have multiple firestorms
 				* remove this when the branches merge back into one.  What is causing the
@@ -1383,9 +1383,9 @@ void WeaponTemplate::dealDamageInternal(ObjectID sourceID, ObjectID victimID, co
 
 	}
 
-	//DEBUG_LOG(("WeaponTemplate::dealDamageInternal: dealing damage %s at frame %d",m_name.str(),TheGameLogic->getFrame()));
+//DEBUG_LOG(("WeaponTemplate::dealDamageInternal: dealing damage %s at frame %d",m_name.str(),TheGameLogic->getFrame()));
 
-		// if there's a specific victim, use it's pos (overriding the value passed in)
+	// if there's a specific victim, use it's pos (overriding the value passed in)
 	Object* primaryVictim = victimID ? TheGameLogic->findObjectByID(victimID) : NULL;	// might be null...
 	if (primaryVictim)
 	{
@@ -1637,8 +1637,8 @@ void WeaponTemplate::dealDamageInternal(ObjectID sourceID, ObjectID victimID, co
 
 				// Guard against zero vector. Make vector stright up if that is the case
 				if (fabs(shockWaveVector.x) < WWMATH_EPSILON &&
-					fabs(shockWaveVector.y) < WWMATH_EPSILON &&
-					fabs(shockWaveVector.z) < WWMATH_EPSILON)
+						fabs(shockWaveVector.y) < WWMATH_EPSILON &&
+						fabs(shockWaveVector.z) < WWMATH_EPSILON)
 				{
 					shockWaveVector.z = 1.0f;
 				}
@@ -1649,7 +1649,7 @@ void WeaponTemplate::dealDamageInternal(ObjectID sourceID, ObjectID victimID, co
 				damageInfo.in.m_shockWaveTaperOff = m_shockWaveTaperOff;
 			}
 
-			if (source && source->getControllingPlayer()) {
+      if (source && source->getControllingPlayer()) {
 				damageInfo.in.m_sourcePlayerMask = source->getControllingPlayer()->getPlayerMask();
 			}
 			// note, don't bother with damage multipliers here...
@@ -2096,8 +2096,8 @@ void Weapon::reloadWithBonus(const Object* sourceObj, const WeaponBonus& bonus, 
 {
 	auto initialAmmoInClip = m_ammoInClip;
 	if (m_template->getClipSize() > 0
-		&& m_ammoInClip == m_template->getClipSize()
-		&& !sourceObj->isReloadTimeShared())
+			&& m_ammoInClip == m_template->getClipSize()
+			&& !sourceObj->isReloadTimeShared())
 		return;	// don't restart our reload delay.
 
 	// TheSuperHackers @feature author 15/01/2025 Check inventory consumption for reload
@@ -2160,7 +2160,7 @@ void Weapon::reloadWithBonus(const Object* sourceObj, const WeaponBonus& bonus, 
 			if (reloadAmount > 0)
 			{
 				inventoryBehavior->consumeItem(consumeInventory, reloadAmount);
-
+				
 				// TheSuperHackers @feature author 15/01/2025 Mark UI dirty if object is owned and selected by player
 				Player* player = sourceObj->getControllingPlayer();
 				if (player && player->isLocalPlayer())
@@ -2558,41 +2558,41 @@ Real Weapon::getPercentReadyToFire() const
 {
 	switch (getStatus())
 	{
-	case OUT_OF_AMMO:
-	case PRE_ATTACK:
-		return 0.0f;
+		case OUT_OF_AMMO:
+		case PRE_ATTACK:
+			return 0.0f;
 
-	case READY_TO_FIRE:
-		return 1.0f;
-
-	case BETWEEN_FIRING_SHOTS:
-	case RELOADING_CLIP:
-	{
-		UnsignedInt now = TheGameLogic->getFrame();
-		UnsignedInt nextShot = getPossibleNextShotFrame();
-		DEBUG_ASSERTCRASH(now >= m_whenLastReloadStarted, ("now >= m_whenLastReloadStarted"));
-		if (now >= nextShot)
+		case READY_TO_FIRE:
 			return 1.0f;
 
-		DEBUG_ASSERTCRASH(nextShot >= m_whenLastReloadStarted, ("nextShot >= m_whenLastReloadStarted"));
-		UnsignedInt totalTime = nextShot - m_whenLastReloadStarted;
-		if (totalTime == 0)
+		case BETWEEN_FIRING_SHOTS:
+		case RELOADING_CLIP:
 		{
-			return 1.0f;
-		}
+			UnsignedInt now = TheGameLogic->getFrame();
+			UnsignedInt nextShot = getPossibleNextShotFrame();
+			DEBUG_ASSERTCRASH(now >= m_whenLastReloadStarted, ("now >= m_whenLastReloadStarted"));
+			if (now >= nextShot)
+				return 1.0f;
 
-		UnsignedInt timeLeft = nextShot - now;
-		DEBUG_ASSERTCRASH(timeLeft <= totalTime, ("timeLeft <= totalTime"));
-		UnsignedInt timeSoFar = totalTime - timeLeft;
-		if (timeSoFar >= totalTime)
-		{
-			return 1.0f;
+			DEBUG_ASSERTCRASH(nextShot >= m_whenLastReloadStarted, ("nextShot >= m_whenLastReloadStarted"));
+			UnsignedInt totalTime = nextShot - m_whenLastReloadStarted;
+			if (totalTime == 0)
+			{
+				return 1.0f;
+			}
+
+			UnsignedInt timeLeft = nextShot - now;
+			DEBUG_ASSERTCRASH(timeLeft <= totalTime, ("timeLeft <= totalTime"));
+			UnsignedInt timeSoFar = totalTime - timeLeft;
+			if (timeSoFar >= totalTime)
+			{
+				return 1.0f;
+			}
+			else
+			{
+				return (Real)timeSoFar / (Real)totalTime;
+			}
 		}
-		else
-		{
-			return (Real)timeSoFar / (Real)totalTime;
-		}
-	}
 	}
 	DEBUG_CRASH(("should not get here"));
 	return 0.0f;
@@ -2621,13 +2621,13 @@ Real Weapon::getAttackDistance(const Object* source, const Object* victimObj, co
 
 	if (victimObj != NULL)
 	{
-#ifdef ATTACK_RANGE_IS_2D
+	#ifdef ATTACK_RANGE_IS_2D
 		range += source->getGeometryInfo().getBoundingCircleRadius();
 		range += victimObj->getGeometryInfo().getBoundingCircleRadius();
-#else
+	#else
 		range += source->getGeometryInfo().getBoundingSphereRadius();
 		range += victimObj->getGeometryInfo().getBoundingSphereRadius();
-#endif
+	#endif
 	}
 
 	return range;
@@ -2685,7 +2685,7 @@ void Weapon::newProjectileFired(const Object* sourceObj, const Object* projectil
 		m_projectileStreamID = projectileStream->getID();
 	}
 
-
+	
 
 	//Check for projectile stream update
 	static NameKeyType key_ProjectileStreamUpdate = NAMEKEY("ProjectileStreamUpdate");
@@ -2777,72 +2777,72 @@ Bool Weapon::privateFireWeapon(
 	//Special case damge type overrides requiring special handling.
 	switch (m_template->getDamageType())
 	{
-	case DAMAGE_DEPLOY:
-	{
+		case DAMAGE_DEPLOY:
+		{
 		const AIUpdateInterface* ai = sourceObj->getAI();
 		if (ai)
-		{
+			{
 			const AssaultTransportAIInterface* atInterface = ai->getAssaultTransportAIInterface();
 			if (atInterface)
-			{
+				{
 				atInterface->beginAssault(victimObj);
+				}
 			}
+			break;
 		}
-		break;
-	}
 
-	case DAMAGE_DISARM:
-	{
-		if (sourceObj && victimObj)
+		case DAMAGE_DISARM:
 		{
-			Bool found = false;
-			for (BehaviorModule** bmi = victimObj->getBehaviorModules(); *bmi; ++bmi)
+			if (sourceObj && victimObj)
 			{
-				LandMineInterface* lmi = (*bmi)->getLandMineInterface();
-				if (lmi)
+				Bool found = false;
+				for (BehaviorModule** bmi = victimObj->getBehaviorModules(); *bmi; ++bmi)
+				{
+					LandMineInterface* lmi = (*bmi)->getLandMineInterface();
+					if (lmi)
+					{
+						VeterancyLevel v = sourceObj->getVeterancyLevel();
+						FXList::doFXPos(m_template->getFireFX(v), victimObj->getPosition(), victimObj->getTransformMatrix(), 0, victimObj->getPosition(), 0);
+						lmi->disarm();
+						found = true;
+						break;
+					}
+				}
+
+				// it's a mine, but doesn't have LandMineInterface...
+			if (!found && victimObj->isKindOf(KINDOF_MINE) || victimObj->isKindOf(KINDOF_BOOBY_TRAP) || victimObj->isKindOf(KINDOF_DEMOTRAP))
 				{
 					VeterancyLevel v = sourceObj->getVeterancyLevel();
 					FXList::doFXPos(m_template->getFireFX(v), victimObj->getPosition(), victimObj->getTransformMatrix(), 0, victimObj->getPosition(), 0);
-					lmi->disarm();
+				TheGameLogic->destroyObject(victimObj);// douse this thing before somebody gets hurt!
 					found = true;
-					break;
+				}
+
+			if (found)
+				{
+					sourceObj->getControllingPlayer()->getAcademyStats()->recordMineCleared();
 				}
 			}
 
-			// it's a mine, but doesn't have LandMineInterface...
-			if (!found && victimObj->isKindOf(KINDOF_MINE) || victimObj->isKindOf(KINDOF_BOOBY_TRAP) || victimObj->isKindOf(KINDOF_DEMOTRAP))
+			--m_maxShotCount;
+			--m_ammoInClip;	// so we can use the delay between shots on the mine clearing weapon
+			if (m_ammoInClip <= 0 && m_template->getAutoReloadsClip())
 			{
-				VeterancyLevel v = sourceObj->getVeterancyLevel();
-				FXList::doFXPos(m_template->getFireFX(v), victimObj->getPosition(), victimObj->getTransformMatrix(), 0, victimObj->getPosition(), 0);
-				TheGameLogic->destroyObject(victimObj);// douse this thing before somebody gets hurt!
-				found = true;
+				reloadAmmo(sourceObj);
+				return TRUE;	// reloaded
 			}
-
-			if (found)
+			else
 			{
-				sourceObj->getControllingPlayer()->getAcademyStats()->recordMineCleared();
+				return FALSE;	// did not reload
 			}
 		}
 
-		--m_maxShotCount;
-		--m_ammoInClip;	// so we can use the delay between shots on the mine clearing weapon
-		if (m_ammoInClip <= 0 && m_template->getAutoReloadsClip())
+		case DAMAGE_HACK:
 		{
-			reloadAmmo(sourceObj);
-			return TRUE;	// reloaded
+			//We're using a hacker unit to hack a target. Hacking has various effects and
+			//instead of inflicting damage, we are waiting for a period of time until the hack takes effect.
+			//return FALSE;
 		}
-		else
-		{
-			return FALSE;	// did not reload
-		}
-	}
-
-	case DAMAGE_HACK:
-	{
-		//We're using a hacker unit to hack a target. Hacking has various effects and
-		//instead of inflicting damage, we are waiting for a period of time until the hack takes effect.
-		//return FALSE;
-	}
 	}
 
 	WeaponBonus bonus;
@@ -3066,8 +3066,8 @@ Bool Weapon::isWithinTargetPitch(const Object* source, const Object* victim) con
 
 	// if there's any intersection between the the two pitch ranges, we're good to go.
 	if ((minPitch >= m_template->getMinTargetPitch() && minPitch <= m_template->getMaxTargetPitch()) ||
-		(maxPitch >= m_template->getMinTargetPitch() && maxPitch <= m_template->getMaxTargetPitch()) ||
-		(minPitch <= m_template->getMinTargetPitch() && maxPitch >= m_template->getMaxTargetPitch()))
+			(maxPitch >= m_template->getMinTargetPitch() && maxPitch <= m_template->getMaxTargetPitch()) ||
+			(minPitch <= m_template->getMinTargetPitch() && maxPitch >= m_template->getMaxTargetPitch()))
 		return true;
 
 	//DEBUG_LOG(("pitch %f-%f is out of range",rad2deg(minPitch),rad2deg(maxPitch),rad2deg(m_template->getMinTargetPitch()),rad2deg(m_template->getMaxTargetPitch())));
@@ -3090,17 +3090,17 @@ Bool Weapon::isDamageWeapon() const
 	//user to mouseover a target and think it can attack it using these types.
 	switch (m_template->getDamageType())
 	{
-	case DAMAGE_DEPLOY:
-		//Kris @todo
-		//Evaluate a better way to handle this weapon type... doesn't fit being a damage weapon.
-		//May want to check if cargo can attack!
-		return TRUE;
+		case DAMAGE_DEPLOY:
+			//Kris @todo
+			//Evaluate a better way to handle this weapon type... doesn't fit being a damage weapon.
+			//May want to check if cargo can attack!
+			return TRUE;
 
-	case DAMAGE_DISARM:
-		return TRUE;	// hmm, can only "damage" mines, but still...
+		case DAMAGE_DISARM:
+			return TRUE;	// hmm, can only "damage" mines, but still...
 
-	case DAMAGE_HACK:
-		return FALSE;
+		case DAMAGE_HACK:
+			return FALSE;
 	}
 
 	//Use no bonus
@@ -3276,12 +3276,12 @@ void Weapon::processRequestAssistance(const Object* requestingObject, Object* vi
 #endif
 	}
 
-	//#if defined(RTS_DEBUG)
-	//  Real muzzleHeight = attachTransform.Get_Z_Translation();
-	//  DEBUG_ASSERTCRASH( muzzleHeight > 0.001f, ("YOUR TURRET HAS A VERY LOW PROJECTILE LAUNCH POSITION, BUT FOUND A VALID BONE. DID YOU PICK THE WRONG ONE? %s", launcher->getTemplate()->getName().str()));
-	//#endif
+//#if defined(RTS_DEBUG)
+//  Real muzzleHeight = attachTransform.Get_Z_Translation();
+//  DEBUG_ASSERTCRASH( muzzleHeight > 0.001f, ("YOUR TURRET HAS A VERY LOW PROJECTILE LAUNCH POSITION, BUT FOUND A VALID BONE. DID YOU PICK THE WRONG ONE? %s", launcher->getTemplate()->getName().str()));
+//#endif
 
-	launcher->convertBonePosToWorldPos(NULL, &attachTransform, NULL, &worldTransform);
+  launcher->convertBonePosToWorldPos(NULL, &attachTransform, NULL, &worldTransform);
 
 	Vector3 tmp = worldTransform.Get_Translation();
 	worldPos.x = tmp.X;
@@ -3337,25 +3337,25 @@ void Weapon::getFiringLineOfSightOrigin(const Object* source, Coord3D& origin) c
 	// now he fails this check so he transitions back.  Our height won't change.
 	origin.z += source->getGeometryInfo().getMaxHeightAbovePosition();
 
-	/*
-		if (m_template->getProjectileTemplate() == NULL)
-		{
-			// note that we want to measure from the top of the collision
-			// shape, not the bottom! (most objects have eyes a lot closer
-			// to their head than their feet. if we have really odd critters
-			// with eye-feet, we'll need to change this assumption.)
-			origin.z += source->getGeometryInfo().getMaxHeightAbovePosition();
-		}
-		else
-		{
-			Matrix3D tmp(true);
-			Coord3D launchPos = {0.0f, 0.0f, 0.0f};
-			calcProjectileLaunchPosition(source, m_wslot, m_curBarrel, tmp, launchPos);
-			origin.x += launchPos.x - source->getPosition()->x;
-			origin.y += launchPos.y - source->getPosition()->y;
-			origin.z += launchPos.z - source->getPosition()->z;
-		}
-	*/
+/*
+	if (m_template->getProjectileTemplate() == NULL)
+	{
+		// note that we want to measure from the top of the collision
+		// shape, not the bottom! (most objects have eyes a lot closer
+		// to their head than their feet. if we have really odd critters
+		// with eye-feet, we'll need to change this assumption.)
+		origin.z += source->getGeometryInfo().getMaxHeightAbovePosition();
+	}
+	else
+	{
+		Matrix3D tmp(true);
+		Coord3D launchPos = {0.0f, 0.0f, 0.0f};
+		calcProjectileLaunchPosition(source, m_wslot, m_curBarrel, tmp, launchPos);
+		origin.x += launchPos.x - source->getPosition()->x;
+		origin.y += launchPos.y - source->getPosition()->y;
+		origin.z += launchPos.z - source->getPosition()->z;
+	}
+*/
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -3634,7 +3634,7 @@ void Weapon::crc(Xfer* xfer)
 /** Xfer
 	* Version Info:
 	* 1: Initial version */
-	// ------------------------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------------------
 void Weapon::xfer(Xfer* xfer)
 {
 	// version

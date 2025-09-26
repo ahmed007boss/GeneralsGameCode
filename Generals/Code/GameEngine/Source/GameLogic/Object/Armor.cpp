@@ -52,12 +52,14 @@ ArmorStore* TheArmorStore = NULL;					///< the ArmorTemplate store definition
 //-------------------------------------------------------------------------------------------------
 ArmorTemplate::ArmorTemplate()
 {
+	m_displayName = L"";
 	clear();
 }
 
 //-------------------------------------------------------------------------------------------------
 void ArmorTemplate::clear()
 {
+
 	for (int i = 0; i < DAMAGE_NUM_TYPES; i++)
 	{
 		m_damageCoefficient[i] = 1.0f;

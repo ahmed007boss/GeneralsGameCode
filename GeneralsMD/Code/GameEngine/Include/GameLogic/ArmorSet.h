@@ -70,6 +70,7 @@ private:
 	const ArmorTemplate* m_template;
 	const ArmorTemplate* m_sideTemplates[HIT_SIDE_COUNT];	///< Side-specific armor templates
 	const DamageFX* m_fx;
+	mutable UnicodeString* m_description;	///< Cached description for UI display
 
 public:
 	inline ArmorTemplateSet()
@@ -86,6 +87,7 @@ public:
 			m_sideTemplates[i] = NULL;
 		}
 		m_fx = NULL;
+		m_description = NULL;
 	}
 
 	inline const ArmorTemplate* getArmorTemplate() const { return m_template; }
@@ -105,6 +107,9 @@ public:
 
 	void parseArmorTemplateSet( INI* ini );
 	void setSideArmorTemplate(HitSide side, const ArmorTemplate* armorTemplate);
+	UnicodeString getModuleDescription() const;
+	UnicodeString buildSideSpecificDescription() const;
+	static void parseDescription(INI* ini, void* instance, void* store, const void* userData);
 };
 
 //-------------------------------------------------------------------------------------------------

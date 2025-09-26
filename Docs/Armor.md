@@ -203,6 +203,21 @@ ArmorSet
 End
 ```
 
+#### FAHD Vehicle with Side-Specific Armor
+```ini
+ArmorSet
+    Conditions          = None
+    Armor               = Fahd8mmReinforcedSteelArmor      ; Default fallback armor
+    ArmorFront          = Fahd8mmReinforcedSteelArmor      ; Front armor
+    ArmorBack           = Fahd8mmReinforcedSteelArmorDoor  ; Vulnerable rear door
+    ArmorTop            = Fahd8mmReinforcedSteelArmor      ; Top armor
+    ArmorBottom         = Fahd8mmReinforcedSteelArmorVHull ; Reinforced bottom
+    ArmorRight          = Fahd8mmReinforcedSteelArmor      ; Right side armor
+    ArmorLeft           = Fahd8mmReinforcedSteelArmor      ; Left side armor
+    DamageFX            = VehicleDamageFX
+End
+```
+
 #### Building with Directional Armor
 ```ini
 ArmorSet

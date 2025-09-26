@@ -66,6 +66,7 @@
 #include "GameClient/Shadow.h"
 
 #include "GameLogic/Armor.h"
+#include "GameLogic/ArmorSet.h"
 #include "GameLogic/Locomotor.h"
 #include "GameLogic/Module/AIUpdate.h"
 #include "GameLogic/Module/SpecialPowerModule.h"
@@ -312,20 +313,20 @@ void ModuleInfo::addModuleInfo(ThingTemplate* thingTemplate,
 		// Remove from behavior modules
 		AsciiString clearedModuleName;
 		thingTemplate->getBehaviorModuleInfo().clearModuleDataWithTag(moduleTag, clearedModuleName);
-		
+
 		// Remove from draw modules
 		thingTemplate->getDrawModuleInfo().clearModuleDataWithTag(moduleTag, clearedModuleName);
-		
+
 		// Remove from client update modules
 		thingTemplate->getClientUpdateModuleInfo().clearModuleDataWithTag(moduleTag, clearedModuleName);
 	}
-	
+
 	//
 	// there must be a module tag present, and it must be unique across all module infos
 	// for this thing template
 	//
-	#if defined(RTS_DEBUG)
-	// get module info
+#if defined(RTS_DEBUG)
+// get module info
 	const Nugget* nugget;
 
 	nugget = thingTemplate->getBehaviorModuleInfo().getNuggetWithTag(moduleTag);
@@ -381,8 +382,8 @@ void ModuleInfo::addModuleInfo(ThingTemplate* thingTemplate,
 		throw INI_INVALID_DATA;
 	}
 
-	#endif
-	
+#endif
+
 
 	m_info.push_back(Nugget(name, moduleTag, data, interfaceMask, inheritable, overrideableByLikeKind));
 
@@ -873,10 +874,245 @@ void ArmorTemplateSet::parseArmorTemplateSet(INI* ini)
 		{ "ArmorTop", INI::parseArmorTemplate, NULL, offsetof(ArmorTemplateSet, m_sideTemplates) + sizeof(ArmorTemplate*) * HIT_SIDE_TOP },
 		{ "ArmorBottom", INI::parseArmorTemplate, NULL, offsetof(ArmorTemplateSet, m_sideTemplates) + sizeof(ArmorTemplate*) * HIT_SIDE_BOTTOM },
 		{ "DamageFX",	INI::parseDamageFX,	NULL, offsetof(ArmorTemplateSet, m_fx) },
+		{ "Description", ArmorTemplateSet::parseDescription, NULL, 0 },
 		{ 0, 0, 0, 0 }
 	};
 
 	ini->initFromINI(this, myFieldParse);
+}
+
+//-------------------------------------------------------------------------------------------------
+void ArmorTemplateSet::parseDescription(INI* ini, void* instance, void* store, const void* userData)
+{
+	ArmorTemplateSet* armorSet = static_cast<ArmorTemplateSet*>(instance);
+	if (!armorSet->m_description)
+	{
+		armorSet->m_description = new UnicodeString();
+	}
+
+	// Parse the string from INI
+	const char* token = ini->getNextToken();
+	if (token)
+	{
+		// Translate the label
+		UnicodeString translated = TheGameText->fetch(token);
+		armorSet->m_description->set(translated.str());
+	}
+}
+
+//-------------------------------------------------------------------------------------------------
+UnicodeString ArmorTemplateSet::buildSideSpecificDescription() const
+{
+	UnicodeString result;
+	
+	// Group sides by their armor templates
+	struct ArmorGroup
+	{
+		const ArmorTemplate* armorTemplate;
+		std::vector<const wchar_t*> sideNames;
+		
+		ArmorGroup(const ArmorTemplate* armor) : armorTemplate(armor) {}
+	};
+	
+	std::vector<ArmorGroup> armorGroups;
+	
+	// Process each side
+	for (int i = 0; i < HIT_SIDE_COUNT; ++i)
+	{
+		// Skip unknown sides
+		if (i == HIT_SIDE_UNKNOWN)
+		{
+			continue;
+		}
+		
+		const ArmorTemplate* sideArmor = m_sideTemplates[i];
+		if (sideArmor == NULL)
+		{
+			sideArmor = m_template; // Use default as fallback
+		}
+		
+		if (sideArmor != NULL)
+		{
+			UnicodeString armorName = sideArmor->getDisplayName();
+			if (armorName.isEmpty() && m_template != NULL)
+			{
+				// Fallback to m_template name if display name is empty
+				armorName = TheGameText->fetch(m_template->getName().str());
+			}
+			
+			if (!armorName.isEmpty())
+			{
+				// Get side name
+				const wchar_t* sideName = L"";
+				switch (i)
+				{
+					case HIT_SIDE_FRONT:  sideName = L"front"; break;
+					case HIT_SIDE_BACK:   sideName = L"back"; break;
+					case HIT_SIDE_LEFT:   sideName = L"left"; break;
+					case HIT_SIDE_RIGHT:  sideName = L"right"; break;
+					case HIT_SIDE_TOP:    sideName = L"top"; break;
+					case HIT_SIDE_BOTTOM: sideName = L"bottom"; break;
+					default:              continue; // Skip unknown sides
+				}
+				
+				// Find existing group for this armor template
+				Bool foundGroup = false;
+				for (size_t j = 0; j < armorGroups.size(); ++j)
+				{
+					if (armorGroups[j].armorTemplate == sideArmor)
+					{
+						armorGroups[j].sideNames.push_back(sideName);
+						foundGroup = true;
+						break;
+					}
+				}
+				
+				// Create new group if not found
+				if (!foundGroup)
+				{
+					armorGroups.push_back(ArmorGroup(sideArmor));
+					armorGroups.back().sideNames.push_back(sideName);
+				}
+			}
+		}
+	}
+	
+	// Build description from groups
+	if (armorGroups.empty())
+	{
+		result = L"";
+	}
+	else
+	{
+		for (size_t i = 0; i < armorGroups.size(); ++i)
+		{
+			const ArmorGroup& group = armorGroups[i];
+			
+			if (!result.isEmpty())
+			{
+				result += L" and ";
+			}
+			
+			// Add side names
+			if (group.sideNames.size() == 1)
+			{
+				result += group.sideNames[0];
+			}
+			else if (group.sideNames.size() == 2)
+			{
+				result += group.sideNames[0];
+				result += L" and ";
+				result += group.sideNames[1];
+			}
+			else
+			{
+				// Multiple sides
+				for (size_t j = 0; j < group.sideNames.size(); ++j)
+				{
+					if (j > 0)
+					{
+						if (j == group.sideNames.size() - 1)
+						{
+							result += L" and ";
+						}
+						else
+						{
+							result += L", ";
+						}
+					}
+					result += group.sideNames[j];
+				}
+			}
+			
+			result += L" protected by ";
+			
+			// Add armor name
+			UnicodeString armorName = group.armorTemplate->getDisplayName();
+			if (armorName.isEmpty() && m_template != NULL)
+			{
+				// Fallback to m_template name if display name is empty
+				armorName = TheGameText->fetch(m_template->getName().str());
+			}
+			
+			if (!armorName.isEmpty())
+			{
+				// Make first letter lowercase for armor name
+				if (armorName.getLength() > 0)
+				{
+					const wchar_t* str = armorName.str();
+					if (str && str[0] >= L'A' && str[0] <= L'Z')
+					{
+						// Create new string with lowercase first letter
+						UnicodeString lowercaseName = armorName;
+						wchar_t* buffer = const_cast<wchar_t*>(lowercaseName.str());
+						buffer[0] = str[0] + (L'a' - L'A');
+						armorName = lowercaseName;
+					}
+				}
+				result += armorName;
+			}
+			
+		}
+	}
+	
+	// Capitalize first letter of result
+	if (!result.isEmpty() && result.getLength() > 0)
+	{
+		const wchar_t* str = result.str();
+		if (str && str[0] >= L'a' && str[0] <= L'z')
+		{
+			// Create new string with uppercase first letter
+			UnicodeString uppercaseResult = result;
+			wchar_t* buffer = const_cast<wchar_t*>(uppercaseResult.str());
+			buffer[0] = str[0] - (L'a' - L'A');
+			result = uppercaseResult;
+		}
+	}
+	
+	return result;
+}
+
+//-------------------------------------------------------------------------------------------------
+UnicodeString ArmorTemplateSet::getModuleDescription() const
+{
+	if (!m_description)
+	{
+		UnicodeString result;
+
+		// Check if we have any side-specific armor
+		Bool hasSideSpecificArmor = false;
+		for (int i = 0; i < HIT_SIDE_COUNT; ++i)
+		{
+			if (m_sideTemplates[i] != NULL)
+			{
+				hasSideSpecificArmor = true;
+				break;
+			}
+		}
+
+		if (!hasSideSpecificArmor)
+		{
+			result = L"";
+			// No side-specific armor, use default armor
+			if (m_template != NULL)
+			{
+				UnicodeString armorName = m_template->getDisplayName();
+				if (!armorName.isEmpty())
+				{
+					result = L"Protected by " + armorName;
+				}
+			}
+
+		}
+		else
+		{
+			// Use the extracted function for side-specific armor description
+			result = buildSideSpecificDescription();
+		}
+
+		m_description = new UnicodeString(result);
+	}
+	return *m_description;
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -1630,15 +1866,15 @@ UnicodeString ThingTemplate::getExtendedDescription() const
 	crateUpgradeOneFlags.set(WEAPONSET_CRATEUPGRADE_ONE);
 	WeaponSetFlags crateUpgradeTwoFlags;
 	crateUpgradeTwoFlags.set(WEAPONSET_CRATEUPGRADE_TWO);
-	
+
 	for (WeaponTemplateSetVector::const_iterator it = weaponSets.begin(); it != weaponSets.end(); ++it)
 	{
 		const WeaponTemplateSet& weaponSet = *it;
 		WeaponSetFlags currentFlags = weaponSet.getNthConditionsYes(0);
-		
+
 		// Check if this is a default weapon set (no conditions or only crate upgrade flags)
-		if (currentFlags == defaultFlags || 
-			currentFlags == crateUpgradeOneFlags || 
+		if (currentFlags == defaultFlags ||
+			currentFlags == crateUpgradeOneFlags ||
 			currentFlags == crateUpgradeTwoFlags)
 		{
 			UnicodeString weaponSetDesc = weaponSet.getModuleDescription();
@@ -1662,31 +1898,29 @@ UnicodeString ThingTemplate::getExtendedDescription() const
 	armorCrateUpgradeOneFlags.set(ARMORSET_CRATE_UPGRADE_ONE);
 	ArmorSetFlags armorCrateUpgradeTwoFlags;
 	armorCrateUpgradeTwoFlags.set(ARMORSET_CRATE_UPGRADE_TWO);
-	
+
 	for (ArmorTemplateSetVector::const_iterator it = armorSets.begin(); it != armorSets.end(); ++it)
 	{
 		const ArmorTemplateSet& armorSet = *it;
 		ArmorSetFlags currentFlags = armorSet.getNthConditionsYes(0);
-		
+
 		// Check if this is a default armor set (no conditions or only crate upgrade flags)
-		if (currentFlags == armorDefaultFlags || 
-			currentFlags == armorCrateUpgradeOneFlags || 
+		if (currentFlags == armorDefaultFlags ||
+			currentFlags == armorCrateUpgradeOneFlags ||
 			currentFlags == armorCrateUpgradeTwoFlags)
 		{
-			const ArmorTemplate* armorTemplate = armorSet.getArmorTemplate();
-			UnicodeString armorDescription = armorTemplate->getModuleDescription();
+			UnicodeString armorDescription = armorSet.getModuleDescription();
 			if (!armorDescription.isEmpty())
-			{				
-					if (!description.isEmpty())
-					{
-						description += L"\n";
-					}
-					description += L"- ";
-					description += armorDescription;
+			{
+				if (!description.isEmpty())
+				{
+					description += L"\n";
 				}
+				description += L"- ";
+				description += armorDescription;
 			}
 		}
-	
+	}
 
 	// Get behavior modules from template
 	const ModuleInfo& behaviorModuleInfo = getBehaviorModuleInfo();
@@ -1699,21 +1933,22 @@ UnicodeString ThingTemplate::getExtendedDescription() const
 		const ModuleData* moduleData;
 		UnicodeString description;
 		Int order;
-		
-		ModuleDescInfo(const ModuleData* md, const UnicodeString& desc, Int ord) 
-			: moduleData(md), description(desc), order(ord) {}
-		
+
+		ModuleDescInfo(const ModuleData* md, const UnicodeString& desc, Int ord)
+			: moduleData(md), description(desc), order(ord) {
+		}
+
 		// Sort by order (lower numbers first)
 		bool operator<(const ModuleDescInfo& other) const
 		{
 			return order < other.order;
 		}
 	};
-	
+
 	// Collect all modules with descriptions
 	std::vector<ModuleDescInfo> moduleDescriptions;
 	moduleDescriptions.reserve(moduleCount + updateModuleCount);
-	
+
 	// Process behavior modules
 	for (Int i = 0; i < moduleCount; ++i)
 	{
@@ -1728,7 +1963,7 @@ UnicodeString ThingTemplate::getExtendedDescription() const
 			}
 		}
 	}
-	
+
 	// Process client update modules
 	for (int i = 0; i < updateModuleCount; ++i)
 	{
@@ -1743,10 +1978,10 @@ UnicodeString ThingTemplate::getExtendedDescription() const
 			}
 		}
 	}
-	
+
 	// Sort modules by their order
 	std::sort(moduleDescriptions.begin(), moduleDescriptions.end());
-	
+
 	// Build final description in sorted order with bullet points
 	for (size_t i = 0; i < moduleDescriptions.size(); ++i)
 	{
@@ -1756,9 +1991,9 @@ UnicodeString ThingTemplate::getExtendedDescription() const
 		}
 		description += L"- ";
 		description += moduleDescriptions[i].description;
-		
+
 	}
-	
+
 	// TheSuperHackers @feature author 01/01/2025 Add locomotor description after modules
 	// Get locomotor description from AI module
 	AIUpdateModuleData* aiData = const_cast<ThingTemplate*>(this)->friend_getAIModuleInfo();
@@ -1798,16 +2033,16 @@ UnicodeString ThingTemplate::getExtendedDescription() const
 UnicodeString ThingTemplate::getKindOfDescription() const
 {
 	UnicodeString result = L"";
-	
+
 	// Get the KindOf mask for this template
 	const KindOfMaskType kindOfMask = m_kindof;
-	
+
 	// KindOf mapping table ordered by priority (most specific first)
 	struct KindOfMapping {
 		KindOfMaskType requiredMask;  // Required KindOf flags
 		const char* localizationKey; // UNITTYPE key
 	};
-	
+
 	static const KindOfMapping kindOfMappings[] = {
 		// Vehicle + Weight + Type combinations (highest priority)
 		{ MAKE_KINDOF_MASK3(KINDOF_VEHICLE, KINDOF_APC, KINDOF_SUPERHEAVY_VEHICLE), "UNITTYPE:SUPERHEAVY_APC" },
@@ -1850,7 +2085,7 @@ UnicodeString ThingTemplate::getKindOfDescription() const
 		{ MAKE_KINDOF_MASK4(KINDOF_VEHICLE, KINDOF_GUN_ARTILLERY, KINDOF_HEAVY_VEHICLE, KINDOF_SELF_PROPELLED), "UNITTYPE:HEAVY_SELF_PROPELLED_GUN_ARTILLERY" },
 		{ MAKE_KINDOF_MASK4(KINDOF_VEHICLE, KINDOF_GUN_ARTILLERY, KINDOF_SUPERHEAVY_VEHICLE, KINDOF_TOWED), "UNITTYPE:SUPERHEAVY_TOWED_GUN_ARTILLERY" },
 		{ MAKE_KINDOF_MASK4(KINDOF_VEHICLE, KINDOF_GUN_ARTILLERY, KINDOF_SUPERHEAVY_VEHICLE, KINDOF_SELF_PROPELLED), "UNITTYPE:SUPERHEAVY_SELF_PROPELLED_GUN_ARTILLERY" },
-		
+
 		// Missile Artillery + Weight + Mobility
 		{ MAKE_KINDOF_MASK4(KINDOF_VEHICLE, KINDOF_MISSILE_ARTILLERY, KINDOF_LIGHT_VEHICLE, KINDOF_TOWED), "UNITTYPE:LIGHT_TOWED_MISSILE_ARTILLERY" },
 		{ MAKE_KINDOF_MASK4(KINDOF_VEHICLE, KINDOF_MISSILE_ARTILLERY, KINDOF_LIGHT_VEHICLE, KINDOF_SELF_PROPELLED), "UNITTYPE:LIGHT_SELF_PROPELLED_MISSILE_ARTILLERY" },
@@ -1860,7 +2095,7 @@ UnicodeString ThingTemplate::getKindOfDescription() const
 		{ MAKE_KINDOF_MASK4(KINDOF_VEHICLE, KINDOF_MISSILE_ARTILLERY, KINDOF_HEAVY_VEHICLE, KINDOF_SELF_PROPELLED), "UNITTYPE:HEAVY_SELF_PROPELLED_MISSILE_ARTILLERY" },
 		{ MAKE_KINDOF_MASK4(KINDOF_VEHICLE, KINDOF_MISSILE_ARTILLERY, KINDOF_SUPERHEAVY_VEHICLE, KINDOF_TOWED), "UNITTYPE:SUPERHEAVY_TOWED_MISSILE_ARTILLERY" },
 		{ MAKE_KINDOF_MASK4(KINDOF_VEHICLE, KINDOF_MISSILE_ARTILLERY, KINDOF_SUPERHEAVY_VEHICLE, KINDOF_SELF_PROPELLED), "UNITTYPE:SUPERHEAVY_SELF_PROPELLED_MISSILE_ARTILLERY" },
-		
+
 		// Rocket Artillery + Weight + Mobility
 		{ MAKE_KINDOF_MASK4(KINDOF_VEHICLE, KINDOF_ROCKET_ARTILLERY, KINDOF_LIGHT_VEHICLE, KINDOF_TOWED), "UNITTYPE:LIGHT_TOWED_ROCKET_ARTILLERY" },
 		{ MAKE_KINDOF_MASK4(KINDOF_VEHICLE, KINDOF_ROCKET_ARTILLERY, KINDOF_LIGHT_VEHICLE, KINDOF_SELF_PROPELLED), "UNITTYPE:LIGHT_SELF_PROPELLED_ROCKET_ARTILLERY" },
@@ -1870,7 +2105,7 @@ UnicodeString ThingTemplate::getKindOfDescription() const
 		{ MAKE_KINDOF_MASK4(KINDOF_VEHICLE, KINDOF_ROCKET_ARTILLERY, KINDOF_HEAVY_VEHICLE, KINDOF_SELF_PROPELLED), "UNITTYPE:HEAVY_SELF_PROPELLED_ROCKET_ARTILLERY" },
 		{ MAKE_KINDOF_MASK4(KINDOF_VEHICLE, KINDOF_ROCKET_ARTILLERY, KINDOF_SUPERHEAVY_VEHICLE, KINDOF_TOWED), "UNITTYPE:SUPERHEAVY_TOWED_ROCKET_ARTILLERY" },
 		{ MAKE_KINDOF_MASK4(KINDOF_VEHICLE, KINDOF_ROCKET_ARTILLERY, KINDOF_SUPERHEAVY_VEHICLE, KINDOF_SELF_PROPELLED), "UNITTYPE:SUPERHEAVY_SELF_PROPELLED_ROCKET_ARTILLERY" },
-		
+
 		// Artillery subtype + weight combinations (medium priority)
 		{ MAKE_KINDOF_MASK3(KINDOF_VEHICLE, KINDOF_GUN_ARTILLERY, KINDOF_LIGHT_VEHICLE), "UNITTYPE:LIGHT_GUN_ARTILLERY" },
 		{ MAKE_KINDOF_MASK3(KINDOF_VEHICLE, KINDOF_GUN_ARTILLERY, KINDOF_MEDIUM_VEHICLE), "UNITTYPE:MEDIUM_GUN_ARTILLERY" },
@@ -1884,7 +2119,7 @@ UnicodeString ThingTemplate::getKindOfDescription() const
 		{ MAKE_KINDOF_MASK3(KINDOF_VEHICLE, KINDOF_ROCKET_ARTILLERY, KINDOF_MEDIUM_VEHICLE), "UNITTYPE:MEDIUM_ROCKET_ARTILLERY" },
 		{ MAKE_KINDOF_MASK3(KINDOF_VEHICLE, KINDOF_ROCKET_ARTILLERY, KINDOF_HEAVY_VEHICLE), "UNITTYPE:HEAVY_ROCKET_ARTILLERY" },
 		{ MAKE_KINDOF_MASK3(KINDOF_VEHICLE, KINDOF_ROCKET_ARTILLERY, KINDOF_SUPERHEAVY_VEHICLE), "UNITTYPE:SUPERHEAVY_ROCKET_ARTILLERY" },
-		
+
 		// Specific vehicle types with mobility combinations
 		// Artillery + Mobility combinations
 		{ MAKE_KINDOF_MASK3(KINDOF_VEHICLE, KINDOF_ARTILLERY, KINDOF_TOWED), "UNITTYPE:TOWED_ARTILLERY" },
@@ -1895,13 +2130,13 @@ UnicodeString ThingTemplate::getKindOfDescription() const
 		{ MAKE_KINDOF_MASK3(KINDOF_VEHICLE, KINDOF_MISSILE_ARTILLERY, KINDOF_SELF_PROPELLED), "UNITTYPE:SELF_PROPELLED_MISSILE_ARTILLERY" },
 		{ MAKE_KINDOF_MASK3(KINDOF_VEHICLE, KINDOF_GUN_ARTILLERY, KINDOF_TOWED), "UNITTYPE:TOWED_GUN_ARTILLERY" },
 		{ MAKE_KINDOF_MASK3(KINDOF_VEHICLE, KINDOF_GUN_ARTILLERY, KINDOF_SELF_PROPELLED), "UNITTYPE:SELF_PROPELLED_GUN_ARTILLERY" },
-		
+
 		// Anti-Aircraft + Mobility combinations
 		{ MAKE_KINDOF_MASK3(KINDOF_VEHICLE, KINDOF_ANTI_AIRCRAFT, KINDOF_TOWED), "UNITTYPE:TOWED_ANTI_AIRCRAFT" },
 		{ MAKE_KINDOF_MASK3(KINDOF_VEHICLE, KINDOF_ANTI_AIRCRAFT, KINDOF_SELF_PROPELLED), "UNITTYPE:SELF_PROPELLED_ANTI_AIRCRAFT" },
 		{ MAKE_KINDOF_MASK3(KINDOF_VEHICLE, KINDOF_ANTI_AIRCRAFT_GUN, KINDOF_TOWED), "UNITTYPE:TOWED_ANTI_AIRCRAFT_GUN" },
 		{ MAKE_KINDOF_MASK3(KINDOF_VEHICLE, KINDOF_ANTI_AIRCRAFT_GUN, KINDOF_SELF_PROPELLED), "UNITTYPE:SELF_PROPELLED_ANTI_AIRCRAFT_GUN" },
-		
+
 		// Specific vehicle types
 		{ MAKE_KINDOF_MASK3(KINDOF_VEHICLE, KINDOF_ANTI_AIRCRAFT, KINDOF_ANTI_AIRCRAFT_GUN), "UNITTYPE:ANTI_AIRCRAFT_GUN" },
 		{ MAKE_KINDOF_MASK3(KINDOF_VEHICLE, KINDOF_ANTI_AIRCRAFT, KINDOF_SAM), "UNITTYPE:SAM" },
@@ -1916,22 +2151,22 @@ UnicodeString ThingTemplate::getKindOfDescription() const
 		{ MAKE_KINDOF_MASK2(KINDOF_VEHICLE, KINDOF_ROCKET_ARTILLERY), "UNITTYPE:ROCKET_ARTILLERY" },
 		{ MAKE_KINDOF_MASK2(KINDOF_VEHICLE, KINDOF_MISSILE_ARTILLERY), "UNITTYPE:MISSILE_ARTILLERY" },
 		{ MAKE_KINDOF_MASK2(KINDOF_VEHICLE, KINDOF_GUN_ARTILLERY), "UNITTYPE:GUN_ARTILLERY" },
-		
+
 		// Ballistic Missile Launcher + Weight combinations (highest priority)
 		{ MAKE_KINDOF_MASK3(KINDOF_VEHICLE, KINDOF_BALLISTIC_MISSILE_LAUNCHER, KINDOF_SUPERHEAVY_VEHICLE), "UNITTYPE:SUPERHEAVY_BALLISTIC_MISSILE_LAUNCHER" },
 		{ MAKE_KINDOF_MASK3(KINDOF_VEHICLE, KINDOF_BALLISTIC_MISSILE_LAUNCHER, KINDOF_HEAVY_VEHICLE), "UNITTYPE:HEAVY_BALLISTIC_MISSILE_LAUNCHER" },
 		{ MAKE_KINDOF_MASK3(KINDOF_VEHICLE, KINDOF_BALLISTIC_MISSILE_LAUNCHER, KINDOF_MEDIUM_VEHICLE), "UNITTYPE:MEDIUM_BALLISTIC_MISSILE_LAUNCHER" },
 		{ MAKE_KINDOF_MASK3(KINDOF_VEHICLE, KINDOF_BALLISTIC_MISSILE_LAUNCHER, KINDOF_LIGHT_VEHICLE), "UNITTYPE:LIGHT_BALLISTIC_MISSILE_LAUNCHER" },
-		
+
 		// Ballistic Missile Launcher (medium priority)
 		{ MAKE_KINDOF_MASK2(KINDOF_VEHICLE, KINDOF_BALLISTIC_MISSILE_LAUNCHER), "UNITTYPE:BALLISTIC_MISSILE_LAUNCHER" },
-		
+
 		// TheSuperHackers @feature author 15/01/2025 Add Loitering Munition Launcher and Unmanned Aerial Carrier
 		{ MAKE_KINDOF_MASK2(KINDOF_VEHICLE, KINDOF_LOITERING_MUNITION_LAUNCHER), "UNITTYPE:LOITERING_MUNITION_LAUNCHER" },
 		{ MAKE_KINDOF_MASK2(KINDOF_VEHICLE, KINDOF_UNMANNED_AERIAL_CARRIER), "UNITTYPE:UNMANNED_AERIAL_CARRIER" },
 		{ MAKE_KINDOF_MASK2(KINDOF_VEHICLE, KINDOF_SUPPORT_UNIT), "UNITTYPE:SUPPORT_VEHICLE" },
 		// TheSuperHackers @feature author 15/01/2025 Add Support Unit combinations
-				
+
 		{ MAKE_KINDOF_MASK2(KINDOF_VEHICLE, KINDOF_BATTLESHIP), "UNITTYPE:BATTLESHIP" },
 		{ MAKE_KINDOF_MASK2(KINDOF_VEHICLE, KINDOF_CRUISER), "UNITTYPE:CRUISER" },
 		{ MAKE_KINDOF_MASK2(KINDOF_VEHICLE, KINDOF_DESTROYER), "UNITTYPE:DESTROYER" },
@@ -1939,10 +2174,10 @@ UnicodeString ThingTemplate::getKindOfDescription() const
 		{ MAKE_KINDOF_MASK2(KINDOF_VEHICLE, KINDOF_SUBMARINE), "UNITTYPE:SUBMARINE" },
 		{ MAKE_KINDOF_MASK2(KINDOF_VEHICLE, KINDOF_PATROL_BOAT), "UNITTYPE:PATROL_BOAT" },
 		{ MAKE_KINDOF_MASK2(KINDOF_VEHICLE, KINDOF_GUNBOAT), "UNITTYPE:GUNBOAT" },
-		
+
 		{ MAKE_KINDOF_MASK2(KINDOF_VEHICLE, KINDOF_SCOUT), "UNITTYPE:SCOUT" },
 		{ MAKE_KINDOF_MASK2(KINDOF_VEHICLE, KINDOF_DOZER), "UNITTYPE:DOZER" },
-		
+
 		// Aircraft types
 		{ MAKE_KINDOF_MASK2(KINDOF_AIRCRAFT, KINDOF_FIGHTER), "UNITTYPE:FIGHTER" },
 		{ MAKE_KINDOF_MASK2(KINDOF_AIRCRAFT, KINDOF_TACTICAL_BOMBER), "UNITTYPE:TACTICAL_BOMBER" },
@@ -1963,32 +2198,32 @@ UnicodeString ThingTemplate::getKindOfDescription() const
 		{ MAKE_KINDOF_MASK2(KINDOF_AIRCRAFT, KINDOF_SMALL_AIRCRAFT), "UNITTYPE:SMALL_AIRCRAFT" },
 		{ MAKE_KINDOF_MASK2(KINDOF_AIRCRAFT, KINDOF_HOT_AIR_BALLOON), "UNITTYPE:HOT_AIR_BALLOON" },
 		{ MAKE_KINDOF_MASK2(KINDOF_AIRCRAFT, KINDOF_BLIMP), "UNITTYPE:BLIMP" },
-		
-		
+
+
 		// Infantry types with anti-target combinations (highest priority)
-		
-		
+
+
 		// Special Forces Infantry + Anti-Target combinations
 		{ MAKE_KINDOF_MASK2(KINDOF_SPECIAL_FORCE_INFANTRY, KINDOF_ANTI_STRUCTURE), "UNITTYPE:ANTI_STRUCTURE_SPECIAL_FORCE" },
 		{ MAKE_KINDOF_MASK2(KINDOF_SPECIAL_FORCE_INFANTRY, KINDOF_ANTI_TANK), "UNITTYPE:ANTI_TANK_SPECIAL_FORCE" },
 		{ MAKE_KINDOF_MASK2(KINDOF_SPECIAL_FORCE_INFANTRY, KINDOF_ANTI_INFANTRY), "UNITTYPE:ANTI_INFANTRY_SPECIAL_FORCE" },
 		{ MAKE_KINDOF_MASK2(KINDOF_SPECIAL_FORCE_INFANTRY, KINDOF_ANTI_NAVAL), "UNITTYPE:ANTI_NAVAL_SPECIAL_FORCE" },
 		{ MAKE_KINDOF_MASK2(KINDOF_SPECIAL_FORCE_INFANTRY, KINDOF_ANTI_AIRCRAFT), "UNITTYPE:ANTI_AIRCRAFT_SPECIAL_FORCE" },
-		
+
 		// Heavy Infantry + Anti-Target combinations
 		{ MAKE_KINDOF_MASK2(KINDOF_HEAVY_INFANTRY, KINDOF_ANTI_STRUCTURE), "UNITTYPE:ANTI_STRUCTURE_HEAVY_INFANTRY" },
 		{ MAKE_KINDOF_MASK2(KINDOF_HEAVY_INFANTRY, KINDOF_ANTI_TANK), "UNITTYPE:ANTI_TANK_HEAVY_INFANTRY" },
 		{ MAKE_KINDOF_MASK2(KINDOF_HEAVY_INFANTRY, KINDOF_ANTI_INFANTRY), "UNITTYPE:ANTI_INFANTRY_HEAVY_INFANTRY" },
 		{ MAKE_KINDOF_MASK2(KINDOF_HEAVY_INFANTRY, KINDOF_ANTI_NAVAL), "UNITTYPE:ANTI_NAVAL_HEAVY_INFANTRY" },
 		{ MAKE_KINDOF_MASK2(KINDOF_HEAVY_INFANTRY, KINDOF_ANTI_AIRCRAFT), "UNITTYPE:ANTI_AIRCRAFT_HEAVY_INFANTRY" },
-		
+
 		// Commando + Anti-Target combinations
 		{ MAKE_KINDOF_MASK2(KINDOF_COMMANDO, KINDOF_ANTI_STRUCTURE), "UNITTYPE:ANTI_STRUCTURE_COMMANDO" },
 		{ MAKE_KINDOF_MASK2(KINDOF_COMMANDO, KINDOF_ANTI_TANK), "UNITTYPE:ANTI_TANK_COMMANDO" },
 		{ MAKE_KINDOF_MASK2(KINDOF_COMMANDO, KINDOF_ANTI_INFANTRY), "UNITTYPE:ANTI_INFANTRY_COMMANDO" },
 		{ MAKE_KINDOF_MASK2(KINDOF_COMMANDO, KINDOF_ANTI_NAVAL), "UNITTYPE:ANTI_NAVAL_COMMANDO" },
 		{ MAKE_KINDOF_MASK2(KINDOF_COMMANDO, KINDOF_ANTI_AIRCRAFT), "UNITTYPE:ANTI_AIRCRAFT_COMMANDO" },
-		
+
 		// Infantry types (medium priority)
 		// Anti-Target + Infantry combinations
 		{ MAKE_KINDOF_MASK2(KINDOF_INFANTRY, KINDOF_ANTI_STRUCTURE), "UNITTYPE:ANTI_STRUCTURE_INFANTRY" },
@@ -2001,7 +2236,7 @@ UnicodeString ThingTemplate::getKindOfDescription() const
 		{ MAKE_KINDOF_MASK2(KINDOF_INFANTRY, KINDOF_MOB_NEXUS), "UNITTYPE:INFANTRYSQUAD" },
 		{ MAKE_KINDOF_MASK2(KINDOF_INFANTRY, KINDOF_HEAVY_INFANTRY), "UNITTYPE:HEAVY_INFANTRY" },
 		{ MAKE_KINDOF_MASK2(KINDOF_INFANTRY, KINDOF_SPECIAL_FORCE_INFANTRY), "UNITTYPE:SPECIAL_FORCE_INFANTRY" },
-		
+
 		// Structure types
 		{ MAKE_KINDOF_MASK2(KINDOF_STRUCTURE, KINDOF_COMMANDCENTER), "UNITTYPE:COMMANDCENTER" },
 		{ MAKE_KINDOF_MASK2(KINDOF_STRUCTURE, KINDOF_FS_SUPPLY_CENTER), "UNITTYPE:SUPPLY_CENTER" },
@@ -2009,10 +2244,10 @@ UnicodeString ThingTemplate::getKindOfDescription() const
 		{ MAKE_KINDOF_MASK2(KINDOF_STRUCTURE, KINDOF_FS_POWER), "UNITTYPE:FS_POWER" },
 		{ MAKE_KINDOF_MASK2(KINDOF_STRUCTURE, KINDOF_EW_RADAR), "UNITTYPE:EW_RADAR_STRUCTURE" },
 		{ MAKE_KINDOF_MASK2(KINDOF_STRUCTURE, KINDOF_FS_BASE_DEFENSE), "UNITTYPE:FS_BASE_DEFENSE" },
-		
+
 		{ MAKE_KINDOF_MASK2(KINDOF_STRUCTURE, KINDOF_FS_FAKE), "UNITTYPE:FS_FAKE" },
 		{ MAKE_KINDOF_MASK2(KINDOF_STRUCTURE, KINDOF_FS_INTERNET_CENTER), "UNITTYPE:FS_INTERNET_CENTER" },
-		{ MAKE_KINDOF_MASK2(KINDOF_STRUCTURE, KINDOF_FS_BARRACKS), "UNITTYPE:FS_BARRACKS" },		
+		{ MAKE_KINDOF_MASK2(KINDOF_STRUCTURE, KINDOF_FS_BARRACKS), "UNITTYPE:FS_BARRACKS" },
 		{ MAKE_KINDOF_MASK2(KINDOF_STRUCTURE, KINDOF_FS_AIRFIELD), "UNITTYPE:FS_AIRFIELD" },
 
 		{ MAKE_KINDOF_MASK2(KINDOF_FS_ADVANCED_TECH, KINDOF_FS_WARFACTORY), "UNITTYPE:FS_ADVANCED_TECH_WARFACTORY" },
@@ -2024,10 +2259,10 @@ UnicodeString ThingTemplate::getKindOfDescription() const
 		{ MAKE_KINDOF_MASK2(KINDOF_STRUCTURE, KINDOF_FS_ADVANCED_TECH), "UNITTYPE:FS_ADVANCED_TECH" },
 		{ MAKE_KINDOF_MASK2(KINDOF_STRUCTURE, KINDOF_FS_WARFACTORY), "UNITTYPE:FS_WARFACTORY" },
 		{ MAKE_KINDOF_MASK2(KINDOF_STRUCTURE, KINDOF_FS_FACTORY), "UNITTYPE:FS_FACTORY" },
-		
+
 		// TheSuperHackers @feature author 15/01/2025 Add FS Technology + Warfactory combinations
 
-		
+
 		// General categories (lowest priority)
 		{ MAKE_KINDOF_MASK(KINDOF_DRONE), "UNITTYPE:DRONE" },
 		{ MAKE_KINDOF_MASK(KINDOF_STRUCTURE), "UNITTYPE:STRUCTURE" },
@@ -2035,7 +2270,7 @@ UnicodeString ThingTemplate::getKindOfDescription() const
 		{ MAKE_KINDOF_MASK(KINDOF_VEHICLE), "UNITTYPE:VEHICLE" },
 		{ MAKE_KINDOF_MASK(KINDOF_AIRCRAFT), "UNITTYPE:AIRCRAFT" }
 	};
-	
+
 	// Check each mapping in priority order
 	for (int i = 0; i < sizeof(kindOfMappings) / sizeof(kindOfMappings[0]); ++i)
 	{
@@ -2048,6 +2283,6 @@ UnicodeString ThingTemplate::getKindOfDescription() const
 			}
 		}
 	}
-	
+
 	return result;
 }

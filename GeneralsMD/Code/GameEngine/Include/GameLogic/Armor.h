@@ -61,7 +61,7 @@ public:
 	Real adjustDamage(DamageType t, Real damage) const;
 
 	inline AsciiString getName() const { return m_name; }
-	inline const UnicodeString& getDisplayName() const { return m_displayName; }
+	UnicodeString getDisplayName() const;
 	inline void setDisplayName(const UnicodeString& newName) { m_displayName = newName; }
 	UnicodeString getModuleDescription() const;
 
@@ -92,7 +92,7 @@ public:
 	}
 
 	inline AsciiString getName() const { return m_template ? m_template->getName() : AsciiString(); }
-	inline const UnicodeString& getDisplayName() const { static UnicodeString empty; return m_template ? m_template->getDisplayName() : empty; }
+	UnicodeString getDisplayName() const;
 
 	inline void clear()
 	{
