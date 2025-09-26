@@ -65,11 +65,11 @@ public:
 
 	InventoryBehaviorModuleData();
 
-            // Helper methods
-            Int getMaxStorageCount(const AsciiString& itemKey) const;
-            Int getInitialAvailableAmount(const AsciiString& itemKey) const;
-            const UnicodeString& getDisplayName(const AsciiString& itemKey) const;
-            Int getCostPerItem(const AsciiString& itemKey) const;
+    // Helper methods
+    Int getMaxStorageCount(const AsciiString& itemKey) const;
+    Int getInitialAvailableAmount(const AsciiString& itemKey) const;
+    const UnicodeString& getDisplayName(const AsciiString& itemKey) const;
+    Int getCostPerItem(const AsciiString& itemKey) const;
 
 	virtual UnicodeString getModuleDescription() const;
 	virtual Int getModuleOrder() const { return 1000; } // High priority for display

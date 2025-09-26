@@ -174,6 +174,7 @@ static PoolSizeRec PoolSizes[] =
 	{ "InstantDeathBehavior", 512, 32 },
 	{ "InventoryBehavior", 256, 32 },
 	{ "InventoryBehaviorModuleData", 256, 32 },
+	{ "InventoryUpgrade", 32, 32 },
 	{ "LaserUpdate", 32, 32 },
 	{ "PointDefenseLaserUpdate", 32, 32 },
 	{ "CleanupHazardUpdate", 32, 32 },

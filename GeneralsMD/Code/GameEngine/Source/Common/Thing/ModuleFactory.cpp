@@ -204,6 +204,7 @@
 #include "GameLogic/Module/LocomotorSetUpgrade.h"
 #include "GameLogic/Module/ObjectCreationUpgrade.h"
 #include "GameLogic/Module/RadarUpgrade.h"
+#include "GameLogic/Module/InventoryUpgrade.h"
 #include "GameLogic/Module/PowerPlantUpgrade.h"
 #include "GameLogic/Module/ReplaceObjectUpgrade.h"
 #include "GameLogic/Module/ModelConditionUpgrade.h"
@@ -490,6 +491,7 @@ void ModuleFactory::init( void )
 	addModule( SubObjectsUpgrade );
 	addModule( StealthUpgrade );
 	addModule( RadarUpgrade );
+	addModule( InventoryUpgrade );
 	addModule( PowerPlantUpgrade );
 	addModule( LocomotorSetUpgrade );
 	addModule( ObjectCreationUpgrade );

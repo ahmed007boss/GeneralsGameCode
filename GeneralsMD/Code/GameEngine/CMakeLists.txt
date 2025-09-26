@@ -403,6 +403,7 @@ set(GAMEENGINE_SRC
     Include/GameLogic/Module/QueueProductionExitUpdate.h
     Include/GameLogic/Module/RadarUpdate.h
     Include/GameLogic/Module/RadarUpgrade.h
+    Include/GameLogic/Module/InventoryUpgrade.h
     Include/GameLogic/Module/RadiusDecalUpdate.h
     Include/GameLogic/Module/RadiusDecalBehavior.h
     Include/GameLogic/Module/WeaponRangeDecalBehavior.h
@@ -1080,6 +1081,7 @@ set(GAMEENGINE_SRC
     Source/GameLogic/Object/Upgrade/PassengersFireUpgrade.cpp
     Source/GameLogic/Object/Upgrade/PowerPlantUpgrade.cpp
     Source/GameLogic/Object/Upgrade/RadarUpgrade.cpp
+    Source/GameLogic/Object/Upgrade/InventoryUpgrade.cpp
     Source/GameLogic/Object/Upgrade/ReplaceObjectUpgrade.cpp
     Source/GameLogic/Object/Upgrade/StatusBitsUpgrade.cpp
     Source/GameLogic/Object/Upgrade/StealthUpgrade.cpp
