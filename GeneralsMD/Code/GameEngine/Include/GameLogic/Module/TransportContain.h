@@ -35,6 +35,7 @@
 // USER INCLUDES //////////////////////////////////////////////////////////////////////////////////
 #include "GameLogic/Module/OpenContain.h"
 #include "Common/UnicodeString.h"
+#include <vector>
 
 //-------------------------------------------------------------------------------------------------
 class TransportContainModuleData : public OpenContainModuleData
@@ -49,7 +50,7 @@ public:
 	Int								m_slotCapacity;								///< max units that can be inside us
 	Real							m_exitPitchRate;
 	AsciiString						m_exitBone;
-	InitialPayload					m_initialPayload;
+	std::vector<InitialPayload>		m_initialPayload;							///< list of initial units to spawn
 	Real							m_healthRegen;
 	UnsignedInt						m_exitDelay;
 	Bool							m_scatterNearbyOnExit;
