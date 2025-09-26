@@ -1196,6 +1196,138 @@ const CommandButton* CommandButton::getAlternativeButtonForPrerequisites(const P
 }
 
 //-------------------------------------------------------------------------------------------------
+// TheSuperHackers @feature author 15/01/2025 Get the cost of executing this command button
+//-------------------------------------------------------------------------------------------------
+UnsignedInt CommandButton::getCostOfExecution(const Player* player, const Object* object) const
+{
+	if (!player || !object)
+		return 0;
+
+	switch (m_command)
+	{
+		case GUI_COMMAND_UNIT_BUILD:
+		{
+			const ThingTemplate* thingTemplate = getThingTemplate();
+			if (thingTemplate)
+			{
+				return thingTemplate->friend_getBuildCost();
+			}
+			break;
+		}
+
+		case GUI_COMMAND_DOZER_CONSTRUCT:
+		{
+			const ThingTemplate* thingTemplate = getThingTemplate();
+			if (thingTemplate)
+			{
+				return thingTemplate->friend_getBuildCost();
+			}
+			break;
+		}
+
+		case GUI_COMMAND_PLAYER_UPGRADE:
+		{
+			const UpgradeTemplate* upgradeTemplate = getUpgradeTemplate();
+			if (upgradeTemplate)
+			{
+				return upgradeTemplate->calcCostToBuild(const_cast<Player*>(player));
+			}
+			break;
+		}
+
+		case GUI_COMMAND_OBJECT_UPGRADE:
+		{
+			const UpgradeTemplate* upgradeTemplate = getUpgradeTemplate();
+			if (upgradeTemplate)
+			{
+				return upgradeTemplate->calcCostToBuild(const_cast<Player*>(player));
+			}
+			break;
+		}
+
+		case GUI_COMMAND_SPECIAL_POWER:
+		case GUI_COMMAND_SPECIAL_POWER_FROM_SHORTCUT:
+		case GUI_COMMAND_SPECIAL_POWER_CONSTRUCT:
+		case GUI_COMMAND_SPECIAL_POWER_CONSTRUCT_FROM_SHORTCUT:
+		{
+			const SpecialPowerTemplate* specialPowerTemplate = getSpecialPowerTemplate();
+			if (specialPowerTemplate)
+			{
+				return specialPowerTemplate->getUsingCost();
+			}
+			break;
+		}
+
+		case GUI_COMMAND_REPLENISH_INVENTORY_ITEM:
+		{
+			// TheSuperHackers @feature author 15/01/2025 Calculate cost for inventory replenishment
+			InventoryBehavior* inventoryBehavior = object->getInventoryBehavior();
+			if (!inventoryBehavior)
+				return 0;
+
+			const InventoryBehaviorModuleData* moduleData = inventoryBehavior->getInventoryModuleData();
+			if (!moduleData)
+				return 0;
+
+			const AsciiString& itemToReplenish = getItemToReplenish();
+			UnsignedInt totalCost = 0;
+
+			if (itemToReplenish.isEmpty())
+			{
+				// Calculate cost for all items
+				for (std::map<AsciiString, InventoryItemConfig>::const_iterator it = moduleData->m_inventoryItems.begin();
+					 it != moduleData->m_inventoryItems.end(); ++it)
+				{
+					const AsciiString& itemKey = it->first;
+					const InventoryItemConfig& config = it->second;
+					
+					Int neededAmount = object->getInventoryReplenishAmount(itemKey);
+					
+					if (neededAmount > 0)
+					{
+						totalCost += neededAmount * config.costPerItem;
+					}
+				}
+			}
+			else
+			{
+				// Calculate cost for specific item
+				Int neededAmount = object->getInventoryReplenishAmount(itemToReplenish);
+				
+				if (neededAmount > 0)
+				{
+					Int costPerItem = moduleData->getCostPerItem(itemToReplenish);
+					totalCost = neededAmount * costPerItem;
+				}
+			}
+
+			return totalCost;
+		}
+
+		case GUI_COMMAND_PURCHASE_SCIENCE:
+		{
+			// Calculate cost for science purchase
+			ScienceType st = SCIENCE_INVALID;
+			for (size_t i = 0; i < getScienceVec().size(); ++i)
+			{
+				st = getScienceVec()[i];
+				if (!player->hasScience(st) && TheScienceStore->playerHasPrereqsForScience(player, st))
+				{
+					return TheScienceStore->getSciencePurchaseCost(st);
+				}
+			}
+			break;
+		}
+
+		default:
+			// Most commands don't have a cost
+			return 0;
+	}
+
+	return 0;
+}
+
+//-------------------------------------------------------------------------------------------------
 /** Get the appropriate button based on modifier keys and click type */
 //-------------------------------------------------------------------------------------------------
 const CommandButton* CommandButton::getButtonForModifiers(Bool ctrlPressed, Bool altPressed, Bool shiftPressed, Bool isRightClick) const

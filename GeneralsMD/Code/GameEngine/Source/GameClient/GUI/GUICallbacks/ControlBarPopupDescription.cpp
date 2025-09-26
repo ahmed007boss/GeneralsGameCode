@@ -291,12 +291,29 @@ static UnicodeString getButtonAlternativesText(const CommandButton* commandButto
 	Drawable* draw = TheInGameUI->getFirstSelectedDrawable();
 	Object* selectedObject = draw ? draw->getObject() : NULL;
 	
-	// Helper function to check if an alternative button is available
+	// Helper function to check if an alternative button is available and get its cost
 	auto isButtonAvailable = [selectedObject, controlBar](const CommandButton* altButton) -> Bool {
 		if (!altButton || !selectedObject || !controlBar) return false;
 		// Check availability using the control bar's getCommandAvailability method
 		CommandAvailability availability = controlBar->getCommandAvailability(altButton, selectedObject, theWindow);
 		return (availability == COMMAND_AVAILABLE);
+	};
+	
+	// Helper function to get cost text for a button
+	auto getButtonCostText = [selectedObject](const CommandButton* altButton) -> UnicodeString {
+		if (!altButton || !selectedObject) return UnicodeString::TheEmptyString;
+		
+		Player* player = ThePlayerList->getLocalPlayer();
+		if (!player) return UnicodeString::TheEmptyString;
+		
+		UnsignedInt buttonCost = altButton->getCostOfExecution(player, selectedObject);
+		if (buttonCost > 0)
+		{
+			UnicodeString costText;
+			costText.format(L" (%d$)", buttonCost);
+			return costText;
+		}
+		return UnicodeString::TheEmptyString;
 	};
 	
 	// Check for right-click alternatives
@@ -310,6 +327,7 @@ static UnicodeString getButtonAlternativesText(const CommandButton* commandButto
 		alternativesText.concat(TheGameText->fetch("TOOLTIP:RightClickCtrlAltShiftTo"));
 		alternativesText.concat(L" ");
 		alternativesText.concat(removeHotkeyFromText(TheGameText->fetch(commandButton->getRightClickCtrlAltShiftButton()->getTextLabel().str())));
+		alternativesText.concat(getButtonCostText(commandButton->getRightClickCtrlAltShiftButton()));
 		alternativesText.concat(L"\n");
 	}
 	if (commandButton->getRightClickCtrlAltButton() && isButtonAvailable(commandButton->getRightClickCtrlAltButton()))
@@ -322,6 +340,7 @@ static UnicodeString getButtonAlternativesText(const CommandButton* commandButto
 		alternativesText.concat(TheGameText->fetch("TOOLTIP:RightClickCtrlAltTo"));
 		alternativesText.concat(L" ");
 		alternativesText.concat(removeHotkeyFromText(TheGameText->fetch(commandButton->getRightClickCtrlAltButton()->getTextLabel().str())));
+		alternativesText.concat(getButtonCostText(commandButton->getRightClickCtrlAltButton()));
 		alternativesText.concat(L"\n");
 	}
 	if (commandButton->getRightClickCtrlShiftButton() && isButtonAvailable(commandButton->getRightClickCtrlShiftButton()))
@@ -334,6 +353,7 @@ static UnicodeString getButtonAlternativesText(const CommandButton* commandButto
 		alternativesText.concat(TheGameText->fetch("TOOLTIP:RightClickCtrlShiftTo"));
 		alternativesText.concat(L" ");
 		alternativesText.concat(removeHotkeyFromText(TheGameText->fetch(commandButton->getRightClickCtrlShiftButton()->getTextLabel().str())));
+		alternativesText.concat(getButtonCostText(commandButton->getRightClickCtrlShiftButton()));
 		alternativesText.concat(L"\n");
 	}
 	if (commandButton->getRightClickAltShiftButton() && isButtonAvailable(commandButton->getRightClickAltShiftButton()))
@@ -346,6 +366,7 @@ static UnicodeString getButtonAlternativesText(const CommandButton* commandButto
 		alternativesText.concat(TheGameText->fetch("TOOLTIP:RightClickAltShiftTo"));
 		alternativesText.concat(L" ");
 		alternativesText.concat(removeHotkeyFromText(TheGameText->fetch(commandButton->getRightClickAltShiftButton()->getTextLabel().str())));
+		alternativesText.concat(getButtonCostText(commandButton->getRightClickAltShiftButton()));
 		alternativesText.concat(L"\n");
 	}
 	if (commandButton->getRightClickButton() && isButtonAvailable(commandButton->getRightClickButton()))
@@ -358,6 +379,7 @@ static UnicodeString getButtonAlternativesText(const CommandButton* commandButto
 		alternativesText.concat(TheGameText->fetch("TOOLTIP:RightClickTo"));
 		alternativesText.concat(L" ");
 		alternativesText.concat(removeHotkeyFromText(TheGameText->fetch(commandButton->getRightClickButton()->getTextLabel().str())));
+		alternativesText.concat(getButtonCostText(commandButton->getRightClickButton()));
 		alternativesText.concat(L"\n");
 	}
 	if (commandButton->getRightClickCtrlButton() && isButtonAvailable(commandButton->getRightClickCtrlButton()))
@@ -370,6 +392,7 @@ static UnicodeString getButtonAlternativesText(const CommandButton* commandButto
 		alternativesText.concat(TheGameText->fetch("TOOLTIP:RightClickCtrlTo"));
 		alternativesText.concat(L" ");
 		alternativesText.concat(removeHotkeyFromText(TheGameText->fetch(commandButton->getRightClickCtrlButton()->getTextLabel().str())));
+		alternativesText.concat(getButtonCostText(commandButton->getRightClickCtrlButton()));
 		alternativesText.concat(L"\n");
 	}
 	if (commandButton->getRightClickAltButton() && isButtonAvailable(commandButton->getRightClickAltButton()))
@@ -382,6 +405,7 @@ static UnicodeString getButtonAlternativesText(const CommandButton* commandButto
 		alternativesText.concat(TheGameText->fetch("TOOLTIP:RightClickAltTo"));
 		alternativesText.concat(L" ");
 		alternativesText.concat(removeHotkeyFromText(TheGameText->fetch(commandButton->getRightClickAltButton()->getTextLabel().str())));
+		alternativesText.concat(getButtonCostText(commandButton->getRightClickAltButton()));
 		alternativesText.concat(L"\n");
 	}
 	if (commandButton->getRightClickShiftButton() && isButtonAvailable(commandButton->getRightClickShiftButton()))
@@ -394,6 +418,7 @@ static UnicodeString getButtonAlternativesText(const CommandButton* commandButto
 		alternativesText.concat(TheGameText->fetch("TOOLTIP:RightClickShiftTo"));
 		alternativesText.concat(L" ");
 		alternativesText.concat(removeHotkeyFromText(TheGameText->fetch(commandButton->getRightClickShiftButton()->getTextLabel().str())));
+		alternativesText.concat(getButtonCostText(commandButton->getRightClickShiftButton()));
 		alternativesText.concat(L"\n");
 	}
 	
@@ -408,6 +433,7 @@ static UnicodeString getButtonAlternativesText(const CommandButton* commandButto
 		alternativesText.concat(TheGameText->fetch("TOOLTIP:LeftClickCtrlAltShiftTo"));
 		alternativesText.concat(L" ");
 		alternativesText.concat(removeHotkeyFromText(TheGameText->fetch(commandButton->getLeftClickCtrlAltShiftButton()->getTextLabel().str())));
+		alternativesText.concat(getButtonCostText(commandButton->getLeftClickCtrlAltShiftButton()));
 		alternativesText.concat(L"\n");
 	}
 	if (commandButton->getLeftClickCtrlAltButton() && isButtonAvailable(commandButton->getLeftClickCtrlAltButton()))
@@ -420,6 +446,7 @@ static UnicodeString getButtonAlternativesText(const CommandButton* commandButto
 		alternativesText.concat(TheGameText->fetch("TOOLTIP:LeftClickCtrlAltTo"));
 		alternativesText.concat(L" ");
 		alternativesText.concat(removeHotkeyFromText(TheGameText->fetch(commandButton->getLeftClickCtrlAltButton()->getTextLabel().str())));
+		alternativesText.concat(getButtonCostText(commandButton->getLeftClickCtrlAltButton()));
 		alternativesText.concat(L"\n");
 	}
 	if (commandButton->getLeftClickCtrlShiftButton() && isButtonAvailable(commandButton->getLeftClickCtrlShiftButton()))
@@ -432,6 +459,7 @@ static UnicodeString getButtonAlternativesText(const CommandButton* commandButto
 		alternativesText.concat(TheGameText->fetch("TOOLTIP:LeftClickCtrlShiftTo"));
 		alternativesText.concat(L" ");
 		alternativesText.concat(removeHotkeyFromText(TheGameText->fetch(commandButton->getLeftClickCtrlShiftButton()->getTextLabel().str())));
+		alternativesText.concat(getButtonCostText(commandButton->getLeftClickCtrlShiftButton()));
 		alternativesText.concat(L"\n");
 	}
 	if (commandButton->getLeftClickAltShiftButton() && isButtonAvailable(commandButton->getLeftClickAltShiftButton()))
@@ -444,6 +472,7 @@ static UnicodeString getButtonAlternativesText(const CommandButton* commandButto
 		alternativesText.concat(TheGameText->fetch("TOOLTIP:LeftClickAltShiftTo"));
 		alternativesText.concat(L" ");
 		alternativesText.concat(removeHotkeyFromText(TheGameText->fetch(commandButton->getLeftClickAltShiftButton()->getTextLabel().str())));
+		alternativesText.concat(getButtonCostText(commandButton->getLeftClickAltShiftButton()));
 		alternativesText.concat(L"\n");
 	}
 	if (commandButton->getLeftClickCtrlButton() && isButtonAvailable(commandButton->getLeftClickCtrlButton()))
@@ -456,6 +485,7 @@ static UnicodeString getButtonAlternativesText(const CommandButton* commandButto
 		alternativesText.concat(TheGameText->fetch("TOOLTIP:LeftClickCtrlTo"));
 		alternativesText.concat(L" ");
 		alternativesText.concat(removeHotkeyFromText(TheGameText->fetch(commandButton->getLeftClickCtrlButton()->getTextLabel().str())));
+		alternativesText.concat(getButtonCostText(commandButton->getLeftClickCtrlButton()));
 		alternativesText.concat(L"\n");
 	}
 	if (commandButton->getLeftClickAltButton() && isButtonAvailable(commandButton->getLeftClickAltButton()))
@@ -468,6 +498,7 @@ static UnicodeString getButtonAlternativesText(const CommandButton* commandButto
 		alternativesText.concat(TheGameText->fetch("TOOLTIP:LeftClickAltTo"));
 		alternativesText.concat(L" ");
 		alternativesText.concat(removeHotkeyFromText(TheGameText->fetch(commandButton->getLeftClickAltButton()->getTextLabel().str())));
+		alternativesText.concat(getButtonCostText(commandButton->getLeftClickAltButton()));
 		alternativesText.concat(L"\n");
 	}
 	if (commandButton->getLeftClickShiftButton() && isButtonAvailable(commandButton->getLeftClickShiftButton()))
@@ -480,6 +511,7 @@ static UnicodeString getButtonAlternativesText(const CommandButton* commandButto
 		alternativesText.concat(TheGameText->fetch("TOOLTIP:LeftClickShiftTo"));
 		alternativesText.concat(L" ");
 		alternativesText.concat(removeHotkeyFromText(TheGameText->fetch(commandButton->getLeftClickShiftButton()->getTextLabel().str())));
+		alternativesText.concat(getButtonCostText(commandButton->getLeftClickShiftButton()));
 		alternativesText.concat(L"\n");
 	}
 	
@@ -915,7 +947,7 @@ void ControlBar::populateBuildTooltipLayout(const CommandButton* commandButton, 
 			
 		}
 
-		// TheSuperHackers @feature author 15/01/2025 Handle inventory replenishment cost
+		// TheSuperHackers @feature author 15/01/2025 Handle inventory replenishment cost using centralized method
 		if (commandButton->getCommandType() == GUI_COMMAND_REPLENISH_INVENTORY_ITEM)
 		{
 			// Get the current object for inventory calculation
@@ -924,58 +956,17 @@ void ControlBar::populateBuildTooltipLayout(const CommandButton* commandButton, 
 			
 			if (selectedObject)
 			{
-				// Find the inventory behavior
-				InventoryBehavior* inventoryBehavior = selectedObject->getInventoryBehavior();
-
-				if (inventoryBehavior)
+				// Use centralized cost calculation method
+				costToBuild = commandButton->getCostOfExecution(player, selectedObject);
+				if (costToBuild > 0)
 				{
-					const InventoryBehaviorModuleData* moduleData = inventoryBehavior->getInventoryModuleData();
-					if (moduleData)
-					{
-						const AsciiString& itemToReplenish = commandButton->getItemToReplenish();
-						UnsignedInt totalCost = 0;
+					cost.format(TheGameText->fetch("TOOLTIP:Cost"), costToBuild);
+				}
 
-						if (itemToReplenish.isEmpty())
-						{
-							// Calculate cost for all items
-							for (std::map<AsciiString, InventoryItemConfig>::const_iterator it = moduleData->m_inventoryItems.begin();
-								 it != moduleData->m_inventoryItems.end(); ++it)
-							{
-								const AsciiString& itemKey = it->first;
-								const InventoryItemConfig& config = it->second;
-								
-								Int neededAmount = selectedObject->getInventoryReplenishAmount(itemKey);
-								
-								if (neededAmount > 0)
-								{
-									totalCost += neededAmount * config.costPerItem;
-								}
-							}
-						}
-						else
-						{
-							// Calculate cost for specific item
-							Int neededAmount = selectedObject->getInventoryReplenishAmount(itemToReplenish);
-							
-							if (neededAmount > 0)
-							{
-								Int costPerItem = moduleData->getCostPerItem(itemToReplenish);
-								totalCost = neededAmount * costPerItem;
-							}
-						}
-
-						costToBuild = totalCost;
-						if (costToBuild > 0)
-						{
-							cost.format(TheGameText->fetch("TOOLTIP:Cost"), costToBuild);
-						}
-
-						if (totalCost > 0 && player->getMoney()->countMoney() < totalCost)
-						{
-							descrip.concat(L"\n\n");
-							descrip.concat(TheGameText->fetch("TOOLTIP:TooltipNotEnoughMoneyToBuild"));
-						}
-					}
+				if (costToBuild > 0 && player->getMoney()->countMoney() < costToBuild)
+				{
+					descrip.concat(L"\n\n");
+					descrip.concat(TheGameText->fetch("TOOLTIP:TooltipNotEnoughMoneyToBuild"));
 				}
 			}
 		}

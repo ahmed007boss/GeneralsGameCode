@@ -319,6 +319,13 @@ CBCommandStatus ControlBar::processCommandUI( GameWindow *control,
 				TheInGameUI->message( "GUI:NotEnoughMoneyToBuild" );
 				break;
 			}
+			// TheSuperHackers @feature author 15/01/2025 Additional cost check using centralized method
+			else if (actualCommandButton->getCostOfExecution(ThePlayerList->getLocalPlayer(), obj) > ThePlayerList->getLocalPlayer()->getMoney()->countMoney())
+			{
+				TheEva->setShouldPlay(EVA_InsufficientFunds);
+				TheInGameUI->message( "GUI:NotEnoughMoneyToBuild" );
+				break;
+			}
 			else if (cmt == CANMAKE_QUEUE_FULL)
 			{
 				TheInGameUI->message( "GUI:ProductionQueueFull" );
@@ -362,6 +369,13 @@ CBCommandStatus ControlBar::processCommandUI( GameWindow *control,
 				TheInGameUI->message( "GUI:NotEnoughMoneyToBuild" );
 				break;
 			}
+			// TheSuperHackers @feature author 15/01/2025 Additional cost check using centralized method
+			else if (actualCommandButton->getCostOfExecution(ThePlayerList->getLocalPlayer(), obj) > ThePlayerList->getLocalPlayer()->getMoney()->countMoney())
+			{
+				TheEva->setShouldPlay(EVA_InsufficientFunds);
+				TheInGameUI->message( "GUI:NotEnoughMoneyToBuild" );
+				break;
+			}
 			else if (cmt == CANMAKE_QUEUE_FULL)
 			{
 				TheInGameUI->message( "GUI:ProductionQueueFull" );
@@ -399,6 +413,13 @@ CBCommandStatus ControlBar::processCommandUI( GameWindow *control,
 
 			CanMakeType cmt = TheBuildAssistant->canMakeUnit( obj, whatToBuild );
 			if (cmt == CANMAKE_NO_MONEY)
+			{
+				TheEva->setShouldPlay(EVA_InsufficientFunds);
+				TheInGameUI->message( "GUI:NotEnoughMoneyToBuild" );
+				break;
+			}
+			// TheSuperHackers @feature author 15/01/2025 Additional cost check using centralized method
+			else if (actualCommandButton->getCostOfExecution(ThePlayerList->getLocalPlayer(), obj) > ThePlayerList->getLocalPlayer()->getMoney()->countMoney())
 			{
 				TheEva->setShouldPlay(EVA_InsufficientFunds);
 				TheInGameUI->message( "GUI:NotEnoughMoneyToBuild" );
@@ -473,6 +494,13 @@ CBCommandStatus ControlBar::processCommandUI( GameWindow *control,
 			CanMakeType cmt = TheBuildAssistant->canMakeUnit(factory, whatToBuild);
 
 			if (cmt == CANMAKE_NO_MONEY)
+			{
+				TheEva->setShouldPlay(EVA_InsufficientFunds);
+				TheInGameUI->message( "GUI:NotEnoughMoneyToBuild" );
+				break;
+			}
+			// TheSuperHackers @feature author 15/01/2025 Additional cost check using centralized method
+			else if (actualCommandButton->getCostOfExecution(ThePlayerList->getLocalPlayer(), factory) > ThePlayerList->getLocalPlayer()->getMoney()->countMoney())
 			{
 				TheEva->setShouldPlay(EVA_InsufficientFunds);
 				TheInGameUI->message( "GUI:NotEnoughMoneyToBuild" );

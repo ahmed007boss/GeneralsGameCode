@@ -1626,65 +1626,21 @@ CommandAvailability ControlBar::getCommandAvailability( const CommandButton *com
 
 		case GUI_COMMAND_REPLENISH_INVENTORY_ITEM:
 		{
-			// TheSuperHackers @feature author 15/01/2025 Check cost for inventory replenishment
-			// Find the inventory behavior
-			InventoryBehavior* inventoryBehavior = obj->getInventoryBehavior();
-
-			if (!inventoryBehavior)
-				return COMMAND_RESTRICTED;
-
-			const InventoryBehaviorModuleData* moduleData = inventoryBehavior->getInventoryModuleData();
-			if (!moduleData)
-				return COMMAND_RESTRICTED;
-
-			const AsciiString& itemToReplenish = command->getItemToReplenish();
-			UnsignedInt totalCost = 0;
-			UnsignedInt totalNeededAmount = 0;
-			if (itemToReplenish.isEmpty())
+			// TheSuperHackers @feature author 15/01/2025 Check cost for inventory replenishment using centralized method
+			UnsignedInt totalCost = command->getCostOfExecution(player, obj);
+			
+			// Check if there are items to replenish
+			if (totalCost == 0)
 			{
-				// Calculate cost for all items
-				for (std::map<AsciiString, InventoryItemConfig>::const_iterator it = moduleData->m_inventoryItems.begin();
-					 it != moduleData->m_inventoryItems.end(); ++it)
-				{
-					const AsciiString& itemKey = it->first;
-					const InventoryItemConfig& config = it->second;
-					
-					Int neededAmount = obj->getInventoryReplenishAmount(itemKey);
-					
-					if (neededAmount > 0)
-					{
-						totalCost += neededAmount * config.costPerItem;
-						totalNeededAmount += neededAmount;
-					}
-				}
-				if (totalNeededAmount == 0)
-				{
-					return COMMAND_RESTRICTED;
-				}
-			}
-			else
-			{
-				// Calculate cost for specific item
-				Int neededAmount = obj->getInventoryReplenishAmount(itemToReplenish);
-				
-				if (neededAmount > 0)
-				{
-					Int costPerItem = moduleData->getCostPerItem(itemToReplenish);
-					totalCost = neededAmount * costPerItem;
-				}
-				else
-				{
-					return COMMAND_RESTRICTED;
-				}
+				return COMMAND_RESTRICTED;
 			}
 
 			// Check if player can afford the replenishment
-			if (totalCost > 0 && player->getMoney()->countMoney() < totalCost)
+			if (player->getMoney()->countMoney() < totalCost)
 			{
 				return COMMAND_CANT_AFFORD;
 			}
 
-			
 			break;
 		}
 

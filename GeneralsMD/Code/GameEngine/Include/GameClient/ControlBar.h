@@ -466,6 +466,9 @@ public:
 	// TheSuperHackers @alternative Ahmed Salah 27/06/2025 Helper function to check all alternative buttons
 	const CommandButton* getAlternativeButtonByIndex(Int index) const;
 
+	// TheSuperHackers @feature author 15/01/2025 Get the cost of executing this command button
+	UnsignedInt getCostOfExecution(const Player* player, const Object* object) const;
+
 private:
 	AsciiString										m_name;												///< template name
 	GUICommandType								m_command;										///< type of command this button
