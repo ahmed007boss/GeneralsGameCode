@@ -33,6 +33,11 @@ Armor configurations are applied to game objects through their templates to prov
 - [Properties](#properties)
   - [Armor Coefficients](#armor-coefficients)
 - [DamageType Values](#damagetype-values)
+- [Side-Specific Armor](#side-specific-armor)
+  - [ArmorSet Properties](#armorset-properties)
+  - [HitSide Values](#hitside-values)
+  - [Side-Specific Examples](#side-specific-examples)
+  - [How Hit Side Detection Works](#how-hit-side-detection-works)
 - [Examples](#examples)
   - [Heavy Armor (Tank)](#heavy-armor-tank)
   - [Light Armor (Infantry)](#light-armor-infantry)
@@ -119,6 +124,182 @@ The Armor property accepts the following damage types:
 - **`EW_BUILDING`** *(v1.04)* - Electronic warfare building damage
 - **`EW_UNRESISTABLE`** *(v1.04)* - Electronic warfare damage that cannot be resisted
 
+## Side-Specific Armor *(v1.04)*
+
+The side-specific armor system allows game objects to have different armor values depending on which side of the object was hit. This creates more realistic and tactical combat where units have different protection on their front, back, sides, top, and bottom.
+
+### ArmorSet Properties *(v1.04)*
+
+Side-specific armor is configured in the `ArmorSet` section of object templates. Each side can have its own armor template, with the main `Armor` property serving as a fallback for any sides not specifically defined.
+
+#### `Armor` *(v1.04)*
+- **Type**: `ArmorTemplate` reference
+- **Description**: Default armor template used as fallback when side-specific armor is not defined
+- **Default**: `None` (no armor)
+- **Example**: `Armor = GLAHeavyTankArmor`
+
+#### `ArmorFront` *(v1.04)*
+- **Type**: `ArmorTemplate` reference
+- **Description**: Armor template used when the front of the object is hit
+- **Default**: Falls back to `Armor` property
+- **Example**: `ArmorFront = GLAHeavyTankArmor`
+
+#### `ArmorBack` *(v1.04)*
+- **Type**: `ArmorTemplate` reference
+- **Description**: Armor template used when the back of the object is hit
+- **Default**: Falls back to `Armor` property
+- **Example**: `ArmorBack = GLAHeavyTankArmor`
+
+#### `ArmorLeft` *(v1.04)*
+- **Type**: `ArmorTemplate` reference
+- **Description**: Armor template used when the left side of the object is hit
+- **Default**: Falls back to `Armor` property
+- **Example**: `ArmorLeft = GLAHeavyTankArmor`
+
+#### `ArmorRight` *(v1.04)*
+- **Type**: `ArmorTemplate` reference
+- **Description**: Armor template used when the right side of the object is hit
+- **Default**: Falls back to `Armor` property
+- **Example**: `ArmorRight = GLAHeavyTankArmor`
+
+#### `ArmorTop` *(v1.04)*
+- **Type**: `ArmorTemplate` reference
+- **Description**: Armor template used when the top of the object is hit
+- **Default**: Falls back to `Armor` property
+- **Example**: `ArmorTop = GLAHeavyTankArmor`
+
+#### `ArmorBottom` *(v1.04)*
+- **Type**: `ArmorTemplate` reference
+- **Description**: Armor template used when the bottom of the object is hit
+- **Default**: Falls back to `Armor` property
+- **Example**: `ArmorBottom = GLAHeavyTankArmor`
+
+### HitSide Values *(v1.04)*
+
+The system recognizes the following hit sides:
+
+- **`HIT_SIDE_FRONT`** *(v1.04)* - Front of the object (positive X-axis direction)
+- **`HIT_SIDE_BACK`** *(v1.04)* - Back of the object (negative X-axis direction)
+- **`HIT_SIDE_LEFT`** *(v1.04)* - Left side of the object (negative Y-axis direction)
+- **`HIT_SIDE_RIGHT`** *(v1.04)* - Right side of the object (positive Y-axis direction)
+- **`HIT_SIDE_TOP`** *(v1.04)* - Top of the object (positive Z-axis direction)
+- **`HIT_SIDE_BOTTOM`** *(v1.04)* - Bottom of the object (negative Z-axis direction)
+- **`HIT_SIDE_UNKNOWN`** *(v1.04)* - Used when hit side cannot be determined (falls back to default armor)
+
+### Side-Specific Examples *(v1.04)*
+
+#### Heavy Tank with Side-Specific Armor
+```ini
+ArmorSet
+    Conditions          = None
+    Armor               = GLAHeavyTankArmor        ; Default armor
+    ArmorFront          = GLAHeavyTankArmorFront   ; Strongest armor
+    ArmorBack           = GLAHeavyTankArmorBack    ; Weakest armor
+    ArmorLeft           = GLAHeavyTankArmorSide    ; Medium armor
+    ArmorRight          = GLAHeavyTankArmorSide    ; Medium armor
+    ArmorTop            = GLAHeavyTankArmorTop     ; Light armor
+    ArmorBottom         = GLAHeavyTankArmorBottom  ; Medium armor
+    DamageFX            = TankDamageFX
+End
+```
+
+#### Building with Directional Armor
+```ini
+ArmorSet
+    Conditions          = None
+    Armor               = BuildingArmor            ; Default armor
+    ArmorFront          = BuildingArmorFront       ; Reinforced front
+    ArmorBack           = BuildingArmorBack        ; Vulnerable back
+    ArmorLeft           = BuildingArmor            ; Standard side armor
+    ArmorRight          = BuildingArmor            ; Standard side armor
+    ArmorTop            = BuildingArmorTop         ; Light roof armor
+    ArmorBottom         = BuildingArmorBottom      ; Foundation armor
+    DamageFX            = BuildingDamageFX
+End
+```
+
+#### Aircraft with Top/Bottom Armor
+```ini
+ArmorSet
+    Conditions          = None
+    Armor               = AircraftArmor            ; Default armor
+    ArmorTop            = AircraftArmorTop         ; Light top armor
+    ArmorBottom         = AircraftArmorBottom      ; Heavier bottom armor
+    DamageFX            = AircraftDamageFX
+End
+```
+
+#### Weapon with Hit Side Override
+```ini
+Weapon JetBombWeapon
+    PrimaryDamage           = 200.0
+    PrimaryDamageRadius     = 0.0
+    PrimaryHitSideOverride  = TOP                      ; Always hits from above
+    DamageType              = EXPLOSION
+    ; ... other weapon properties
+End
+
+Weapon MineWeapon
+    PrimaryDamage           = 150.0
+    PrimaryDamageRadius     = 0.0
+    PrimaryHitSideOverride  = BOTTOM                   ; Always hits from below
+    DamageType              = EXPLOSION
+    ; ... other weapon properties
+End
+
+Weapon MultiRadiusWeapon
+    PrimaryDamage           = 300.0
+    PrimaryDamageRadius     = 50.0
+    SecondaryDamage         = 150.0
+    SecondaryDamageRadius   = 100.0
+    PrimaryHitSideOverride  = TOP                      ; Direct hit from above
+    SecondaryHitSideOverride = FRONT                   ; Secondary damage from front
+    DamageType              = EXPLOSION
+    ; ... other weapon properties
+End
+```
+
+### How Hit Side Detection Works *(v1.04)*
+
+The hit side detection system uses the following process:
+
+1. **Check Weapon Override**: If the weapon has `PrimaryHitSideOverride` or `SecondaryHitSideOverride` set and this is a direct hit (not radius damage), use the appropriate override value
+2. **Damage Direction Calculation**: The system calculates the direction vector from the damage source to the target object
+3. **Object Orientation**: The system gets the target object's transform matrix to determine its orientation
+4. **Dot Product Analysis**: The system calculates dot products between the damage direction and the object's local coordinate axes:
+   - **Forward/Back**: X-axis (front/back)
+   - **Left/Right**: Y-axis (left/right)
+   - **Top/Bottom**: Z-axis (up/down) - *Only used with weapon override*
+5. **Side Determination**: The side with the highest absolute dot product is selected as the hit side (front/back/left/right only for automatic detection)
+
+**Important Notes:**
+- **Weapon Override**: `PrimaryHitSideOverride` and `SecondaryHitSideOverride` only apply to direct hits, not radius damage
+- **Primary vs Secondary**: Primary override applies to targets within `PrimaryDamageRadius`, secondary override applies to targets within `SecondaryDamageRadius` but outside primary radius
+- **Automatic Detection**: Only detects front, back, left, and right sides automatically
+- **Top/Bottom**: Requires weapon override (e.g., jets use `PrimaryHitSideOverride = TOP`, mines use `PrimaryHitSideOverride = BOTTOM`)
+
+#### Mathematical Process
+
+```cpp
+// Get object's local coordinate system
+Vector3 forward = transform->Get_X_Vector();  // Forward direction
+Vector3 right = transform->Get_Y_Vector();    // Right direction  
+Vector3 up = transform->Get_Z_Vector();       // Up direction
+
+// Calculate dot products
+Real forwardDot = Vector3::Dot_Product(forward, hitDirection);
+Real rightDot = Vector3::Dot_Product(right, hitDirection);
+Real upDot = Vector3::Dot_Product(up, hitDirection);
+
+// Determine hit side based on highest absolute dot product
+if (abs(forwardDot) >= abs(rightDot) && abs(forwardDot) >= abs(upDot))
+    return (forwardDot > 0) ? HIT_SIDE_FRONT : HIT_SIDE_BACK;
+else if (abs(rightDot) >= abs(upDot))
+    return (rightDot > 0) ? HIT_SIDE_RIGHT : HIT_SIDE_LEFT;
+else
+    return (upDot > 0) ? HIT_SIDE_TOP : HIT_SIDE_BOTTOM;
+```
+
 ## Examples
 
 ### Heavy Armor (Tank)
@@ -177,6 +358,7 @@ End
 
 ## Template
 
+### Basic Armor Template
 ```ini
 Armor ArmorName
     Armor = Default 100%               ; // Default resistance for all damage types *(v1.04)*
@@ -222,6 +404,21 @@ Armor ArmorName
     Armor = EW_VEHICLE 100%            ; // EW vehicle damage resistance *(v1.04)*
     Armor = EW_BUILDING 100%           ; // EW building damage resistance *(v1.04)*
     Armor = EW_UNRESISTABLE 100%       ; // EW unresistable damage resistance *(v1.04)*
+End
+```
+
+### Side-Specific ArmorSet Template *(v1.04)*
+```ini
+ArmorSet
+    Conditions          = None                    ; // Armor set conditions
+    Armor               = DefaultArmor            ; // Default armor template *(v1.04)*
+    ArmorFront          = FrontArmor              ; // Front armor template *(v1.04)*
+    ArmorBack           = BackArmor               ; // Back armor template *(v1.04)*
+    ArmorLeft           = LeftArmor               ; // Left side armor template *(v1.04)*
+    ArmorRight          = RightArmor              ; // Right side armor template *(v1.04)*
+    ArmorTop            = TopArmor                ; // Top armor template *(v1.04)*
+    ArmorBottom         = BottomArmor             ; // Bottom armor template *(v1.04)*
+    DamageFX            = DamageFXTemplate        ; // Damage effects template
 End
 ```
 
@@ -301,15 +498,40 @@ When you write `Armor = EXPLOSION 50%` in the INI file, the game converts it int
 - Armor cannot be changed dynamically during gameplay (only through upgrades)
 - The armor system works in conjunction with the damage system for combat calculations
 
+### Side-Specific Armor Notes *(v1.04)*
+
+- Side-specific armor provides tactical depth by making positioning important in combat
+- The system automatically falls back to the default `Armor` property if a specific side armor is not defined
+- Hit side detection works best with objects that have clear orientation (vehicles, buildings)
+- The system is designed to be backward compatible - existing armor configurations will continue to work
+- Side-specific armor can be combined with other armor set conditions (veteran, elite, etc.)
+- Hit side detection uses mathematical dot product calculations for accurate side determination
+- The system supports all six sides: front, back, left, right, top, and bottom
+- Side-specific armor templates are referenced by name and must be defined separately
+- The hit side detection system integrates seamlessly with the existing damage calculation pipeline
+
 ## Source Files
 
+### Basic Armor System
 - Header: [`GeneralsMD/Code/GameEngine/Include/GameLogic/Armor.h`](../../GeneralsMD/Code/GameEngine/Include/GameLogic/Armor.h)
 - Source: [`GeneralsMD/Code/GameEngine/Source/GameLogic/Object/Armor.cpp`](../../GeneralsMD/Code/GameEngine/Source/GameLogic/Object/Armor.cpp)
 - Damage Types: [`GeneralsMD/Code/GameEngine/Include/GameLogic/Damage.h`](../../GeneralsMD/Code/GameEngine/Include/GameLogic/Damage.h)
 
+### Side-Specific Armor System *(v1.04)*
+- **Base Class**: [`GeneralsMD/Code/GameEngine/Include/GameLogic/ArmorSet.h`](../../GeneralsMD/Code/GameEngine/Include/GameLogic/ArmorSet.h)
+- **Hit Side Detection**: [`GeneralsMD/Code/GameEngine/Include/GameLogic/HitSideDetection.h`](../../GeneralsMD/Code/GameEngine/Include/GameLogic/HitSideDetection.h)
+- **Hit Side Implementation**: [`GeneralsMD/Code/GameEngine/Source/GameLogic/HitSideDetection.cpp`](../../GeneralsMD/Code/GameEngine/Source/GameLogic/HitSideDetection.cpp)
+- **Damage System**: [`GeneralsMD/Code/GameEngine/Include/GameLogic/Damage.h`](../../GeneralsMD/Code/GameEngine/Include/GameLogic/Damage.h)
+- **Parsing**: [`GeneralsMD/Code/GameEngine/Source/Common/Thing/ThingTemplate.cpp`](../../GeneralsMD/Code/GameEngine/Source/Common/Thing/ThingTemplate.cpp)
+- **Damage Calculation**: [`GeneralsMD/Code/GameEngine/Source/GameLogic/Object/Body/ActiveBody.cpp`](../../GeneralsMD/Code/GameEngine/Source/GameLogic/Object/Body/ActiveBody.cpp)
+- **Weapon System**: [`GeneralsMD/Code/GameEngine/Source/GameLogic/Object/Weapon.cpp`](../../GeneralsMD/Code/GameEngine/Source/GameLogic/Object/Weapon.cpp)
+
 ## Changes History
 
-- No Changes done since 1.04
+- **v1.04**: Added side-specific armor system with hit side detection
+- **v1.04**: Added ArmorSet properties for directional armor (ArmorFront, ArmorBack, ArmorLeft, ArmorRight, ArmorTop, ArmorBottom)
+- **v1.04**: Implemented mathematical hit side detection using dot product calculations
+- **v1.04**: Added backward compatibility for existing armor configurations
 
 ## Status
 

@@ -321,7 +321,26 @@ Real ActiveBody::estimateDamage( DamageInfoInput& damageInfo ) const
 		}
 	}
 
-	Real amount = m_curArmor.adjustDamage(damageInfo.m_damageType, damageInfo.m_amount);
+	// Use side-specific armor if available
+	const ArmorTemplateSet* set = getObject()->getTemplate()->findArmorTemplateSet(m_curArmorSetFlags);
+	Real amount;
+	if (set && damageInfo.m_hitSide != HIT_SIDE_UNKNOWN)
+	{
+		const ArmorTemplate* sideArmor = set->getSideArmorTemplate(damageInfo.m_hitSide);
+		if (sideArmor)
+		{
+			Armor sideArmorInstance = TheArmorStore->makeArmor(sideArmor);
+			amount = sideArmorInstance.adjustDamage(damageInfo.m_damageType, damageInfo.m_amount);
+		}
+		else
+		{
+			amount = m_curArmor.adjustDamage(damageInfo.m_damageType, damageInfo.m_amount);
+		}
+	}
+	else
+	{
+		amount = m_curArmor.adjustDamage(damageInfo.m_damageType, damageInfo.m_amount);
+	}
 
 	return amount;
 }
@@ -382,7 +401,34 @@ void ActiveBody::attemptDamage( DamageInfo *damageInfo )
 
 	Bool alreadyHandled = FALSE;
 	Bool allowModifier = TRUE;
-	Real amount = m_curArmor.adjustDamage(damageInfo->in.m_damageType, damageInfo->in.m_amount);
+	
+	// Use side-specific armor if available
+	Real amount;
+	if (damageInfo->in.m_hitSide != HIT_SIDE_UNKNOWN)
+	{
+		const ArmorTemplateSet* set = getObject()->getTemplate()->findArmorTemplateSet(m_curArmorSetFlags);
+		if (set)
+		{
+			const ArmorTemplate* sideArmor = set->getSideArmorTemplate(damageInfo->in.m_hitSide);
+			if (sideArmor)
+			{
+				Armor sideArmorInstance = TheArmorStore->makeArmor(sideArmor);
+				amount = sideArmorInstance.adjustDamage(damageInfo->in.m_damageType, damageInfo->in.m_amount);
+			}
+			else
+			{
+				amount = m_curArmor.adjustDamage(damageInfo->in.m_damageType, damageInfo->in.m_amount);
+			}
+		}
+		else
+		{
+			amount = m_curArmor.adjustDamage(damageInfo->in.m_damageType, damageInfo->in.m_amount);
+		}
+	}
+	else
+	{
+		amount = m_curArmor.adjustDamage(damageInfo->in.m_damageType, damageInfo->in.m_amount);
+	}
 
 	switch( damageInfo->in.m_damageType )
 	{

@@ -431,6 +431,9 @@ public:
 	inline Real getRadiusDamageAngle() const { return m_radiusDamageAngle; }
 	inline DamageType getDamageType() const { return m_damageType; }
 	inline ObjectStatusTypes getDamageStatusType() const { return m_damageStatusType; }
+	inline HitSide getPrimaryHitSideOverride() const { return m_primaryHitSideOverride; }
+	inline HitSide getSecondaryHitSideOverride() const { return m_secondaryHitSideOverride; }
+	inline HitSide getDirectHitSideOverride() const { return m_directHitSideOverride; }
 	inline DeathType getDeathType() const { return m_deathType; }
 	inline Real getContinueAttackRange() const { return m_continueAttackRange; }
 	inline Real getInfantryInaccuracyDist() const { return m_infantryInaccuracyDist; }
@@ -578,7 +581,10 @@ private:
 	ObjectStatusTypes m_damageStatusType;		///< If our damage is Status damage, the status we apply
 	UnsignedInt m_suspendFXDelay;						///< The fx can be suspended for any delay, in frames, then they will execute as normal
 	Bool m_dieOnDetonate;
-	AsciiString m_consumeInventory;						///< TheSuperHackers @feature author 15/01/2025 Key of inventory item to consume when firing
+	AsciiString m_consumeInventory;
+	HitSide m_primaryHitSideOverride;							///< Override hit side for primary damage (jets, mines, etc.)
+	HitSide m_secondaryHitSideOverride;						///< Override hit side for secondary damage (jets, mines, etc.)
+	HitSide m_directHitSideOverride;							///< Override hit side for direct hits when distance > 2.0f
 
 	mutable HistoricWeaponDamageList m_historicDamage;
 };

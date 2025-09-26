@@ -29,10 +29,8 @@
 #ifndef _ArmorSet_H_
 #define _ArmorSet_H_
 
-#include "Lib/BaseType.h"
 #include "Common/GameType.h"
-#include "Common/SparseMatchFinder.h"
-#include "Common/SparseMatchFinder.h"
+#include "GameLogic/Damage.h"
 
 //-------------------------------------------------------------------------------------------------
 class ArmorTemplate;
@@ -70,6 +68,7 @@ class ArmorTemplateSet
 private:
 	ArmorSetFlags m_types;
 	const ArmorTemplate* m_template;
+	const ArmorTemplate* m_sideTemplates[HIT_SIDE_COUNT];	///< Side-specific armor templates
 	const DamageFX* m_fx;
 
 public:
@@ -82,10 +81,20 @@ public:
 	{
 		m_types.clear();
 		m_template = NULL;
+		for (int i = 0; i < HIT_SIDE_COUNT; i++)
+		{
+			m_sideTemplates[i] = NULL;
+		}
 		m_fx = NULL;
 	}
 
 	inline const ArmorTemplate* getArmorTemplate() const { return m_template; }
+	inline const ArmorTemplate* getSideArmorTemplate(HitSide side) const 
+	{ 
+		if (side >= 0 && side < HIT_SIDE_COUNT && m_sideTemplates[side] != NULL)
+			return m_sideTemplates[side];
+		return m_template; // Fallback to default armor
+	}
 	inline const DamageFX* getDamageFX() const { return m_fx; }
 
 	inline Int getConditionsYesCount() const { return 1; }
@@ -95,6 +104,7 @@ public:
 #endif
 
 	void parseArmorTemplateSet( INI* ini );
+	void setSideArmorTemplate(HitSide side, const ArmorTemplate* armorTemplate);
 };
 
 //-------------------------------------------------------------------------------------------------

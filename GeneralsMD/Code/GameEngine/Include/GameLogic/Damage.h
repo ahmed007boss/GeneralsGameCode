@@ -182,6 +182,22 @@ void initDamageTypeFlags();
 
 
 //-------------------------------------------------------------------------------------------------
+/** Hit side types for side-specific armor */
+//-------------------------------------------------------------------------------------------------
+enum HitSide CPP_11(: Int)
+{
+	HIT_SIDE_FRONT		= 0,
+	HIT_SIDE_BACK		= 1,
+	HIT_SIDE_LEFT		= 2,
+	HIT_SIDE_RIGHT		= 3,
+	HIT_SIDE_TOP		= 4,
+	HIT_SIDE_BOTTOM		= 5,
+	HIT_SIDE_UNKNOWN	= 6,	///< Used when hit side cannot be determined
+	
+	HIT_SIDE_COUNT
+};
+
+//-------------------------------------------------------------------------------------------------
 /** Death types, keep this in sync with TheDeathNames[] */
 //-------------------------------------------------------------------------------------------------
 enum DeathType CPP_11(: Int)
@@ -248,6 +264,22 @@ static const char *const TheDeathNames[] =
 static_assert(ARRAY_SIZE(TheDeathNames) == DEATH_NUM_TYPES + 1, "Incorrect array size");
 #endif // end DEFINE_DEATH_NAMES
 
+#ifdef DEFINE_HIT_SIDE_NAMES
+static const char *const TheHitSideNames[] =
+{
+	"FRONT",
+	"BACK", 
+	"LEFT",
+	"RIGHT",
+	"TOP",
+	"BOTTOM",
+	"UNKNOWN",
+
+	NULL
+};
+static_assert(ARRAY_SIZE(TheHitSideNames) == HIT_SIDE_COUNT + 1, "Incorrect array size");
+#endif // end DEFINE_HIT_SIDE_NAMES
+
 
 //-------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------
@@ -291,6 +323,7 @@ public:
 		m_deathType = DEATH_NORMAL;
 		m_amount = 0;
 		m_kill = FALSE;
+		m_hitSide = HIT_SIDE_UNKNOWN;
 
     m_shockWaveVector.zero();
     m_shockWaveAmount   = 0.0f;
@@ -307,6 +340,7 @@ public:
 	DeathType			 m_deathType;						///< if this kills us, death type to be used
 	Real					 m_amount;								///< # value of how much damage to inflict
 	Bool						m_kill;									///< will always cause object to die regardless of damage.
+	HitSide				 m_hitSide;								///< which side of the object was hit
 
 	// These are used for damage causing shockwave, forcing units affected to be pushed around
 	Coord3D				 m_shockWaveVector;				///< This represents the incoming damage vector

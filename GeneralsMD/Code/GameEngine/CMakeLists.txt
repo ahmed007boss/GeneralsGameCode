@@ -251,6 +251,7 @@ set(GAMEENGINE_SRC
     Include/GameLogic/FPUControl.h
     Include/GameLogic/GameLogic.h
     Include/GameLogic/GhostObject.h
+    Include/GameLogic/HitSideDetection.h
     Include/GameLogic/Locomotor.h
     Include/GameLogic/LocomotorSet.h
 #    Include/GameLogic/LogicRandomValue.h
@@ -953,6 +954,7 @@ set(GAMEENGINE_SRC
     Source/GameLogic/Object/ExperienceTracker.cpp
     Source/GameLogic/Object/FiringTracker.cpp
     Source/GameLogic/Object/GhostObject.cpp
+    Source/GameLogic/HitSideDetection.cpp
     Source/GameLogic/Object/Helper/ObjectDefectionHelper.cpp
     Source/GameLogic/Object/Helper/ObjectHelper.cpp
     Source/GameLogic/Object/Helper/ObjectRepulsorHelper.cpp

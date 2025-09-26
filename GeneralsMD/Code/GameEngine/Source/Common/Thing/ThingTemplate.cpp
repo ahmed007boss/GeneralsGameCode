@@ -866,6 +866,12 @@ void ArmorTemplateSet::parseArmorTemplateSet(INI* ini)
 	{
 		{ "Conditions", ArmorSetFlags::parseFromINI, NULL, offsetof(ArmorTemplateSet, m_types) },
 		{ "Armor", INI::parseArmorTemplate,	NULL, offsetof(ArmorTemplateSet, m_template) },
+		{ "ArmorFront", INI::parseArmorTemplate, NULL, offsetof(ArmorTemplateSet, m_sideTemplates) + sizeof(ArmorTemplate*) * HIT_SIDE_FRONT },
+		{ "ArmorBack", INI::parseArmorTemplate, NULL, offsetof(ArmorTemplateSet, m_sideTemplates) + sizeof(ArmorTemplate*) * HIT_SIDE_BACK },
+		{ "ArmorLeft", INI::parseArmorTemplate, NULL, offsetof(ArmorTemplateSet, m_sideTemplates) + sizeof(ArmorTemplate*) * HIT_SIDE_LEFT },
+		{ "ArmorRight", INI::parseArmorTemplate, NULL, offsetof(ArmorTemplateSet, m_sideTemplates) + sizeof(ArmorTemplate*) * HIT_SIDE_RIGHT },
+		{ "ArmorTop", INI::parseArmorTemplate, NULL, offsetof(ArmorTemplateSet, m_sideTemplates) + sizeof(ArmorTemplate*) * HIT_SIDE_TOP },
+		{ "ArmorBottom", INI::parseArmorTemplate, NULL, offsetof(ArmorTemplateSet, m_sideTemplates) + sizeof(ArmorTemplate*) * HIT_SIDE_BOTTOM },
 		{ "DamageFX",	INI::parseDamageFX,	NULL, offsetof(ArmorTemplateSet, m_fx) },
 		{ 0, 0, 0, 0 }
 	};
