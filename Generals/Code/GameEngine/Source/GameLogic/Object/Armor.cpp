@@ -52,7 +52,7 @@ ArmorStore* TheArmorStore = NULL;					///< the ArmorTemplate store definition
 //-------------------------------------------------------------------------------------------------
 ArmorTemplate::ArmorTemplate()
 {
-	m_displayName = L"";
+
 	clear();
 }
 
