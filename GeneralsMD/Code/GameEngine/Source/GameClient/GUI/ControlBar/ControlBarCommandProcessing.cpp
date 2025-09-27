@@ -543,14 +543,24 @@ CBCommandStatus ControlBar::processCommandUI( GameWindow *control,
 
 			}
 
-			// get a new production id to assign to this
-			ProductionID productionID = pu->requestUniqueUnitID();
+			// TheSuperHackers @feature author 15/01/2025 Queue multiple units based on Amount property
+			Int amount = actualCommandButton->getAmount();
+			for (Int i = 0; i < amount; i++) {
+				// Check eligibility before each unit is queued
+				CanMakeType canMake = TheBuildAssistant->canMakeUnit(factory, whatToBuild);
+				if (canMake == CANMAKE_OK) {
+					// get a new production id to assign to this
+					ProductionID productionID = pu->requestUniqueUnitID();
 
-			// create a message to build this thing
-
-			GameMessage *msg = TheMessageStream->appendMessage( GameMessage::MSG_QUEUE_UNIT_CREATE );
-			msg->appendIntegerArgument( whatToBuild->getTemplateID() );
-			msg->appendIntegerArgument( productionID );
+					// create a message to build this thing
+					GameMessage *msg = TheMessageStream->appendMessage( GameMessage::MSG_QUEUE_UNIT_CREATE );
+					msg->appendIntegerArgument( whatToBuild->getTemplateID() );
+					msg->appendIntegerArgument( productionID );
+				} else {
+					// Stop queuing if we can't queue more units
+					break;
+				}
+			}
 
 			break;
 

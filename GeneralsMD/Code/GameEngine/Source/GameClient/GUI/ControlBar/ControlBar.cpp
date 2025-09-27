@@ -119,6 +119,7 @@ const FieldParse CommandButton::s_commandButtonFieldParseTable[] =
 	{ "OverlayImage",					INI::parseAsciiString,			 NULL, offsetof( CommandButton, m_overlayImageName ) },
 	{ "OverlayImage2",					INI::parseAsciiString,			 NULL, offsetof( CommandButton, m_overlayImage2Name ) },
 	{ "ItemToReplenish",				INI::parseAsciiString,			 NULL, offsetof( CommandButton, m_itemToReplenish ) },
+	{ "Amount",							INI::parseInt,							 NULL, offsetof( CommandButton, m_amount ) },
 	{ "CursorName",						INI::parseAsciiString,			 NULL, offsetof( CommandButton, m_cursorName ) },
 	{ "InvalidCursorName",		INI::parseAsciiString,       NULL, offsetof( CommandButton, m_invalidCursorName ) },
 	{ "ButtonBorderType",			INI::parseLookupList,				 CommandButtonMappedBorderTypeNames, offsetof( CommandButton, m_commandButtonBorder ) },
@@ -762,6 +763,7 @@ CommandButton::CommandButton( void )
 	m_overlayImageName.clear();
 	m_overlayImage2Name.clear();
 	m_itemToReplenish.clear();
+	m_amount = 1;  // Default amount is 1
 	m_isRequireElectronics = false;
 	// End Add
 
@@ -1210,7 +1212,8 @@ UnsignedInt CommandButton::getCostOfExecution(const Player* player, const Object
 			const ThingTemplate* thingTemplate = getThingTemplate();
 			if (thingTemplate)
 			{
-				return thingTemplate->friend_getBuildCost();
+				// TheSuperHackers @feature author 15/01/2025 Multiply cost by amount for multiple units
+				return thingTemplate->friend_getBuildCost() * getAmount();
 			}
 			break;
 		}
@@ -1220,7 +1223,8 @@ UnsignedInt CommandButton::getCostOfExecution(const Player* player, const Object
 			const ThingTemplate* thingTemplate = getThingTemplate();
 			if (thingTemplate)
 			{
-				return thingTemplate->friend_getBuildCost();
+				// TheSuperHackers @feature author 15/01/2025 Multiply cost by amount for multiple units
+				return thingTemplate->friend_getBuildCost() * getAmount();
 			}
 			break;
 		}

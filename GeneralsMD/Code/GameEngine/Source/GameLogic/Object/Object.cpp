@@ -5621,7 +5621,17 @@ void Object::doCommandButton(const CommandButton* commandButton, CommandSourceTy
 			const ThingTemplate* tt = commandButton->getThingTemplate();
 			ProductionUpdateInterface* pu = this->getProductionUpdateInterface();
 			if (pu && tt) {
-				pu->queueCreateUnit(tt, pu->requestUniqueUnitID());
+				// TheSuperHackers @feature author 15/01/2025 Queue multiple units based on Amount property
+				Int amount = commandButton->getAmount();
+				for (Int i = 0; i < amount; i++) {
+					// Check eligibility before each unit is queued
+					if (pu->canQueueCreateUnit(tt)) {
+						pu->queueCreateUnit(tt, pu->requestUniqueUnitID());
+					} else {
+						// Stop queuing if we can't queue more units
+						break;
+					}
+				}
 				return;
 			}
 			break;
