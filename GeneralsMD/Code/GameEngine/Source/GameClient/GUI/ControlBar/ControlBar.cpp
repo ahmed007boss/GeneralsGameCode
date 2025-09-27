@@ -120,6 +120,7 @@ const FieldParse CommandButton::s_commandButtonFieldParseTable[] =
 	{ "OverlayImage2",					INI::parseAsciiString,			 NULL, offsetof( CommandButton, m_overlayImage2Name ) },
 	{ "ItemToReplenish",				INI::parseAsciiString,			 NULL, offsetof( CommandButton, m_itemToReplenish ) },
 	{ "Amount",							INI::parseInt,							 NULL, offsetof( CommandButton, m_amount ) },
+	{ "EnableMassProduction",			INI::parseBool,							 NULL, offsetof( CommandButton, m_enableMassProduction ) },
 	{ "CursorName",						INI::parseAsciiString,			 NULL, offsetof( CommandButton, m_cursorName ) },
 	{ "InvalidCursorName",		INI::parseAsciiString,       NULL, offsetof( CommandButton, m_invalidCursorName ) },
 	{ "ButtonBorderType",			INI::parseLookupList,				 CommandButtonMappedBorderTypeNames, offsetof( CommandButton, m_commandButtonBorder ) },
@@ -764,6 +765,7 @@ CommandButton::CommandButton( void )
 	m_overlayImage2Name.clear();
 	m_itemToReplenish.clear();
 	m_amount = 1;  // Default amount is 1
+	m_enableMassProduction = true;  // Default mass production is enabled
 	m_isRequireElectronics = false;
 	// End Add
 
@@ -1213,7 +1215,15 @@ UnsignedInt CommandButton::getCostOfExecution(const Player* player, const Object
 			if (thingTemplate)
 			{
 				// TheSuperHackers @feature author 15/01/2025 Multiply cost by amount for multiple units
-				return thingTemplate->friend_getBuildCost() * getAmount();
+				Int amount = getAmount();
+				
+				// Check for mass production with modifier keys (if enabled)
+				if (getEnableMassProduction()) {
+					// Note: We can't detect modifier keys here, so we use the base amount
+					// The actual mass production logic is handled in ControlBarCommandProcessing.cpp
+				}
+				
+				return thingTemplate->friend_getBuildCost() * amount;
 			}
 			break;
 		}

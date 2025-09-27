@@ -543,8 +543,30 @@ CBCommandStatus ControlBar::processCommandUI( GameWindow *control,
 
 			}
 
-			// TheSuperHackers @feature author 15/01/2025 Queue multiple units based on Amount property
+			// TheSuperHackers @feature author 15/01/2025 Queue multiple units based on Amount property and mass production
 			Int amount = actualCommandButton->getAmount();
+			
+			// Check for mass production with modifier keys
+			if (actualCommandButton->getEnableMassProduction() && 
+				actualCommandButton->getCommandType() == GUI_COMMAND_UNIT_BUILD) {
+				
+				// Get MaxSimultaneousOfType to limit mass production options
+				Int maxSimultaneous = 0;
+				if (whatToBuild) {
+					maxSimultaneous = whatToBuild->getMaxSimultaneousOfType();
+				}
+				
+				// Check if modifier buttons are not assigned and modifier keys are pressed
+				// Also check MaxSimultaneousOfType limits (ignore if maxSimultaneous < 1, meaning unlimited)
+				if (shiftPressed && !actualCommandButton->getLeftClickShiftButton() && (maxSimultaneous < 1 || maxSimultaneous >= 3)) {
+					amount = 3;  // Shift+Click = 3x
+				} else if (ctrlPressed && !actualCommandButton->getLeftClickCtrlButton() && (maxSimultaneous < 1 || maxSimultaneous >= 6)) {
+					amount = 6;  // Ctrl+Click = 6x
+				} else if (altPressed && !actualCommandButton->getLeftClickAltButton() && (maxSimultaneous < 1 || maxSimultaneous >= 9)) {
+					amount = 9;  // Alt+Click = 9x
+				}
+			}
+			
 			for (Int i = 0; i < amount; i++) {
 				// Check eligibility before each unit is queued
 				CanMakeType canMake = TheBuildAssistant->canMakeUnit(factory, whatToBuild);

@@ -515,6 +515,145 @@ static UnicodeString getButtonAlternativesText(const CommandButton* commandButto
 		alternativesText.concat(L"\n");
 	}
 	
+	// TheSuperHackers @feature author 15/01/2025 Add mass production alternatives for modifier keys
+	if (commandButton->getEnableMassProduction() && 
+		commandButton->getCommandType() == GUI_COMMAND_UNIT_BUILD &&
+		commandButton->getThingTemplate())
+	{
+		// Helper function to get mass production cost text
+		auto getMassProductionCostText = [selectedObject](const CommandButton* button, Int multiplier) -> UnicodeString {
+			if (!button || !selectedObject) return UnicodeString::TheEmptyString;
+			
+			Player* player = ThePlayerList->getLocalPlayer();
+			if (!player) return UnicodeString::TheEmptyString;
+			
+			UnsignedInt baseCost = button->getCostOfExecution(player, selectedObject);
+			UnsignedInt totalCost = baseCost * multiplier;
+			if (totalCost > 0)
+			{
+				UnicodeString costText;
+				costText.format(L" (%d$)", totalCost);
+				return costText;
+			}
+			return UnicodeString::TheEmptyString;
+		};
+		
+		// Helper function to format mass production text with intelligent multiplier placement
+		auto formatMassProductionText = [](const UnicodeString& originalText, const UnicodeString& multiplier) -> UnicodeString {
+			// Simple approach: replace "Build " with "Build x6 " (case-insensitive)
+			UnicodeString result = originalText;
+			
+			// Check for "Build " (with space) - case insensitive
+			UnicodeString lowerText = originalText;
+			// Convert to lowercase for comparison
+			for (Int i = 0; i < lowerText.getLength(); i++) {
+				wchar_t c = lowerText.str()[i];
+				if (c >= L'A' && c <= L'Z') {
+					// Create new string with lowercase character
+					UnicodeString newLowerText;
+					for (Int j = 0; j < i; j++) {
+						newLowerText.concat(lowerText.str()[j]);
+					}
+					newLowerText.concat(c + (L'a' - L'A'));
+					for (Int j = i + 1; j < lowerText.getLength(); j++) {
+						newLowerText.concat(lowerText.str()[j]);
+					}
+					lowerText = newLowerText;
+				}
+			}
+			
+			// Look for "build " pattern
+			Int buildSpacePos = -1;
+			for (Int i = 0; i <= lowerText.getLength() - 6; i++) {
+				if (lowerText.str()[i] == L'b' && lowerText.str()[i+1] == L'u' && 
+					lowerText.str()[i+2] == L'i' && lowerText.str()[i+3] == L'l' && 
+					lowerText.str()[i+4] == L'd' && lowerText.str()[i+5] == L' ') {
+					buildSpacePos = i;
+					break;
+				}
+			}
+			
+			if (buildSpacePos >= 0) {
+				// Found "Build " - replace with "Build x6 "
+				UnicodeString newResult;
+				// Copy text up to "Build "
+				for (Int i = 0; i < buildSpacePos + 6; i++) {
+					newResult.concat(originalText.str()[i]);
+				}
+				// Add multiplier with space
+				newResult.concat(multiplier);
+				newResult.concat(L" ");
+				// Copy rest of text
+				for (Int i = buildSpacePos + 6; i < originalText.getLength(); i++) {
+					newResult.concat(originalText.str()[i]);
+				}
+				return newResult;
+			} else {
+				// No "Build " found - append multiplier at the end
+				result.concat(L" ");
+				result.concat(multiplier);
+				return result;
+			}
+		};
+		
+		// Get MaxSimultaneousOfType to limit mass production options
+		Int maxSimultaneous = 0;
+		if (commandButton->getThingTemplate()) {
+			maxSimultaneous = commandButton->getThingTemplate()->getMaxSimultaneousOfType();
+		}
+		
+		// Check for Shift+Click (3x) - only if no Shift button assigned and MaxSimultaneousOfType >= 3 (or unlimited if < 1)
+		if (!commandButton->getLeftClickShiftButton() && (maxSimultaneous < 1 || maxSimultaneous >= 3))
+		{
+			if (!hasAlternatives)
+			{
+				alternativesText = L"\n\n";
+				hasAlternatives = true;
+			}
+			alternativesText.concat(TheGameText->fetch("TOOLTIP:LeftClickShiftTo"));
+			alternativesText.concat(L" ");
+			UnicodeString originalText = removeHotkeyFromText(TheGameText->fetch(commandButton->getTextLabel().str()));
+			UnicodeString formattedText = formatMassProductionText(originalText, L"3x");
+			alternativesText.concat(formattedText);
+			alternativesText.concat(getMassProductionCostText(commandButton, 3));
+			alternativesText.concat(L"\n");
+		}
+		
+		// Check for Ctrl+Click (6x) - only if no Ctrl button assigned and MaxSimultaneousOfType >= 6 (or unlimited if < 1)
+		if (!commandButton->getLeftClickCtrlButton() && (maxSimultaneous < 1 || maxSimultaneous >= 6))
+		{
+			if (!hasAlternatives)
+			{
+				alternativesText = L"\n\n";
+				hasAlternatives = true;
+			}
+			alternativesText.concat(TheGameText->fetch("TOOLTIP:LeftClickCtrlTo"));
+			alternativesText.concat(L" ");
+			UnicodeString originalText = removeHotkeyFromText(TheGameText->fetch(commandButton->getTextLabel().str()));
+			UnicodeString formattedText = formatMassProductionText(originalText, L"6x");
+			alternativesText.concat(formattedText);
+			alternativesText.concat(getMassProductionCostText(commandButton, 6));
+			alternativesText.concat(L"\n");
+		}
+		
+		// Check for Alt+Click (9x) - only if no Alt button assigned and MaxSimultaneousOfType >= 9 (or unlimited if < 1)
+		if (!commandButton->getLeftClickAltButton() && (maxSimultaneous < 1 || maxSimultaneous >= 9))
+		{
+			if (!hasAlternatives)
+			{
+				alternativesText = L"\n\n";
+				hasAlternatives = true;
+			}
+			alternativesText.concat(TheGameText->fetch("TOOLTIP:LeftClickAltTo"));
+			alternativesText.concat(L" ");
+			UnicodeString originalText = removeHotkeyFromText(TheGameText->fetch(commandButton->getTextLabel().str()));
+			UnicodeString formattedText = formatMassProductionText(originalText, L"9x");
+			alternativesText.concat(formattedText);
+			alternativesText.concat(getMassProductionCostText(commandButton, 9));
+			alternativesText.concat(L"\n");
+		}
+	}
+	
 	return alternativesText;
 }
 

@@ -379,6 +379,7 @@ public:
 	const ScienceVec& getScienceVec() const { return m_science; }
 	CommandButtonMappedBorderType getCommandButtonMappedBorderType() const { return m_commandButtonBorder; }
 	Int getAmount() const { return m_amount; }
+	Bool getEnableMassProduction() const { return m_enableMassProduction; }
 	const Image* getButtonImage() const { return m_buttonImage;	}
 	void cacheButtonImage();
 
@@ -500,6 +501,7 @@ private:
 	AsciiString										m_overlayImage2Name;					///< second overlay image name for additional visual indicators
 	AsciiString										m_itemToReplenish;						///< TheSuperHackers @feature author 15/01/2025 Item key to replenish (empty means all items)
 	Int												m_amount;											///< TheSuperHackers @feature author 15/01/2025 Amount of units to queue when button is pressed (default 1)
+	Bool											m_enableMassProduction;					///< TheSuperHackers @feature author 15/01/2025 Enable mass production with modifier keys (default true)
 	GameWindow*										m_window;											///< used during the run-time assignment of a button to a gadget button window
 	AudioEventRTS									m_unitSpecificSound;					///< Unit sound played whenever button is clicked.
 
