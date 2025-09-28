@@ -57,6 +57,20 @@ enum BodyDamageType CPP_11(: Int)
 	BODY_DAMAGED,					///< unit has been damaged
 	BODY_REALLYDAMAGED,		///< unit is extremely damaged / nearly destroyed
 	BODY_RUBBLE,					///< unit has been reduced to rubble/corpse/exploded-hulk, etc
+	
+	// TheSuperHackers @feature author 15/01/2025 Component-specific damage states
+	BODY_COMPONENT_ENGINE_DESTROYED,	///< engine component has been destroyed
+	BODY_COMPONENT_TURRET_DESTROYED,	///< turret component has been destroyed
+	
+	// TheSuperHackers @feature author 15/01/2025 Specific weapon slot damage states
+	BODY_COMPONENT_WEAPON_A_DESTROYED,	///< weapon slot A component has been destroyed
+	BODY_COMPONENT_WEAPON_B_DESTROYED,	///< weapon slot B component has been destroyed
+	BODY_COMPONENT_WEAPON_C_DESTROYED,	///< weapon slot C component has been destroyed
+	BODY_COMPONENT_WEAPON_D_DESTROYED,	///< weapon slot D component has been destroyed
+	BODY_COMPONENT_WEAPON_E_DESTROYED,	///< weapon slot E component has been destroyed
+	BODY_COMPONENT_WEAPON_F_DESTROYED,	///< weapon slot F component has been destroyed
+	BODY_COMPONENT_WEAPON_G_DESTROYED,	///< weapon slot G component has been destroyed
+	BODY_COMPONENT_WEAPON_H_DESTROYED,	///< weapon slot H component has been destroyed
 
 	BODYDAMAGETYPE_COUNT
 };
@@ -68,6 +82,16 @@ static const char* const TheBodyDamageTypeNames[] =
 	"DAMAGED",
 	"REALLYDAMAGED",
 	"RUBBLE",
+	"COMPONENT_ENGINE_DESTROYED",
+	"COMPONENT_TURRET_DESTROYED",
+	"COMPONENT_WEAPON_A_DESTROYED",
+	"COMPONENT_WEAPON_B_DESTROYED",
+	"COMPONENT_WEAPON_C_DESTROYED",
+	"COMPONENT_WEAPON_D_DESTROYED",
+	"COMPONENT_WEAPON_E_DESTROYED",
+	"COMPONENT_WEAPON_F_DESTROYED",
+	"COMPONENT_WEAPON_G_DESTROYED",
+	"COMPONENT_WEAPON_H_DESTROYED",
 
 	NULL
 };

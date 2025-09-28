@@ -1644,6 +1644,26 @@ CommandAvailability ControlBar::getCommandAvailability( const CommandButton *com
 			break;
 		}
 
+		case GUI_COMMAND_REPLACE_COMPONENT:
+		{
+			// TheSuperHackers @feature author 15/01/2025 Check if there are damaged components to replace
+			UnsignedInt totalCost = command->getCostOfExecution(player, obj);
+			
+			// Check if there are damaged components to replace
+			if (totalCost == 0)
+			{
+				return COMMAND_RESTRICTED;
+			}
+
+			// Check if player can afford the replacement
+			if (player->getMoney()->countMoney() < totalCost)
+			{
+				return COMMAND_CANT_AFFORD;
+			}
+
+			break;
+		}
+
 		case GUI_COMMAND_HACK_INTERNET:
 		{
 			AIUpdateInterface *ai = obj->getAI();

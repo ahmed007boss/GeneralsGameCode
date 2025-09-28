@@ -60,6 +60,8 @@
 #include "GameLogic/Module/StealthUpdate.h"
 #include "GameLogic/Module/RebuildHoleBehavior.h"
 #include "GameLogic/Module/InventoryBehavior.h"
+#include "GameLogic/Module/ActiveBody.h"
+#include "GameLogic/Component.h"
 #include "GameLogic/ScriptEngine.h"
 #include "GameLogic/Weapon.h"
 
@@ -119,6 +121,7 @@ const FieldParse CommandButton::s_commandButtonFieldParseTable[] =
 	{ "OverlayImage",					INI::parseAsciiString,			 NULL, offsetof( CommandButton, m_overlayImageName ) },
 	{ "OverlayImage2",					INI::parseAsciiString,			 NULL, offsetof( CommandButton, m_overlayImage2Name ) },
 	{ "ItemToReplenish",				INI::parseAsciiString,			 NULL, offsetof( CommandButton, m_itemToReplenish ) },
+	{ "ComponentName",					INI::parseAsciiString,			 NULL, offsetof( CommandButton, m_componentName ) },
 	{ "Amount",							INI::parseInt,							 NULL, offsetof( CommandButton, m_amount ) },
 	{ "EnableMassProduction",			INI::parseBool,							 NULL, offsetof( CommandButton, m_enableMassProduction ) },
 	{ "CursorName",						INI::parseAsciiString,			 NULL, offsetof( CommandButton, m_cursorName ) },
@@ -1331,6 +1334,67 @@ UnsignedInt CommandButton::getCostOfExecution(const Player* player, const Object
 				}
 			}
 			break;
+		}
+
+		case GUI_COMMAND_REPLACE_COMPONENT:
+		{
+			// TheSuperHackers @feature author 15/01/2025 Calculate cost for component replacement
+			BodyModuleInterface* body = object->getBodyModule();
+			if (!body)
+				return 0;
+
+			ActiveBody* activeBody = static_cast<ActiveBody*>(body);
+			if (!activeBody)
+				return 0;
+
+			const AsciiString& componentName = getComponentName();
+			UnsignedInt totalCost = 0;
+
+			if (componentName.isEmpty())
+			{
+				// Calculate cost for all damaged components
+				std::vector<Component> components = object->getComponents();
+				for (std::vector<Component>::const_iterator it = components.begin();
+					 it != components.end(); ++it)
+				{
+					const Component& component = *it;
+					if (component.replacementCost > 0)
+					{
+						Real currentHealth = activeBody->getComponentHealth(component.name);
+						Real maxHealth = activeBody->getComponentMaxHealth(component.name);
+						
+						// Only include cost if component is damaged
+						if (currentHealth < maxHealth)
+						{
+							totalCost += component.replacementCost;
+						}
+					}
+				}
+			}
+			else
+			{
+				// Calculate cost for specific component
+				Real currentHealth = activeBody->getComponentHealth(componentName);
+				Real maxHealth = activeBody->getComponentMaxHealth(componentName);
+				
+				// Only include cost if component is damaged
+				if (currentHealth < maxHealth)
+				{
+					// Find the component to get its replacement cost
+					std::vector<Component> components = object->getComponents();
+					for (std::vector<Component>::const_iterator it = components.begin();
+						 it != components.end(); ++it)
+					{
+						if (it->name == componentName)
+						{
+							totalCost = it->replacementCost;
+							break;
+						}
+					}
+				}
+			}
+
+			return totalCost;
 		}
 
 		default:

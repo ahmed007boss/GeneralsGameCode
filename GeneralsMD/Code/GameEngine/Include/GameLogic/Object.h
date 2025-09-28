@@ -47,6 +47,7 @@
 #include "GameLogic/WeaponBonusConditionFlags.h"
 #include "GameLogic/WeaponSet.h"
 #include "GameLogic/WeaponSetFlags.h"
+#include "Component.h"
 #include "GameLogic/Module/StealthUpdate.h"
 #include "GameLogic/Module/InventoryBehavior.h"
 
@@ -55,6 +56,7 @@
 //-----------------------------------------------------------------------------
 
 class AIGroup;
+class ActiveBodyModuleData;
 class AIUpdateInterface;
 class Anim2DTemplate;
 class BehaviorModule;
@@ -297,6 +299,10 @@ public:
 	UnicodeString getExtendedDescription() const;
 
 	BodyModuleInterface* getBodyModule() const { return m_body; }
+	
+	// TheSuperHackers @feature author 15/01/2025 Get component information from ActiveBody
+	std::vector<Component> getComponents() const;
+	
 	ContainModuleInterface* getContain() const { return m_contain; }
   StealthUpdate*          getStealth() const { return m_stealth; }
 	SpawnBehaviorInterface* getSpawnBehaviorInterface() const;

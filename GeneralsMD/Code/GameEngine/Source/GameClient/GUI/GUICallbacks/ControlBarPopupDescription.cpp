@@ -93,6 +93,8 @@
 #include "GameLogic/Module/OverchargeBehavior.h"
 #include "GameLogic/Module/ProductionUpdate.h"
 #include "GameLogic/Module/InventoryBehavior.h"
+#include "GameLogic/Module/ActiveBody.h"
+#include "GameLogic/Component.h"
 #include "GameLogic/ScriptEngine.h"
 
 #include "GameNetwork/NetworkInterface.h"
@@ -1090,6 +1092,30 @@ void ControlBar::populateBuildTooltipLayout(const CommandButton* commandButton, 
 		if (commandButton->getCommandType() == GUI_COMMAND_REPLENISH_INVENTORY_ITEM)
 		{
 			// Get the current object for inventory calculation
+			Drawable* draw = TheInGameUI->getFirstSelectedDrawable();
+			Object* selectedObject = draw ? draw->getObject() : NULL;
+			
+			if (selectedObject)
+			{
+				// Use centralized cost calculation method
+				costToBuild = commandButton->getCostOfExecution(player, selectedObject);
+				if (costToBuild > 0)
+				{
+					cost.format(TheGameText->fetch("TOOLTIP:Cost"), costToBuild);
+				}
+
+				if (costToBuild > 0 && player->getMoney()->countMoney() < costToBuild)
+				{
+					descrip.concat(L"\n\n");
+					descrip.concat(TheGameText->fetch("TOOLTIP:TooltipNotEnoughMoneyToBuild"));
+				}
+			}
+		}
+
+		// TheSuperHackers @feature author 15/01/2025 Handle component replacement cost using centralized method
+		if (commandButton->getCommandType() == GUI_COMMAND_REPLACE_COMPONENT)
+		{
+			// Get the current object for component calculation
 			Drawable* draw = TheInGameUI->getFirstSelectedDrawable();
 			Object* selectedObject = draw ? draw->getObject() : NULL;
 			

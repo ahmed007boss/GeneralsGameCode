@@ -40,6 +40,8 @@
 #include "GameLogic/Damage.h"
 
 #include "WWMath/matrix3d.h"
+#include <map>
+#include <vector>
 
 // FORWARD REFERENCES /////////////////////////////////////////////////////////////////////////////
 struct FieldParse;
@@ -434,6 +436,18 @@ public:
 	inline HitSide getPrimaryHitSideOverride() const { return m_primaryHitSideOverride; }
 	inline HitSide getSecondaryHitSideOverride() const { return m_secondaryHitSideOverride; }
 	inline HitSide getDirectHitSideOverride() const { return m_directHitSideOverride; }
+	
+	// TheSuperHackers @feature author 15/01/2025 Component damage getters
+	Real getPrimaryComponentDamage(const AsciiString& componentName) const;
+	Real getSecondaryComponentDamage(const AsciiString& componentName) const;
+	
+	// TheSuperHackers @feature author 15/01/2025 Component dependency system
+	inline const std::vector<AsciiString>& getAffectedByComponents() const { return m_affectedByComponents; }
+	Bool areRequiredComponentsFunctional(const Object* source) const;
+
+	// TheSuperHackers @feature author 15/01/2025 Component dependency system
+	std::vector<AsciiString> m_affectedByComponents;			///< List of component names that affect this weapon's functionality
+
 	inline DeathType getDeathType() const { return m_deathType; }
 	inline Real getContinueAttackRange() const { return m_continueAttackRange; }
 	inline Real getInfantryInaccuracyDist() const { return m_infantryInaccuracyDist; }
@@ -485,6 +499,10 @@ public:
 	) const;
 
 	void postProcessLoad();
+
+	// TheSuperHackers @feature author 15/01/2025 Component damage properties
+	std::map<AsciiString, Real> m_primaryComponentDamage;		///< Primary damage to specific components
+	std::map<AsciiString, Real> m_secondaryComponentDamage;	///< Secondary damage to specific components
 
 protected:
 
@@ -741,6 +759,9 @@ public:
 	inline Int getClipSize() const { return m_template->getClipSize(); }
 	// Contact weapons (like car bombs) need to basically collide with their target.
 	inline Bool isContactWeapon() const { return m_template->isContactWeapon(); }
+	
+	// TheSuperHackers @feature author 15/01/2025 Weapon component functionality check
+	Bool isWeaponSlotFunctional(const Object* source) const;
 
 	Int getClipReloadTime(const Object *source) const;
 

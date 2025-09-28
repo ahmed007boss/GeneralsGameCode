@@ -38,7 +38,10 @@
 #include "GameLogic/Damage.h"
 #include "GameLogic/Armor.h"
 #include "GameLogic/ArmorSet.h"
+#include "../Component.h"
 #include "Common/UnicodeString.h"
+#include <vector>
+#include <map>
 
 // FORWARD REFERENCES /////////////////////////////////////////////////////////////////////////////
 class BodyParticleSystem;
@@ -62,6 +65,8 @@ public:
 	Real m_ewDamageCap;								///< Subdual damage will never accumulate past this
 	UnsignedInt m_ewDamageHealRate;		///< Every this often, we drop subdual damage...
 	Real m_ewDamageHealAmount;					///< by this much.
+
+	std::vector<Component> m_components;		///< List of components with individual health values
 
 	ActiveBodyModuleData();
 
@@ -149,6 +154,53 @@ public:
 	virtual Bool canBeEWJammed() const;
 	virtual void onEWChange( Bool isNowEWJammed );///< Override this if you want a totally different effect than DISABLED_SUBDUED
 
+	// TheSuperHackers @feature author 15/01/2025 Component health management
+	virtual Real getComponentHealth(const AsciiString& componentName) const;
+	virtual Real getComponentMaxHealth(const AsciiString& componentName) const;
+	virtual Bool setComponentHealth(const AsciiString& componentName, Real health);
+	virtual Bool damageComponent(const AsciiString& componentName, Real damage);
+	virtual Bool healComponent(const AsciiString& componentName, Real healing);
+	virtual Bool isComponentDestroyed(const AsciiString& componentName) const;
+	virtual void initializeComponentHealth();
+	
+	// TheSuperHackers @feature author 15/01/2025 Get component definitions
+	virtual std::vector<Component> getComponents() const;
+	
+	// TheSuperHackers @feature author 15/01/2025 Component functionality status
+	enum ComponentStatus
+	{
+		COMPONENT_STATUS_NONE = 0,           // Component does not exist
+		COMPONENT_STATUS_FULLY_FUNCTIONAL,   // 50% - 100% health
+		COMPONENT_STATUS_PARTIALLY_FUNCTIONAL, // 10% - 50% health  
+		COMPONENT_STATUS_DOWNED              // 0% - 10% health
+	};
+	virtual ComponentStatus getComponentStatus(const AsciiString& componentName) const;
+	
+	// TheSuperHackers @feature author 15/01/2025 Update model state based on current damage
+	virtual void setCorrectDamageState();
+
+	// TheSuperHackers @feature author 15/01/2025 Basic component name constants
+	static const AsciiString COMPONENT_ENGINE;
+	static const AsciiString COMPONENT_WHEELS;
+	static const AsciiString COMPONENT_TRACKS;
+	static const AsciiString COMPONENT_FUEL_TANK;
+	static const AsciiString COMPONENT_TURRET_A;
+	static const AsciiString COMPONENT_TURRET_B;
+	static const AsciiString COMPONENT_TURRET_C;
+	static const AsciiString COMPONENT_PRIMARY_WEAPON;
+	static const AsciiString COMPONENT_SECONDARY_WEAPON;
+	static const AsciiString COMPONENT_TERTIARY_WEAPON;
+	static const AsciiString COMPONENT_WEAPON_FOUR;
+	static const AsciiString COMPONENT_WEAPON_FIVE;
+	static const AsciiString COMPONENT_WEAPON_SIX;
+	static const AsciiString COMPONENT_WEAPON_SEVEN;
+	static const AsciiString COMPONENT_WEAPON_EIGHT;
+	static const AsciiString COMPONENT_RADAR;
+	static const AsciiString COMPONENT_ELECTRONICS;
+	static const AsciiString COMPONENT_POWER;
+	static const AsciiString COMPONENT_COMMUNICATION_A;
+	static const AsciiString COMPONENT_COMMUNICATION_B;
+
 protected:
 
 	void validateArmorAndDamageFX() const;
@@ -158,7 +210,6 @@ protected:
 															const ParticleSystemTemplate *systemTemplate,
 															Int maxSystems );
 	void deleteAllParticleSystems( void );
-	void setCorrectDamageState();
 
 	Bool shouldRetaliate(Object *obj);
 	Bool shouldRetaliateAgainstAggressor(Object *obj, Object *damager);
@@ -171,8 +222,8 @@ private:
 
 	Real									m_currentHealth;				///< health of the object
 	Real									m_prevHealth;						///< previous health value before current health change op
-  Real									m_maxHealth;						///< max health this object can have
-  Real									m_initialHealth;				///< starting health for this object
+  	Real									m_maxHealth;						///< max health this object can have
+  	Real									m_initialHealth;				///< starting health for this object
 	Real									m_currentSubdualDamage;	///< Starts at zero and goes up.  Inherited modules will do something when "subdued".
 	Real									m_currentEWDamage;	///< Starts at zero and goes up.  Inherited modules will do something when "subdued".
 
@@ -196,6 +247,10 @@ private:
 	mutable const ArmorTemplateSet*		m_curArmorSet;
 	mutable Armor											m_curArmor;
 	mutable const DamageFX*						m_curDamageFX;
+
+	// TheSuperHackers @feature author 15/01/2025 Runtime component health tracking
+	std::map<AsciiString, Real>			m_componentHealth;		///< Current health of each component
+	std::map<AsciiString, Real>			m_componentMaxHealth;	///< Maximum health of each component
 
 };
 

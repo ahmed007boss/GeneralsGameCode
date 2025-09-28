@@ -37,6 +37,7 @@
 #include "Common/GameType.h"
 #include "Common/ObjectStatusTypes.h" // Precompiled header anyway, no detangling possibility
 #include "Common/Snapshot.h"
+#include <map>
 
 
 // FORWARD REFERENCES /////////////////////////////////////////////////////////////////////////////
@@ -198,6 +199,38 @@ enum HitSide CPP_11(: Int)
 };
 
 //-------------------------------------------------------------------------------------------------
+/** Hit side flags for component damage */
+//-------------------------------------------------------------------------------------------------
+typedef BitFlags<HIT_SIDE_COUNT> HitSideFlags;
+
+inline Bool getHitSideFlag(HitSideFlags flags, HitSide side)
+{
+	return flags.test(side);
+}
+
+inline HitSideFlags setHitSideFlag(HitSideFlags flags, HitSide side)
+{
+	flags.set(side, TRUE);
+	return flags;
+}
+
+inline HitSideFlags clearHitSideFlag(HitSideFlags flags, HitSide side)
+{
+	flags.set(side, FALSE);
+	return flags;
+}
+
+inline void SET_ALL_HIT_SIDE_BITS(HitSideFlags& m)
+{
+	m.clear();
+	m.flip();
+}
+
+extern HitSideFlags HIT_SIDE_FLAGS_NONE;
+extern HitSideFlags HIT_SIDE_FLAGS_ALL;
+void initHitSideFlags();
+
+//-------------------------------------------------------------------------------------------------
 /** Death types, keep this in sync with TheDeathNames[] */
 //-------------------------------------------------------------------------------------------------
 enum DeathType CPP_11(: Int)
@@ -329,6 +362,9 @@ public:
     m_shockWaveAmount   = 0.0f;
     m_shockWaveRadius   = 0.0f;
     m_shockWaveTaperOff = 0.0f;
+    
+    // TheSuperHackers @feature author 15/01/2025 Initialize component damage map
+    m_componentDamage.clear();
 	}
 
 	ObjectID		   m_sourceID;							///< source of the damage
@@ -348,6 +384,8 @@ public:
 	Real					 m_shockWaveRadius;			  ///< This represents the effect radius of the shockwave.
 	Real					 m_shockWaveTaperOff;			///< This represents the taper off effect of the shockwave at the tip of the radius. 0.0 means shockwave is 0% at the radius edge.
 
+	// TheSuperHackers @feature author 15/01/2025 Component damage system
+	std::map<AsciiString, Real> m_componentDamage;		///< Component-specific damage amounts
 
 protected:
 

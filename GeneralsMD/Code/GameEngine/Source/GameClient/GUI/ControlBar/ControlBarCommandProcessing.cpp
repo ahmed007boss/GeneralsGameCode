@@ -1033,6 +1033,21 @@ CBCommandStatus ControlBar::processCommandUI( GameWindow *control,
 		}
 
 		//---------------------------------------------------------------------------------------------
+		case GUI_COMMAND_REPLACE_COMPONENT:
+		{
+			// TheSuperHackers @feature author 15/01/2025 Replace damaged components via message stream
+			const AsciiString& componentName = actualCommandButton->getComponentName();
+			
+			// Send message with component name length (0 means replace all damaged components)
+			GameMessage *msg = TheMessageStream->appendMessage( GameMessage::MSG_REPLACE_COMPONENT );
+			Int componentLength = componentName.isEmpty() ? 0 : componentName.getLength();
+			msg->appendIntegerArgument( componentLength );
+			
+			markUIDirty();
+			break;
+		}
+
+		//---------------------------------------------------------------------------------------------
 		case GUI_COMMAND_SPECIAL_POWER_FROM_SHORTCUT:
 		{
 			const SpecialPowerTemplate *spTemplate = actualCommandButton->getSpecialPowerTemplate();

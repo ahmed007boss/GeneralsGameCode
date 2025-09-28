@@ -214,6 +214,18 @@ const char* const ModelConditionFlags::s_bitNameList[] =
 	"RELOADING_H",
 	"USING_WEAPON_H",
 	
+	// TheSuperHackers @feature author 15/01/2025 Component-specific damage model conditions
+	"COMPONENT_ENGINE_DESTROYED",
+	"COMPONENT_TURRET_DESTROYED",
+	"COMPONENT_WEAPON_A_DESTROYED",
+	"COMPONENT_WEAPON_B_DESTROYED",
+	"COMPONENT_WEAPON_C_DESTROYED",
+	"COMPONENT_WEAPON_D_DESTROYED",
+	"COMPONENT_WEAPON_E_DESTROYED",
+	"COMPONENT_WEAPON_F_DESTROYED",
+	"COMPONENT_WEAPON_G_DESTROYED",
+	"COMPONENT_WEAPON_H_DESTROYED",
+	
 	NULL
 };
 static_assert(ARRAY_SIZE(ModelConditionFlags::s_bitNameList) == ModelConditionFlags::NumBits + 1, "Incorrect array size");

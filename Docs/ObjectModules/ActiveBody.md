@@ -36,6 +36,7 @@ Used by objects that have active health systems, can take damage, and can be des
   - [Health Settings](#health-settings)
   - [Subdual Damage Settings](#subdual-damage-settings)
   - [Electronic Warfare Settings](#electronic-warfare-settings)
+  - [Component Settings](#component-settings)
 - [Enum Value Lists](#enum-value-lists)
 - [Examples](#examples)
 - [Template](#template)
@@ -97,6 +98,54 @@ Used by objects that have active health systems, can take damage, and can be des
 - **Default**: `0.0`
 - **Example**: `EWDamageHealAmount = 25.0`
 
+### Component Settings
+
+#### `Component` *(v1.04, Generals Zero Hour only)*
+- **Type**: `Component` block
+- **Description**: Defines individual component health systems for detailed damage modeling. Each component can have its own health, healing behavior, and hit side restrictions. Components allow for realistic damage simulation where different parts of an object can be damaged independently
+- **Default**: No components defined
+- **Example**: 
+```ini
+Component PRIMARY_WEAPON
+  MaxHealth = 100.0
+  InitialHealth = 100.0
+  HealingType = NORMAL
+  DamageOnSides = HIT_SIDE_FRONT HIT_SIDE_TOP
+End
+```
+
+#### Component Properties
+
+##### `MaxHealth` *(v1.04, Generals Zero Hour only)*
+- **Type**: `Real`
+- **Description**: Maximum health points for this specific component. Higher values make the component more durable and resistant to damage. This determines the total damage capacity before the component is destroyed
+- **Default**: `0.0`
+- **Example**: `MaxHealth = 100.0`
+
+##### `InitialHealth` *(v1.04, Generals Zero Hour only)*
+- **Type**: `Real`
+- **Description**: Starting health points for this component when the object is created. Higher values allow components to spawn with more health than their maximum, providing temporary damage buffer
+- **Default**: `0.0`
+- **Example**: `InitialHealth = 100.0`
+
+##### `HealingType` *(v1.04, Generals Zero Hour only)*
+- **Type**: `ComponentHealingType` (see [ComponentHealingType Values](#componenthealingtype-values) section)
+- **Description**: Defines how this component can be healed. Different healing types control whether components can be fully repaired, partially repaired, or require replacement
+- **Default**: `NORMAL`
+- **Example**: `HealingType = NORMAL`
+
+##### `DamageOnSides` *(v1.04, Generals Zero Hour only)*
+- **Type**: `HitSideFlags` (see [HitSide Values](#hitside-values) section)
+- **Description**: Specifies which hit sides can damage this component. If not set (empty), the component can be damaged from any hit side. This allows for realistic damage modeling where certain components are only vulnerable from specific angles
+- **Default**: Empty (damageable from all sides)
+- **Example**: `DamageOnSides = HIT_SIDE_FRONT HIT_SIDE_TOP`
+
+##### `ReplacementCost` *(v1.04, Generals Zero Hour only)*
+- **Type**: `UnsignedInt`
+- **Description**: Cost in money to fully replace this component when it's damaged. Higher values make component replacement more expensive. At 0 (default), the component cannot be replaced via the GUI command system
+- **Default**: `0`
+- **Example**: `ReplacementCost = 500`
+
 ## Enum Value Lists
 
 #### `BodyDamageType` Values *(v1.04)*
@@ -106,6 +155,26 @@ Used by objects that have active health systems, can take damage, and can be des
 - **`BODY_DAMAGED`** *(v1.04)* - Unit has been damaged
 - **`BODY_REALLYDAMAGED`** *(v1.04)* - Unit is extremely damaged / nearly destroyed
 - **`BODY_RUBBLE`** *(v1.04)* - Unit has been reduced to rubble/corpse/exploded-hulk, etc
+
+#### `ComponentHealingType` Values *(v1.04, Generals Zero Hour only)*
+**Source:** [Component.h](../../GeneralsMD/Code/GameEngine/Include/GameLogic/Component.h#40) - `ComponentHealingType` enum definition
+
+- **`NORMAL`** *(v1.04)* - Can be healed from destroyed to max normally
+- **`PARTIAL_ONLY`** *(v1.04)* - Can be healed if not destroyed to max normally
+- **`PARTIAL_DESTROYED`** *(v1.04)* - Can be healed from destroyed to partially working normally, but to max needs replacement
+- **`PARTIAL_LIMITED`** *(v1.04)* - Can be healed if not destroyed to partially working normally, but to max needs replacement
+- **`REPLACEMENT_ONLY`** *(v1.04)* - Cannot be healed normally, needs replacement
+
+#### `HitSide` Values *(v1.04)*
+**Source:** [Damage.h](../../GeneralsMD/Code/GameEngine/Include/GameLogic/Damage.h#188) - `HitSide` enum definition
+
+- **`HIT_SIDE_FRONT`** *(v1.04)* - Front side of the object
+- **`HIT_SIDE_BACK`** *(v1.04)* - Back side of the object
+- **`HIT_SIDE_LEFT`** *(v1.04)* - Left side of the object
+- **`HIT_SIDE_RIGHT`** *(v1.04)* - Right side of the object
+- **`HIT_SIDE_TOP`** *(v1.04)* - Top side of the object
+- **`HIT_SIDE_BOTTOM`** *(v1.04)* - Bottom side of the object
+- **`HIT_SIDE_UNKNOWN`** *(v1.04)* - Used when hit side cannot be determined
 
 ## Examples
 
@@ -153,6 +222,38 @@ Body = ActiveBody ModuleTag_02
 End
 ```
 
+### Tank with Component Damage System
+```ini
+Body = ActiveBody ModuleTag_02
+  MaxHealth = 500.0
+  InitialHealth = 500.0
+  
+  Component PRIMARY_WEAPON
+    MaxHealth = 100.0
+    InitialHealth = 100.0
+    HealingType = NORMAL
+    DamageOnSides = HIT_SIDE_FRONT HIT_SIDE_TOP
+    ReplacementCost = 300
+  End
+  
+  Component ENGINE
+    MaxHealth = 150.0
+    InitialHealth = 150.0
+    HealingType = PARTIAL_DESTROYED
+    DamageOnSides = HIT_SIDE_BACK HIT_SIDE_LEFT HIT_SIDE_RIGHT
+    ReplacementCost = 500
+  End
+  
+  Component TURRET
+    MaxHealth = 80.0
+    InitialHealth = 80.0
+    HealingType = NORMAL
+    DamageOnSides = HIT_SIDE_TOP
+    ReplacementCost = 200
+  End
+End
+```
+
 ## Template
 
 ```ini
@@ -170,6 +271,15 @@ Body = ActiveBody ModuleTag_XX
   EWDamageCap = 0.0               ; // maximum EW damage before jamming *(v1.04, Generals Zero Hour only)*
   EWDamageHealRate = 0            ; // milliseconds between EW damage healing *(v1.04, Generals Zero Hour only)*
   EWDamageHealAmount = 0.0        ; // amount of EW damage healed per interval *(v1.04, Generals Zero Hour only)*
+
+  ; Component Settings (Generals Zero Hour only)
+  ; Component COMPONENT_NAME
+  ;   MaxHealth = 100.0            ; // maximum health for this component *(v1.04, Generals Zero Hour only)*
+  ;   InitialHealth = 100.0        ; // starting health for this component *(v1.04, Generals Zero Hour only)*
+  ;   HealingType = NORMAL         ; // how this component can be healed *(v1.04, Generals Zero Hour only)*
+  ;   DamageOnSides = HIT_SIDE_FRONT HIT_SIDE_TOP ; // which hit sides can damage this component *(v1.04, Generals Zero Hour only)*
+  ;   ReplacementCost = 0          ; // cost to replace this component when damaged *(v1.04, Generals Zero Hour only)*
+  ; End
 End
 ```
 
@@ -184,6 +294,42 @@ End
 - Objects with ActiveBody can be targeted by weapons (see [Weapon documentation](../Weapon.md)) and affected by damage types
 - Veterancy levels can modify maximum health and healing rates
 - ActiveBody integrates with armor systems (see [Armor documentation](../Armor.md)) and damage effects
+- **Component System**: Individual components can be damaged independently, affecting object functionality (weapons, movement, etc.)
+- **Component Replacement**: Damaged components can be replaced via GUI commands if `ReplacementCost` is set
+- **Hit Side Restrictions**: Components can be configured to only take damage from specific hit sides for realistic damage modeling
+- **Component Healing Types**: Different components can have different healing behaviors (normal, partial only, replacement only, etc.)
+- **Model State Updates**: Component replacement automatically updates visual model states to reflect component status
+
+## Component Replacement System
+
+The component damage system includes a GUI-based replacement system that allows players to repair damaged components:
+
+### **GUI Command Integration**
+- **Command Type**: `GUI_COMMAND_REPLACE_COMPONENT` - Available in command button definitions
+- **Component Targeting**: Can target specific components or all damaged components
+- **Cost Calculation**: Automatically calculates replacement costs based on component `ReplacementCost` values
+- **Multi-Object Support**: Works with multiple selected objects simultaneously
+
+### **Command Button Properties**
+- **`ComponentName`**: Specifies which component to replace (empty = all damaged components)
+- **Cost Display**: Shows replacement cost in tooltips with "not enough money" warnings
+- **Availability**: Button is disabled when no damaged components exist or player lacks sufficient funds
+
+### **Replacement Process**
+1. **Cost Check**: Verifies player has sufficient money for replacement
+2. **Component Healing**: Sets component health to maximum value
+3. **Model Update**: Updates visual model state to reflect component repair
+4. **Money Deduction**: Deducts replacement cost from player's money
+
+### **Usage in Command Buttons**
+```ini
+CommandButton = Command_ReplaceEngine
+  Command = REPLACE_COMPONENT
+  ComponentName = ENGINE
+  TextLabel = "Replace Engine"
+  ButtonImage = "ReplaceEngineButton"
+End
+```
 
 ## Source Files
 

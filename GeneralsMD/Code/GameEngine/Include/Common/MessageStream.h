@@ -541,6 +541,7 @@ public:
 		MSG_DO_WEAPON_AT_LOCATION,									///< fire a specific weapon at location
 		MSG_DO_WEAPON_AT_OBJECT,										///< fire a specific weapon at a target object
 		MSG_REPLENISH_INVENTORY_ITEM,								///< TheSuperHackers @feature author 15/01/2025 replenish inventory items
+		MSG_REPLACE_COMPONENT,											///< TheSuperHackers @feature author 15/01/2025 replace damaged component
 		MSG_DO_SPECIAL_POWER,												///< do special
 		MSG_DO_SPECIAL_POWER_AT_LOCATION,						///< do special with target location
 		MSG_DO_SPECIAL_POWER_AT_OBJECT,							///< do special at with target object

@@ -610,10 +610,11 @@ CanAttackResult WeaponSet::getAbleToUseWeaponAgainstTarget(AbleToAttackType atta
 	for (Int slot = 0; slot < WEAPONSLOT_COUNT - 1; ++slot)
 	{
 		Weapon* weaponToTest = m_weapons[slot];
-		if (weaponToTest)
+		if (weaponToTest && weaponToTest->isWeaponSlotFunctional(source))
 		{
 			bool isValidTarget = weaponToTest->isValidWeaponUse(source, victim);
-			if (isValidTarget)
+			// TheSuperHackers @feature author 15/01/2025 Check if weapon component is functional
+			if (isValidTarget )
 			{
 				hasAValidWeaponForVictim = TRUE;
 			}
@@ -666,7 +667,7 @@ CanAttackResult WeaponSet::getAbleToUseWeaponAgainstTarget(AbleToAttackType atta
 	for (Int slot = 0; slot < WEAPONSLOT_COUNT - 1; ++slot)
 	{
 		Weapon* weaponToTestForRange = m_weapons[m_curWeapon];
-		if (weaponToTestForRange)
+		if (weaponToTestForRange && weaponToTestForRange->isWeaponSlotFunctional(source))
 		{
 
 
@@ -748,6 +749,10 @@ CanAttackResult WeaponSet::getAbleToUseWeaponAgainstTarget(AbleToAttackType atta
 			Weapon* weapon = m_weapons[i];
 			if (weapon && weapon->estimateWeaponDamage(source, victim))
 			{
+				// TheSuperHackers @feature author 15/01/2025 Check if weapon component is functional
+				if (!weapon->isWeaponSlotFunctional(source))
+					continue;
+
 				//Kris: Aug 22, 2003
 				//Surgical fix so Jarmen Kell doesn't get a targeting cursor on enemy vehicles unless he is in snipe mode.
 				if (weapon->getDamageType() == DAMAGE_KILLPILOT && source->isKindOf(KINDOF_HERO) && m_curWeapon == PRIMARY_WEAPON && specificSlot == (WeaponSlotType)-1)
@@ -887,6 +892,10 @@ Bool WeaponSet::chooseBestWeaponForTarget(const Object* obj, const Object* victi
 			continue;
 
 		if (!weapon->isWithinTargetPitch(obj, victim))
+			continue;
+
+		// TheSuperHackers @feature author 15/01/2025 Check if weapon component is functional
+		if (!weapon->isWeaponSlotFunctional(obj))
 			continue;
 
 		Real damage = weapon->estimateWeaponDamage(obj, victim);

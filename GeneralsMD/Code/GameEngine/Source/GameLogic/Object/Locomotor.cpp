@@ -45,6 +45,8 @@
 #include "GameLogic/Module/PhysicsUpdate.h"
 #include "GameLogic/Module/BodyModule.h"
 #include "GameLogic/Module/AIUpdate.h"
+#include "GameLogic/Module/ActiveBody.h"
+#include "GameLogic/Component.h"
 
 
 static const Real DONUT_TIME_DELAY_SECONDS=2.5f;
@@ -282,6 +284,12 @@ LocomotorTemplate::LocomotorTemplate()
 	m_maxTurnRateDamaged = -1.0f;
 	m_accelerationDamaged = -1.0f;
 	m_liftDamaged = -1.0f;
+	
+	// TheSuperHackers @feature author 15/01/2025 Initialize destroyed state properties (default 0)
+	m_maxSpeedDestroyed = 0.0f;
+	m_maxTurnRateDestroyed = 0.0f;
+	m_accelerationDestroyed = 0.0f;
+	m_liftDestroyed = 0.0f;
 
 	m_surfaces = 0;
 	m_maxSpeed = 0.0f;
@@ -460,6 +468,29 @@ void LocomotorTemplate::validate()
 }
 
 //-------------------------------------------------------------------------------------------------
+// TheSuperHackers @feature author 15/01/2025 Parse AffectedByComponents from INI
+//-------------------------------------------------------------------------------------------------
+static void parseAffectedByComponents(INI* ini, void* instance, void* /*store*/, const void* /*userData*/)
+{
+	LocomotorTemplate* self = (LocomotorTemplate*)instance;
+	
+	// Clear existing components
+	self->m_affectedByComponents.clear();
+	
+	// Parse multiple component names from a single line
+	// Format: AffectedByComponents = TARGETING_SYSTEMS RELOADING_SYSTEM
+	const char* token = ini->getNextToken();
+	while (token != NULL)
+	{
+		AsciiString componentName;
+		componentName.set(token);
+		self->m_affectedByComponents.push_back(componentName);
+		
+		token = ini->getNextTokenOrNull();
+	}
+}
+
+//-------------------------------------------------------------------------------------------------
 static void parseFrictionPerSec( INI* ini, void * /*instance*/, void *store, const void* /*userData*/ )
 {
 	Real fricPerSec = INI::scanReal(ini->getNextToken());
@@ -476,12 +507,16 @@ const FieldParse* LocomotorTemplate::getFieldParse() const
 		{ "Surfaces", INI::parseBitString32, TheLocomotorSurfaceTypeNames, offsetof(LocomotorTemplate, m_surfaces) },
 		{ "Speed", INI::parseVelocityReal, NULL, offsetof(LocomotorTemplate, m_maxSpeed) },
 		{ "SpeedDamaged", INI::parseVelocityReal, NULL, offsetof( LocomotorTemplate, m_maxSpeedDamaged ) },
+		{ "SpeedDestroyed", INI::parseVelocityReal, NULL, offsetof( LocomotorTemplate, m_maxSpeedDestroyed ) },
 		{ "TurnRate", INI::parseAngularVelocityReal, NULL, offsetof(LocomotorTemplate, m_maxTurnRate) },
 		{ "TurnRateDamaged", INI::parseAngularVelocityReal, NULL, offsetof( LocomotorTemplate, m_maxTurnRateDamaged ) },
+		{ "TurnRateDestroyed", INI::parseAngularVelocityReal, NULL, offsetof( LocomotorTemplate, m_maxTurnRateDestroyed ) },
 		{ "Acceleration", INI::parseAccelerationReal, NULL, offsetof(LocomotorTemplate, m_acceleration) },
 		{ "AccelerationDamaged", INI::parseAccelerationReal, NULL, offsetof( LocomotorTemplate, m_accelerationDamaged ) },
+		{ "AccelerationDestroyed", INI::parseAccelerationReal, NULL, offsetof( LocomotorTemplate, m_accelerationDestroyed ) },
 		{ "Lift", INI::parseAccelerationReal, NULL, offsetof(LocomotorTemplate, m_lift) },
 		{ "LiftDamaged", INI::parseAccelerationReal, NULL, offsetof( LocomotorTemplate, m_liftDamaged ) },
+		{ "LiftDestroyed", INI::parseAccelerationReal, NULL, offsetof( LocomotorTemplate, m_liftDestroyed ) },
 		{ "Braking", INI::parseAccelerationReal, NULL, offsetof(LocomotorTemplate, m_braking) },
 		{ "MinSpeed", INI::parseVelocityReal, NULL, offsetof(LocomotorTemplate, m_minSpeed) },
 		{ "MinTurnSpeed", INI::parseVelocityReal, NULL, offsetof(LocomotorTemplate, m_minTurnSpeed) },
@@ -536,6 +571,7 @@ const FieldParse* LocomotorTemplate::getFieldParse() const
 		{ "RudderCorrectionRate",			 INI::parseReal, NULL, offsetof(LocomotorTemplate, m_rudderCorrectionRate) },
 		{ "ElevatorCorrectionDegree",	 INI::parseReal, NULL, offsetof(LocomotorTemplate, m_elevatorCorrectionDegree) },
 		{ "ElevatorCorrectionRate",		 INI::parseReal, NULL, offsetof(LocomotorTemplate, m_elevatorCorrectionRate) },
+		{ "AffectedByComponents",		 parseAffectedByComponents, NULL, 0 },
 		{ NULL, NULL, NULL, 0 }
 
 	};
@@ -820,7 +856,33 @@ void Locomotor::startMove(void)
 }
 
 //-------------------------------------------------------------------------------------------------
-Real Locomotor::getMaxSpeedForCondition(BodyDamageType condition) const
+// TheSuperHackers @feature author 15/01/2025 Get engine component status from object
+//-------------------------------------------------------------------------------------------------
+Int Locomotor::getEngineComponentStatus(const Object* obj) const
+{
+	if (!obj)
+		return static_cast<Int>(ActiveBody::COMPONENT_STATUS_NONE);
+		
+	BodyModuleInterface* body = obj->getBodyModule();
+	if (!body)
+		return static_cast<Int>(ActiveBody::COMPONENT_STATUS_NONE);
+		
+	ActiveBody* activeBody = static_cast<ActiveBody*>(body);
+	if (!activeBody)
+		return static_cast<Int>(ActiveBody::COMPONENT_STATUS_NONE);
+	
+	// Get engine component status
+	Int engineStatus = static_cast<Int>(activeBody->getComponentStatus(ActiveBody::COMPONENT_ENGINE));
+	
+	// Get required components status from template
+	Int requiredComponentsStatus = m_template->getRequiredComponentsStatus(obj);
+	
+	// Return the lowest status between engine and required components
+	return (engineStatus < requiredComponentsStatus) ? engineStatus : requiredComponentsStatus;
+}
+
+//-------------------------------------------------------------------------------------------------
+Real Locomotor::getMaxSpeedForCondition(BodyDamageType condition, const Object* obj) const
 {
 	Real speed;
 
@@ -829,6 +891,18 @@ Real Locomotor::getMaxSpeedForCondition(BodyDamageType condition) const
 	else
 		speed = m_template->m_maxSpeedDamaged;
 
+	// TheSuperHackers @feature author 15/01/2025 Check engine and required components status
+	Int engineStatus = getEngineComponentStatus(obj);
+	if (engineStatus == static_cast<Int>(ActiveBody::COMPONENT_STATUS_DOWNED))
+	{
+		speed = m_template->m_maxSpeedDestroyed; // Engine or required components destroyed - use destroyed speed
+	}
+	else if (engineStatus == static_cast<Int>(ActiveBody::COMPONENT_STATUS_PARTIALLY_FUNCTIONAL))
+	{
+		speed = m_template->m_maxSpeedDamaged; // Engine or required components partially working - use damaged speed
+	}
+	// If engine and required components are fully functional or don't exist, use normal speed calculation
+
 	if (speed > m_maxSpeed)
 		speed = m_maxSpeed;
 
@@ -836,7 +910,7 @@ Real Locomotor::getMaxSpeedForCondition(BodyDamageType condition) const
 }
 
 //-------------------------------------------------------------------------------------------------
-Real Locomotor::getMaxTurnRate(BodyDamageType condition) const
+Real Locomotor::getMaxTurnRate(BodyDamageType condition, const Object* obj) const
 {
 	Real turn;
 
@@ -844,6 +918,18 @@ Real Locomotor::getMaxTurnRate(BodyDamageType condition) const
 		turn = m_template->m_maxTurnRate;
 	else
 		turn = m_template->m_maxTurnRateDamaged;
+
+	// TheSuperHackers @feature author 15/01/2025 Check engine and required components status
+	Int engineStatus = getEngineComponentStatus(obj);
+	if (engineStatus == static_cast<Int>(ActiveBody::COMPONENT_STATUS_DOWNED))
+	{
+		turn = m_template->m_maxTurnRateDestroyed; // Engine or required components destroyed - use destroyed turn rate
+	}
+	else if (engineStatus == static_cast<Int>(ActiveBody::COMPONENT_STATUS_PARTIALLY_FUNCTIONAL))
+	{
+		turn = m_template->m_maxTurnRateDamaged; // Engine or required components partially working - use damaged turn rate
+	}
+	// If engine and required components are fully functional or don't exist, use normal turn rate calculation
 
 	if (turn > m_maxTurnRate)
 		turn = m_maxTurnRate;
@@ -856,7 +942,7 @@ Real Locomotor::getMaxTurnRate(BodyDamageType condition) const
 }
 
 //-------------------------------------------------------------------------------------------------
-Real Locomotor::getMaxAcceleration(BodyDamageType condition) const
+Real Locomotor::getMaxAcceleration(BodyDamageType condition, const Object* obj) const
 {
 	Real accel;
 
@@ -864,6 +950,18 @@ Real Locomotor::getMaxAcceleration(BodyDamageType condition) const
 		accel = m_template->m_acceleration;
 	else
 		accel = m_template->m_accelerationDamaged;
+
+	// TheSuperHackers @feature author 15/01/2025 Check engine and required components status
+	Int engineStatus = getEngineComponentStatus(obj);
+	if (engineStatus == static_cast<Int>(ActiveBody::COMPONENT_STATUS_DOWNED))
+	{
+		accel = m_template->m_accelerationDestroyed; // Engine or required components destroyed - use destroyed acceleration
+	}
+	else if (engineStatus == static_cast<Int>(ActiveBody::COMPONENT_STATUS_PARTIALLY_FUNCTIONAL))
+	{
+		accel = m_template->m_accelerationDamaged; // Engine or required components partially working - use damaged acceleration
+	}
+	// If engine and required components are fully functional or don't exist, use normal acceleration calculation
 
 	if (accel > m_maxAccel)
 		accel = m_maxAccel;
@@ -883,7 +981,7 @@ Real Locomotor::getBraking() const
 }
 
 //-------------------------------------------------------------------------------------------------
-Real Locomotor::getMaxLift(BodyDamageType condition) const
+Real Locomotor::getMaxLift(BodyDamageType condition, const Object* obj) const
 {
 	Real lift;
 
@@ -891,6 +989,18 @@ Real Locomotor::getMaxLift(BodyDamageType condition) const
 		lift = m_template->m_lift;
 	else
 		lift = m_template->m_liftDamaged;
+
+	// TheSuperHackers @feature author 15/01/2025 Check engine and required components status
+	Int engineStatus = getEngineComponentStatus(obj);
+	if (engineStatus == static_cast<Int>(ActiveBody::COMPONENT_STATUS_DOWNED))
+	{
+		lift = m_template->m_liftDestroyed; // Engine or required components destroyed - use destroyed lift
+	}
+	else if (engineStatus == static_cast<Int>(ActiveBody::COMPONENT_STATUS_PARTIALLY_FUNCTIONAL))
+	{
+		lift = m_template->m_liftDamaged; // Engine or required components partially working - use damaged lift
+	}
+	// If engine and required components are fully functional or don't exist, use normal lift calculation
 
 	if (lift > m_maxLift)
 		lift = m_maxLift;
@@ -956,7 +1066,7 @@ void Locomotor::locoUpdate_moveTowardsAngle(Object* obj, Real goalAngle)
 PhysicsTurningType Locomotor::rotateTowardsPosition(Object* obj, const Coord3D& goalPos, Real *relAngle)
 {
 	BodyDamageType bdt = obj->getBodyModule()->getDamageState();
-	Real turnRate = getMaxTurnRate(bdt);
+	Real turnRate = getMaxTurnRate(bdt, obj);
 
 	PhysicsTurningType rotating = rotateObjAroundLocoPivot(obj, goalPos, turnRate, relAngle);
 	return rotating;
@@ -987,7 +1097,7 @@ void Locomotor::locoUpdate_moveTowardsPosition(Object* obj, const Coord3D& goalP
 	setFlag(MAINTAIN_POS_IS_VALID, false);
 
 	BodyDamageType bdt = obj->getBodyModule()->getDamageState();
-	Real maxSpeed = getMaxSpeedForCondition(bdt);
+	Real maxSpeed = getMaxSpeedForCondition(bdt, obj);
 
 	// sanity, we cannot use desired speed that is greater than our max speed we are capable of moving at
 	if( desiredSpeed > maxSpeed )
@@ -1084,7 +1194,7 @@ void Locomotor::locoUpdate_moveTowardsPosition(Object* obj, const Coord3D& goalP
 	if (*blocked)
 	{
 		physics->scrubVelocity2D(desiredSpeed); // stop if we are about to run into the blocking object.
-		Real turnRate = getMaxTurnRate(obj->getBodyModule()->getDamageState());
+		Real turnRate = getMaxTurnRate(obj->getBodyModule()->getDamageState(), obj);
 		if (m_template->m_wanderWidthFactor == 0.0f)
 		{
 			*blocked = (TURN_NONE != rotateObjAroundLocoPivot(obj, goalPos, turnRate));
@@ -1201,7 +1311,7 @@ void Locomotor::moveTowardsPositionTreads(Object* obj, PhysicsBehavior *physics,
 
 	// sanity, we cannot use desired speed that is greater than our max speed we are capable of moving at
 	BodyDamageType bdt = obj->getBodyModule()->getDamageState();
-	Real maxSpeed = getMaxSpeedForCondition(bdt);
+	Real maxSpeed = getMaxSpeedForCondition(bdt, obj);
 	if( desiredSpeed > maxSpeed )
 		desiredSpeed = maxSpeed;
 
@@ -1313,8 +1423,8 @@ void Locomotor::moveTowardsPositionTreads(Object* obj, PhysicsBehavior *physics,
 void Locomotor::moveTowardsPositionWheels(Object* obj, PhysicsBehavior *physics, const Coord3D& goalPos, Real onPathDistToGoal, Real desiredSpeed)
 {
 	BodyDamageType bdt = obj->getBodyModule()->getDamageState();
-	Real maxSpeed = getMaxSpeedForCondition(bdt);
-	Real maxTurnRate = getMaxTurnRate(bdt);
+	Real maxSpeed = getMaxSpeedForCondition(bdt, obj);
+	Real maxTurnRate = getMaxTurnRate(bdt, obj);
 	Real maxAcceleration = getMaxAcceleration(bdt);
 
 	// sanity, we cannot use desired speed that is greater than our max speed we are capable of moving at
@@ -1656,7 +1766,7 @@ void Locomotor::moveTowardsPositionLegs(Object* obj, PhysicsBehavior *physics, c
 	Real maxAcceleration = getMaxAcceleration( obj->getBodyModule()->getDamageState() );
 
 	// sanity, we cannot use desired speed that is greater than our max speed we are capable of moving at
-	Real maxSpeed = getMaxSpeedForCondition( obj->getBodyModule()->getDamageState() );
+	Real maxSpeed = getMaxSpeedForCondition( obj->getBodyModule()->getDamageState(), obj );
 	if( desiredSpeed > maxSpeed )
 		desiredSpeed = maxSpeed;
 
@@ -1747,7 +1857,7 @@ void Locomotor::moveTowardsPositionClimb(Object* obj, PhysicsBehavior *physics, 
 	Real maxAcceleration = getMaxAcceleration( obj->getBodyModule()->getDamageState() );
 
 	// sanity, we cannot use desired speed that is greater than our max speed we are capable of moving at
-	Real maxSpeed = getMaxSpeedForCondition( obj->getBodyModule()->getDamageState() );
+	Real maxSpeed = getMaxSpeedForCondition( obj->getBodyModule()->getDamageState(), obj );
 	if( desiredSpeed > maxSpeed )
 		desiredSpeed = maxSpeed;
 
@@ -1947,7 +2057,7 @@ void Locomotor::moveTowardsPositionThrust(Object* obj, PhysicsBehavior *physics,
 {
 	BodyDamageType bdt = obj->getBodyModule()->getDamageState();
 
-	Real maxForwardSpeed = getMaxSpeedForCondition(bdt);
+	Real maxForwardSpeed = getMaxSpeedForCondition(bdt, obj);
 	desiredSpeed = clamp(m_template->m_minSpeed, desiredSpeed, maxForwardSpeed);
 	Real actualForwardSpeed = physics->getForwardSpeed3D();
 
@@ -1993,7 +2103,7 @@ void Locomotor::moveTowardsPositionThrust(Object* obj, PhysicsBehavior *physics,
 	// Maintain goal speed
 	Real forwardSpeedDelta = desiredSpeed - actualForwardSpeed;
 	Real maxAccel = (forwardSpeedDelta > 0.0f || getBraking() == 0) ? getMaxAcceleration(bdt) : -getBraking();
-	Real maxTurnRate = getMaxTurnRate(bdt);
+	Real maxTurnRate = getMaxTurnRate(bdt, obj);
 
 	// what direction do we need to thrust in, in order to reach the goalpos?
 	Vector3 desiredThrustDir;
@@ -2384,7 +2494,7 @@ void Locomotor::moveTowardsPositionOther(Object* obj, PhysicsBehavior *physics, 
 	Real maxAcceleration = getMaxAcceleration(bdt);
 
 	// sanity, we cannot use desired speed that is greater than our max speed we are capable of moving at
-	Real maxSpeed = getMaxSpeedForCondition(bdt);
+	Real maxSpeed = getMaxSpeedForCondition(bdt, obj);
 	if( desiredSpeed > maxSpeed )
 		desiredSpeed = maxSpeed;
 
@@ -2801,6 +2911,48 @@ void LocomotorSet::clear()
 	m_locomotors.clear();
 	m_validLocomotorSurfaces = 0;
 	m_downhillOnly = FALSE;
+}
+
+//-------------------------------------------------------------------------------------------------
+// TheSuperHackers @feature author 15/01/2025 Get the lowest status among required components for locomotor template
+//-------------------------------------------------------------------------------------------------
+Int LocomotorTemplate::getRequiredComponentsStatus(const Object* source) const
+{
+	if (!source)
+		return static_cast<Int>(ActiveBody::COMPONENT_STATUS_FULLY_FUNCTIONAL); // No source object - assume functional
+	
+	// If no components are specified, locomotor is always functional
+	if (m_affectedByComponents.empty())
+		return static_cast<Int>(ActiveBody::COMPONENT_STATUS_FULLY_FUNCTIONAL);
+	
+	BodyModuleInterface* body = source->getBodyModule();
+	if (!body)
+		return static_cast<Int>(ActiveBody::COMPONENT_STATUS_FULLY_FUNCTIONAL); // No body module - assume functional
+	
+	ActiveBody* activeBody = static_cast<ActiveBody*>(body);
+	if (!activeBody)
+		return static_cast<Int>(ActiveBody::COMPONENT_STATUS_FULLY_FUNCTIONAL); // Not an ActiveBody - assume functional
+	
+	Int lowestStatus = static_cast<Int>(ActiveBody::COMPONENT_STATUS_FULLY_FUNCTIONAL);
+	
+	// Check each required component and find the lowest status
+	for (std::vector<AsciiString>::const_iterator it = m_affectedByComponents.begin();
+		 it != m_affectedByComponents.end(); ++it)
+	{
+		const AsciiString& componentName = *it;
+		ActiveBody::ComponentStatus status = activeBody->getComponentStatus(componentName);
+		
+		// If component doesn't exist, skip it (not required)
+		if (status == ActiveBody::COMPONENT_STATUS_NONE)
+			continue;
+		
+		// Update lowest status if this component has a worse status
+		Int statusInt = static_cast<Int>(status);
+		if (statusInt < lowestStatus)
+			lowestStatus = statusInt;
+	}
+	
+	return lowestStatus;
 }
 
 //-------------------------------------------------------------------------------------------------

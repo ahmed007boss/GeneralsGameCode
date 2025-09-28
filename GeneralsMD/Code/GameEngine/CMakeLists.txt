@@ -243,6 +243,7 @@ set(GAMEENGINE_SRC
     Include/GameLogic/AITNGuard.h
     Include/GameLogic/Armor.h
     Include/GameLogic/ArmorSet.h
+    Include/GameLogic/Component.h
     Include/GameLogic/CaveSystem.h
     Include/GameLogic/CrateSystem.h
     Include/GameLogic/Damage.h

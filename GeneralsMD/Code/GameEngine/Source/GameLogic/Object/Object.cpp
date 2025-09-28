@@ -68,6 +68,7 @@
 #include "GameLogic/Module/AutoHealBehavior.h"
 #include "GameLogic/Module/BehaviorModule.h"
 #include "GameLogic/Module/BodyModule.h"
+#include "GameLogic/Module/ActiveBody.h"
 #include "GameLogic/Module/CollideModule.h"
 #include "GameLogic/Module/ContainModule.h"
 #include "GameLogic/Module/CountermeasuresBehavior.h"
@@ -1582,8 +1583,9 @@ void Object::fireCurrentWeapon(Object* target)
 		return;
 
 	Weapon* weapon = m_weaponSet.getCurWeapon();
-	if (weapon && (weapon->getStatus() == READY_TO_FIRE))
+	if (weapon && (weapon->getStatus() == READY_TO_FIRE) && weapon->isWeaponSlotFunctional(this))
 	{
+				
 		Bool reloaded = weapon->fireWeapon(this, target);
 		DEBUG_ASSERTCRASH(m_firingTracker, ("hey, we are firing but have no firing tracker. this is wrong."));
 		if (m_firingTracker)
@@ -1606,6 +1608,13 @@ void Object::fireCurrentWeapon(const Coord3D* pos)
 	Weapon* weapon = m_weaponSet.getCurWeapon();
 	if (weapon && (weapon->getStatus() == READY_TO_FIRE))
 	{
+		// TheSuperHackers @feature author 15/01/2025 Check if weapon component is functional
+		if (!weapon->isWeaponSlotFunctional(this))
+		{
+			// Weapon component is downed - cannot fire
+			return;
+		}
+		
 		Bool reloaded = weapon->fireWeapon(this, pos);
 		DEBUG_ASSERTCRASH(m_firingTracker, ("hey, we are firing but have no firing tracker. this is wrong."));
 		if (m_firingTracker)
@@ -5626,7 +5635,7 @@ void Object::doCommandButton(const CommandButton* commandButton, CommandSourceTy
 				for (Int i = 0; i < amount; i++) {
 					// Check eligibility before each unit is queued
 					if (pu->canQueueCreateUnit(tt)) {
-						pu->queueCreateUnit(tt, pu->requestUniqueUnitID());
+				pu->queueCreateUnit(tt, pu->requestUniqueUnitID());
 					} else {
 						// Stop queuing if we can't queue more units
 						break;
@@ -6634,6 +6643,26 @@ UnicodeString Object::getExtendedDescription() const
 	}
 	
 	return UnicodeString();
+}
+
+//-------------------------------------------------------------------------------------------------
+// TheSuperHackers @feature author 15/01/2025 Get component information from ActiveBody
+//-------------------------------------------------------------------------------------------------
+std::vector<Component> Object::getComponents() const
+{
+	std::vector<Component> components;
+	
+	// Get the ActiveBody module
+	BodyModuleInterface* body = getBodyModule();
+	if (!body)
+		return components;
+	
+	ActiveBody* activeBody = static_cast<ActiveBody*>(body);
+	if (!activeBody)
+		return components;
+	
+	// Use the public ActiveBody::getComponents() method
+	return activeBody->getComponents();
 }
 
 //-------------------------------------------------------------------------------------------------

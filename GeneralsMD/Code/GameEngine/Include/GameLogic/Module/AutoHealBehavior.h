@@ -62,6 +62,7 @@ public:
 	Bool									m_skipSelfForHealing; ///< Don't heal myself.
 	KindOfMaskType				m_kindOf;	//Only these types can heal -- defaults to everything.
 	KindOfMaskType				m_forbiddenKindOf;	//Only these types can heal -- defaults to everything.
+	Real									m_componentHealingAmount; ///< TheSuperHackers @feature author 15/01/2025 Component healing amount (-1 = proportional to main health, 0 = no component healing)
 	const ParticleSystemTemplate*				m_radiusParticleSystemTmpl;					//Optional particle system meant to apply to entire effect for entire duration.
 	const ParticleSystemTemplate*				m_unitHealPulseParticleSystemTmpl;	//Optional particle system applying to each object getting healed each heal pulse.
 
@@ -77,6 +78,7 @@ public:
 		m_unitHealPulseParticleSystemTmpl = NULL;
 		m_affectsWholePlayer = FALSE;
 		m_skipSelfForHealing = FALSE;
+		m_componentHealingAmount = -1.0f; // Default to proportional healing
 		SET_ALL_KINDOFMASK_BITS( m_kindOf );
 		m_forbiddenKindOf.clear();
 	}
@@ -97,6 +99,7 @@ public:
 			{ "StartHealingDelay",			INI::parseDurationUnsignedInt,				NULL, offsetof( AutoHealBehaviorModuleData, m_startHealingDelay ) },
 			{ "AffectsWholePlayer",			INI::parseBool,												NULL, offsetof( AutoHealBehaviorModuleData, m_affectsWholePlayer ) },
 			{ "SkipSelfForHealing",			INI::parseBool,												NULL, offsetof( AutoHealBehaviorModuleData, m_skipSelfForHealing ) },
+			{ "ComponentHealingAmount",		INI::parseReal,												NULL, offsetof( AutoHealBehaviorModuleData, m_componentHealingAmount ) },
 			{ 0, 0, 0, 0 }
 		};
 

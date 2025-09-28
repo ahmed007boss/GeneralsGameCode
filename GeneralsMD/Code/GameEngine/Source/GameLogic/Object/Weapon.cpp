@@ -67,6 +67,7 @@
 #include "GameLogic/Module/UpdateModule.h"
 #include "GameLogic/Module/SpecialPowerCompletionDie.h"
 #include "GameLogic/Module/AssaultTransportAIUpdate.h"
+#include "GameLogic/Module/ActiveBody.h"
 #include "GameLogic/Object.h"
 #include "GameLogic/ObjectCreationList.h"
 #include "GameLogic/PartitionManager.h"
@@ -160,6 +161,121 @@ static void parseAllVetLevelsPSys(INI* ini, void* /*instance*/, void* store, con
 WeaponStore* TheWeaponStore = NULL;					///< the weapon store definition
 
 
+//-------------------------------------------------------------------------------------------------
+// TheSuperHackers @feature author 15/01/2025 Parse PrimaryComponentDamage from INI
+//-------------------------------------------------------------------------------------------------
+static void parsePrimaryComponentDamage(INI* ini, void* instance, void* /*store*/, const void* /*userData*/)
+{
+	WeaponTemplate* self = (WeaponTemplate*)instance;
+	
+	// Parse multiple component damage pairs from a single line
+	// Format: PrimaryComponentDamage = Engine 10 Turret 5 Wheels 15
+	const char* token = ini->getNextToken();
+	while (token != NULL)
+	{
+		// Get component name
+		AsciiString componentName;
+		componentName.set(token);
+		
+		// Get damage amount (next token)
+		token = ini->getNextTokenOrNull();
+		Real damage = 0.0f;
+		if (token != NULL)
+		{
+			// Try to parse as float - if it fails, treat as component name
+			try
+			{
+				damage = (Real)atof(token);
+				token = ini->getNextTokenOrNull(); // Move to next component name
+			}
+			catch (...)
+			{
+				// If parsing fails, treat current token as component name with damage 0
+				damage = 0.0f;
+			}
+		}
+		
+		// Add component damage entry if damage is positive
+		if (damage > 0.0f)
+		{
+			self->m_primaryComponentDamage[componentName] = damage;
+		}
+		
+		// Continue with next token if available
+		if (token == NULL)
+			break;
+	}
+}
+
+//-------------------------------------------------------------------------------------------------
+// TheSuperHackers @feature author 15/01/2025 Parse AffectedByComponents from INI
+//-------------------------------------------------------------------------------------------------
+static void parseAffectedByComponents(INI* ini, void* instance, void* /*store*/, const void* /*userData*/)
+{
+	WeaponTemplate* self = (WeaponTemplate*)instance;
+	
+	// Clear existing components
+	self->m_affectedByComponents.clear();
+	
+	// Parse multiple component names from a single line
+	// Format: AffectedByComponents = TARGETING_SYSTEMS RELOADING_SYSTEM
+	const char* token = ini->getNextToken();
+	while (token != NULL)
+	{
+		AsciiString componentName;
+		componentName.set(token);
+		self->m_affectedByComponents.push_back(componentName);
+		
+		token = ini->getNextTokenOrNull();
+	}
+}
+
+//-------------------------------------------------------------------------------------------------
+// TheSuperHackers @feature author 15/01/2025 Parse SecondaryComponentDamage from INI
+//-------------------------------------------------------------------------------------------------
+static void parseSecondaryComponentDamage(INI* ini, void* instance, void* /*store*/, const void* /*userData*/)
+{
+	WeaponTemplate* self = (WeaponTemplate*)instance;
+	
+	// Parse multiple component damage pairs from a single line
+	// Format: SecondaryComponentDamage = Engine 5 Turret 10 Wheels 8
+	const char* token = ini->getNextToken();
+	while (token != NULL)
+	{
+		// Get component name
+		AsciiString componentName;
+		componentName.set(token);
+		
+		// Get damage amount (next token)
+		token = ini->getNextTokenOrNull();
+		Real damage = 0.0f;
+		if (token != NULL)
+		{
+			// Try to parse as float - if it fails, treat as component name
+			try
+			{
+				damage = (Real)atof(token);
+				token = ini->getNextTokenOrNull(); // Move to next component name
+			}
+			catch (...)
+			{
+				// If parsing fails, treat current token as component name with damage 0
+				damage = 0.0f;
+			}
+		}
+		
+		// Add component damage entry if damage is positive
+		if (damage > 0.0f)
+		{
+			self->m_secondaryComponentDamage[componentName] = damage;
+		}
+		
+		// Continue with next token if available
+		if (token == NULL)
+			break;
+	}
+}
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // PRIVATE DATA ///////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -250,6 +366,9 @@ const FieldParse WeaponTemplate::TheWeaponTemplateFieldParseTable[] =
 	{ "PrimaryHitSideOverride",		INI::parseIndexList,										TheHitSideNames,				offsetof(WeaponTemplate, m_primaryHitSideOverride) },
 	{ "SecondaryHitSideOverride",	INI::parseIndexList,										TheHitSideNames,				offsetof(WeaponTemplate, m_secondaryHitSideOverride) },
 	{ "DirectHitSideOverride",		INI::parseIndexList,										TheHitSideNames,				offsetof(WeaponTemplate, m_directHitSideOverride) },
+	{ "PrimaryComponentDamage",		parsePrimaryComponentDamage,								NULL,							0 },
+	{ "SecondaryComponentDamage",	parseSecondaryComponentDamage,							NULL,							0 },
+	{ "AffectedByComponents",		parseAffectedByComponents,								NULL,							0 },
 	{ NULL,												NULL,																		NULL,							0 }
 
 };
@@ -340,6 +459,10 @@ WeaponTemplate::WeaponTemplate() : m_nextTemplate(NULL)
 	m_primaryHitSideOverride = HIT_SIDE_UNKNOWN;
 	m_secondaryHitSideOverride = HIT_SIDE_UNKNOWN;
 	m_directHitSideOverride = HIT_SIDE_UNKNOWN;
+	
+	// TheSuperHackers @feature author 15/01/2025 Initialize component damage maps
+	m_primaryComponentDamage.clear();
+	m_secondaryComponentDamage.clear();
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -1686,7 +1809,29 @@ void WeaponTemplate::dealDamageInternal(ObjectID sourceID, ObjectID victimID, co
 				}
 			}
 
+			// TheSuperHackers @feature author 15/01/2025 Populate component damage in DamageInfo
+			damageInfo.in.m_componentDamage.clear();
+			if (curVictimDistSqr <= primaryRadiusSqr)
+			{
+				// Apply primary component damage if this is primary damage
+				for (std::map<AsciiString, Real>::const_iterator it = m_primaryComponentDamage.begin(); 
+					 it != m_primaryComponentDamage.end(); ++it)
+				{
+					damageInfo.in.m_componentDamage[it->first] = it->second;
+				}
+			}
+			else
+			{
+				// Apply secondary component damage if this is secondary damage
+				for (std::map<AsciiString, Real>::const_iterator it = m_secondaryComponentDamage.begin(); 
+					 it != m_secondaryComponentDamage.end(); ++it)
+				{
+					damageInfo.in.m_componentDamage[it->first] = it->second;
+				}
+			}
+
 			curVictim->attemptDamage(&damageInfo);
+			
 			//DEBUG_ASSERTLOG(damageInfo.out.m_noEffect, ("WeaponTemplate::dealDamageInternal: dealt to %s %08lx: attempted %f, actual %f (%f)",
 			//	curVictim->getTemplate()->getName().str(),curVictim,
 			//	damageInfo.in.m_amount, damageInfo.out.m_actualDamageDealt, damageInfo.out.m_actualDamageClipped));
@@ -2978,11 +3123,19 @@ void Weapon::preFireWeapon(const Object* source, const Object* victim)
 //-------------------------------------------------------------------------------------------------
 Bool Weapon::fireWeapon(const Object* source, Object* target, ObjectID* projectileID)
 {
+	// TheSuperHackers @feature author 15/01/2025 Check weapon component functionality
+	if (!isWeaponSlotFunctional(source))
+	{
+		// Weapon component is downed - cannot fire
+		return false;
+	}
 	// Validate weapon use before firing
 	if (!isValidWeaponUse(source, target))
 	{
 		return true;
 	}
+	
+	
 	//CRCDEBUG_LOG(("Weapon::fireWeapon() for %s at %s", DescribeObject(source).str(), DescribeObject(target).str()));
 	return privateFireWeapon(source, target, NULL, false, false, 0, projectileID, TRUE);
 }
@@ -2991,11 +3144,18 @@ Bool Weapon::fireWeapon(const Object* source, Object* target, ObjectID* projecti
 // return true if we auto-reloaded our clip after firing.
 Bool Weapon::fireWeapon(const Object* source, const Coord3D* pos, ObjectID* projectileID)
 {
+	// TheSuperHackers @feature author 15/01/2025 Check weapon component functionality
+	if (!isWeaponSlotFunctional(source))
+	{
+		// Weapon component is downed - cannot fire
+		return false;
+	}
 	// Validate weapon use before firing
 	if (!isValidWeaponUse(source, nullptr))
 	{
 		return true;
 	}
+	
 	//CRCDEBUG_LOG(("Weapon::fireWeapon() for %s", DescribeObject(source).str()));
 	return privateFireWeapon(source, NULL, pos, false, false, 0, projectileID, TRUE);
 }
@@ -3003,6 +3163,13 @@ Bool Weapon::fireWeapon(const Object* source, const Coord3D* pos, ObjectID* proj
 //-------------------------------------------------------------------------------------------------
 void Weapon::fireProjectileDetonationWeapon(const Object* source, Object* target, WeaponBonusConditionFlags extraBonusFlags, Bool inflictDamage)
 {
+	// TheSuperHackers @feature author 15/01/2025 Check weapon component functionality
+	if (!isWeaponSlotFunctional(source))
+	{
+		// Weapon component is downed - cannot fire
+		return;
+	}
+	
 	//CRCDEBUG_LOG(("Weapon::fireProjectileDetonationWeapon() for %sat %s", DescribeObject(source).str(), DescribeObject(target).str()));
 	privateFireWeapon(source, target, NULL, true, false, extraBonusFlags, NULL, inflictDamage);
 }
@@ -3010,6 +3177,13 @@ void Weapon::fireProjectileDetonationWeapon(const Object* source, Object* target
 //-------------------------------------------------------------------------------------------------
 void Weapon::fireProjectileDetonationWeapon(const Object* source, const Coord3D* pos, WeaponBonusConditionFlags extraBonusFlags, Bool inflictDamage)
 {
+	// TheSuperHackers @feature author 15/01/2025 Check weapon component functionality
+	if (!isWeaponSlotFunctional(source))
+	{
+		// Weapon component is downed - cannot fire
+		return;
+	}
+	
 	//CRCDEBUG_LOG(("Weapon::fireProjectileDetonationWeapon() for %s", DescribeObject(source).str()));
 	privateFireWeapon(source, NULL, pos, true, false, extraBonusFlags, NULL, inflictDamage);
 }
@@ -3800,4 +3974,126 @@ void WeaponBonusSet::appendBonuses(WeaponBonusConditionFlags flags, WeaponBonus&
 
 		this->m_bonus[i].appendBonuses(bonus);
 	}
+}
+
+//-------------------------------------------------------------------------------------------------
+// TheSuperHackers @feature author 15/01/2025 Component damage getter implementations
+//-------------------------------------------------------------------------------------------------
+Real WeaponTemplate::getPrimaryComponentDamage(const AsciiString& componentName) const
+{
+	std::map<AsciiString, Real>::const_iterator it = m_primaryComponentDamage.find(componentName);
+	return (it != m_primaryComponentDamage.end()) ? it->second : 0.0f;
+}
+
+Real WeaponTemplate::getSecondaryComponentDamage(const AsciiString& componentName) const
+{
+	std::map<AsciiString, Real>::const_iterator it = m_secondaryComponentDamage.find(componentName);
+	return (it != m_secondaryComponentDamage.end()) ? it->second : 0.0f;
+}
+
+//-------------------------------------------------------------------------------------------------
+// TheSuperHackers @feature author 15/01/2025 Weapon component functionality check
+//-------------------------------------------------------------------------------------------------
+Bool Weapon::isWeaponSlotFunctional(const Object* source) const
+{
+	// Get the ActiveBody from the source object
+	BodyModuleInterface* body = source->getBodyModule();
+	if (!body)
+		return true; // No body module - assume functional
+	
+	ActiveBody* activeBody = static_cast<ActiveBody*>(body);
+	if (!activeBody)
+		return true; // Not an ActiveBody - assume functional
+	
+	// Map weapon slot to component name
+	AsciiString componentName;
+	switch (static_cast<Int>(m_wslot))
+	{
+		case 0: // PRIMARY
+			componentName = ActiveBody::COMPONENT_PRIMARY_WEAPON;
+			break;
+		case 1: // SECONDARY
+			componentName = ActiveBody::COMPONENT_SECONDARY_WEAPON;
+			break;
+		case 2: // TERTIARY
+			componentName = ActiveBody::COMPONENT_TERTIARY_WEAPON;
+			break;
+		case 3: // WEAPON_FOUR
+			componentName = ActiveBody::COMPONENT_WEAPON_FOUR;
+			break;
+		case 4: // WEAPON_FIVE
+			componentName = ActiveBody::COMPONENT_WEAPON_FIVE;
+			break;
+		case 5: // WEAPON_SIX
+			componentName = ActiveBody::COMPONENT_WEAPON_SIX;
+			break;
+		case 6: // WEAPON_SEVEN
+			componentName = ActiveBody::COMPONENT_WEAPON_SEVEN;
+			break;
+		case 7: // WEAPON_EIGHT
+			componentName = ActiveBody::COMPONENT_WEAPON_EIGHT;
+			break;
+		default:
+			// Invalid weapon slot - assume functional (no component restriction)
+			return true;
+	}
+	
+	// Check component status
+	ActiveBody::ComponentStatus status = activeBody->getComponentStatus(componentName);
+	
+	// If component doesn't exist, weapon should work (no component restriction)
+	if (status == ActiveBody::COMPONENT_STATUS_NONE)
+		return true;
+	
+	// If component exists, it must not be downed to work
+	if (status == ActiveBody::COMPONENT_STATUS_DOWNED)
+		return false;
+	
+	// TheSuperHackers @feature author 15/01/2025 Check weapon template's required components
+	// Check if the weapon template has any required components that are not functional
+	if (!m_template->areRequiredComponentsFunctional(source))
+		return false;
+	
+	// All checks passed - weapon is functional
+	return true;
+}
+
+//-------------------------------------------------------------------------------------------------
+// TheSuperHackers @feature author 15/01/2025 Check if required components are functional for weapon template
+//-------------------------------------------------------------------------------------------------
+Bool WeaponTemplate::areRequiredComponentsFunctional(const Object* source) const
+{
+	if (!source)
+		return true; // No source object - assume functional
+	
+	// If no components are specified, weapon is always functional
+	if (m_affectedByComponents.empty())
+		return true;
+	
+	BodyModuleInterface* body = source->getBodyModule();
+	if (!body)
+		return true; // No body module - assume functional
+	
+	ActiveBody* activeBody = static_cast<ActiveBody*>(body);
+	if (!activeBody)
+		return true; // Not an ActiveBody - assume functional
+	
+	// Check each required component
+	for (std::vector<AsciiString>::const_iterator it = m_affectedByComponents.begin();
+		 it != m_affectedByComponents.end(); ++it)
+	{
+		const AsciiString& componentName = *it;
+		ActiveBody::ComponentStatus status = activeBody->getComponentStatus(componentName);
+		
+		// If component doesn't exist, skip it (not required)
+		if (status == ActiveBody::COMPONENT_STATUS_NONE)
+			continue;
+		
+		// If component exists and is downed, weapon is not functional
+		if (status == ActiveBody::COMPONENT_STATUS_DOWNED)
+			return false;
+	}
+	
+	// All required components are functional
+	return true;
 }

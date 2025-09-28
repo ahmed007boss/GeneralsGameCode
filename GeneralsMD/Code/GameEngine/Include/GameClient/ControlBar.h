@@ -207,6 +207,7 @@ enum GUICommandType CPP_11(: Int)
 	GUI_COMMAND_COMBATDROP,								///< rappel contents to ground or bldg
 	GUI_COMMAND_SWITCH_WEAPON,						///< switch weapon use
 	GUI_COMMAND_REPLENISH_INVENTORY_ITEM,		///< TheSuperHackers @feature author 15/01/2025 replenish inventory items
+	GUI_COMMAND_REPLACE_COMPONENT,				///< TheSuperHackers @feature author 15/01/2025 replace damaged component
 
 	//Context senstive command modes
 	GUICOMMANDMODE_HIJACK_VEHICLE,
@@ -271,6 +272,7 @@ static const char *const TheGuiCommandNames[] =
 	"COMBATDROP",
 	"SWITCH_WEAPON",
 	"REPLENISH_INVENTORY_ITEM",
+	"REPLACE_COMPONENT",
 	"HIJACK_VEHICLE",
 	"CONVERT_TO_CARBOMB",
 	"SABOTAGE_BUILDING",
@@ -356,6 +358,7 @@ public:
 	const AsciiString& getOverlayImageName() const { return m_overlayImageName; }
 	const AsciiString& getOverlayImage2Name() const { return m_overlayImage2Name; }
 	const AsciiString& getItemToReplenish() const { return m_itemToReplenish; }
+	const AsciiString& getComponentName() const { return m_componentName; }
 	const AudioEventRTS* getUnitSpecificSound() const { return &m_unitSpecificSound; }
 	const bool isRequireElectronics() const { return m_isRequireElectronics; }
 
@@ -500,6 +503,7 @@ private:
 	AsciiString										m_overlayImageName;						///< overlay image name for additional visual indicators
 	AsciiString										m_overlayImage2Name;					///< second overlay image name for additional visual indicators
 	AsciiString										m_itemToReplenish;						///< TheSuperHackers @feature author 15/01/2025 Item key to replenish (empty means all items)
+	AsciiString										m_componentName;						///< TheSuperHackers @feature author 15/01/2025 Component name to replace (empty means all damaged components)
 	Int												m_amount;											///< TheSuperHackers @feature author 15/01/2025 Amount of units to queue when button is pressed (default 1)
 	Bool											m_enableMassProduction;					///< TheSuperHackers @feature author 15/01/2025 Enable mass production with modifier keys (default true)
 	GameWindow*										m_window;											///< used during the run-time assignment of a button to a gadget button window

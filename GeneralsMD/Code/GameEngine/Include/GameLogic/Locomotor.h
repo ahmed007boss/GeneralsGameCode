@@ -38,12 +38,14 @@
 #include "Common/Snapshot.h"
 #include "GameLogic/Damage.h"
 #include "GameLogic/LocomotorSet.h"
+#include <vector>
 
 // FORWARD REFERENCES /////////////////////////////////////////////////////////////////////////////
 class Locomotor;
 class LocomotorTemplate;
 class INI;
 class PhysicsBehavior;
+class ActiveBody;
 enum BodyDamageType CPP_11(: Int);
 enum PhysicsTurningType CPP_11(: Int);
 
@@ -148,6 +150,13 @@ public:
 
 	void validate();
 
+	// TheSuperHackers @feature author 15/01/2025 Component dependency system
+	inline const std::vector<AsciiString>& getAffectedByComponents() const { return m_affectedByComponents; }
+	Int getRequiredComponentsStatus(const Object* source) const;
+
+	// TheSuperHackers @feature author 15/01/2025 Component dependency system
+	std::vector<AsciiString> m_affectedByComponents;			///< List of component names that affect this locomotor's functionality
+
 protected:
 
 
@@ -164,13 +173,17 @@ private:
 	LocomotorSurfaceTypeMask	m_surfaces;							///< flags indicating the kinds of surfaces we can use
 	Real											m_maxSpeed;							///< max speed
 	Real											m_maxSpeedDamaged;			///< max speed when "damaged"
+	Real											m_maxSpeedDestroyed;		///< max speed when destroyed (default 0)
 	Real											m_minSpeed;							///< we should never brake past this
 	Real											m_maxTurnRate;					///< max rate at which we can turn, in rads/frame
 	Real											m_maxTurnRateDamaged;		///< max turn rate when "damaged"
+	Real											m_maxTurnRateDestroyed;	///< max turn rate when destroyed (default 0)
 	Real											m_acceleration;					///< max acceleration
 	Real											m_accelerationDamaged;	///< max acceleration when damaged
+	Real											m_accelerationDestroyed;	///< max acceleration when destroyed (default 0)
 	Real											m_lift;									///< max lifting acceleration (flying objects only)
 	Real											m_liftDamaged;					///< max lift when damaged
+	Real											m_liftDestroyed;					///< max lift when destroyed (default 0)
 	Real											m_braking;							///< max braking (deceleration)
 	Real											m_minTurnSpeed;					///< we must be going >= this speed in order to turn
 	Real											m_preferredHeight;			///< our preferred height (if flying)
@@ -254,11 +267,13 @@ public:
 	*/
 	Bool locoUpdate_maintainCurrentPosition(Object* obj);
 
-	Real getMaxSpeedForCondition(BodyDamageType condition) const;  ///< get max speed given condition
-	Real getMaxTurnRate(BodyDamageType condition) const;  ///< get max turning rate given condition
-	Real getMaxAcceleration(BodyDamageType condition) const;  ///< get acceleration given condition
-	Real getMaxLift(BodyDamageType condition) const;  ///< get acceleration given condition
+	Real getMaxSpeedForCondition(BodyDamageType condition, const Object* obj = NULL) const;  ///< get max speed given condition
+	Real getMaxTurnRate(BodyDamageType condition, const Object* obj = NULL) const;  ///< get max turning rate given condition
+	Real getMaxAcceleration(BodyDamageType condition, const Object* obj = NULL) const;  ///< get acceleration given condition
+	Real getMaxLift(BodyDamageType condition, const Object* obj = NULL) const;  ///< get lift given condition
 	Real getBraking() const;  ///< get braking given condition
+
+	Int getEngineComponentStatus(const Object* obj) const;  ///< TheSuperHackers @feature author 15/01/2025 Get engine component status from object (returns ComponentStatus enum value)
 
 	inline Real getPreferredHeight() const { return m_preferredHeight;} ///< Just return preferredheight, no damage consideration
 	inline void restorePreferredHeightFromTemplate() { m_preferredHeight = m_template->m_preferredHeight; };
