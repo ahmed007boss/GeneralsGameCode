@@ -4001,7 +4001,7 @@ Bool Weapon::isWeaponSlotFunctional(const Object* source) const
 	if (!body)
 		return true; // No body module - assume functional
 	
-	ActiveBody* activeBody = static_cast<ActiveBody*>(body);
+	ActiveBody* activeBody = dynamic_cast<ActiveBody*>(body);
 	if (!activeBody)
 		return true; // Not an ActiveBody - assume functional
 	
@@ -4039,7 +4039,7 @@ Bool Weapon::isWeaponSlotFunctional(const Object* source) const
 	}
 	
 	// Check component status
-	ActiveBody::ComponentStatus status = activeBody->getComponentStatus(componentName);
+		ActiveBody::ComponentStatus status = activeBody->getComponentStatus(componentName);
 	
 	// If component doesn't exist, weapon should work (no component restriction)
 	if (status == ActiveBody::COMPONENT_STATUS_NONE)
@@ -4074,7 +4074,7 @@ Bool WeaponTemplate::areRequiredComponentsFunctional(const Object* source) const
 	if (!body)
 		return true; // No body module - assume functional
 	
-	ActiveBody* activeBody = static_cast<ActiveBody*>(body);
+	ActiveBody* activeBody = dynamic_cast<ActiveBody*>(body);
 	if (!activeBody)
 		return true; // Not an ActiveBody - assume functional
 	

@@ -867,7 +867,7 @@ Int Locomotor::getEngineComponentStatus(const Object* obj) const
 	if (!body)
 		return static_cast<Int>(ActiveBody::COMPONENT_STATUS_NONE);
 		
-	ActiveBody* activeBody = static_cast<ActiveBody*>(body);
+	ActiveBody* activeBody = dynamic_cast<ActiveBody*>(body);
 	if (!activeBody)
 		return static_cast<Int>(ActiveBody::COMPONENT_STATUS_NONE);
 	
@@ -2929,7 +2929,7 @@ Int LocomotorTemplate::getRequiredComponentsStatus(const Object* source) const
 	if (!body)
 		return static_cast<Int>(ActiveBody::COMPONENT_STATUS_FULLY_FUNCTIONAL); // No body module - assume functional
 	
-	ActiveBody* activeBody = static_cast<ActiveBody*>(body);
+	ActiveBody* activeBody = dynamic_cast<ActiveBody*>(body);
 	if (!activeBody)
 		return static_cast<Int>(ActiveBody::COMPONENT_STATUS_FULLY_FUNCTIONAL); // Not an ActiveBody - assume functional
 	
