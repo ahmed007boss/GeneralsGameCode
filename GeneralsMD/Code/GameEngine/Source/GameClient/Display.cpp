@@ -47,11 +47,7 @@ Display::Display()
 	m_width = 0;
 	m_height = 0;
 	m_bitDepth = 0;
-#if defined( RTS_DEBUG )
-	m_windowed = TRUE;
-#else
 	m_windowed = FALSE;
-#endif
 	m_videoBuffer = NULL;
 	m_videoStream = NULL;
 	m_debugDisplayCallback = NULL;
