@@ -893,7 +893,7 @@ void GameLogic::logicMessageDispatcher( GameMessage *msg, void *userData )
 							BodyModuleInterface* body = firstObj->getBodyModule();
 							if (body)
 							{
-								ActiveBody* activeBody = static_cast<ActiveBody*>(body);
+								ActiveBody* activeBody = dynamic_cast<ActiveBody*>(body);
 								if (activeBody)
 								{
 									std::vector<Component> components = firstObj->getComponents();
@@ -928,7 +928,7 @@ void GameLogic::logicMessageDispatcher( GameMessage *msg, void *userData )
 					if (!body)
 						continue;
 
-					ActiveBody* activeBody = static_cast<ActiveBody*>(body);
+					ActiveBody* activeBody = dynamic_cast<ActiveBody*>(body);
 					if (!activeBody)
 						continue;
 

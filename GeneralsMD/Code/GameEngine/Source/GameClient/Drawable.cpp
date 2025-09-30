@@ -4033,8 +4033,126 @@ void Drawable::drawHealthBar(const IRegion2D* healthBarRegion)
 		TheDisplay->drawFillRect( healthBarRegion->lo.x + 1, healthBarRegion->lo.y + 1,
 															(healthBoxWidth - 2) * healthRatio, healthBoxHeight - 2,
 															color );
+
+		// TheSuperHackers @feature Ahmed Salah 30/09/2025 Draw fuel/consumed item bar below health bar
+		drawFuelBar(healthBarRegion, obj);
 	}
 
+}
+
+//-------------------------------------------------------------------------------------------------
+// TheSuperHackers @feature Ahmed Salah 30/09/2025 Draw fuel/consumed item bar below health bar
+//-------------------------------------------------------------------------------------------------
+void Drawable::drawFuelBar(const IRegion2D* healthBarRegion, Object* obj)
+{
+	if (!healthBarRegion || !obj)
+		return;
+
+	// Get the locomotor to check for consumed items
+	AIUpdateInterface* ai = obj->getAIUpdateInterface();
+	if (!ai)
+		return;
+
+	LocomotorSet& locomotorSet = const_cast<LocomotorSet&>(ai->getLocomotorSet());
+	
+	// Check all locomotor surfaces for consumed items
+	Locomotor* groundLoco = locomotorSet.findLocomotor(LOCOMOTORSURFACE_GROUND);
+	Locomotor* waterLoco = locomotorSet.findLocomotor(LOCOMOTORSURFACE_WATER);
+	Locomotor* airLoco = locomotorSet.findLocomotor(LOCOMOTORSURFACE_AIR);
+	
+	Locomotor* activeLoco = nullptr;
+	AsciiString consumeItem;
+	Int consumeRate = 0;
+	
+	// Find the first locomotor with a consumed item
+	if (groundLoco && !groundLoco->getConsumeItem().isEmpty())
+	{
+		activeLoco = groundLoco;
+		consumeItem = groundLoco->getConsumeItem();
+		consumeRate = groundLoco->getConsumeRate();
+	}
+	else if (waterLoco && !waterLoco->getConsumeItem().isEmpty())
+	{
+		activeLoco = waterLoco;
+		consumeItem = waterLoco->getConsumeItem();
+		consumeRate = waterLoco->getConsumeRate();
+	}
+	else if (airLoco && !airLoco->getConsumeItem().isEmpty())
+	{
+		activeLoco = airLoco;
+		consumeItem = airLoco->getConsumeItem();
+		consumeRate = airLoco->getConsumeRate();
+	}
+	
+	// If no locomotor has consumed items, don't draw anything
+	if (!activeLoco || consumeItem.isEmpty())
+		return;
+
+	// Get inventory behavior to check current item count
+	InventoryBehavior* inventoryBehavior = obj->getInventoryBehavior();
+	if (!inventoryBehavior)
+		return;
+
+	Int currentAmount = inventoryBehavior->getItemCount(consumeItem);
+	
+	// Get max storage from module data
+	const InventoryBehaviorModuleData* moduleData = inventoryBehavior->getInventoryModuleData();
+	if (!moduleData)
+		return;
+	
+	Int maxStorage = moduleData->getMaxStorageCount(consumeItem);
+	
+	// If no max storage or current amount, don't draw
+	if (maxStorage <= 0 || currentAmount < 0)
+		return;
+
+	// Calculate fuel ratio
+	Real fuelRatio = (Real)currentAmount / (Real)maxStorage;
+	
+	// Clamp fuel ratio to valid range
+	if (fuelRatio < 0.0f) fuelRatio = 0.0f;
+	if (fuelRatio > 1.0f) fuelRatio = 1.0f;
+	
+	// Position the fuel bar below the health bar
+	Real healthBoxWidth = healthBarRegion->hi.x - healthBarRegion->lo.x;
+	Real healthBoxHeight = max(3, healthBarRegion->hi.y - healthBarRegion->lo.y);
+	
+	Int fuelBarY = healthBarRegion->hi.y + 1; // 1 pixel below health bar (reduced distance)
+	Int fuelBarHeight = max(4, (Int)(healthBoxHeight * 1.4f)); // 140% of health bar height (doubled)
+	
+	// Dynamic fuel bar color based on fuel level (olive to brown progression)
+	Color fuelColor, fuelOutlineColor;
+	
+	// Olive to brown color progression
+	// 100% = Bright Olive (128, 128, 0)
+	// 0% = Dark Brown (64, 32, 0)
+	Real redComponent = 0.5f + (0.5f * (1.0f - fuelRatio));    // 0.5 to 1.0
+	Real greenComponent = 0.5f + (0.5f * (1.0f - fuelRatio));  // 0.5 to 1.0
+	Real blueComponent = 0.0f; // Always 0 for olive/brown tones
+	
+	// Ensure color components are in valid range
+	if (redComponent < 0.0f) redComponent = 0.0f;
+	if (redComponent > 1.0f) redComponent = 1.0f;
+	if (greenComponent < 0.0f) greenComponent = 0.0f;
+	if (greenComponent > 1.0f) greenComponent = 1.0f;
+	
+	fuelColor = GameMakeColor(255.0f * redComponent, 255.0f * greenComponent, 255.0f * blueComponent, 255);
+	fuelOutlineColor = GameMakeColor(0, 0, 0, 255); // Black outline
+	
+	// Draw fuel bar outline (black outline)
+	TheDisplay->drawOpenRect(healthBarRegion->lo.x, fuelBarY, healthBoxWidth, fuelBarHeight, 1.0f, fuelOutlineColor);
+	
+	// Draw filled fuel bar (size reduces with consumption like health bar)
+	// The bar width should reduce from left to right as fuel decreases
+	Real fuelBarWidth = (healthBoxWidth - 2) * fuelRatio;
+	
+	// Only draw the filled bar if there's fuel left
+	if (fuelBarWidth > 0)
+	{
+		TheDisplay->drawFillRect(healthBarRegion->lo.x + 1, fuelBarY + 1,
+								fuelBarWidth, fuelBarHeight - 2,
+								fuelColor);
+	}
 }
 
 //-------------------------------------------------------------------------------------------------

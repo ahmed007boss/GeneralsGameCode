@@ -38,6 +38,9 @@
 #include "GameLogic/Module/UpdateModule.h"
 #include "Common/UnicodeString.h"
 
+// Forward declaration for RunwayReservationType
+enum RunwayReservationType : Int;
+
 //-------------------------------------------------------------------------------------------------
 class ParkingPlaceBehaviorModuleData : public UpdateModuleData
 {
@@ -51,6 +54,10 @@ public:
 	Real					m_landingDeckHeightOffset;
 	Bool					m_hasRunways;			// if true, each col has a runway in front of it
 	Bool					m_parkInHangars;	// if true, park at the hangar production spot, not the "real" parking place
+	
+	// TheSuperHackers @feature Ahmed Salah 30/09/2025 Inventory and component restoration properties
+	std::vector<AsciiString>	m_replenishItems;		///< List of inventory items to replenish for parked vehicles
+	std::vector<AsciiString>	m_restoreComponents;	///< List of components to restore to max health for parked vehicles
 
 	ParkingPlaceBehaviorModuleData()
 	{
@@ -63,6 +70,10 @@ public:
 		m_landingDeckHeightOffset = 0.0f;
 		m_hasRunways = false;
 		m_parkInHangars = false;
+		
+		// TheSuperHackers @feature Ahmed Salah 30/09/2025 Initialize restoration properties
+		m_replenishItems.clear();
+		m_restoreComponents.clear();
 	}
 
 	static void buildFieldParse(MultiIniFieldParse& p)
@@ -78,6 +89,8 @@ public:
 			{ "HasRunways",					     INI::parseBool, NULL, offsetof( ParkingPlaceBehaviorModuleData, m_hasRunways ) },
 			{ "ParkInHangars",			     INI::parseBool, NULL, offsetof( ParkingPlaceBehaviorModuleData, m_parkInHangars ) },
 			{ "HealAmountPerSecond",     INI::parseReal, NULL, offsetof( ParkingPlaceBehaviorModuleData, m_healAmount ) },
+			{ "ReplenishItems",			     parseReplenishItems, NULL, 0 },
+			{ "RestoreComponents",	     parseRestoreComponents, NULL, 0 },
 //			{ "ExtraHealAmount4Helicopters",  INI::parseReal, NULL, offsetof( ParkingPlaceBehaviorModuleData, m_extraHealAmount4Helicopters ) },
 
 
@@ -93,6 +106,10 @@ public:
 
 	// TheSuperHackers @feature author 01/01/2025 Override getModuleOrder for display ordering
 	virtual Int getModuleOrder() const { return 700; } // Seventh priority
+
+	// TheSuperHackers @feature Ahmed Salah 30/09/2025 Static parsing functions for restoration properties
+	static void parseReplenishItems(INI* ini, void* instance, void* /*store*/, const void* /*userData*/);
+	static void parseRestoreComponents(INI* ini, void* instance, void* /*store*/, const void* /*userData*/);
 
 private:
 
@@ -161,6 +178,9 @@ public:
 	virtual Bool calcBestParkingAssignment( ObjectID id, Coord3D *pos, Int *oldIndex = NULL, Int *newIndex = NULL ) { return FALSE; }
 	virtual const std::vector<Coord3D>* getTaxiLocations( ObjectID id ) const { return NULL; }
 	virtual const std::vector<Coord3D>* getCreationLocations( ObjectID id ) const { return NULL; }
+
+	// TheSuperHackers @feature Ahmed Salah 30/09/2025 Restoration methods
+	void restoreParkedVehicle(Object* vehicle, const ParkingPlaceBehaviorModuleData* data);
 
 private:
 

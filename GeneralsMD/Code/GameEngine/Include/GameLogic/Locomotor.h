@@ -39,6 +39,7 @@
 #include "GameLogic/Damage.h"
 #include "GameLogic/LocomotorSet.h"
 #include <vector>
+#include "Module/ActiveBody.h"
 
 // FORWARD REFERENCES /////////////////////////////////////////////////////////////////////////////
 class Locomotor;
@@ -152,7 +153,7 @@ public:
 
 	// TheSuperHackers @feature author 15/01/2025 Component dependency system
 	inline const std::vector<AsciiString>& getAffectedByComponents() const { return m_affectedByComponents; }
-	Int getRequiredComponentsStatus(const Object* source) const;
+	ComponentStatus getRequiredComponentsStatus(const Object* source) const;
 
 	// TheSuperHackers @feature author 15/01/2025 Component dependency system
 	std::vector<AsciiString> m_affectedByComponents;			///< List of component names that affect this locomotor's functionality
@@ -192,6 +193,8 @@ private:
 	Real											m_speedLimitZ;					///< try to avoid going up or down at more than this speed, if possible
 	Real											m_speedLimit;					///< temporary speed limit for group movement (0 = no limit)
 	Bool											m_excludeFromGroupMove;		///< exclude this locomotor from group movement speed limits
+	AsciiString										m_consumeItem;					///< TheSuperHackers @feature Ahmed Salah 30/09/2025 Item to consume as fuel while moving
+	Real											m_consumeRate;					///< TheSuperHackers @feature Ahmed Salah 30/09/2025 Rate of fuel consumption per second
 	Real											m_extra2DFriction;			///< extra 2dfriction to apply (via Physics)
 	Real											m_maxThrustAngle;				///< THRUST locos only: how much we deflect our thrust angle
 	LocomotorBehaviorZ				m_behaviorZ;						///< z-axis behavior
@@ -275,7 +278,8 @@ public:
 	Real getMaxLift(BodyDamageType condition, const Object* obj = NULL) const;  ///< get lift given condition
 	Real getBraking() const;  ///< get braking given condition
 
-	Int getEngineComponentStatus(const Object* obj) const;  ///< TheSuperHackers @feature author 15/01/2025 Get engine component status from object (returns ComponentStatus enum value)
+	ComponentStatus getEngineComponentStatus(const Object* obj) const;  ///< TheSuperHackers @feature author 15/01/2025 Get engine component status from object (returns ComponentStatus enum value)
+	Real getMaxReachableDistance(const Object* obj) const;  ///< TheSuperHackers @feature Ahmed Salah 30/09/2025 Calculate max distance object can reach based on fuel, speed, and acceleration
 
 	inline Real getPreferredHeight() const { return m_preferredHeight;} ///< Just return preferredheight, no damage consideration
 	inline void restorePreferredHeightFromTemplate() { m_preferredHeight = m_template->m_preferredHeight; };
@@ -352,6 +356,12 @@ public:
 	inline Real getSpeedLimit() const { return m_speedLimit; }
 	inline void clearSpeedLimit() { m_speedLimit = 0.0f; }
 	inline Bool isExcludedFromGroupMove() const { return m_excludeFromGroupMove; }
+	
+	// TheSuperHackers @feature Ahmed Salah 30/09/2025 Inventory consumption methods
+	inline const AsciiString& getConsumeItem() const { return m_consumeItem; }
+	inline Real getConsumeRate() const { return m_consumeRate; }
+	Bool consumeInventoryItem(Object* obj) const;
+	Bool hasInventoryItem(Object* obj) const;
 
 	inline void setPreferredHeight( Real height ) { m_preferredHeight = height; }
 
@@ -484,6 +494,8 @@ private:
 	Real				m_maxTurnRate;
 	Real				m_speedLimit;					///< temporary speed limit for group movement (0 = no limit)
 	Bool				m_excludeFromGroupMove;		///< exclude this locomotor from group movement speed limits
+	AsciiString			m_consumeItem;					///< TheSuperHackers @feature Ahmed Salah 30/09/2025 Item to consume as fuel while moving
+	Real				m_consumeRate;					///< TheSuperHackers @feature Ahmed Salah 30/09/2025 Rate of fuel consumption per second
 	Real				m_closeEnoughDist;
 #ifdef CIRCLE_FOR_LANDING
 	Real				m_circleThresh;

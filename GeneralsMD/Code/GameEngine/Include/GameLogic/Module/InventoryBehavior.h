@@ -48,11 +48,11 @@ class INI;
 struct InventoryItemConfig
 {
     UnicodeString displayName;        ///< Display name for the inventory item
-    Int maxStorageCount;              ///< Maximum storage capacity
-    Int initialAvailableAmount;       ///< Initial available amount
+    Real maxStorageCount;              ///< Maximum storage capacity
+    Real initialAvailableAmount;       ///< Initial available amount
     Int costPerItem;                  ///< TheSuperHackers @feature author 15/01/2025 Cost per item for replenishment
     
-    InventoryItemConfig() : maxStorageCount(0), initialAvailableAmount(0), costPerItem(0) {}
+    InventoryItemConfig() : maxStorageCount(0.0f), initialAvailableAmount(0.0f), costPerItem(0) {}
 };
 
 //-------------------------------------------------------------------------------------------------
@@ -66,8 +66,8 @@ public:
 	InventoryBehaviorModuleData();
 
     // Helper methods
-    Int getMaxStorageCount(const AsciiString& itemKey) const;
-    Int getInitialAvailableAmount(const AsciiString& itemKey) const;
+    Real getMaxStorageCount(const AsciiString& itemKey) const;
+    Real getInitialAvailableAmount(const AsciiString& itemKey) const;
     const UnicodeString& getDisplayName(const AsciiString& itemKey) const;
     Int getCostPerItem(const AsciiString& itemKey) const;
 
@@ -100,15 +100,15 @@ public:
 	virtual void destroy(Object* object);
 
 	// Inventory management
-	Bool consumeItem(const AsciiString& itemKey, Int amount = 1);
-	Bool hasItem(const AsciiString& itemKey, Int amount = 1) const;
-	Int getItemCount(const AsciiString& itemKey) const;
-	Bool addItem(const AsciiString& itemKey, Int amount);
-	Bool setItemCount(const AsciiString& itemKey, Int count);
+	Bool consumeItem(const AsciiString& itemKey, Real amount = 1.0f);
+	Bool hasItem(const AsciiString& itemKey, Real amount = 1.0f) const;
+	Real getItemCount(const AsciiString& itemKey) const;
+	Bool addItem(const AsciiString& itemKey, Real amount);
+	Bool setItemCount(const AsciiString& itemKey, Real count);
 
 	// Inventory queries
 	Bool isEmpty() const;
-	Int getTotalItems() const;
+	Real getTotalItems() const;
 
             // Interface method for external access
             static InventoryBehavior* getInventoryBehavior(BehaviorModule* module);
@@ -117,7 +117,7 @@ public:
             const InventoryBehaviorModuleData* getInventoryModuleData() const;
 
 private:
-	std::map<AsciiString, Int> m_currentAmounts;  ///< Current amounts for each item (runtime state)
+	std::map<AsciiString, Real> m_currentAmounts;  ///< Current amounts for each item (runtime state)
 };
 
 #endif // __InventoryBehavior_H_

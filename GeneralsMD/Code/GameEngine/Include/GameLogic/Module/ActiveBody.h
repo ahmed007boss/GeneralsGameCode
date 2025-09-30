@@ -46,7 +46,14 @@
 // FORWARD REFERENCES /////////////////////////////////////////////////////////////////////////////
 class BodyParticleSystem;
 class ParticleSystemTemplate;
-
+// TheSuperHackers @feature author 15/01/2025 Component functionality status
+enum ComponentStatus
+{
+	COMPONENT_STATUS_NONE = 0,           // Component does not exist
+	COMPONENT_STATUS_FULLY_FUNCTIONAL,   // 50% - 100% health
+	COMPONENT_STATUS_PARTIALLY_FUNCTIONAL, // 10% - 50% health  
+	COMPONENT_STATUS_DOWNED              // 0% - 10% health
+};
 //-------------------------------------------------------------------------------------------------
 /** Active body module */
 //-------------------------------------------------------------------------------------------------
@@ -166,14 +173,6 @@ public:
 	// TheSuperHackers @feature author 15/01/2025 Get component definitions
 	virtual std::vector<Component> getComponents() const;
 	
-	// TheSuperHackers @feature author 15/01/2025 Component functionality status
-	enum ComponentStatus
-	{
-		COMPONENT_STATUS_NONE = 0,           // Component does not exist
-		COMPONENT_STATUS_FULLY_FUNCTIONAL,   // 50% - 100% health
-		COMPONENT_STATUS_PARTIALLY_FUNCTIONAL, // 10% - 50% health  
-		COMPONENT_STATUS_DOWNED              // 0% - 10% health
-	};
 	virtual ComponentStatus getComponentStatus(const AsciiString& componentName) const;
 	
 	// TheSuperHackers @feature author 15/01/2025 Update model state based on current damage

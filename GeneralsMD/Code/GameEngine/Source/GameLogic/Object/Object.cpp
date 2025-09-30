@@ -3035,6 +3035,48 @@ Bool Object::isJet() const
 }
 
 //-------------------------------------------------------------------------------------------------
+/**
+ * TheSuperHackers @feature Ahmed Salah 30/09/2025 Returns true if object has enough of the specified inventory item
+ */
+Bool Object::hasInventoryItem(const AsciiString& itemName, Real requiredCount) const
+{
+	if (itemName.isEmpty() || requiredCount <= 0.0f)
+		return true; // No inventory check required or invalid parameters
+	
+	// Get the inventory behavior from the object
+	InventoryBehavior* inventoryBehavior = getInventoryBehavior();
+	if (!inventoryBehavior)
+		return true; // No inventory behavior - assume items are available
+	
+	// Check if we have enough inventory items
+	Int currentItems = inventoryBehavior->getItemCount(itemName);
+	return currentItems >= requiredCount;
+}
+
+//-------------------------------------------------------------------------------------------------
+/**
+ * TheSuperHackers @feature Ahmed Salah 30/09/2025 Consumes the specified amount of inventory item
+ */
+Bool Object::consumeInventoryItem(const AsciiString& itemName, Real count) const
+{
+	if (itemName.isEmpty() || count <= 0.0f)
+		return true; // No inventory consumption required or invalid parameters
+	
+	// Get the inventory behavior from the object
+	InventoryBehavior* inventoryBehavior = getInventoryBehavior();
+	if (!inventoryBehavior)
+		return true; // No inventory behavior - assume items are available
+	
+	// Check if we have enough inventory items
+	Int currentItems = inventoryBehavior->getItemCount(itemName);
+	if (currentItems < count)
+		return false; // Not enough inventory items
+	
+	// Consume the inventory items
+	return inventoryBehavior->consumeItem(itemName, count);
+}
+
+//-------------------------------------------------------------------------------------------------
 void Object::scoreTheKill(const Object* victim)
 {
 	// Do stuff that has nothing to do with experience points here, like tell our Player we killed something
@@ -6675,7 +6717,7 @@ std::vector<Component> Object::getComponents() const
 	if (!body)
 		return components;
 	
-	ActiveBody* activeBody = static_cast<ActiveBody*>(body);
+	ActiveBody* activeBody = dynamic_cast<ActiveBody*>(body);
 	if (!activeBody)
 		return components;
 	

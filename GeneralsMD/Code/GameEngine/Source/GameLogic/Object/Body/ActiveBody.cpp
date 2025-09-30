@@ -276,6 +276,7 @@ static void parseComponent(INI* ini, void* instance, void* /*store*/, const void
 		{ "HealingType", parseComponentHealingType, NULL, offsetof(Component, healingType) },
 		{ "DamageOnSides", parseComponentDamageOnSides, NULL, offsetof(Component, damageOnSides) },
 		{ "ReplacementCost", INI::parseUnsignedInt, NULL, offsetof(Component, replacementCost) },
+		{ "ForceReturnOnDestroy", INI::parseBool, NULL, offsetof(Component, forceReturnOnDestroy) },
 		{ 0, 0, 0, 0 }
 	};
 	
@@ -2245,7 +2246,7 @@ void ActiveBody::initializeComponentHealth()
 //-------------------------------------------------------------------------------------------------
 // TheSuperHackers @feature author 15/01/2025 Component functionality status
 //-------------------------------------------------------------------------------------------------
-ActiveBody::ComponentStatus ActiveBody::getComponentStatus(const AsciiString& componentName) const
+ComponentStatus ActiveBody::getComponentStatus(const AsciiString& componentName) const
 {
 	if (componentName.isEmpty())
 		return COMPONENT_STATUS_NONE;

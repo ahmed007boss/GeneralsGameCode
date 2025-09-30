@@ -1343,7 +1343,7 @@ UnsignedInt CommandButton::getCostOfExecution(const Player* player, const Object
 			if (!body)
 				return 0;
 
-			ActiveBody* activeBody = static_cast<ActiveBody*>(body);
+			ActiveBody* activeBody = dynamic_cast<ActiveBody*>(body);
 			if (!activeBody)
 				return 0;
 

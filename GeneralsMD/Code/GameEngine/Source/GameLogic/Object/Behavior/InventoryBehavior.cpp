@@ -58,16 +58,16 @@ static void parseItem(INI* ini, void* instance, void* /*store*/, const void* /*u
             // Create a temporary structure to hold the parsed values
             struct TempItemData {
                 UnicodeString m_displayName;
-                Int m_maxStorageCount;
-                Int m_initialAvailableAmount;
+                Real m_maxStorageCount;
+                Real m_initialAvailableAmount;
                 Int m_costPerItem;
             } tempData;
 	
             static const FieldParse tempItemFieldParse[] =
             {
                 { "DisplayName", INI::parseAndTranslateLabel, NULL, offsetof(TempItemData, m_displayName) },
-                { "MaxStorageCount", INI::parseInt, NULL, offsetof(TempItemData, m_maxStorageCount) },
-                { "InitialAvailableAmount", INI::parseInt, NULL, offsetof(TempItemData, m_initialAvailableAmount) },
+                { "MaxStorageCount", INI::parseReal, NULL, offsetof(TempItemData, m_maxStorageCount) },
+                { "InitialAvailableAmount", INI::parseReal, NULL, offsetof(TempItemData, m_initialAvailableAmount) },
                 { "CostPerItem", INI::parseInt, NULL, offsetof(TempItemData, m_costPerItem) },
                 { 0, 0, 0, 0 }
             };
@@ -104,13 +104,13 @@ void InventoryBehaviorModuleData::buildFieldParse(MultiIniFieldParse& p)
 //-------------------------------------------------------------------------------------------------
 // TheSuperHackers @feature author 15/01/2025 Helper methods for InventoryBehaviorModuleData
 //-------------------------------------------------------------------------------------------------
-Int InventoryBehaviorModuleData::getMaxStorageCount(const AsciiString& itemKey) const
+Real InventoryBehaviorModuleData::getMaxStorageCount(const AsciiString& itemKey) const
 {
 	std::map<AsciiString, InventoryItemConfig>::const_iterator it = m_inventoryItems.find(itemKey);
 	return (it != m_inventoryItems.end()) ? it->second.maxStorageCount : 0;
 }
 
-Int InventoryBehaviorModuleData::getInitialAvailableAmount(const AsciiString& itemKey) const
+Real InventoryBehaviorModuleData::getInitialAvailableAmount(const AsciiString& itemKey) const
 {
 	std::map<AsciiString, InventoryItemConfig>::const_iterator it = m_inventoryItems.find(itemKey);
 	return (it != m_inventoryItems.end()) ? it->second.initialAvailableAmount : 0;
@@ -145,14 +145,14 @@ UnicodeString InventoryBehaviorModuleData::getModuleDescription() const
 		const InventoryItemConfig& config = it->second;
 		
 		// Only include items with initialAvailableAmount > 0
-		if (config.initialAvailableAmount > 0)
+		if (config.initialAvailableAmount > 0.0f)
 		{
 			if (!first)
 				result += L" and ";
 			
 			// Use += to append instead of format which overwrites
 			UnicodeString itemText;
-			itemText.format(L"%d %s", config.initialAvailableAmount, config.displayName.str());
+			itemText.format(L"%.1f %s", config.initialAvailableAmount, config.displayName.str());
 			result += itemText;
 			first = false;
 			hasAnyItems = true;
@@ -193,8 +193,8 @@ void InventoryBehavior::onObjectCreated()
 			 it != data->m_inventoryItems.end(); ++it)
 		{
 			const AsciiString& itemKey = it->first;
-			Int initialAmount = it->second.initialAvailableAmount;
-			if (!itemKey.isEmpty() && initialAmount > 0)
+			Real initialAmount = it->second.initialAvailableAmount;
+			if (!itemKey.isEmpty() && initialAmount > 0.0f)
 			{
 				// Use setter method to ensure proper validation
 				setItemCount(itemKey, initialAmount);
@@ -217,12 +217,12 @@ void InventoryBehavior::destroy(Object* object)
 }
 
 //-------------------------------------------------------------------------------------------------
-Bool InventoryBehavior::consumeItem(const AsciiString& itemKey, Int amount)
+Bool InventoryBehavior::consumeItem(const AsciiString& itemKey, Real amount)
 {
-	if (itemKey.isEmpty() || amount <= 0)
+	if (itemKey.isEmpty() || amount <= 0.0f)
 		return false;
 
-	std::map<AsciiString, Int>::iterator it = m_currentAmounts.find(itemKey);
+	std::map<AsciiString, Real>::iterator it = m_currentAmounts.find(itemKey);
 	if (it == m_currentAmounts.end())
 		return false;
 
@@ -230,60 +230,60 @@ Bool InventoryBehavior::consumeItem(const AsciiString& itemKey, Int amount)
 		return false;
 
 	it->second -= amount;
-	if (it->second <= 0)
+	if (it->second <= 0.0f)
 	{
 		m_currentAmounts.erase(it);
 	}
 	return true;
 }
 
-Bool InventoryBehavior::hasItem(const AsciiString& itemKey, Int amount) const
+Bool InventoryBehavior::hasItem(const AsciiString& itemKey, Real amount) const
 {
-	if (itemKey.isEmpty() || amount <= 0)
+	if (itemKey.isEmpty() || amount <= 0.0f)
 		return false;
 
-	std::map<AsciiString, Int>::const_iterator it = m_currentAmounts.find(itemKey);
+	std::map<AsciiString, Real>::const_iterator it = m_currentAmounts.find(itemKey);
 	if (it == m_currentAmounts.end())
 		return false;
 
 	return it->second >= amount;
 }
 
-Int InventoryBehavior::getItemCount(const AsciiString& itemKey) const
+Real InventoryBehavior::getItemCount(const AsciiString& itemKey) const
 {
 	if (itemKey.isEmpty())
-		return 0;
+		return 0.0f;
 
-	std::map<AsciiString, Int>::const_iterator it = m_currentAmounts.find(itemKey);
+	std::map<AsciiString, Real>::const_iterator it = m_currentAmounts.find(itemKey);
 	if (it == m_currentAmounts.end())
-		return 0;
+		return 0.0f;
 
 	return it->second;
 }
 
-Bool InventoryBehavior::addItem(const AsciiString& itemKey, Int amount)
+Bool InventoryBehavior::addItem(const AsciiString& itemKey, Real amount)
 {
-	if (itemKey.isEmpty() || amount <= 0)
+	if (itemKey.isEmpty() || amount <= 0.0f)
 		return false;
 
 	// Get current amount and add to it
-	Int currentAmount = getItemCount(itemKey);
-	Int newAmount = currentAmount + amount;
+	Real currentAmount = getItemCount(itemKey);
+	Real newAmount = currentAmount + amount;
 	
 	// Use setter method to ensure proper validation against max storage
 	return setItemCount(itemKey, newAmount);
 }
 
-Bool InventoryBehavior::setItemCount(const AsciiString& itemKey, Int count)
+Bool InventoryBehavior::setItemCount(const AsciiString& itemKey, Real count)
 {
-	if (itemKey.isEmpty() || count < 0)
+	if (itemKey.isEmpty() || count < 0.0f)
 		return false;
 
 	// Get max storage from module data
 	const InventoryBehaviorModuleData* data = static_cast<const InventoryBehaviorModuleData*>(getModuleData());
-	Int maxStorage = data ? data->getMaxStorageCount(itemKey) : 0;
+	Real maxStorage = data ? data->getMaxStorageCount(itemKey) : 0.0f;
 
-	if (count == 0)
+	if (count == 0.0f)
 	{
 		m_currentAmounts.erase(itemKey);
 		return true;
@@ -292,7 +292,7 @@ Bool InventoryBehavior::setItemCount(const AsciiString& itemKey, Int count)
 	m_currentAmounts[itemKey] = count;
 	
 	// Cap at max storage
-	if (maxStorage > 0 && m_currentAmounts[itemKey] > maxStorage)
+	if (maxStorage > 0.0f && m_currentAmounts[itemKey] > maxStorage)
 		m_currentAmounts[itemKey] = maxStorage;
 	
 	return true;
@@ -303,10 +303,10 @@ Bool InventoryBehavior::isEmpty() const
 	return m_currentAmounts.empty();
 }
 
-Int InventoryBehavior::getTotalItems() const
+Real InventoryBehavior::getTotalItems() const
 {
-	Int total = 0;
-	for (std::map<AsciiString, Int>::const_iterator it = m_currentAmounts.begin(); 
+	Real total = 0.0f;
+	for (std::map<AsciiString, Real>::const_iterator it = m_currentAmounts.begin(); 
 		 it != m_currentAmounts.end(); ++it)
 	{
 		total += it->second;
@@ -347,21 +347,21 @@ void InventoryBehavior::xfer( Xfer *xfer )
 			for (Int i = 0; i < inventorySize; ++i)
 			{
 				AsciiString itemKey;
-				Int itemCount;
+				Real itemCount;
 				xfer->xferAsciiString( &itemKey );
-				xfer->xferInt( &itemCount );
+				xfer->xferReal( &itemCount );
 				m_currentAmounts[itemKey] = itemCount;
 			}
 		}
 		else
 		{
-			for (std::map<AsciiString, Int>::const_iterator it = m_currentAmounts.begin(); 
+			for (std::map<AsciiString, Real>::const_iterator it = m_currentAmounts.begin(); 
 				 it != m_currentAmounts.end(); ++it)
 			{
 				AsciiString itemKey = it->first;
-				Int itemCount = it->second;
+				Real itemCount = it->second;
 				xfer->xferAsciiString( &itemKey );
-				xfer->xferInt( &itemCount );
+				xfer->xferReal( &itemCount );
 			}
 		}
 	}

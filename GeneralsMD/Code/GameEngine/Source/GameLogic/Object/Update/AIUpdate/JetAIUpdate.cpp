@@ -38,6 +38,7 @@
 #include "GameLogic/ExperienceTracker.h"
 #include "GameLogic/Locomotor.h"
 #include "GameLogic/Module/BodyModule.h"
+#include "GameLogic/Module/ActiveBody.h"
 #include "GameLogic/Module/CountermeasuresBehavior.h"
 #include "GameLogic/Module/JetAIUpdate.h"
 #include "GameLogic/Module/ParkingPlaceBehavior.h"
@@ -117,6 +118,7 @@ Bool JetAIUpdate::isOutOfSpecialReloadAmmo() const
 	}
 	return specials > 0 && out == specials;
 }
+
 
 //-------------------------------------------------------------------------------------------------
 static ParkingPlaceBehaviorInterface* getPP(ObjectID id, Object** airfieldPP = NULL)
@@ -1838,6 +1840,26 @@ UpdateSleepTime JetAIUpdate::update()
 
 	getProducerLocation();
 
+	// TheSuperHackers @feature Ahmed Salah 30/09/2025 Check for forced return conditions
+	if (shouldForceReturn() && !isForcedToReturn())
+	{
+		forceReturnToParkingSpace();
+	}
+	
+	// TheSuperHackers @feature Ahmed Salah 30/09/2025 Clear forced return flag when successfully parked
+	if (isForcedToReturn())
+	{
+		Object* obj = getObject();
+		if (obj && obj->getProducerID() != 0)
+		{
+			Object* producer = TheGameLogic->findObjectByID(obj->getProducerID());
+			if (producer && isParkedAt(producer))
+			{
+				setFlag(FORCED_TO_RETURN, FALSE);
+			}
+		}
+	}
+
 	Object* jet = getObject();
 
 	ParkingPlaceBehaviorInterface* pp = getPP(getObject()->getProducerID());
@@ -2401,6 +2423,29 @@ void JetAIUpdate::aiDoCommand(const AICommandParms* parms)
 	// and a script tells it to do something with a condition of TRUE!
 	getProducerLocation();
 
+	// TheSuperHackers @feature Ahmed Salah 30/09/2025 Check for forced return conditions
+	if (shouldForceReturn() && !isForcedToReturn())
+	{
+		forceReturnToParkingSpace();
+		return;
+	}
+
+	// TheSuperHackers @feature Ahmed Salah 30/09/2025 Prevent new commands when jet is forced to return
+	if (isForcedToReturn())
+	{
+		// Only allow certain commands when forced to return
+		switch (parms->m_cmd)
+		{
+		case AICMD_IDLE:
+		case AICMD_BUSY:
+			// Allow idle/busy commands to prevent infinite loops
+			break;
+		default:
+			// Block all other commands when forced to return
+			return;
+		}
+	}
+
 	if (!isAllowedToRespondToAiCommands(parms))
 		return;
 
@@ -2621,4 +2666,110 @@ void JetAIUpdate::loadPostProcess( void )
 
 	// extend base class
 	AIUpdateInterface::loadPostProcess();
+}
+
+//-------------------------------------------------------------------------------------------------
+// TheSuperHackers @feature Ahmed Salah 30/09/2025 Forced return to parking space functionality
+//-------------------------------------------------------------------------------------------------
+
+//-------------------------------------------------------------------------------------------------
+void JetAIUpdate::forceReturnToParkingSpace()
+{
+	// Set the forced return flag
+	setFlag(FORCED_TO_RETURN, TRUE);
+	
+	// Clear any pending commands
+	friend_purgePendingCommand();
+	
+	// Force the jet to return to its parking space
+	// This will override any current commands and force the jet to land
+	Object* obj = getObject();
+	if (obj && obj->getProducerID() != 0)
+	{
+		// Get the producer (airfield) location
+		Object* producer = TheGameLogic->findObjectByID(obj->getProducerID());
+		if (producer)
+		{
+			// Force return to the producer
+			doLandingCommand(producer, CMD_FROM_AI);
+		}
+	}
+}
+
+//-------------------------------------------------------------------------------------------------
+Bool JetAIUpdate::isForcedToReturn() const
+{
+	return getFlag(FORCED_TO_RETURN);
+}
+
+//-------------------------------------------------------------------------------------------------
+Bool JetAIUpdate::shouldForceReturn() const
+{
+	const Object* obj = getObject();
+	if (!obj) return FALSE;
+	
+	// Check if jet is already forced to return
+	if (isForcedToReturn()) return TRUE;
+	
+	// Check if jet is already parked
+	if (obj->getProducerID() != 0)
+	{
+		Object* producer = TheGameLogic->findObjectByID(obj->getProducerID());
+		if (producer && isParkedAt(producer))
+			return FALSE;
+	}
+	
+	// Check health - force return if less than 10% health
+	Real currentHealth = obj->getBodyModule()->getHealth();
+	Real maxHealth = obj->getBodyModule()->getMaxHealth();
+	if (maxHealth > 0.0f)
+	{
+		Real healthPercent = (currentHealth / maxHealth) * 100.0f;
+		if (healthPercent < 10.0f)
+		{
+			return TRUE;
+		}
+	}
+	
+	// TheSuperHackers @feature Ahmed Salah 30/09/2025 Check locomotive consumed item (fuel) - force return if out of fuel
+	const AIUpdateInterface* ai = obj->getAIUpdateInterface();
+	if (ai)
+	{
+		LocomotorSet& locomotorSet = const_cast<LocomotorSet&>(ai->getLocomotorSet());
+		// Check all locomotor surfaces for fuel consumption
+		Locomotor* groundLoco = locomotorSet.findLocomotor(LOCOMOTORSURFACE_GROUND);
+		Locomotor* waterLoco = locomotorSet.findLocomotor(LOCOMOTORSURFACE_WATER);
+		Locomotor* airLoco = locomotorSet.findLocomotor(LOCOMOTORSURFACE_AIR);
+		
+		// Check if any locomotor is out of fuel
+		if ((groundLoco && !obj->hasInventoryItem(groundLoco->getConsumeItem(), groundLoco->getConsumeRate())) ||
+			(waterLoco && !obj->hasInventoryItem(waterLoco->getConsumeItem(), waterLoco->getConsumeRate())) ||
+			(airLoco && !obj->hasInventoryItem(airLoco->getConsumeItem(), airLoco->getConsumeRate())))
+		{
+			return TRUE;
+		}
+	}
+	
+	// Check critical components - force return if any critical component is destroyed
+	BodyModuleInterface* body = obj->getBodyModule();
+	ActiveBody* activeBody = nullptr;
+	if (body)
+	{
+		// Check if it's actually an ActiveBody before casting
+		activeBody = dynamic_cast<ActiveBody*>(body);
+		if (activeBody){		
+			std::vector<Component> components = obj->getComponents();
+			for (const Component& component : components)
+			{
+				if (component.forceReturnOnDestroy && activeBody->isComponentDestroyed(component.name))
+				{
+					return TRUE;
+				}
+			}
+		}
+	}
+	
+	
+	
+	return FALSE;
 }

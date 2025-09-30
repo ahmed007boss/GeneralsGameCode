@@ -758,6 +758,7 @@ private:
 
 	void drawEmoticon( const IRegion2D* healthBarRegion );
 	void drawHealthBar( const IRegion2D* healthBarRegion );					///< draw heath bar
+	void drawFuelBar( const IRegion2D* healthBarRegion, Object* obj );		///< draw fuel/consumed item bar
 	void drawHealing( const IRegion2D* healthBarRegion );						///< draw icons
 	void drawEnthusiastic( const IRegion2D* healthBarRegin );				///< draw icons
 #ifdef ALLOW_DEMORALIZE

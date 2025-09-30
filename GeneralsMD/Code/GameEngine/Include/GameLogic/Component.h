@@ -60,8 +60,9 @@ struct Component
 	ComponentHealingType healingType;			///< How this component can be healed
 	HitSideFlags damageOnSides;					///< TheSuperHackers @feature author 15/01/2025 Which hit sides can damage this component (empty = all sides)
 	UnsignedInt replacementCost;				///< TheSuperHackers @feature author 15/01/2025 Cost to replace this component (0 = cannot be replaced)
+	Bool forceReturnOnDestroy;					///< TheSuperHackers @feature Ahmed Salah 30/09/2025 Force jet to return to parking when this component is destroyed
 	
-	Component() : maxHealth(0.0f), initialHealth(0.0f), healingType(COMPONENT_HEALING_NORMAL), damageOnSides(), replacementCost(0) {}
+	Component() : maxHealth(0.0f), initialHealth(0.0f), healingType(COMPONENT_HEALING_NORMAL), damageOnSides(), replacementCost(0), forceReturnOnDestroy(FALSE) {}
 };
 
 #endif // _COMPONENT_H_

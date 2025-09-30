@@ -1045,8 +1045,8 @@ GameMessage::Type CommandTranslator::issueMoveToLocationCommand( const Coord3D *
 				msgType = GameMessage::MSG_DO_GROUPATTACKMOVETO;
 			}
 			else
-			{
-				msgType = GameMessage::MSG_DO_ATTACKMOVETO;
+		{
+			msgType = GameMessage::MSG_DO_ATTACKMOVETO;
 			}
 		}
 		else if( TheInGameUI->isInForceMoveToMode() )

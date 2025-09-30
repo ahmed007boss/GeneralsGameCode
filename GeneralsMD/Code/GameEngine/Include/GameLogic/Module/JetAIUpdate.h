@@ -105,6 +105,11 @@ public:
 	virtual void notifyVictimIsDead();
 	virtual Bool isOutOfSpecialReloadAmmo() const;
 
+	// TheSuperHackers @feature Ahmed Salah 30/09/2025 Forced return to parking space functionality
+	virtual void forceReturnToParkingSpace();
+	virtual Bool isForcedToReturn() const;
+	virtual Bool shouldForceReturn() const;
+
 	const Coord3D* friend_getProducerLocation() const { return &m_producerLocation; }
 	Real friend_getOutOfAmmoDamagePerSecond() const { return getJetAIUpdateModuleData()->m_outOfAmmoDamagePerSecond; }
 	Bool friend_keepsParkingSpaceWhenAirborne() const { return getJetAIUpdateModuleData()->m_keepsParkingSpaceWhenAirborne; }
@@ -157,7 +162,8 @@ private:
 		USE_SPECIAL_RETURN_LOCO,
 		ALLOW_CIRCLING,
 		ALLOW_INTERRUPT_AND_RESUME_OF_CUR_STATE_FOR_RELOAD,
-		TAXI_IN_PROGRESS
+		TAXI_IN_PROGRESS,
+		FORCED_TO_RETURN
 	};
 
 	Coord3D									m_producerLocation;		///< remember this, so that if our producer dies, we have a place to circle aimlessly

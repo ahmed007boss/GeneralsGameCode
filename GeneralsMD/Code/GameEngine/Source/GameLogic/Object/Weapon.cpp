@@ -4039,14 +4039,14 @@ Bool Weapon::isWeaponSlotFunctional(const Object* source) const
 	}
 	
 	// Check component status
-		ActiveBody::ComponentStatus status = activeBody->getComponentStatus(componentName);
+		ComponentStatus status = activeBody->getComponentStatus(componentName);
 	
 	// If component doesn't exist, weapon should work (no component restriction)
-	if (status == ActiveBody::COMPONENT_STATUS_NONE)
+	if (status == COMPONENT_STATUS_NONE)
 		return true;
 	
 	// If component exists, it must not be downed to work
-	if (status == ActiveBody::COMPONENT_STATUS_DOWNED)
+	if (status == COMPONENT_STATUS_DOWNED)
 		return false;
 	
 	// TheSuperHackers @feature author 15/01/2025 Check weapon template's required components
@@ -4083,14 +4083,14 @@ Bool WeaponTemplate::areRequiredComponentsFunctional(const Object* source) const
 		 it != m_affectedByComponents.end(); ++it)
 	{
 		const AsciiString& componentName = *it;
-		ActiveBody::ComponentStatus status = activeBody->getComponentStatus(componentName);
+		ComponentStatus status = activeBody->getComponentStatus(componentName);
 		
 		// If component doesn't exist, skip it (not required)
-		if (status == ActiveBody::COMPONENT_STATUS_NONE)
+		if (status == COMPONENT_STATUS_NONE)
 			continue;
 		
 		// If component exists and is downed, weapon is not functional
-		if (status == ActiveBody::COMPONENT_STATUS_DOWNED)
+		if (status == COMPONENT_STATUS_DOWNED)
 			return false;
 	}
 	

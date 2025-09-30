@@ -47,6 +47,7 @@
 #include "GameLogic/Module/AIUpdate.h"
 #include "GameLogic/Module/ActiveBody.h"
 #include "GameLogic/Component.h"
+#include "GameLogic/Module/InventoryBehavior.h"
 
 
 static const Real DONUT_TIME_DELAY_SECONDS=2.5f;
@@ -309,6 +310,10 @@ LocomotorTemplate::LocomotorTemplate()
 	m_maxThrustAngle = 0;
 	m_speedLimitZ = 999999.0f;
 	m_extra2DFriction = 0.0f;
+	
+	// TheSuperHackers @feature Ahmed Salah 30/09/2025 Initialize fuel consumption properties
+	m_consumeItem = AsciiString();
+	m_consumeRate = 0.0f;
 
 	m_accelPitchLimit = 0;
 	m_decelPitchLimit = 0;
@@ -526,6 +531,8 @@ const FieldParse* LocomotorTemplate::getFieldParse() const
 		{ "Extra2DFriction", parseFrictionPerSec, NULL, offsetof(LocomotorTemplate, m_extra2DFriction) },
 		{ "SpeedLimitZ", INI::parseVelocityReal, NULL, offsetof(LocomotorTemplate, m_speedLimitZ) },
 		{ "ExcludeFromGroupMove", INI::parseBool, NULL, offsetof(LocomotorTemplate, m_excludeFromGroupMove) },
+		{ "ConsumeItem", INI::parseAsciiString, NULL, offsetof(LocomotorTemplate, m_consumeItem) },
+		{ "ConsumeRate", INI::parseReal, NULL, offsetof(LocomotorTemplate, m_consumeRate) },
 		{ "MaxThrustAngle", INI::parseAngleReal, NULL, offsetof(LocomotorTemplate, m_maxThrustAngle) },		// yes, angle, not angular-vel
 		{ "ZAxisBehavior", INI::parseIndexList, TheLocomotorBehaviorZNames, offsetof(LocomotorTemplate, m_behaviorZ) },
 		{ "Appearance", INI::parseIndexList, TheLocomotorAppearanceNames, offsetof(LocomotorTemplate, m_appearance) },		\
@@ -729,6 +736,8 @@ Locomotor::Locomotor(const LocomotorTemplate* tmpl)
 	m_maxTurnRate = BIGNUM;
 	m_speedLimit = 0.0f;		// No speed limit by default
 	m_excludeFromGroupMove = tmpl->m_excludeFromGroupMove;
+	m_consumeItem = tmpl->m_consumeItem;
+	m_consumeRate = tmpl->m_consumeRate;
 	m_flags = 0;
 	m_closeEnoughDist = m_template->m_closeEnoughDist;
 	setFlag(IS_CLOSE_ENOUGH_DIST_3D, m_template->m_isCloseEnoughDist3D);
@@ -763,6 +772,8 @@ Locomotor::Locomotor(const Locomotor& that)
 	m_maxTurnRate = that.m_maxTurnRate;
 	m_speedLimit = that.m_speedLimit;
 	m_excludeFromGroupMove = that.m_excludeFromGroupMove;
+	m_consumeItem = that.m_consumeItem;
+	m_consumeRate = that.m_consumeRate;
 	m_flags = that.m_flags;
 	m_closeEnoughDist = that.m_closeEnoughDist;
 #ifdef CIRCLE_FOR_LANDING
@@ -863,27 +874,76 @@ void Locomotor::startMove(void)
 //-------------------------------------------------------------------------------------------------
 // TheSuperHackers @feature author 15/01/2025 Get engine component status from object
 //-------------------------------------------------------------------------------------------------
-Int Locomotor::getEngineComponentStatus(const Object* obj) const
+ComponentStatus Locomotor::getEngineComponentStatus(const Object* obj) const
 {
 	if (!obj)
-		return static_cast<Int>(ActiveBody::COMPONENT_STATUS_NONE);
+		return COMPONENT_STATUS_NONE;
 		
 	BodyModuleInterface* body = obj->getBodyModule();
 	if (!body)
-		return static_cast<Int>(ActiveBody::COMPONENT_STATUS_NONE);
+		return COMPONENT_STATUS_NONE;
 		
 	ActiveBody* activeBody = dynamic_cast<ActiveBody*>(body);
 	if (!activeBody)
-		return static_cast<Int>(ActiveBody::COMPONENT_STATUS_NONE);
+		return COMPONENT_STATUS_NONE;
 	
 	// Get engine component status
-	Int engineStatus = static_cast<Int>(activeBody->getComponentStatus(ActiveBody::COMPONENT_ENGINE));
+	ComponentStatus engineStatus = activeBody->getComponentStatus(ActiveBody::COMPONENT_ENGINE);
 	
 	// Get required components status from template
-	Int requiredComponentsStatus = m_template->getRequiredComponentsStatus(obj);
+	ComponentStatus requiredComponentsStatus = static_cast<ComponentStatus>(m_template->getRequiredComponentsStatus(obj));
 	
 	// Return the lowest status between engine and required components
 	return (engineStatus < requiredComponentsStatus) ? engineStatus : requiredComponentsStatus;
+}
+
+//-------------------------------------------------------------------------------------------------
+// TheSuperHackers @feature Ahmed Salah 30/09/2025 Calculate max distance object can reach based on fuel, speed, and acceleration
+//-------------------------------------------------------------------------------------------------
+Real Locomotor::getMaxReachableDistance(const Object* obj) const
+{
+	if (!obj)
+		return 0.0f;
+	
+	// Get current fuel level
+	Real currentFuel = 0.0f;
+	if (!m_consumeItem.isEmpty() && m_consumeRate > 0.0f)
+	{
+		InventoryBehavior* inventoryBehavior = obj->getInventoryBehavior();
+		if (inventoryBehavior)
+		{
+			currentFuel = inventoryBehavior->getItemCount(m_consumeItem);
+		}
+	}
+	
+	// If no fuel consumption, return a very large distance (effectively unlimited)
+	if (m_consumeItem.isEmpty() || m_consumeRate <= 0.0f)
+		return 999999.0f;
+	
+	// If no fuel, return 0
+	if (currentFuel <= 0.0f)
+		return 0.0f;
+	
+	// Get movement parameters
+	BodyDamageType bdt = obj->getBodyModule()->getDamageState();
+	Real maxSpeed = getMaxSpeedForCondition(bdt, obj);
+	
+	// Simple calculation: distance = speed * time
+	// Time available = fuel / consumption rate
+	Real timeAvailable = currentFuel / m_consumeRate;
+	
+	// Calculate maximum distance using average speed
+	// Use a conservative estimate: assume 70% of max speed on average
+	Real averageSpeed = maxSpeed * 0.7f;
+	Real maxDistance = averageSpeed * timeAvailable;
+	
+	// Ensure reasonable bounds
+	if (maxDistance < 0.0f)
+		maxDistance = 0.0f;
+	if (maxDistance > 10000.0f) // Cap at reasonable maximum
+		maxDistance = 10000.0f;
+	
+	return maxDistance;
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -897,16 +957,23 @@ Real Locomotor::getMaxSpeedForCondition(BodyDamageType condition, const Object* 
 		speed = m_template->m_maxSpeedDamaged;
 
 	// TheSuperHackers @feature author 15/01/2025 Check engine and required components status
-	Int engineStatus = getEngineComponentStatus(obj);
-	if (engineStatus == static_cast<Int>(ActiveBody::COMPONENT_STATUS_DOWNED))
+	ComponentStatus engineStatus = getEngineComponentStatus(obj);
+	if (engineStatus == COMPONENT_STATUS_DOWNED)
 	{
 		speed = m_template->m_maxSpeedDestroyed; // Engine or required components destroyed - use destroyed speed
 	}
-	else if (engineStatus == static_cast<Int>(ActiveBody::COMPONENT_STATUS_PARTIALLY_FUNCTIONAL))
+	else if (engineStatus == COMPONENT_STATUS_PARTIALLY_FUNCTIONAL)
 	{
 		speed = m_template->m_maxSpeedDamaged; // Engine or required components partially working - use damaged speed
 	}
 	// If engine and required components are fully functional or don't exist, use normal speed calculation
+
+	// TheSuperHackers @feature Ahmed Salah 30/09/2025 Check fuel levels for non-jets
+	if (obj && !obj->isJet() && !obj->hasInventoryItem(m_consumeItem, m_consumeRate))
+	{
+		// Out of fuel - use destroyed speed for non-jets
+		speed = m_template->m_maxSpeedDestroyed;
+	}
 
 	if (speed > m_maxSpeed)
 		speed = m_maxSpeed;
@@ -929,16 +996,23 @@ Real Locomotor::getMaxTurnRate(BodyDamageType condition, const Object* obj) cons
 		turn = m_template->m_maxTurnRateDamaged;
 
 	// TheSuperHackers @feature author 15/01/2025 Check engine and required components status
-	Int engineStatus = getEngineComponentStatus(obj);
-	if (engineStatus == static_cast<Int>(ActiveBody::COMPONENT_STATUS_DOWNED))
+	ComponentStatus engineStatus = getEngineComponentStatus(obj);
+	if (engineStatus == COMPONENT_STATUS_DOWNED)
 	{
 		turn = m_template->m_maxTurnRateDestroyed; // Engine or required components destroyed - use destroyed turn rate
 	}
-	else if (engineStatus == static_cast<Int>(ActiveBody::COMPONENT_STATUS_PARTIALLY_FUNCTIONAL))
+	else if (engineStatus == COMPONENT_STATUS_PARTIALLY_FUNCTIONAL)
 	{
 		turn = m_template->m_maxTurnRateDamaged; // Engine or required components partially working - use damaged turn rate
 	}
 	// If engine and required components are fully functional or don't exist, use normal turn rate calculation
+
+	// TheSuperHackers @feature Ahmed Salah 30/09/2025 Check fuel levels for non-jets
+	if (obj && !obj->isJet() && !obj->hasInventoryItem(m_consumeItem, m_consumeRate))
+	{
+		// Out of fuel - use destroyed turn rate for non-jets
+		turn = m_template->m_maxTurnRateDestroyed;
+	}
 
 	if (turn > m_maxTurnRate)
 		turn = m_maxTurnRate;
@@ -961,16 +1035,23 @@ Real Locomotor::getMaxAcceleration(BodyDamageType condition, const Object* obj) 
 		accel = m_template->m_accelerationDamaged;
 
 	// TheSuperHackers @feature author 15/01/2025 Check engine and required components status
-	Int engineStatus = getEngineComponentStatus(obj);
-	if (engineStatus == static_cast<Int>(ActiveBody::COMPONENT_STATUS_DOWNED))
+	ComponentStatus engineStatus = getEngineComponentStatus(obj);
+	if (engineStatus == COMPONENT_STATUS_DOWNED)
 	{
 		accel = m_template->m_accelerationDestroyed; // Engine or required components destroyed - use destroyed acceleration
 	}
-	else if (engineStatus == static_cast<Int>(ActiveBody::COMPONENT_STATUS_PARTIALLY_FUNCTIONAL))
+	else if (engineStatus == COMPONENT_STATUS_PARTIALLY_FUNCTIONAL)
 	{
 		accel = m_template->m_accelerationDamaged; // Engine or required components partially working - use damaged acceleration
 	}
 	// If engine and required components are fully functional or don't exist, use normal acceleration calculation
+
+	// TheSuperHackers @feature Ahmed Salah 30/09/2025 Check fuel levels for non-jets
+	if (obj && !obj->isJet() && !obj->hasInventoryItem(m_consumeItem, m_consumeRate))
+	{
+		// Out of fuel - use destroyed acceleration for non-jets
+		accel = m_template->m_accelerationDestroyed;
+	}
 
 	if (accel > m_maxAccel)
 		accel = m_maxAccel;
@@ -1001,15 +1082,22 @@ Real Locomotor::getMaxLift(BodyDamageType condition, const Object* obj) const
 
 	// TheSuperHackers @feature author 15/01/2025 Check engine and required components status
 	Int engineStatus = getEngineComponentStatus(obj);
-	if (engineStatus == static_cast<Int>(ActiveBody::COMPONENT_STATUS_DOWNED))
+	if (engineStatus == COMPONENT_STATUS_DOWNED)
 	{
 		lift = m_template->m_liftDestroyed; // Engine or required components destroyed - use destroyed lift
 	}
-	else if (engineStatus == static_cast<Int>(ActiveBody::COMPONENT_STATUS_PARTIALLY_FUNCTIONAL))
+	else if (engineStatus == COMPONENT_STATUS_PARTIALLY_FUNCTIONAL)
 	{
 		lift = m_template->m_liftDamaged; // Engine or required components partially working - use damaged lift
 	}
 	// If engine and required components are fully functional or don't exist, use normal lift calculation
+
+	// TheSuperHackers @feature Ahmed Salah 30/09/2025 Check fuel levels for non-jets
+	if (obj && !obj->isJet() && !obj->hasInventoryItem(m_consumeItem, m_consumeRate))
+	{
+		// Out of fuel - use destroyed lift for non-jets
+		lift = m_template->m_liftDestroyed;
+	}
 
 	if (lift > m_maxLift)
 		lift = m_maxLift;
@@ -1056,6 +1144,17 @@ void Locomotor::locoUpdate_moveTowardsAngle(Object* obj, Real goalAngle)
 		locoUpdate_moveTowardsPosition(obj, desiredPos, onPathDistToGoal, minSpeed, &blocked);
 
 		// don't need to call handleBehaviorZ() here, since locoUpdate_moveTowardsPosition() will do so
+		// TheSuperHackers @feature Ahmed Salah 30/09/2025 Consume fuel per real-time second
+		if (physics->isMotive())
+		{
+			// Calculate fuel consumption per real-time second
+			Real frameTime = 1.0f / (Real)LOGICFRAMES_PER_SECOND;
+			Real fuelToConsume = m_consumeRate * frameTime;
+			if (fuelToConsume > 0.0f)
+			{
+				obj->consumeInventoryItem(m_consumeItem, fuelToConsume);
+			}
+		}
 		return;
 	}
 	else
@@ -1067,6 +1166,18 @@ void Locomotor::locoUpdate_moveTowardsAngle(Object* obj, Real goalAngle)
 		PhysicsTurningType rotating = rotateTowardsPosition(obj, desiredPos);
 		physics->setTurning(rotating);
 		handleBehaviorZ(obj, physics, *obj->getPosition());
+		
+		// TheSuperHackers @feature Ahmed Salah 30/09/2025 Consume fuel per real-time second
+		if (physics->isMotive())
+		{
+			// Calculate fuel consumption per real-time second
+			Real frameTime = 1.0f / (Real)LOGICFRAMES_PER_SECOND;
+			Real fuelToConsume = m_consumeRate * frameTime;
+			if (fuelToConsume > 0.0f)
+			{
+				obj->consumeInventoryItem(m_consumeItem, fuelToConsume);
+			}
+		}
 	}
 
 }
@@ -1262,6 +1373,18 @@ void Locomotor::locoUpdate_moveTowardsPosition(Object* obj, const Coord3D& goalP
 	handleBehaviorZ(obj, physics, goalPos);
 	// Objects that are braking don't follow the normal physics, so they end up at their destination exactly.
 	obj->setStatus( MAKE_OBJECT_STATUS_MASK( OBJECT_STATUS_BRAKING ), getFlag(IS_BRAKING) );
+	
+		// TheSuperHackers @feature Ahmed Salah 30/09/2025 Consume inventory item per real-time second
+		if (physics->isMotive()) // Only consume fuel if actually moving
+		{
+			// Calculate fuel consumption per real-time second
+			Real frameTime = 1.0f / (Real)LOGICFRAMES_PER_SECOND;
+			Real fuelToConsume = m_consumeRate * frameTime;
+			if (fuelToConsume > 0.0f)
+			{
+				obj->consumeInventoryItem(m_consumeItem, fuelToConsume);
+			}
+		}
 
 	if (wasBraking)
 	{
@@ -2647,6 +2770,18 @@ Bool Locomotor::locoUpdate_maintainCurrentPosition(Object* obj)
 	if (handleBehaviorZ(obj, physics, m_maintainPos))
 		requiresConstantCalling = TRUE;
 
+	// TheSuperHackers @feature Ahmed Salah 30/09/2025 Consume inventory item for hovering/flying units per real-time second
+	if (physics->isMotive()) // Only consume inventory items if actually moving or hovering
+	{
+		// Calculate fuel consumption per real-time second
+		Real frameTime = 1.0f / (Real)LOGICFRAMES_PER_SECOND;
+		Real fuelToConsume = m_consumeRate * frameTime;
+		if (fuelToConsume > 0.0f)
+		{
+			obj->consumeInventoryItem(m_consumeItem, fuelToConsume);
+		}
+	}
+
 	return requiresConstantCalling;
 }
 
@@ -2925,34 +3060,34 @@ void LocomotorSet::clear()
 //-------------------------------------------------------------------------------------------------
 // TheSuperHackers @feature author 15/01/2025 Get the lowest status among required components for locomotor template
 //-------------------------------------------------------------------------------------------------
-Int LocomotorTemplate::getRequiredComponentsStatus(const Object* source) const
+ComponentStatus LocomotorTemplate::getRequiredComponentsStatus(const Object* source) const
 {
 	if (!source)
-		return static_cast<Int>(ActiveBody::COMPONENT_STATUS_FULLY_FUNCTIONAL); // No source object - assume functional
+		return COMPONENT_STATUS_FULLY_FUNCTIONAL; // No source object - assume functional
 	
 	// If no components are specified, locomotor is always functional
 	if (m_affectedByComponents.empty())
-		return static_cast<Int>(ActiveBody::COMPONENT_STATUS_FULLY_FUNCTIONAL);
+		return COMPONENT_STATUS_FULLY_FUNCTIONAL;
 	
 	BodyModuleInterface* body = source->getBodyModule();
 	if (!body)
-		return static_cast<Int>(ActiveBody::COMPONENT_STATUS_FULLY_FUNCTIONAL); // No body module - assume functional
+		return COMPONENT_STATUS_FULLY_FUNCTIONAL; // No body module - assume functional
 	
 	ActiveBody* activeBody = dynamic_cast<ActiveBody*>(body);
 	if (!activeBody)
-		return static_cast<Int>(ActiveBody::COMPONENT_STATUS_FULLY_FUNCTIONAL); // Not an ActiveBody - assume functional
+		return COMPONENT_STATUS_FULLY_FUNCTIONAL; // Not an ActiveBody - assume functional
 	
-	Int lowestStatus = static_cast<Int>(ActiveBody::COMPONENT_STATUS_FULLY_FUNCTIONAL);
+	Int lowestStatus = COMPONENT_STATUS_FULLY_FUNCTIONAL;
 	
 	// Check each required component and find the lowest status
 	for (std::vector<AsciiString>::const_iterator it = m_affectedByComponents.begin();
 		 it != m_affectedByComponents.end(); ++it)
 	{
 		const AsciiString& componentName = *it;
-		ActiveBody::ComponentStatus status = activeBody->getComponentStatus(componentName);
+		ComponentStatus status = activeBody->getComponentStatus(componentName);
 		
 		// If component doesn't exist, skip it (not required)
-		if (status == ActiveBody::COMPONENT_STATUS_NONE)
+		if (status == COMPONENT_STATUS_NONE)
 			continue;
 		
 		// Update lowest status if this component has a worse status
@@ -2961,8 +3096,9 @@ Int LocomotorTemplate::getRequiredComponentsStatus(const Object* source) const
 			lowestStatus = statusInt;
 	}
 	
-	return lowestStatus;
+	return static_cast<ComponentStatus>(lowestStatus);
 }
+
 
 //-------------------------------------------------------------------------------------------------
 void LocomotorSet::addLocomotor(const LocomotorTemplate* lt)

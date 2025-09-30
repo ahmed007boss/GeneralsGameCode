@@ -203,6 +203,12 @@ public:
 	Bool isMobile() const;																	///< returns true if object is currently able to move
 	Bool isAbleToAttack() const;														///< returns true if object currently has some kind of attack capability
 	Bool isJet() const;																			///< returns true if object is a jet (has JetAIUpdate module)
+	Bool canMove() const;																		///< returns true if object can move (not out of fuel, not held, etc.)
+	Bool hasFuelToMove() const;																	///< returns true if object has fuel to move (checks all locomotor surfaces)
+	
+	// TheSuperHackers @feature Ahmed Salah 30/09/2025 Inventory management methods
+	Bool hasInventoryItem(const AsciiString& itemName, Real requiredCount = 1.0f) const;	///< returns true if object has enough of the specified inventory item
+	Bool consumeInventoryItem(const AsciiString& itemName, Real count = 1.0f) const;		///< consumes the specified amount of inventory item, returns true if successful
 
 	void maskObject( Bool mask );				///< mask/unmask object
 

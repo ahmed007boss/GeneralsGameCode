@@ -304,7 +304,7 @@ void AutoHealBehavior::pulseHealObject( Object *obj )
 		BodyModuleInterface *body = obj->getBodyModule();
 		if (body && data->m_componentHealingAmount != 0.0f)
 		{
-			ActiveBody* activeBody = static_cast<ActiveBody*>(body);
+			ActiveBody* activeBody = dynamic_cast<ActiveBody*>(body);
 			if (activeBody)
 			{
 				// Get components using the new Object method
