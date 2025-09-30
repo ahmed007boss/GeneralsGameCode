@@ -1589,11 +1589,33 @@ void clampWaypointPosition( Coord3D &position, Int margin )
 /**
  * Move to given position(s)
  */
-void AIGroup::groupMoveToPosition( const Coord3D *p_posIn, Bool addWaypoint, CommandSourceType cmdSource )
+void AIGroup::groupMoveToPosition( const Coord3D *p_posIn, Bool addWaypoint, CommandSourceType cmdSource, Bool isGroupMove )
 {
 
   Coord3D position = *p_posIn;
   Coord3D *pos = &position;
+
+	// TheSuperHackers @feature Ahmed Salah 27/06/2025 Clear speed limits on regular move commands
+	if (!isGroupMove && cmdSource == CMD_FROM_PLAYER)
+	{
+		// Clear any existing speed limits for all units
+		std::list<Object *>::iterator i;
+		for( i = m_memberList.begin(); i != m_memberList.end(); ++i )
+		{
+			Object *groupMember = (*i);
+			if (groupMember && groupMember->getAIUpdateInterface())
+			{
+				LocomotorSet& locomotorSet = const_cast<LocomotorSet&>(groupMember->getAIUpdateInterface()->getLocomotorSet());
+				// Clear speed limit for all locomotor surfaces
+				Locomotor* groundLoco = locomotorSet.findLocomotor(LOCOMOTORSURFACE_GROUND);
+				if (groundLoco) groundLoco->clearSpeedLimit();
+				Locomotor* waterLoco = locomotorSet.findLocomotor(LOCOMOTORSURFACE_WATER);
+				if (waterLoco) waterLoco->clearSpeedLimit();
+				Locomotor* airLoco = locomotorSet.findLocomotor(LOCOMOTORSURFACE_AIR);
+				if (airLoco) airLoco->clearSpeedLimit();
+			}
+		}
+	}
 
 	Bool didInfantry = false;
 	Bool didVehicles = false;
@@ -1656,8 +1678,97 @@ void AIGroup::groupMoveToPosition( const Coord3D *p_posIn, Bool addWaypoint, Com
   Int margin = STD_WAYPOINT_CLAMP_MARGIN + extraMargin;
   clampWaypointPosition( position, margin );
 
+	// TheSuperHackers @feature Ahmed Salah 27/06/2025 Implement group move with speed matching
+	if (isGroupMove && cmdSource == CMD_FROM_PLAYER)
+	{
+		// Find the slowest unit with healthy engine
+		Real slowestSpeed = 999999.0f;  // Large number instead of BIGNUM
+		Object* slowestUnit = NULL;
+		std::list<Object*> unitsToLimit; // Track which units should have speed limits applied
+		
+		for( i = m_memberList.begin(); i != m_memberList.end(); ++i )
+		{
+			Object *groupMember = (*i);
+			if (groupMember && groupMember->getAIUpdateInterface())
+			{
+				// TheSuperHackers @feature Ahmed Salah 30/09/2025 Skip units excluded from group move
+				const ThingTemplate* objTemplate = groupMember->getTemplate();
+				if (objTemplate && objTemplate->isExcludedFromGroupMove())
+					continue;
+				
+				// TheSuperHackers @feature Ahmed Salah 30/09/2025 Automatically exclude jets from group movement
+				if (groupMember->isJet())
+					continue;
 
+				// Check if unit has healthy engine (not destroyed)
+				BodyDamageType damageState = groupMember->getBodyModule()->getDamageState();
+				if (damageState != BODY_RUBBLE)
+				{
+					// Get the current locomotor and its speed
+					LocomotorSet& locomotorSet = const_cast<LocomotorSet&>(groupMember->getAIUpdateInterface()->getLocomotorSet());
+					Locomotor* currentLoco = locomotorSet.findLocomotor(LOCOMOTORSURFACE_GROUND);
+					if (!currentLoco) currentLoco = locomotorSet.findLocomotor(LOCOMOTORSURFACE_WATER);
+					if (!currentLoco) currentLoco = locomotorSet.findLocomotor(LOCOMOTORSURFACE_AIR);
+					
+					// TheSuperHackers @feature Ahmed Salah 30/09/2025 Skip locomotors excluded from group move
+					if (currentLoco && currentLoco->isExcludedFromGroupMove())
+						continue;
 
+					// Add this unit to the list of units that should have speed limits applied
+					unitsToLimit.push_back(groupMember);
+
+					Real unitSpeed = 0.0f;
+					if (currentLoco) {
+						unitSpeed = currentLoco->getMaxSpeedForCondition(damageState, groupMember);
+					}
+					if (unitSpeed < slowestSpeed)
+					{
+						slowestSpeed = unitSpeed;
+						slowestUnit = groupMember;
+					}
+				}
+			}
+		}
+		
+		// Set speed limit only for units that were considered in the speed calculation
+		if (slowestUnit && slowestSpeed < 999999.0f)
+		{
+			for( std::list<Object*>::iterator limitIt = unitsToLimit.begin(); limitIt != unitsToLimit.end(); ++limitIt )
+			{
+				Object *groupMember = (*limitIt);
+				if (groupMember && groupMember->getAIUpdateInterface())
+				{
+					LocomotorSet& locomotorSet = const_cast<LocomotorSet&>(groupMember->getAIUpdateInterface()->getLocomotorSet());
+					// Set speed limit for all locomotor surfaces
+					Locomotor* groundLoco = locomotorSet.findLocomotor(LOCOMOTORSURFACE_GROUND);
+					if (groundLoco) groundLoco->setSpeedLimit(slowestSpeed);
+					Locomotor* waterLoco = locomotorSet.findLocomotor(LOCOMOTORSURFACE_WATER);
+					if (waterLoco) waterLoco->setSpeedLimit(slowestSpeed);
+					Locomotor* airLoco = locomotorSet.findLocomotor(LOCOMOTORSURFACE_AIR);
+					if (airLoco) airLoco->setSpeedLimit(slowestSpeed);
+				}
+			}
+		}
+		else
+		{
+			// No healthy units found, clear any existing speed limits for all units
+			for( i = m_memberList.begin(); i != m_memberList.end(); ++i )
+			{
+				Object *groupMember = (*i);
+				if (groupMember && groupMember->getAIUpdateInterface())
+				{
+					LocomotorSet& locomotorSet = const_cast<LocomotorSet&>(groupMember->getAIUpdateInterface()->getLocomotorSet());
+					// Clear speed limit for all locomotor surfaces
+					Locomotor* groundLoco = locomotorSet.findLocomotor(LOCOMOTORSURFACE_GROUND);
+					if (groundLoco) groundLoco->clearSpeedLimit();
+					Locomotor* waterLoco = locomotorSet.findLocomotor(LOCOMOTORSURFACE_WATER);
+					if (waterLoco) waterLoco->clearSpeedLimit();
+					Locomotor* airLoco = locomotorSet.findLocomotor(LOCOMOTORSURFACE_AIR);
+					if (airLoco) airLoco->clearSpeedLimit();
+				}
+			}
+		}
+	}
 
 	if (tightenGroup)
 	{
@@ -2322,8 +2433,121 @@ void AIGroup::groupAttackPosition( const Coord3D *pos, Int maxShotsToFire, Comma
 /**
  * Attack move to a location
  */
-void AIGroup::groupAttackMoveToPosition( const Coord3D *pos, Int maxShotsToFire, CommandSourceType cmdSource )
+void AIGroup::groupAttackMoveToPosition( const Coord3D *pos, Int maxShotsToFire, CommandSourceType cmdSource, Bool isGroupMove )
 {
+	// TheSuperHackers @feature Ahmed Salah 27/06/2025 Implement group attack move with speed matching
+	if (isGroupMove && cmdSource == CMD_FROM_PLAYER)
+	{
+		// Find the slowest unit with healthy engine
+		Real slowestSpeed = 999999.0f;
+		Object* slowestUnit = NULL;
+		std::list<Object*> unitsToLimit; // Track which units should have speed limits applied
+
+		std::list<Object *>::iterator i;
+		for( i = m_memberList.begin(); i != m_memberList.end(); ++i )
+		{
+			Object *groupMember = (*i);
+			if (groupMember && groupMember->getAIUpdateInterface())
+			{
+				// TheSuperHackers @feature Ahmed Salah 30/09/2025 Skip units excluded from group move
+				const ThingTemplate* objTemplate = groupMember->getTemplate();
+				if (objTemplate && objTemplate->isExcludedFromGroupMove())
+					continue;
+				
+				// TheSuperHackers @feature Ahmed Salah 30/09/2025 Automatically exclude jets from group movement
+				if (groupMember->isJet())
+					continue;
+
+				// Check if unit has healthy engine (not destroyed)
+				BodyDamageType damageState = groupMember->getBodyModule()->getDamageState();
+				if (damageState != BODY_RUBBLE)
+				{
+					// Get the current locomotor and its speed
+					LocomotorSet& locomotorSet = const_cast<LocomotorSet&>(groupMember->getAIUpdateInterface()->getLocomotorSet());
+					Locomotor* currentLoco = locomotorSet.findLocomotor(LOCOMOTORSURFACE_GROUND);
+					if (!currentLoco) currentLoco = locomotorSet.findLocomotor(LOCOMOTORSURFACE_WATER);
+					if (!currentLoco) currentLoco = locomotorSet.findLocomotor(LOCOMOTORSURFACE_AIR);
+					
+					// TheSuperHackers @feature Ahmed Salah 30/09/2025 Skip locomotors excluded from group move
+					if (currentLoco && currentLoco->isExcludedFromGroupMove())
+						continue;
+
+					// Add this unit to the list of units that should have speed limits applied
+					unitsToLimit.push_back(groupMember);
+
+					Real unitSpeed = 0.0f;
+					if (currentLoco) {
+						unitSpeed = currentLoco->getMaxSpeedForCondition(damageState, groupMember);
+					}
+					if (unitSpeed < slowestSpeed)
+					{
+						slowestSpeed = unitSpeed;
+						slowestUnit = groupMember;
+					}
+				}
+			}
+		}
+
+		// Set speed limit only for units that were considered in the speed calculation
+		if (slowestUnit && slowestSpeed < 999999.0f)
+		{
+			for( std::list<Object*>::iterator limitIt = unitsToLimit.begin(); limitIt != unitsToLimit.end(); ++limitIt )
+			{
+				Object *groupMember = (*limitIt);
+				if (groupMember && groupMember->getAIUpdateInterface())
+				{
+					LocomotorSet& locomotorSet = const_cast<LocomotorSet&>(groupMember->getAIUpdateInterface()->getLocomotorSet());
+					// Set speed limit for all locomotor surfaces
+					Locomotor* groundLoco = locomotorSet.findLocomotor(LOCOMOTORSURFACE_GROUND);
+					if (groundLoco) groundLoco->setSpeedLimit(slowestSpeed);
+					Locomotor* waterLoco = locomotorSet.findLocomotor(LOCOMOTORSURFACE_WATER);
+					if (waterLoco) waterLoco->setSpeedLimit(slowestSpeed);
+					Locomotor* airLoco = locomotorSet.findLocomotor(LOCOMOTORSURFACE_AIR);
+					if (airLoco) airLoco->setSpeedLimit(slowestSpeed);
+				}
+			}
+		}
+		else
+		{
+			// No healthy units found, clear any existing speed limits for all units
+			for( i = m_memberList.begin(); i != m_memberList.end(); ++i )
+			{
+				Object *groupMember = (*i);
+				if (groupMember && groupMember->getAIUpdateInterface())
+				{
+					LocomotorSet& locomotorSet = const_cast<LocomotorSet&>(groupMember->getAIUpdateInterface()->getLocomotorSet());
+					// Clear speed limit for all locomotor surfaces
+					Locomotor* groundLoco = locomotorSet.findLocomotor(LOCOMOTORSURFACE_GROUND);
+					if (groundLoco) groundLoco->clearSpeedLimit();
+					Locomotor* waterLoco = locomotorSet.findLocomotor(LOCOMOTORSURFACE_WATER);
+					if (waterLoco) waterLoco->clearSpeedLimit();
+					Locomotor* airLoco = locomotorSet.findLocomotor(LOCOMOTORSURFACE_AIR);
+					if (airLoco) airLoco->clearSpeedLimit();
+				}
+			}
+		}
+	}
+	else if (!isGroupMove && cmdSource == CMD_FROM_PLAYER)
+	{
+		// Clear any existing speed limits for all units
+		std::list<Object *>::iterator i;
+		for( i = m_memberList.begin(); i != m_memberList.end(); ++i )
+		{
+			Object *groupMember = (*i);
+			if (groupMember && groupMember->getAIUpdateInterface())
+			{
+				LocomotorSet& locomotorSet = const_cast<LocomotorSet&>(groupMember->getAIUpdateInterface()->getLocomotorSet());
+				// Clear speed limit for all locomotor surfaces
+				Locomotor* groundLoco = locomotorSet.findLocomotor(LOCOMOTORSURFACE_GROUND);
+				if (groundLoco) groundLoco->clearSpeedLimit();
+				Locomotor* waterLoco = locomotorSet.findLocomotor(LOCOMOTORSURFACE_WATER);
+				if (waterLoco) waterLoco->clearSpeedLimit();
+				Locomotor* airLoco = locomotorSet.findLocomotor(LOCOMOTORSURFACE_AIR);
+				if (airLoco) airLoco->clearSpeedLimit();
+			}
+		}
+	}
+
 	std::list<Object *>::iterator i;
 	for( i = m_memberList.begin(); i != m_memberList.end(); ++i )
 	{

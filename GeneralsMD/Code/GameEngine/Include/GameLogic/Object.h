@@ -202,6 +202,7 @@ public:
 	// physical properties
 	Bool isMobile() const;																	///< returns true if object is currently able to move
 	Bool isAbleToAttack() const;														///< returns true if object currently has some kind of attack capability
+	Bool isJet() const;																			///< returns true if object is a jet (has JetAIUpdate module)
 
 	void maskObject( Bool mask );				///< mask/unmask object
 

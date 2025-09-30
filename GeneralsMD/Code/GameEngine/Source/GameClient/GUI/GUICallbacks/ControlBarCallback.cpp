@@ -116,7 +116,7 @@ WindowMsgHandledType LeftHUDInput( GameWindow *window, UnsignedInt msg,
 
 				if (!(drawableList->empty() || msg == GWM_MOUSE_LEAVING))
 				{
-					if (command && command->getCommandType() == GUI_COMMAND_ATTACK_MOVE)
+					if (command && (command->getCommandType() == GUI_COMMAND_ATTACK_MOVE || command->getCommandType() == GUI_COMMAND_GROUP_ATTACK_MOVE))
 					{
 						cur = Mouse::ATTACKMOVETO;
 					}
@@ -199,7 +199,7 @@ WindowMsgHandledType LeftHUDInput( GameWindow *window, UnsignedInt msg,
 
 					if (!(drawableList->empty() || msg == GWM_MOUSE_LEAVING))
 					{
-						if (command && command->getCommandType() == GUI_COMMAND_ATTACK_MOVE)
+						if (command && (command->getCommandType() == GUI_COMMAND_ATTACK_MOVE || command->getCommandType() == GUI_COMMAND_GROUP_ATTACK_MOVE))
 						{
 							cur = Mouse::ATTACKMOVETO;
 						}
@@ -285,7 +285,7 @@ WindowMsgHandledType LeftHUDInput( GameWindow *window, UnsignedInt msg,
 					TheGameClient->evaluateContextCommand( NULL, &world, CommandTranslator::DO_COMMAND );
 
 				}
-				else if( command && command->getCommandType() == GUI_COMMAND_ATTACK_MOVE)
+				else if( command && (command->getCommandType() == GUI_COMMAND_ATTACK_MOVE || command->getCommandType() == GUI_COMMAND_GROUP_ATTACK_MOVE))
 				{
 					// TheSuperHackers @restriction Ahmed Salah 27/06/2025 Check if any selected unit is holding position
 					Bool anyUnitHoldingPosition = FALSE;

@@ -1178,7 +1178,35 @@ void GameLogic::logicMessageDispatcher( GameMessage *msg, void *userData )
 			if (currentlySelectedGroup)
 			{
 				currentlySelectedGroup->releaseWeaponLockForGroup(LOCKED_TEMPORARILY);	// release any temporary locks.
-				currentlySelectedGroup->groupMoveToPosition( &dest, false, CMD_FROM_PLAYER );
+				currentlySelectedGroup->groupMoveToPosition( &dest, false, CMD_FROM_PLAYER, FALSE );
+			}
+
+			break;
+		}
+
+		//---------------------------------------------------------------------------------------------
+		case GameMessage::MSG_DO_GROUPMOVETO:
+		{
+			Coord3D dest = msg->getArgument( 0 )->location;
+
+			if (currentlySelectedGroup)
+			{
+				currentlySelectedGroup->releaseWeaponLockForGroup(LOCKED_TEMPORARILY);	// release any temporary locks.
+				currentlySelectedGroup->groupMoveToPosition( &dest, false, CMD_FROM_PLAYER, TRUE );
+			}
+
+			break;
+		}
+
+		//---------------------------------------------------------------------------------------------
+		case GameMessage::MSG_DO_GROUPATTACKMOVETO:
+		{
+			Coord3D dest = msg->getArgument( 0 )->location;
+
+			if (currentlySelectedGroup)
+			{
+				currentlySelectedGroup->releaseWeaponLockForGroup(LOCKED_TEMPORARILY);	// release any temporary locks.
+				currentlySelectedGroup->groupAttackMoveToPosition( &dest, NO_MAX_SHOTS_LIMIT, CMD_FROM_PLAYER, TRUE );
 			}
 
 			break;
@@ -1195,7 +1223,7 @@ void GameLogic::logicMessageDispatcher( GameMessage *msg, void *userData )
 			{
 				//DEBUG_LOG(("GameLogicDispatch - got a MSG_DO_MOVETO command"));
 				currentlySelectedGroup->releaseWeaponLockForGroup(LOCKED_TEMPORARILY);	// release any temporary locks.
-				currentlySelectedGroup->groupMoveToPosition( &dest, false, CMD_FROM_PLAYER );
+				currentlySelectedGroup->groupMoveToPosition( &dest, false, CMD_FROM_PLAYER, FALSE );
 			}
 
 			break;
@@ -1210,7 +1238,7 @@ void GameLogic::logicMessageDispatcher( GameMessage *msg, void *userData )
 			{
 				//DEBUG_LOG(("GameLogicDispatch - got a MSG_DO_MOVETO command"));
 				currentlySelectedGroup->releaseWeaponLockForGroup(LOCKED_TEMPORARILY);	// release any temporary locks.
-				currentlySelectedGroup->groupMoveToPosition( &dest, true, CMD_FROM_PLAYER );
+				currentlySelectedGroup->groupMoveToPosition( &dest, true, CMD_FROM_PLAYER, FALSE );
 			}
 
 			break;

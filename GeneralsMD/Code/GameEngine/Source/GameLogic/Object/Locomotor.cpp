@@ -525,6 +525,7 @@ const FieldParse* LocomotorTemplate::getFieldParse() const
 		{ "CirclingRadius", INI::parseReal, NULL, offsetof(LocomotorTemplate, m_circlingRadius) },
 		{ "Extra2DFriction", parseFrictionPerSec, NULL, offsetof(LocomotorTemplate, m_extra2DFriction) },
 		{ "SpeedLimitZ", INI::parseVelocityReal, NULL, offsetof(LocomotorTemplate, m_speedLimitZ) },
+		{ "ExcludeFromGroupMove", INI::parseBool, NULL, offsetof(LocomotorTemplate, m_excludeFromGroupMove) },
 		{ "MaxThrustAngle", INI::parseAngleReal, NULL, offsetof(LocomotorTemplate, m_maxThrustAngle) },		// yes, angle, not angular-vel
 		{ "ZAxisBehavior", INI::parseIndexList, TheLocomotorBehaviorZNames, offsetof(LocomotorTemplate, m_behaviorZ) },
 		{ "Appearance", INI::parseIndexList, TheLocomotorAppearanceNames, offsetof(LocomotorTemplate, m_appearance) },		\
@@ -726,6 +727,8 @@ Locomotor::Locomotor(const LocomotorTemplate* tmpl)
 	m_maxAccel = BIGNUM;
 	m_maxBraking = BIGNUM;
 	m_maxTurnRate = BIGNUM;
+	m_speedLimit = 0.0f;		// No speed limit by default
+	m_excludeFromGroupMove = tmpl->m_excludeFromGroupMove;
 	m_flags = 0;
 	m_closeEnoughDist = m_template->m_closeEnoughDist;
 	setFlag(IS_CLOSE_ENOUGH_DIST_3D, m_template->m_isCloseEnoughDist3D);
@@ -758,6 +761,8 @@ Locomotor::Locomotor(const Locomotor& that)
 	m_maxAccel = that.m_maxAccel;
 	m_maxBraking = that.m_maxBraking;
 	m_maxTurnRate = that.m_maxTurnRate;
+	m_speedLimit = that.m_speedLimit;
+	m_excludeFromGroupMove = that.m_excludeFromGroupMove;
 	m_flags = that.m_flags;
 	m_closeEnoughDist = that.m_closeEnoughDist;
 #ifdef CIRCLE_FOR_LANDING
@@ -905,6 +910,10 @@ Real Locomotor::getMaxSpeedForCondition(BodyDamageType condition, const Object* 
 
 	if (speed > m_maxSpeed)
 		speed = m_maxSpeed;
+
+	// TheSuperHackers @feature Ahmed Salah 27/06/2025 Apply speed limit for group movement
+	if (m_speedLimit > 0.0f && speed > m_speedLimit)
+		speed = m_speedLimit;
 
 	return speed;
 }

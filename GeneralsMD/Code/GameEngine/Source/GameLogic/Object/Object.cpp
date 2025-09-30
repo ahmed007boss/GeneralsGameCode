@@ -3021,6 +3021,20 @@ Bool Object::isMobile() const
 }
 
 //-------------------------------------------------------------------------------------------------
+/**
+ * TheSuperHackers @feature Ahmed Salah 30/09/2025 Returns true if object is a jet
+ * (has JetAIUpdate module)
+ */
+Bool Object::isJet() const
+{
+	// Check if object has JetAIUpdate module
+	if (findUpdateModule(TheNameKeyGenerator->nameToKey("JetAIUpdate")))
+		return true;
+
+	return false;
+}
+
+//-------------------------------------------------------------------------------------------------
 void Object::scoreTheKill(const Object* victim)
 {
 	// Do stuff that has nothing to do with experience points here, like tell our Player we killed something
@@ -5664,6 +5678,7 @@ void Object::doCommandButton(const CommandButton* commandButton, CommandSourceTy
 		case GUI_COMMAND_CANCEL_UNIT_BUILD:
 		case GUI_COMMAND_CANCEL_UPGRADE:
 		case GUI_COMMAND_ATTACK_MOVE:
+		case GUI_COMMAND_GROUP_ATTACK_MOVE:
 		case GUI_COMMAND_GUARD:
 		case GUI_COMMAND_GUARD_WITHOUT_PURSUIT:
 		case GUI_COMMAND_GUARD_FLYING_UNITS_ONLY:
@@ -5793,6 +5808,7 @@ void Object::doCommandButtonAtObject(const CommandButton* commandButton, Object*
 		case GUI_COMMAND_OBJECT_UPGRADE:
 		case GUI_COMMAND_CANCEL_UPGRADE:
 		case GUI_COMMAND_ATTACK_MOVE:
+		case GUI_COMMAND_GROUP_ATTACK_MOVE:
 		case GUI_COMMAND_GUARD:
 		case GUI_COMMAND_GUARD_WITHOUT_PURSUIT:
 		case GUI_COMMAND_GUARD_FLYING_UNITS_ONLY:
@@ -5842,6 +5858,7 @@ void Object::doCommandButtonAtPosition(const CommandButton* commandButton, const
 			break;
 		}
 		case GUI_COMMAND_ATTACK_MOVE:
+		case GUI_COMMAND_GROUP_ATTACK_MOVE:
 			if (ai)
 			{
 				ai->aiAttackMoveToPosition(pos, commandButton->getMaxShotsToFire(), cmdSource);
@@ -5945,6 +5962,7 @@ void Object::doCommandButtonUsingWaypoints(const CommandButton* commandButton, c
 			break;
 		}
 		case GUI_COMMAND_ATTACK_MOVE:
+		case GUI_COMMAND_GROUP_ATTACK_MOVE:
 		case GUI_COMMAND_STOP:
 		case GUI_COMMAND_DOZER_CONSTRUCT:
 		case GUI_COMMAND_DOZER_CONSTRUCT_CANCEL:

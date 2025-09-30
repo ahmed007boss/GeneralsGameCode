@@ -262,6 +262,7 @@ public:
 		MSG_META_TAKE_SCREENSHOT,										///< take screenshot
 		MSG_META_ALL_CHEER,													///< Yay! :)
 		MSG_META_TOGGLE_ATTACKMOVE,									///< enter attack-move mode
+		MSG_META_TOGGLE_GROUPMOVE,									///< enter group-move mode
 
 		MSG_META_BEGIN_CAMERA_ROTATE_LEFT,
 		MSG_META_END_CAMERA_ROTATE_LEFT,
@@ -576,6 +577,8 @@ public:
 		MSG_DO_MOVETO,															///< location
 		MSG_DO_ATTACKMOVETO,												///< location
 		MSG_DO_FORCEMOVETO,													///< location
+		MSG_DO_GROUPMOVETO,												///< location - group move with speed matching
+		MSG_DO_GROUPATTACKMOVETO,									///< location - group attack move with speed matching
 		MSG_ADD_WAYPOINT,														///< location
 		MSG_DO_GUARD_POSITION,											///< Guard with the currently selected group
 		MSG_DO_GUARD_OBJECT,												///< Guard with the currently selected group

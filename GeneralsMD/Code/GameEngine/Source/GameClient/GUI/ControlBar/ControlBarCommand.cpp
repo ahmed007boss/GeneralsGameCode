@@ -1470,6 +1470,25 @@ CommandAvailability ControlBar::getCommandAvailability( const CommandButton *com
 			break;
 		}
 
+		case GUI_COMMAND_GROUP_MOVE:
+		{
+			// Check if the current object is holding position
+			if( obj && obj->isDisabledByType( DISABLED_HELD ) )
+			{
+				return COMMAND_RESTRICTED;  // Disable group move when unit is holding position
+			}
+			break;
+		}
+		case GUI_COMMAND_GROUP_ATTACK_MOVE:
+		{
+			// Check if the current object is holding position
+			if( obj && obj->isDisabledByType( DISABLED_HELD ) )
+			{
+				return COMMAND_RESTRICTED;  // Disable group attack move when unit is holding position
+			}
+			break;
+		}
+
 		case GUI_COMMAND_COMBATDROP:
 		{
 			if( getRappellerCount(obj) <= 0 )

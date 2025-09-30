@@ -157,8 +157,8 @@ void ControlBar::addCommonCommands( Drawable *draw, Bool firstDrawable )
 			// get the command
 			command = commandSet->getCommandButton(i);
 
-			Bool attackMove = (command && command->getCommandType() == GUI_COMMAND_ATTACK_MOVE) ||
-												(m_commonCommands[ i ] && m_commonCommands[ i ]->getCommandType() == GUI_COMMAND_ATTACK_MOVE);
+			Bool attackMove = (command && (command->getCommandType() == GUI_COMMAND_ATTACK_MOVE || command->getCommandType() == GUI_COMMAND_GROUP_ATTACK_MOVE)) ||
+												(m_commonCommands[ i ] && (m_commonCommands[ i ]->getCommandType() == GUI_COMMAND_ATTACK_MOVE || m_commonCommands[ i ]->getCommandType() == GUI_COMMAND_GROUP_ATTACK_MOVE));
 
 			// Kris: When any units have attack move, they all get it. This is to allow
 			// combat units to be selected with the odd dozer or pilot and still retain that ability.

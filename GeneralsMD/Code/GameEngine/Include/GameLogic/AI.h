@@ -912,7 +912,7 @@ public:
 	UnsignedShort Num_Refs() const { return m_refCount.Num_Refs(); }
 #endif
 
-	void groupMoveToPosition( const Coord3D *pos, Bool addWaypoint, CommandSourceType cmdSource );
+	void groupMoveToPosition( const Coord3D *pos, Bool addWaypoint, CommandSourceType cmdSource, Bool isGroupMove = FALSE );
 	void groupMoveToAndEvacuate( const Coord3D *pos, CommandSourceType cmdSource );			///< move to given position(s)
 	void groupMoveToAndEvacuateAndExit( const Coord3D *pos, CommandSourceType cmdSource );			///< move to given position & unload transport.
 	void groupIdle(CommandSourceType cmdSource);						///< Enter idle state.
@@ -934,7 +934,7 @@ public:
 	}
 	void groupAttackTeam( const Team *team, Int maxShotsToFire, CommandSourceType cmdSource );							///< attack the given team
 	void groupAttackPosition( const Coord3D *pos, Int maxShotsToFire, CommandSourceType cmdSource );						///< attack given spot
-	void groupAttackMoveToPosition( const Coord3D *pos, Int maxShotsToFire, CommandSourceType cmdSource );	///< Attack move to the location
+	void groupAttackMoveToPosition( const Coord3D *pos, Int maxShotsToFire, CommandSourceType cmdSource, Bool isGroupMove = FALSE );	///< Attack move to the location
 	void groupHunt( CommandSourceType cmdSource );														///< begin "seek and destroy"
 	void groupRepair( Object *obj, CommandSourceType cmdSource );						///< repair the given object
 	void groupResumeConstruction( Object *obj, CommandSourceType cmdSource );	///< resume construction on the object

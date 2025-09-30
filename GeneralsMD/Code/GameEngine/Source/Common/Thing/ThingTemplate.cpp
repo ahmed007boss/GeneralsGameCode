@@ -136,6 +136,7 @@ const FieldParse ThingTemplate::s_objectFieldParseTable[] =
 	{ "IsTrainable",					INI::parseBool,												NULL,									offsetof(ThingTemplate, m_isTrainable) },
 	{ "EnterGuard",						INI::parseBool,												NULL,									offsetof(ThingTemplate, m_enterGuard) },
 	{ "HijackGuard",					INI::parseBool,												NULL,									offsetof(ThingTemplate, m_hijackGuard) },
+	{ "ExcludeFromGroupMove",	INI::parseBool,												NULL,									offsetof(ThingTemplate, m_excludeFromGroupMove) },
 
 	{ "Side",									INI::parseAsciiString,								NULL,	offsetof(ThingTemplate, m_defaultOwningSide) },
 
@@ -1239,6 +1240,7 @@ ThingTemplate::ThingTemplate() :
 	m_enterGuard = FALSE;
 	m_hijackGuard = FALSE;
 	m_isExtensionObject = FALSE;
+	m_excludeFromGroupMove = FALSE;
 
 	m_templateID = 0;
 	m_kindof = KINDOFMASK_NONE;

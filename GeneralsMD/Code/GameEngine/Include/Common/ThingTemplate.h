@@ -486,6 +486,7 @@ public:
 	Bool isTrainable() const{return m_isTrainable; }
 	Bool isEnterGuard() const{return m_enterGuard; }
 	Bool isHijackGuard() const{return m_hijackGuard; }
+	Bool isExcludedFromGroupMove() const{return m_excludeFromGroupMove; }
 
 	const AudioEventRTS *getVoiceSelect() const								{ return getAudio(TTAUDIO_voiceSelect); }
 	const AudioEventRTS *getVoiceGroupSelect() const					{ return getAudio(TTAUDIO_voiceGroupSelect); }
@@ -814,6 +815,7 @@ private:
 	Bool					m_armorCopiedFromDefault;
 	Bool					m_weaponsCopiedFromDefault;
 	Bool					m_isExtensionObject;
+	Bool					m_excludeFromGroupMove;				///< exclude this thing from group movement speed limits
 
 	// ---- Byte-sized things
 	Byte					m_radarPriority;						///< does object appear on radar, and if so at what priority

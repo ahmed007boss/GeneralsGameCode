@@ -759,6 +759,14 @@ CBCommandStatus ControlBar::processCommandUI( GameWindow *control,
 			break;
 
 		//---------------------------------------------------------------------------------------------
+		case GUI_COMMAND_GROUP_MOVE:
+			TheMessageStream->appendMessage(GameMessage::MSG_META_TOGGLE_GROUPMOVE);
+			break;
+		case GUI_COMMAND_GROUP_ATTACK_MOVE:
+			TheMessageStream->appendMessage(GameMessage::MSG_META_TOGGLE_GROUPMOVE);
+			break;
+
+		//---------------------------------------------------------------------------------------------
 		case GUI_COMMAND_STOP:
 		{
 			// This message always works on the currently selected team

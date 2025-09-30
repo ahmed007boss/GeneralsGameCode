@@ -552,6 +552,10 @@ public:  // ********************************************************************
 	Bool isInAttackMoveToMode( void ) const		{ return m_attackMoveToMode; }
 	void clearAttackMoveToMode( void )				{ m_attackMoveToMode = FALSE; }
 
+	void toggleGroupMoveToMode( void )				{ m_groupMoveToMode = !m_groupMoveToMode; }
+	Bool isInGroupMoveToMode( void ) const		{ return m_groupMoveToMode; }
+	void clearGroupMoveToMode( void )				{ m_groupMoveToMode = FALSE; }
+
 	void setCameraRotateLeft( Bool set )		{ m_cameraRotatingLeft = set; }
 	void setCameraRotateRight( Bool set )		{ m_cameraRotatingRight = set; }
 	void setCameraZoomIn( Bool set )				{ m_cameraZoomingIn = set; }
@@ -868,6 +872,7 @@ protected:
 	Bool												m_forceAttackMode;		///< are we in force attack mode?
 	Bool												m_forceMoveToMode;		///< are we in force move mode?
 	Bool												m_attackMoveToMode;	///< are we in attack move mode?
+	Bool												m_groupMoveToMode;		///< are we in group move mode?
 	Bool												m_preferSelection;		///< the shift key has been depressed.
 
 	Bool												m_cameraRotatingLeft;

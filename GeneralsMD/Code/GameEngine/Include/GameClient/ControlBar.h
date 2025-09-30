@@ -182,6 +182,8 @@ enum GUICommandType CPP_11(: Int)
 	GUI_COMMAND_OBJECT_UPGRADE,						///< put an object upgrade in the queue
 	GUI_COMMAND_CANCEL_UPGRADE,						///< cancel an upgrade
 	GUI_COMMAND_ATTACK_MOVE,							///< attack move command
+	GUI_COMMAND_GROUP_MOVE,							///< group move command with speed matching
+	GUI_COMMAND_GROUP_ATTACK_MOVE,				///< group attack move command with speed matching
 	GUI_COMMAND_GUARD,										///< guard command
 	GUI_COMMAND_GUARD_WITHOUT_PURSUIT,		///< guard command, no pursuit out of guard area
 	GUI_COMMAND_GUARD_FLYING_UNITS_ONLY,	///< guard command, ignore nonflyers
@@ -247,6 +249,8 @@ static const char *const TheGuiCommandNames[] =
 	"OBJECT_UPGRADE",
 	"CANCEL_UPGRADE",
 	"ATTACK_MOVE",
+	"GROUP_MOVE",
+	"GROUP_ATTACK_MOVE",
 	"GUARD",
 	"GUARD_WITHOUT_PURSUIT",
 	"GUARD_FLYING_UNITS_ONLY",

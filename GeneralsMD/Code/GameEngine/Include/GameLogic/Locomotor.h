@@ -190,6 +190,8 @@ private:
 	Real											m_preferredHeightDamping;		///< how aggressively to adjust to preferred height: 1.0 = very much so, 0.1 = gradually, etc
 	Real											m_circlingRadius;				///< for flying things, the radius at which they circle their "maintain" destination. (pos = cw, neg = ccw, 0 = smallest possible)
 	Real											m_speedLimitZ;					///< try to avoid going up or down at more than this speed, if possible
+	Real											m_speedLimit;					///< temporary speed limit for group movement (0 = no limit)
+	Bool											m_excludeFromGroupMove;		///< exclude this locomotor from group movement speed limits
 	Real											m_extra2DFriction;			///< extra 2dfriction to apply (via Physics)
 	Real											m_maxThrustAngle;				///< THRUST locos only: how much we deflect our thrust angle
 	LocomotorBehaviorZ				m_behaviorZ;						///< z-axis behavior
@@ -345,6 +347,11 @@ public:
 	inline void setCloseEnoughDist( Real dist ) { m_closeEnoughDist = dist; }
 	inline void setCloseEnoughDist3D( Bool setting ) { setFlag(IS_CLOSE_ENOUGH_DIST_3D, setting); }
 	inline Bool isInvalidPositionAllowed() const { return getFlag( ALLOW_INVALID_POSITION ); }
+	
+	inline void setSpeedLimit(Real limit) { m_speedLimit = limit; }
+	inline Real getSpeedLimit() const { return m_speedLimit; }
+	inline void clearSpeedLimit() { m_speedLimit = 0.0f; }
+	inline Bool isExcludedFromGroupMove() const { return m_excludeFromGroupMove; }
 
 	inline void setPreferredHeight( Real height ) { m_preferredHeight = height; }
 
@@ -475,6 +482,8 @@ private:
 	Real				m_maxAccel;
 	Real				m_maxBraking;
 	Real				m_maxTurnRate;
+	Real				m_speedLimit;					///< temporary speed limit for group movement (0 = no limit)
+	Bool				m_excludeFromGroupMove;		///< exclude this locomotor from group movement speed limits
 	Real				m_closeEnoughDist;
 #ifdef CIRCLE_FOR_LANDING
 	Real				m_circleThresh;

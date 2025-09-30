@@ -52,6 +52,7 @@
 #include "Common/GameLOD.h"
 
 #include "GameClient/InGameUI.h"
+#include "GameClient/Keyboard.h"
 #include "GameClient/CommandXlat.h"
 #include "GameClient/DebugDisplay.h"
 #include "GameClient/Drawable.h"
@@ -1030,13 +1031,23 @@ GameMessage::Type CommandTranslator::issueMoveToLocationCommand( const Coord3D *
 
 	if (m_teamExists)
 	{
+		// TheSuperHackers @feature Ahmed Salah 27/06/2025 Add group move command with shift+click
+		Bool shiftPressed = TheKeyboard->isShift();
+		
 		if( TheInGameUI->isInWaypointMode() )
 		{
 			msgType = GameMessage::MSG_ADD_WAYPOINT;
 		}
 		else if( TheInGameUI->isInAttackMoveToMode())
 		{
-			msgType = GameMessage::MSG_DO_ATTACKMOVETO;
+			if( shiftPressed )
+			{
+				msgType = GameMessage::MSG_DO_GROUPATTACKMOVETO;
+			}
+			else
+			{
+				msgType = GameMessage::MSG_DO_ATTACKMOVETO;
+			}
 		}
 		else if( TheInGameUI->isInForceMoveToMode() )
 		{
@@ -1046,13 +1057,17 @@ GameMessage::Type CommandTranslator::issueMoveToLocationCommand( const Coord3D *
 		{
 			msgType = GameMessage::MSG_DO_ATTACK_OBJECT;
 		}
+		else if( shiftPressed )
+		{
+			msgType = GameMessage::MSG_DO_GROUPMOVETO;
+		}
 		else
 		{
 			msgType = GameMessage::MSG_DO_MOVETO;
 		}
 		
 		// TheSuperHackers @restriction Ahmed Salah 27/06/2025 Check if any selected unit is holding position
-		if( commandType == DO_COMMAND && (msgType == GameMessage::MSG_DO_MOVETO || msgType == GameMessage::MSG_DO_ATTACKMOVETO) )
+		if( commandType == DO_COMMAND && (msgType == GameMessage::MSG_DO_MOVETO || msgType == GameMessage::MSG_DO_ATTACKMOVETO || msgType == GameMessage::MSG_DO_GROUPMOVETO || msgType == GameMessage::MSG_DO_GROUPATTACKMOVETO) )
 		{
 			Bool anyUnitHoldingPosition = FALSE;
 			const DrawableList *selected = TheInGameUI->getAllSelectedDrawables();
@@ -3429,6 +3444,10 @@ GameMessageDisposition CommandTranslator::translateGameMessage(const GameMessage
 		//-----------------------------------------------------------------------------------------
 		case GameMessage::MSG_META_TOGGLE_ATTACKMOVE:
 			TheInGameUI->toggleAttackMoveToMode( );
+			break;
+
+		case GameMessage::MSG_META_TOGGLE_GROUPMOVE:
+			TheInGameUI->toggleGroupMoveToMode( );
 			break;
 
 		case GameMessage::MSG_META_BEGIN_CAMERA_ROTATE_LEFT:
