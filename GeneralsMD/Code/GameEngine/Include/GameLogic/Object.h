@@ -241,6 +241,8 @@ public:
 	void healCompletely();														///< Restore max health to this Object
 	void notifySubdualDamage( Real amount );///< At this level, we just pass this on to our helper and do a special tint
 	void notifyEWDamage( Real amount );///< At this level, we just pass this on to our helper and do a special tint
+	EWDamageHelper* getEWDamageHelper() { return m_ewDamageHelper; }///< Get the EW damage helper
+	const EWDamageHelper* getEWDamageHelper() const { return m_ewDamageHelper; }///< Get the EW damage helper (const)
 	void doStatusDamage( ObjectStatusTypes status, Real duration );///< At this level, we just pass this on to our helper
 	void doTempWeaponBonus( WeaponBonusConditionType status, UnsignedInt duration );///< At this level, we just pass this on to our helper
 
@@ -818,7 +820,7 @@ private:
 	Real					m_visionRange;										///< looking range
 	Real					m_shroudClearingOriginalRange;						///< looking range for shroud ONLY
 	Real					m_shroudClearingRange;						///< looking range for shroud ONLY
-	Real					m_shroudClearingSubdualRange;						///< looking range for shroud ONLY
+	Real					m_shroudClearingDisabledRange;						///< looking range for shroud ONLY when disabled
 	Real					m_shroudRange;										///< like looking range, this is how far I shroud others' looks
 
 	DisabledMaskType	m_disabledMask;

@@ -34,6 +34,8 @@
 
 // INCLUDES ///////////////////////////////////////////////////////////////////////////////////////
 #include "GameLogic/Module/ObjectHelper.h"
+#include "Common/AsciiString.h"
+#include <map>
 
 // ------------------------------------------------------------------------------------------------
 // ------------------------------------------------------------------------------------------------
@@ -60,8 +62,15 @@ public:
 
 	void notifyEWDamage(Real amount);
 
+	// TheSuperHackers @feature Ahmed Salah 15/01/2025 Component-based EW damage management
+	void notifyComponentEWDamage(const AsciiString& componentName, Real amount);
+	void processComponentEWDamageHealing();
+
 protected:
 	UnsignedInt m_healingStepCountdown;
+	
+	// TheSuperHackers @feature Ahmed Salah 15/01/2025 Component EW damage tracking
+	std::map<AsciiString, UnsignedInt> m_componentEWHealCountdown;	///< Countdown for each component's EW damage healing
 };
 
 

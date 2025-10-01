@@ -35,6 +35,14 @@
 #include "Common/AsciiString.h"
 #include "GameLogic/Damage.h"
 
+// TheSuperHackers @feature author 15/01/2025 Component functionality status
+enum ComponentStatus
+{
+	COMPONENT_STATUS_NONE = 0,           // Component does not exist
+	COMPONENT_STATUS_FULLY_FUNCTIONAL,   // 50% - 100% health
+	COMPONENT_STATUS_PARTIALLY_FUNCTIONAL, // 10% - 50% health  
+	COMPONENT_STATUS_DOWNED              // 0% - 10% health
+};
 //-------------------------------------------------------------------------------------------------
 // TheSuperHackers @feature author 15/01/2025 Component healing behavior types
 //-------------------------------------------------------------------------------------------------
@@ -62,7 +70,12 @@ struct Component
 	UnsignedInt replacementCost;				///< TheSuperHackers @feature author 15/01/2025 Cost to replace this component (0 = cannot be replaced)
 	Bool forceReturnOnDestroy;					///< TheSuperHackers @feature Ahmed Salah 30/09/2025 Force jet to return to parking when this component is destroyed
 	
-	Component() : maxHealth(0.0f), initialHealth(0.0f), healingType(COMPONENT_HEALING_NORMAL), damageOnSides(), replacementCost(0), forceReturnOnDestroy(FALSE) {}
+	// TheSuperHackers @feature Ahmed Salah 15/01/2025 EW damage properties for components
+	Real ewDamageCap;							///< Maximum EW damage this component can accumulate
+	UnsignedInt ewDamageHealRate;				///< How often EW damage heals (in frames)
+	Real ewDamageHealAmount;					///< How much EW damage heals per cycle
+	
+	Component() : maxHealth(0.0f), initialHealth(0.0f), healingType(COMPONENT_HEALING_NORMAL), damageOnSides(), replacementCost(0), forceReturnOnDestroy(FALSE), ewDamageCap(0.0f), ewDamageHealRate(0), ewDamageHealAmount(0.0f) {}
 };
 
 #endif // _COMPONENT_H_

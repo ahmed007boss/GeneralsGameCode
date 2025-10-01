@@ -33,6 +33,7 @@
 
 #include "GameLogic/Object.h"
 #include "GameLogic/Module/BodyModule.h"
+#include "GameLogic/Module/ActiveBody.h"
 #include "GameLogic/Module/EWDamageHelper.h"
 
 // ------------------------------------------------------------------------------------------------
@@ -56,6 +57,9 @@ EWDamageHelper::~EWDamageHelper(void)
 UpdateSleepTime EWDamageHelper::update()
 {
 	BodyModuleInterface* body = getObject()->getBodyModule();
+
+	// TheSuperHackers @feature Ahmed Salah 15/01/2025 Process component-based EW damage healing
+	processComponentEWDamageHealing();
 
 	m_healingStepCountdown--;
 	if (m_healingStepCountdown > 0)
@@ -105,7 +109,7 @@ void EWDamageHelper::xfer(Xfer* xfer)
 {
 
 	// version
-	XferVersion currentVersion = 1;
+	XferVersion currentVersion = 2; // TheSuperHackers @feature Ahmed Salah 15/01/2025 Incremented for component EW damage support
 	XferVersion version = currentVersion;
 	xfer->xferVersion(&version, currentVersion);
 
@@ -113,6 +117,38 @@ void EWDamageHelper::xfer(Xfer* xfer)
 	ObjectHelper::xfer(xfer);
 
 	xfer->xferUnsignedInt(&m_healingStepCountdown);
+	
+	// TheSuperHackers @feature Ahmed Salah 15/01/2025 Component EW damage countdown tracking
+	if (version >= 2)
+	{
+		// Xfer component EW heal countdown map
+		UnsignedInt countdownSize = m_componentEWHealCountdown.size();
+		xfer->xferUnsignedInt(&countdownSize);
+		
+		if (xfer->getXferMode() == XFER_LOAD)
+		{
+			m_componentEWHealCountdown.clear();
+			for (UnsignedInt i = 0; i < countdownSize; i++)
+			{
+				AsciiString componentName;
+				UnsignedInt countdown;
+				xfer->xferAsciiString(&componentName);
+				xfer->xferUnsignedInt(&countdown);
+				m_componentEWHealCountdown[componentName] = countdown;
+			}
+		}
+		else
+		{
+			for (std::map<AsciiString, UnsignedInt>::iterator it = m_componentEWHealCountdown.begin();
+				 it != m_componentEWHealCountdown.end(); ++it)
+			{
+				AsciiString componentName = it->first;
+				UnsignedInt countdown = it->second;
+				xfer->xferAsciiString(&componentName);
+				xfer->xferUnsignedInt(&countdown);
+			}
+		}
+	}
 
 }
 
@@ -125,5 +161,84 @@ void EWDamageHelper::loadPostProcess(void)
 	// object helper base class
 	ObjectHelper::loadPostProcess();
 
+}
+
+// ------------------------------------------------------------------------------------------------
+// TheSuperHackers @feature Ahmed Salah 15/01/2025 Component-based EW damage management
+// ------------------------------------------------------------------------------------------------
+void EWDamageHelper::notifyComponentEWDamage(const AsciiString& componentName, Real amount)
+{
+	if (componentName.isEmpty() || amount <= 0.0f)
+		return;
+		
+	// Get the ActiveBody module to add component EW damage
+	ActiveBody* activeBody = static_cast<ActiveBody*>(getObject()->getBodyModule());
+	if (!activeBody)
+		return;
+		
+	// Add EW damage to the component
+	activeBody->addComponentEWDamage(componentName, amount);
+	
+	// Set up healing countdown for this component
+	UnsignedInt healRate = activeBody->getComponentEWDamageHealRate(componentName);
+	if (healRate > 0)
+	{
+		m_componentEWHealCountdown[componentName] = healRate;
+		setWakeFrame(getObject(), UPDATE_SLEEP_NONE);
+	}
+}
+
+// ------------------------------------------------------------------------------------------------
+void EWDamageHelper::processComponentEWDamageHealing()
+{
+	ActiveBody* activeBody = static_cast<ActiveBody*>(getObject()->getBodyModule());
+	if (!activeBody)
+		return;
+		
+	// Process each component's EW damage healing
+	for (std::map<AsciiString, UnsignedInt>::iterator it = m_componentEWHealCountdown.begin();
+		 it != m_componentEWHealCountdown.end(); )
+	{
+		const AsciiString& componentName = it->first;
+		UnsignedInt& countdown = it->second;
+		
+		// Decrement countdown
+		if (countdown > 0)
+		{
+			countdown--;
+		}
+		
+		// Check if it's time to heal
+		if (countdown == 0)
+		{
+			Real healAmount = activeBody->getComponentEWDamageHealAmount(componentName);
+			if (healAmount > 0.0f)
+			{
+				activeBody->healComponentEWDamage(componentName, healAmount);
+				
+				// Reset countdown if there's still damage
+				Real currentDamage = activeBody->getComponentEWDamage(componentName);
+				if (currentDamage > 0.0f)
+				{
+					UnsignedInt healRate = activeBody->getComponentEWDamageHealRate(componentName);
+					countdown = healRate;
+				}
+				else
+				{
+					// No more damage, remove from tracking
+					it = m_componentEWHealCountdown.erase(it);
+					continue;
+				}
+			}
+			else
+			{
+				// No healing amount, remove from tracking
+				it = m_componentEWHealCountdown.erase(it);
+				continue;
+			}
+		}
+		
+		++it;
+	}
 }
 

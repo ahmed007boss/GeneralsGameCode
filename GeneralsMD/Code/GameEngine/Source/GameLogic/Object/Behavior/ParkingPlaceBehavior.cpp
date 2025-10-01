@@ -783,8 +783,7 @@ void ParkingPlaceBehavior::restoreParkedVehicle(Object* vehicle, const ParkingPl
 	if (!data->m_restoreComponents.empty())
 	{
 		BodyModuleInterface* body = vehicle->getBodyModule();
-		ActiveBody* activeBody = dynamic_cast<ActiveBody*>(body);
-		if (activeBody)
+		if (body)
 		{
 			for (std::vector<AsciiString>::const_iterator it = data->m_restoreComponents.begin();
 				 it != data->m_restoreComponents.end(); ++it)
@@ -793,15 +792,15 @@ void ParkingPlaceBehavior::restoreParkedVehicle(Object* vehicle, const ParkingPl
 				if (!componentName.isEmpty())
 				{
 					// Get current and max health for this component
-					Real currentHealth = activeBody->getComponentHealth(componentName);
-					Real maxHealth = activeBody->getComponentMaxHealth(componentName);
+					Real currentHealth = body->getComponentHealth(componentName);
+					Real maxHealth = body->getComponentMaxHealth(componentName);
 					
 					// Restore to max health if damaged
 					if (currentHealth < maxHealth)
 					{
-						activeBody->setComponentHealth(componentName, maxHealth);
+						body->setComponentHealth(componentName, maxHealth);
 						// Update model state after component restoration
-						activeBody->setCorrectDamageState();
+						body->setCorrectDamageState();
 					}
 				}
 			}

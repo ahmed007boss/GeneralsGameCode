@@ -54,12 +54,13 @@
 #include "GameLogic/TerrainLogic.h"
 #include "GameLogic/Weapon.h"
 #include "GameLogic/Module/AIUpdate.h"
-#include "GameLogic/Module/ActiveBody.h"
 #include "GameLogic/Module/BridgeBehavior.h"
 #include "GameLogic/Module/ContainModule.h"
 #include "GameLogic/Module/DamageModule.h"
-#include "GameLogic/Module/DieModule.h"
 #include "GameClient/GameText.h"
+#include "GameLogic/Module/ActiveBody.h"
+#include "GameLogic/Module/EWDamageHelper.h"
+#include "ActiveBodyEW.cpp"
 
 
 
@@ -137,27 +138,27 @@ static BodyDamageType calcComponentDamageState(const AsciiString& componentName,
 	if (ratio <= 0.1f)
 	{
 		// Map component names to specific damage states
-		if (componentName == ActiveBody::COMPONENT_ENGINE)
+		if (componentName == BodyModule::COMPONENT_ENGINE)
 			return BODY_COMPONENT_ENGINE_DESTROYED;
-		else if (componentName == ActiveBody::COMPONENT_PRIMARY_WEAPON)
+		else if (componentName == BodyModule::COMPONENT_PRIMARY_WEAPON)
 			return BODY_COMPONENT_WEAPON_A_DESTROYED;
-		else if (componentName == ActiveBody::COMPONENT_SECONDARY_WEAPON)
+		else if (componentName == BodyModule::COMPONENT_SECONDARY_WEAPON)
 			return BODY_COMPONENT_WEAPON_B_DESTROYED;
-		else if (componentName == ActiveBody::COMPONENT_TERTIARY_WEAPON)
+		else if (componentName == BodyModule::COMPONENT_TERTIARY_WEAPON)
 			return BODY_COMPONENT_WEAPON_C_DESTROYED;
-		else if (componentName == ActiveBody::COMPONENT_WEAPON_FOUR)
+		else if (componentName == BodyModule::COMPONENT_WEAPON_FOUR)
 			return BODY_COMPONENT_WEAPON_D_DESTROYED;
-		else if (componentName == ActiveBody::COMPONENT_WEAPON_FIVE)
+		else if (componentName == BodyModule::COMPONENT_WEAPON_FIVE)
 			return BODY_COMPONENT_WEAPON_E_DESTROYED;
-		else if (componentName == ActiveBody::COMPONENT_WEAPON_SIX)
+		else if (componentName == BodyModule::COMPONENT_WEAPON_SIX)
 			return BODY_COMPONENT_WEAPON_F_DESTROYED;
-		else if (componentName == ActiveBody::COMPONENT_WEAPON_SEVEN)
+		else if (componentName == BodyModule::COMPONENT_WEAPON_SEVEN)
 			return BODY_COMPONENT_WEAPON_G_DESTROYED;
-		else if (componentName == ActiveBody::COMPONENT_WEAPON_EIGHT)
+		else if (componentName == BodyModule::COMPONENT_WEAPON_EIGHT)
 			return BODY_COMPONENT_WEAPON_H_DESTROYED;
-		else if (componentName == ActiveBody::COMPONENT_TURRET_A ||
-				 componentName == ActiveBody::COMPONENT_TURRET_B ||
-				 componentName == ActiveBody::COMPONENT_TURRET_C)
+		else if (componentName == BodyModule::COMPONENT_TURRET_A ||
+				 componentName == BodyModule::COMPONENT_TURRET_B ||
+				 componentName == BodyModule::COMPONENT_TURRET_C)
 			return BODY_COMPONENT_TURRET_DESTROYED;
 	}
 	
@@ -277,6 +278,12 @@ static void parseComponent(INI* ini, void* instance, void* /*store*/, const void
 		{ "DamageOnSides", parseComponentDamageOnSides, NULL, offsetof(Component, damageOnSides) },
 		{ "ReplacementCost", INI::parseUnsignedInt, NULL, offsetof(Component, replacementCost) },
 		{ "ForceReturnOnDestroy", INI::parseBool, NULL, offsetof(Component, forceReturnOnDestroy) },
+		
+		// TheSuperHackers @feature Ahmed Salah 15/01/2025 Component EW damage properties
+		{ "EWDamageCap", INI::parseReal, NULL, offsetof(Component, ewDamageCap) },
+		{ "EWDamageHealRate", INI::parseUnsignedInt, NULL, offsetof(Component, ewDamageHealRate) },
+		{ "EWDamageHealAmount", INI::parseReal, NULL, offsetof(Component, ewDamageHealAmount) },
+		
 		{ 0, 0, 0, 0 }
 	};
 	
@@ -775,6 +782,27 @@ void ActiveBody::attemptDamage( DamageInfo *damageInfo )
 		}
 
 		getObject()->notifyEWDamage(amount);
+
+		// TheSuperHackers @feature Ahmed Salah 15/01/2025 Apply EW damage to components
+		if (!damageInfo->in.m_componentDamage.empty())
+		{
+			for (std::map<AsciiString, Real>::const_iterator it = damageInfo->in.m_componentDamage.begin();
+				 it != damageInfo->in.m_componentDamage.end(); ++it)
+			{
+				const AsciiString& componentName = it->first;
+				Real componentEWDamage = it->second;
+				
+				// Apply EW damage to this component
+				addComponentEWDamage(componentName, componentEWDamage);
+				
+				// Notify the EWDamageHelper about component EW damage
+				EWDamageHelper* ewHelper = getObject()->getEWDamageHelper();
+				if (ewHelper)
+				{
+					ewHelper->notifyComponentEWDamage(componentName, componentEWDamage);
+				}
+			}
+		}
 	}
 
 	if (allowModifier)
@@ -1676,57 +1704,6 @@ Bool ActiveBody::isSubdued() const
 
 
 //-------------------------------------------------------------------------------------------------
-//-------------------------------------------------------------------------------------------------
-void ActiveBody::internalAddEWDamage(Real delta)
-{
-	const ActiveBodyModuleData* data = getActiveBodyModuleData();
-
-	m_currentEWDamage += delta;
-	m_currentEWDamage = min(m_currentEWDamage, data->m_ewDamageCap);
-}
-//-------------------------------------------------------------------------------------------------
-//-------------------------------------------------------------------------------------------------
-Bool ActiveBody::canBeEWJammed() const
-{
-	// Any body with subdue listings can be subdued.
-	return getActiveBodyModuleData()->m_ewDamageCap > 0;
-}
-
-//-------------------------------------------------------------------------------------------------
-//-------------------------------------------------------------------------------------------------
-void ActiveBody::onEWChange(Bool isNowSubdued)
-{
-	//if (!getObject()->isKindOf(KINDOF_PROJECTILE))
-	{
-		Object* me = getObject();
-
-		if (isNowSubdued)
-		{
-			me->setDisabled(DISABLED_EW);
-
-		}
-		else
-		{
-			me->clearDisabled(DISABLED_EW);
-
-		}
-	}
-	//else if (isNowSubdued)// There is no coming back from being jammed, and projectiles can't even heal, but this makes it clear.
-	//{
-	//	ProjectileUpdateInterface* pui = getObject()->getProjectileUpdateInterface();
-	//	if (pui)
-	//	{
-	//		pui->projectileNowJammed();
-	//	}
-	//}
-}
-
-//-------------------------------------------------------------------------------------------------
-//-------------------------------------------------------------------------------------------------
-Bool ActiveBody::isEWJammed() const
-{
-	return m_maxHealth <= m_currentEWDamage;
-}
 
 
 //-------------------------------------------------------------------------------------------------
@@ -1769,25 +1746,6 @@ Real ActiveBody::getSubdualDamageHealAmount() const
 Bool ActiveBody::hasAnySubdualDamage() const
 {
 	return m_currentSubdualDamage > 0;
-}
-//-------------------------------------------------------------------------------------------------
-//-------------------------------------------------------------------------------------------------
-UnsignedInt ActiveBody::getEWDamageHealRate() const
-{
-	return getActiveBodyModuleData()->m_ewDamageHealRate;
-}
-
-//-------------------------------------------------------------------------------------------------
-//-------------------------------------------------------------------------------------------------
-Real ActiveBody::getEWDamageHealAmount() const
-{
-	return getActiveBodyModuleData()->m_ewDamageHealAmount;
-}
-//-------------------------------------------------------------------------------------------------
-//-------------------------------------------------------------------------------------------------
-Bool ActiveBody::hasAnyEWDamage() const
-{
-	return m_currentEWDamage > 0;
 }
 //-------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------
@@ -2271,28 +2229,8 @@ ComponentStatus ActiveBody::getComponentStatus(const AsciiString& componentName)
 
 
 //-------------------------------------------------------------------------------------------------
-// TheSuperHackers @feature author 15/01/2025 Basic component name constants
+// TheSuperHackers @feature author 15/01/2025 Basic component name constants - now in BodyModule base class
 //-------------------------------------------------------------------------------------------------
-const AsciiString ActiveBody::COMPONENT_ENGINE = "ENGINE";
-const AsciiString ActiveBody::COMPONENT_WHEELS = "WHEELS";
-const AsciiString ActiveBody::COMPONENT_TRACKS = "TRACKS";
-const AsciiString ActiveBody::COMPONENT_FUEL_TANK = "FUEL_TANK";
-const AsciiString ActiveBody::COMPONENT_TURRET_A = "TURRET_A";
-const AsciiString ActiveBody::COMPONENT_TURRET_B = "TURRET_B";
-const AsciiString ActiveBody::COMPONENT_TURRET_C = "TURRET_C";
-const AsciiString ActiveBody::COMPONENT_PRIMARY_WEAPON = "PRIMARY_WEAPON";
-const AsciiString ActiveBody::COMPONENT_SECONDARY_WEAPON = "SECONDARY_WEAPON";
-const AsciiString ActiveBody::COMPONENT_TERTIARY_WEAPON = "TERTIARY_WEAPON";
-const AsciiString ActiveBody::COMPONENT_WEAPON_FOUR = "WEAPON_FOUR";
-const AsciiString ActiveBody::COMPONENT_WEAPON_FIVE = "WEAPON_FIVE";
-const AsciiString ActiveBody::COMPONENT_WEAPON_SIX = "WEAPON_SIX";
-const AsciiString ActiveBody::COMPONENT_WEAPON_SEVEN = "WEAPON_SEVEN";
-const AsciiString ActiveBody::COMPONENT_WEAPON_EIGHT = "WEAPON_EIGHT";
-const AsciiString ActiveBody::COMPONENT_RADAR = "RADAR";
-const AsciiString ActiveBody::COMPONENT_ELECTRONICS = "ELECTRONICS";
-const AsciiString ActiveBody::COMPONENT_POWER = "POWER";
-const AsciiString ActiveBody::COMPONENT_COMMUNICATION_A = "COMMUNICATION_A";
-const AsciiString ActiveBody::COMPONENT_COMMUNICATION_B = "COMMUNICATION_B";
 
 //-------------------------------------------------------------------------------------------------
 // TheSuperHackers @feature author 15/01/2025 Get component definitions

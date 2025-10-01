@@ -38,10 +38,8 @@
 #include "GameLogic/ExperienceTracker.h"
 #include "GameLogic/Locomotor.h"
 #include "GameLogic/Module/BodyModule.h"
-#include "GameLogic/Module/ActiveBody.h"
 #include "GameLogic/Module/CountermeasuresBehavior.h"
 #include "GameLogic/Module/JetAIUpdate.h"
-#include "GameLogic/Module/ParkingPlaceBehavior.h"
 #include "GameLogic/Module/PhysicsUpdate.h"
 #include "GameLogic/Object.h"
 #include "GameLogic/AIPathfind.h"
@@ -2752,24 +2750,17 @@ Bool JetAIUpdate::shouldForceReturn() const
 	
 	// Check critical components - force return if any critical component is destroyed
 	BodyModuleInterface* body = obj->getBodyModule();
-	ActiveBody* activeBody = nullptr;
 	if (body)
 	{
-		// Check if it's actually an ActiveBody before casting
-		activeBody = dynamic_cast<ActiveBody*>(body);
-		if (activeBody){		
-			std::vector<Component> components = obj->getComponents();
-			for (const Component& component : components)
-			{
-				if (component.forceReturnOnDestroy && activeBody->isComponentDestroyed(component.name))
+		std::vector<Component> components = obj->getComponents();
+		for (const Component& component : components)
+		{
+			if (component.forceReturnOnDestroy && body->isComponentDestroyed(component.name))
 				{
 					return TRUE;
 				}
 			}
 		}
-	}
-	
-	
-	
-	return FALSE;
+		return FALSE;
 }
+	

@@ -882,13 +882,9 @@ ComponentStatus Locomotor::getEngineComponentStatus(const Object* obj) const
 	BodyModuleInterface* body = obj->getBodyModule();
 	if (!body)
 		return COMPONENT_STATUS_NONE;
-		
-	ActiveBody* activeBody = dynamic_cast<ActiveBody*>(body);
-	if (!activeBody)
-		return COMPONENT_STATUS_NONE;
 	
 	// Get engine component status
-	ComponentStatus engineStatus = activeBody->getComponentStatus(ActiveBody::COMPONENT_ENGINE);
+	ComponentStatus engineStatus = body->getComponentStatus(BodyModule::COMPONENT_ENGINE);
 	
 	// Get required components status from template
 	ComponentStatus requiredComponentsStatus = static_cast<ComponentStatus>(m_template->getRequiredComponentsStatus(obj));
@@ -3073,10 +3069,6 @@ ComponentStatus LocomotorTemplate::getRequiredComponentsStatus(const Object* sou
 	if (!body)
 		return COMPONENT_STATUS_FULLY_FUNCTIONAL; // No body module - assume functional
 	
-	ActiveBody* activeBody = dynamic_cast<ActiveBody*>(body);
-	if (!activeBody)
-		return COMPONENT_STATUS_FULLY_FUNCTIONAL; // Not an ActiveBody - assume functional
-	
 	Int lowestStatus = COMPONENT_STATUS_FULLY_FUNCTIONAL;
 	
 	// Check each required component and find the lowest status
@@ -3084,7 +3076,7 @@ ComponentStatus LocomotorTemplate::getRequiredComponentsStatus(const Object* sou
 		 it != m_affectedByComponents.end(); ++it)
 	{
 		const AsciiString& componentName = *it;
-		ComponentStatus status = activeBody->getComponentStatus(componentName);
+		ComponentStatus status = body->getComponentStatus(componentName);
 		
 		// If component doesn't exist, skip it (not required)
 		if (status == COMPONENT_STATUS_NONE)

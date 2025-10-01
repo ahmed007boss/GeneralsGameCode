@@ -304,100 +304,96 @@ void AutoHealBehavior::pulseHealObject( Object *obj )
 		BodyModuleInterface *body = obj->getBodyModule();
 		if (body && data->m_componentHealingAmount != 0.0f)
 		{
-			ActiveBody* activeBody = dynamic_cast<ActiveBody*>(body);
-			if (activeBody)
+			// Get components using the new Object method
+			std::vector<Component> components = obj->getComponents();
+			
+			// Calculate component healing amount
+			Real componentHealingAmount = data->m_componentHealingAmount;
+			if (componentHealingAmount < 0.0f) // -1.0f means proportional healing
 			{
-				// Get components using the new Object method
-				std::vector<Component> components = obj->getComponents();
+				// Proportional healing: calculate based on main health ratio
+				Real mainMaxHealth = body->getMaxHealth();
+				Real mainCurrentHealth = body->getHealth();
+				Real mainHealingAmount = static_cast<Real>(data->m_healingAmount);
 				
-				// Calculate component healing amount
-				Real componentHealingAmount = data->m_componentHealingAmount;
-				if (componentHealingAmount < 0.0f) // -1.0f means proportional healing
+				if (mainMaxHealth > 0.0f && mainCurrentHealth < mainMaxHealth)
 				{
-					// Proportional healing: calculate based on main health ratio
-					Real mainMaxHealth = body->getMaxHealth();
-					Real mainCurrentHealth = body->getHealth();
-					Real mainHealingAmount = static_cast<Real>(data->m_healingAmount);
-					
-					if (mainMaxHealth > 0.0f && mainCurrentHealth < mainMaxHealth)
-					{
-						// Calculate healing ratio (how much of main health is being healed)
-						Real mainHealingRatio = mainHealingAmount / mainMaxHealth;
-						componentHealingAmount = mainHealingRatio;
-					}
+					// Calculate healing ratio (how much of main health is being healed)
+					Real mainHealingRatio = mainHealingAmount / mainMaxHealth;
+					componentHealingAmount = mainHealingRatio;
 				}
+			}
+			
+			// Heal components based on their healing types
+			for (std::vector<Component>::const_iterator it = components.begin();
+				 it != components.end(); ++it)
+			{
+				const AsciiString& componentName = it->name;
+				Real maxHealth = body->getComponentMaxHealth(componentName);
+				Real currentHealth = body->getComponentHealth(componentName);
 				
-				// Heal components based on their healing types
-				for (std::vector<Component>::const_iterator it = components.begin();
-					 it != components.end(); ++it)
+				if (maxHealth > 0.0f) // Component exists
 				{
-					const AsciiString& componentName = it->name;
-					Real maxHealth = activeBody->getComponentMaxHealth(componentName);
-					Real currentHealth = activeBody->getComponentHealth(componentName);
-					
-					if (maxHealth > 0.0f) // Component exists
+					Real healingNeeded = maxHealth - currentHealth;
+					if (healingNeeded > 0.0f) // Component needs healing
 					{
-						Real healingNeeded = maxHealth - currentHealth;
-						if (healingNeeded > 0.0f) // Component needs healing
+						Real finalHealingAmount = healingNeeded * componentHealingAmount;
+						
+						// Apply healing based on component healing type
+						switch (it->healingType)
 						{
-							Real finalHealingAmount = healingNeeded * componentHealingAmount;
-							
-							// Apply healing based on component healing type
-							switch (it->healingType)
-							{
-								case COMPONENT_HEALING_NORMAL:
-									// Can be healed from destroyed to max normally
-									activeBody->healComponent(componentName, finalHealingAmount);
-									break;
-									
-								case COMPONENT_HEALING_PARTIAL_ONLY:
-									// Can be healed if not destroyed to max normally
-									if (currentHealth > 0.0f)
+							case COMPONENT_HEALING_NORMAL:
+								// Can be healed from destroyed to max normally
+								body->healComponent(componentName, finalHealingAmount);
+								break;
+								
+							case COMPONENT_HEALING_PARTIAL_ONLY:
+								// Can be healed if not destroyed to max normally
+								if (currentHealth > 0.0f)
+								{
+									body->healComponent(componentName, finalHealingAmount);
+								}
+								break;
+								
+							case COMPONENT_HEALING_PARTIAL_DESTROYED:
+								// Can be healed from destroyed to partially working (16%) normally
+								if (currentHealth <= 0.0f)
+								{
+									// Heal to 16% of max health
+									Real targetHealth = maxHealth * 0.16f;
+									Real healToTarget = targetHealth - currentHealth;
+									if (healToTarget > 0.0f)
 									{
-										activeBody->healComponent(componentName, finalHealingAmount);
+										Real actualHeal = healToTarget * componentHealingAmount;
+										body->healComponent(componentName, actualHeal);
 									}
-									break;
-									
-								case COMPONENT_HEALING_PARTIAL_DESTROYED:
-									// Can be healed from destroyed to partially working (16%) normally
-									if (currentHealth <= 0.0f)
+								}
+								else
+								{
+									// Normal healing if not destroyed
+									body->healComponent(componentName, finalHealingAmount);
+								}
+								break;
+								
+							case COMPONENT_HEALING_PARTIAL_LIMITED:
+								// Can be healed if not destroyed to partially working (16%) normally
+								if (currentHealth > 0.0f)
+								{
+									// Heal to 16% of max health
+									Real targetHealth = maxHealth * 0.16f;
+									Real healToTarget = targetHealth - currentHealth;
+									if (healToTarget > 0.0f)
 									{
-										// Heal to 16% of max health
-										Real targetHealth = maxHealth * 0.16f;
-										Real healToTarget = targetHealth - currentHealth;
-										if (healToTarget > 0.0f)
-										{
-											Real actualHeal = healToTarget * componentHealingAmount;
-											activeBody->healComponent(componentName, actualHeal);
-										}
+										Real actualHeal = healToTarget * componentHealingAmount;
+										body->healComponent(componentName, actualHeal);
 									}
-									else
-									{
-										// Normal healing if not destroyed
-										activeBody->healComponent(componentName, finalHealingAmount);
-									}
-									break;
-									
-								case COMPONENT_HEALING_PARTIAL_LIMITED:
-									// Can be healed if not destroyed to partially working (16%) normally
-									if (currentHealth > 0.0f)
-									{
-										// Heal to 16% of max health
-										Real targetHealth = maxHealth * 0.16f;
-										Real healToTarget = targetHealth - currentHealth;
-										if (healToTarget > 0.0f)
-										{
-											Real actualHeal = healToTarget * componentHealingAmount;
-											activeBody->healComponent(componentName, actualHeal);
-										}
-									}
-									break;
-									
-								case COMPONENT_HEALING_REPLACEMENT_ONLY:
-									// Cannot be healed normally, needs replacement
-									// Skip healing for this component
-									break;
-							}
+								}
+								break;
+								
+							case COMPONENT_HEALING_REPLACEMENT_ONLY:
+								// Cannot be healed normally, needs replacement
+								// Skip healing for this component
+								break;
 						}
 					}
 				}

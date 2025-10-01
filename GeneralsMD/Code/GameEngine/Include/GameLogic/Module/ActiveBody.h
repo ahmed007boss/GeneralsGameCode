@@ -38,22 +38,14 @@
 #include "GameLogic/Damage.h"
 #include "GameLogic/Armor.h"
 #include "GameLogic/ArmorSet.h"
-#include "../Component.h"
 #include "Common/UnicodeString.h"
-#include <vector>
+#include "GameLogic/Component.h"
 #include <map>
 
 // FORWARD REFERENCES /////////////////////////////////////////////////////////////////////////////
 class BodyParticleSystem;
 class ParticleSystemTemplate;
-// TheSuperHackers @feature author 15/01/2025 Component functionality status
-enum ComponentStatus
-{
-	COMPONENT_STATUS_NONE = 0,           // Component does not exist
-	COMPONENT_STATUS_FULLY_FUNCTIONAL,   // 50% - 100% health
-	COMPONENT_STATUS_PARTIALLY_FUNCTIONAL, // 10% - 50% health  
-	COMPONENT_STATUS_DOWNED              // 0% - 10% health
-};
+
 //-------------------------------------------------------------------------------------------------
 /** Active body module */
 //-------------------------------------------------------------------------------------------------
@@ -117,6 +109,16 @@ public:
 	virtual Real getEWDamageHealAmount() const;
 	virtual Bool hasAnyEWDamage() const;
 	virtual Real getCurrentEWDamageAmount() const { return m_currentEWDamage; }
+	
+	// TheSuperHackers @feature Ahmed Salah 15/01/2025 Component-aware EW damage methods
+	virtual Real getTotalEWDamage() const;									///< Get total EW damage (global + components)
+	virtual Real getEWDamagePercentage() const;							///< Get EW damage as percentage of total capacity
+	
+	// TheSuperHackers @feature Ahmed Salah 15/01/2025 Component-based EW damage property methods
+	virtual Real getTotalComponentEWDamageCap() const;					///< Get total component EW damage cap
+	virtual Real getEffectiveEWDamageCap() const;							///< Get effective EW damage cap (global + components)
+	virtual UnsignedInt getFastestComponentEWHealRate() const;			///< Get fastest component EW heal rate
+	virtual Real getTotalComponentEWHealAmount() const;					///< Get total component EW heal amount
 
 	virtual const DamageInfo *getLastDamageInfo() const { return &m_lastDamageInfo; }	///< return info on last damage dealt to this object
 	virtual UnsignedInt getLastDamageTimestamp() const { return m_lastDamageTimestamp; }	///< return frame of last damage dealt
@@ -161,7 +163,7 @@ public:
 	virtual Bool canBeEWJammed() const;
 	virtual void onEWChange( Bool isNowEWJammed );///< Override this if you want a totally different effect than DISABLED_SUBDUED
 
-	// TheSuperHackers @feature author 15/01/2025 Component health management
+	// TheSuperHackers @feature author 15/01/2025 Component health management - now inherited from BodyModule
 	virtual Real getComponentHealth(const AsciiString& componentName) const;
 	virtual Real getComponentMaxHealth(const AsciiString& componentName) const;
 	virtual Bool setComponentHealth(const AsciiString& componentName, Real health);
@@ -170,7 +172,17 @@ public:
 	virtual Bool isComponentDestroyed(const AsciiString& componentName) const;
 	virtual void initializeComponentHealth();
 	
-	// TheSuperHackers @feature author 15/01/2025 Get component definitions
+	// TheSuperHackers @feature Ahmed Salah 15/01/2025 Component EW damage management - now inherited from BodyModule
+	virtual Real getComponentEWDamage(const AsciiString& componentName) const;
+	virtual Real getComponentEWDamageCap(const AsciiString& componentName) const;
+	virtual UnsignedInt getComponentEWDamageHealRate(const AsciiString& componentName) const;
+	virtual Real getComponentEWDamageHealAmount(const AsciiString& componentName) const;
+	virtual Bool setComponentEWDamage(const AsciiString& componentName, Real damage);
+	virtual Bool addComponentEWDamage(const AsciiString& componentName, Real damage);
+	virtual Bool hasAnyComponentEWDamage() const;
+	virtual void healComponentEWDamage(const AsciiString& componentName, Real healing);
+	
+	// TheSuperHackers @feature author 15/01/2025 Get component definitions - now inherited from BodyModule
 	virtual std::vector<Component> getComponents() const;
 	
 	virtual ComponentStatus getComponentStatus(const AsciiString& componentName) const;
@@ -178,27 +190,7 @@ public:
 	// TheSuperHackers @feature author 15/01/2025 Update model state based on current damage
 	virtual void setCorrectDamageState();
 
-	// TheSuperHackers @feature author 15/01/2025 Basic component name constants
-	static const AsciiString COMPONENT_ENGINE;
-	static const AsciiString COMPONENT_WHEELS;
-	static const AsciiString COMPONENT_TRACKS;
-	static const AsciiString COMPONENT_FUEL_TANK;
-	static const AsciiString COMPONENT_TURRET_A;
-	static const AsciiString COMPONENT_TURRET_B;
-	static const AsciiString COMPONENT_TURRET_C;
-	static const AsciiString COMPONENT_PRIMARY_WEAPON;
-	static const AsciiString COMPONENT_SECONDARY_WEAPON;
-	static const AsciiString COMPONENT_TERTIARY_WEAPON;
-	static const AsciiString COMPONENT_WEAPON_FOUR;
-	static const AsciiString COMPONENT_WEAPON_FIVE;
-	static const AsciiString COMPONENT_WEAPON_SIX;
-	static const AsciiString COMPONENT_WEAPON_SEVEN;
-	static const AsciiString COMPONENT_WEAPON_EIGHT;
-	static const AsciiString COMPONENT_RADAR;
-	static const AsciiString COMPONENT_ELECTRONICS;
-	static const AsciiString COMPONENT_POWER;
-	static const AsciiString COMPONENT_COMMUNICATION_A;
-	static const AsciiString COMPONENT_COMMUNICATION_B;
+	// TheSuperHackers @feature author 15/01/2025 Basic component name constants - now inherited from BodyModule
 
 protected:
 
@@ -250,6 +242,10 @@ private:
 	// TheSuperHackers @feature author 15/01/2025 Runtime component health tracking
 	std::map<AsciiString, Real>			m_componentHealth;		///< Current health of each component
 	std::map<AsciiString, Real>			m_componentMaxHealth;	///< Maximum health of each component
+	
+	// TheSuperHackers @feature Ahmed Salah 15/01/2025 Runtime component EW damage tracking
+	std::map<AsciiString, Real>			m_componentEWDamage;		///< Current EW damage of each component
+	std::map<AsciiString, UnsignedInt>	m_componentEWHealCountdown;	///< Countdown for EW damage healing
 
 };
 

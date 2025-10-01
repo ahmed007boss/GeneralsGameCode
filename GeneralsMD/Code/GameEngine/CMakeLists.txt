@@ -888,6 +888,7 @@ set(GAMEENGINE_SRC
     Source/GameLogic/Object/Behavior/SupplyWarehouseCripplingBehavior.cpp
     Source/GameLogic/Object/Behavior/TechBuildingBehavior.cpp
     Source/GameLogic/Object/Body/ActiveBody.cpp
+    Source/GameLogic/Object/Body/ActiveBodyEW.cpp
     Source/GameLogic/Object/Body/BodyModule.cpp
     Source/GameLogic/Object/Body/HighlanderBody.cpp
     Source/GameLogic/Object/Body/HiveStructureBody.cpp

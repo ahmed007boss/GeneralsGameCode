@@ -37,6 +37,8 @@
 #include "GameLogic/ArmorSet.h"
 #include "GameLogic/Module/BehaviorModule.h"
 #include "Common/UnicodeString.h"
+#include "GameLogic/Component.h"
+#include <map>
 
 //-------------------------------------------------------------------------------------------------
 /** OBJECT BODY MODULE base class */
@@ -196,6 +198,32 @@ public:
 	virtual Bool hasAnyEWDamage() const = 0;
 	virtual Real getCurrentEWDamageAmount() const = 0;
 
+	// TheSuperHackers @feature Ahmed Salah 15/01/2025 Component health management
+	virtual Real getComponentHealth(const AsciiString& componentName) const = 0;
+	virtual Real getComponentMaxHealth(const AsciiString& componentName) const = 0;
+	virtual Bool setComponentHealth(const AsciiString& componentName, Real health) = 0;
+	virtual Bool damageComponent(const AsciiString& componentName, Real damage) = 0;
+	virtual Bool healComponent(const AsciiString& componentName, Real healing) = 0;
+	virtual Bool isComponentDestroyed(const AsciiString& componentName) const = 0;
+	virtual void initializeComponentHealth() = 0;
+	
+	// TheSuperHackers @feature Ahmed Salah 15/01/2025 Component EW damage management
+	virtual Real getComponentEWDamage(const AsciiString& componentName) const = 0;
+	virtual Real getComponentEWDamageCap(const AsciiString& componentName) const = 0;
+	virtual UnsignedInt getComponentEWDamageHealRate(const AsciiString& componentName) const = 0;
+	virtual Real getComponentEWDamageHealAmount(const AsciiString& componentName) const = 0;
+	virtual Bool setComponentEWDamage(const AsciiString& componentName, Real damage) = 0;
+	virtual Bool addComponentEWDamage(const AsciiString& componentName, Real damage) = 0;
+	virtual Bool hasAnyComponentEWDamage() const = 0;
+	virtual void healComponentEWDamage(const AsciiString& componentName, Real healing) = 0;
+	
+	// TheSuperHackers @feature author 15/01/2025 Get component definitions
+	virtual std::vector<Component> getComponents() const = 0;
+	
+	virtual ComponentStatus getComponentStatus(const AsciiString& componentName) const = 0;
+
+	// TheSuperHackers @feature author 15/01/2025 Update visual damage state based on component health
+	virtual void setCorrectDamageState() = 0;
 
 	virtual BodyDamageType getDamageState() const = 0;
 	virtual void setDamageState( BodyDamageType newState ) = 0;	///< control damage state directly.  Will adjust hitpoints.
@@ -294,6 +322,33 @@ public:
 	virtual Bool hasAnyEWDamage() const { return FALSE; }
 	virtual Real getCurrentEWDamageAmount() const { return 0.0f; }
 
+	// TheSuperHackers @feature Ahmed Salah 15/01/2025 Component health management - default implementations
+	virtual Real getComponentHealth(const AsciiString& componentName) const { return 0.0f; }
+	virtual Real getComponentMaxHealth(const AsciiString& componentName) const { return 0.0f; }
+	virtual Bool setComponentHealth(const AsciiString& componentName, Real health) { return false; }
+	virtual Bool damageComponent(const AsciiString& componentName, Real damage) { return false; }
+	virtual Bool healComponent(const AsciiString& componentName, Real healing) { return false; }
+	virtual Bool isComponentDestroyed(const AsciiString& componentName) const { return false; }
+	virtual void initializeComponentHealth() { }
+	
+	// TheSuperHackers @feature Ahmed Salah 15/01/2025 Component EW damage management - default implementations
+	virtual Real getComponentEWDamage(const AsciiString& componentName) const { return 0.0f; }
+	virtual Real getComponentEWDamageCap(const AsciiString& componentName) const { return 0.0f; }
+	virtual UnsignedInt getComponentEWDamageHealRate(const AsciiString& componentName) const { return 0; }
+	virtual Real getComponentEWDamageHealAmount(const AsciiString& componentName) const { return 0.0f; }
+	virtual Bool setComponentEWDamage(const AsciiString& componentName, Real damage) { return false; }
+	virtual Bool addComponentEWDamage(const AsciiString& componentName, Real damage) { return false; }
+	virtual Bool hasAnyComponentEWDamage() const { return false; }
+	virtual void healComponentEWDamage(const AsciiString& componentName, Real healing) { }
+	
+	// TheSuperHackers @feature author 15/01/2025 Get component definitions - default implementations
+	virtual std::vector<Component> getComponents() const { return std::vector<Component>(); }
+	
+	virtual ComponentStatus getComponentStatus(const AsciiString& componentName) const { return COMPONENT_STATUS_NONE; }
+
+	// TheSuperHackers @feature author 15/01/2025 Update visual damage state based on component health - default implementation
+	virtual void setCorrectDamageState() { }
+
 	virtual Real getInitialHealth() const {return 0.0f;}  // return initial health
 
 	virtual BodyDamageType getDamageState() const = 0;
@@ -339,6 +394,29 @@ public:
 
 	virtual void evaluateVisualCondition() { }
 	virtual void updateBodyParticleSystems() { };// made public for topple anf building collapse updates -ML
+
+	// TheSuperHackers @feature author 15/01/2025 Basic component name constants
+	static const AsciiString COMPONENT_ENGINE;
+	static const AsciiString COMPONENT_WHEELS;
+	static const AsciiString COMPONENT_TRACKS;
+	static const AsciiString COMPONENT_FUEL_TANK;
+	static const AsciiString COMPONENT_TURRET_A;
+	static const AsciiString COMPONENT_TURRET_B;
+	static const AsciiString COMPONENT_TURRET_C;
+	static const AsciiString COMPONENT_PRIMARY_WEAPON;
+	static const AsciiString COMPONENT_SECONDARY_WEAPON;
+	static const AsciiString COMPONENT_TERTIARY_WEAPON;
+	static const AsciiString COMPONENT_WEAPON_FOUR;
+	static const AsciiString COMPONENT_WEAPON_FIVE;
+	static const AsciiString COMPONENT_WEAPON_SIX;
+	static const AsciiString COMPONENT_WEAPON_SEVEN;
+	static const AsciiString COMPONENT_WEAPON_EIGHT;
+	static const AsciiString COMPONENT_RADAR;
+	static const AsciiString COMPONENT_VISION;
+	static const AsciiString COMPONENT_ELECTRONICS;
+	static const AsciiString COMPONENT_POWER;
+	static const AsciiString COMPONENT_COMMUNICATION_A;
+	static const AsciiString COMPONENT_COMMUNICATION_B;
 
 protected:
 

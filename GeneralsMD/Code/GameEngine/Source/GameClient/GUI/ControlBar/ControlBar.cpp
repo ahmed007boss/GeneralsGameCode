@@ -1343,25 +1343,21 @@ UnsignedInt CommandButton::getCostOfExecution(const Player* player, const Object
 			if (!body)
 				return 0;
 
-			ActiveBody* activeBody = dynamic_cast<ActiveBody*>(body);
-			if (!activeBody)
-				return 0;
-
 			const AsciiString& componentName = getComponentName();
 			UnsignedInt totalCost = 0;
 
 			if (componentName.isEmpty())
 			{
 				// Calculate cost for all damaged components
-				std::vector<Component> components = object->getComponents();
+				std::vector<Component> components = body->getComponents();
 				for (std::vector<Component>::const_iterator it = components.begin();
 					 it != components.end(); ++it)
 				{
 					const Component& component = *it;
 					if (component.replacementCost > 0)
 					{
-						Real currentHealth = activeBody->getComponentHealth(component.name);
-						Real maxHealth = activeBody->getComponentMaxHealth(component.name);
+						Real currentHealth = body->getComponentHealth(component.name);
+						Real maxHealth = body->getComponentMaxHealth(component.name);
 						
 						// Only include cost if component is damaged
 						if (currentHealth < maxHealth)
@@ -1374,8 +1370,8 @@ UnsignedInt CommandButton::getCostOfExecution(const Player* player, const Object
 			else
 			{
 				// Calculate cost for specific component
-				Real currentHealth = activeBody->getComponentHealth(componentName);
-				Real maxHealth = activeBody->getComponentMaxHealth(componentName);
+				Real currentHealth = body->getComponentHealth(componentName);
+				Real maxHealth = body->getComponentMaxHealth(componentName);
 				
 				// Only include cost if component is damaged
 				if (currentHealth < maxHealth)

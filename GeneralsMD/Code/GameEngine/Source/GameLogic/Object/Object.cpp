@@ -69,6 +69,7 @@
 #include "GameLogic/Module/BehaviorModule.h"
 #include "GameLogic/Module/BodyModule.h"
 #include "GameLogic/Module/ActiveBody.h"
+#include "GameLogic/Component.h"
 #include "GameLogic/Module/CollideModule.h"
 #include "GameLogic/Module/ContainModule.h"
 #include "GameLogic/Module/CountermeasuresBehavior.h"
@@ -327,7 +328,7 @@ Object::Object(const ThingTemplate* tt, const ObjectStatusMaskType& objectStatus
 	m_visionRange = tt->friend_calcVisionRange();
 	m_shroudClearingRange = tt->friend_calcShroudClearingRange();
 
-	m_shroudClearingSubdualRange = tt->friend_calcShroudClearingSubdualRange();
+	m_shroudClearingDisabledRange = tt->friend_calcShroudClearingDisabledRange();
 	if (m_shroudClearingRange == -1.0f)
 		m_shroudClearingRange = m_visionRange;// Backwards compatible, and perfectly logical default to assign
 	m_shroudRange = 0.0f;
@@ -5302,6 +5303,33 @@ Real Object::getShroudClearingRange() const
 {
 	Real shroudClearingRange = m_shroudClearingRange;
 
+	// TheSuperHackers @feature Ahmed Salah 15/01/2025 Shroud clearing range based on ActiveBody component status
+	// Check if object has ActiveBody module and RADAR component
+	const ActiveBody* activeBody = static_cast<const ActiveBody*>(getBodyModule());
+	if (activeBody)
+	{
+		ComponentStatus radarStatus = activeBody->getComponentStatus(BodyModule::COMPONENT_RADAR);
+		
+		if (radarStatus == COMPONENT_STATUS_DOWNED)
+		{
+			// RADAR component is destroyed - use disabled range or default to 30
+			if (m_shroudClearingDisabledRange > 0)
+			{
+				shroudClearingRange = m_shroudClearingDisabledRange;
+			}
+			else
+			{
+				shroudClearingRange = 30.0f;
+			}
+		}
+		else if (radarStatus == COMPONENT_STATUS_PARTIALLY_FUNCTIONAL)
+		{
+			// RADAR component is partially functional - use 50% of original range
+			shroudClearingRange = m_shroudClearingRange * 0.5f;
+		}
+		// If COMPONENT_STATUS_FULLY_FUNCTIONAL, use original range (no change)
+	}
+
 	if (getStatusBits().test(OBJECT_STATUS_UNDER_CONSTRUCTION))
 	{
 		//structures under construction have limited vision range.  For now, base it
@@ -5331,9 +5359,9 @@ Real Object::getShroudClearingRange() const
 //-------------------------------------------------------------------------------------------------
 void Object::setShroudClearingRange(Real newShroudClearingRange)
 {
-	if (getDisabledFlags().test(DISABLED_EW) && m_shroudClearingSubdualRange >= 0)
+	if (getDisabledFlags().test(DISABLED_EW) && m_shroudClearingDisabledRange >= 0)
 	{
-		newShroudClearingRange = m_shroudClearingSubdualRange;
+		newShroudClearingRange = m_shroudClearingDisabledRange;
 	}
 
 	if (newShroudClearingRange != m_shroudClearingRange)
@@ -5459,11 +5487,11 @@ void Object::notifySubdualDamage(Real amount)
 		else
 			getDrawable()->clearTintStatus(TINT_STATUS_GAINING_SUBDUAL_DAMAGE);
 	}
-	if (m_shroudClearingSubdualRange >= 0)
+	if (m_shroudClearingDisabledRange >= 0)
 	{
 		if (getDisabledFlags().test(DISABLED_SUBDUED))
 		{
-			setShroudClearingRange(m_shroudClearingSubdualRange);
+			setShroudClearingRange(m_shroudClearingDisabledRange);
 		}
 		else
 		{
@@ -5486,11 +5514,11 @@ void Object::notifyEWDamage(Real amount)
 		else
 			getDrawable()->clearTintStatus(TINT_STATUS_GAINING_EW_DAMAGE);
 	}
-	if (m_shroudClearingSubdualRange >= 0)
+	if (m_shroudClearingDisabledRange >= 0)
 	{
 		if (getDisabledFlags().test(DISABLED_SUBDUED))
 		{
-			setShroudClearingRange(m_shroudClearingSubdualRange);
+			setShroudClearingRange(m_shroudClearingDisabledRange);
 		}
 		else
 		{
@@ -6712,17 +6740,13 @@ std::vector<Component> Object::getComponents() const
 {
 	std::vector<Component> components;
 	
-	// Get the ActiveBody module
+	// Get the BodyModule
 	BodyModuleInterface* body = getBodyModule();
 	if (!body)
 		return components;
 	
-	ActiveBody* activeBody = dynamic_cast<ActiveBody*>(body);
-	if (!activeBody)
-		return components;
-	
-	// Use the public ActiveBody::getComponents() method
-	return activeBody->getComponents();
+	// Use the public BodyModule::getComponents() method
+	return body->getComponents();
 }
 
 //-------------------------------------------------------------------------------------------------

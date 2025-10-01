@@ -3996,42 +3996,38 @@ Real WeaponTemplate::getSecondaryComponentDamage(const AsciiString& componentNam
 //-------------------------------------------------------------------------------------------------
 Bool Weapon::isWeaponSlotFunctional(const Object* source) const
 {
-	// Get the ActiveBody from the source object
+	// Get the BodyModule from the source object
 	BodyModuleInterface* body = source->getBodyModule();
 	if (!body)
 		return true; // No body module - assume functional
-	
-	ActiveBody* activeBody = dynamic_cast<ActiveBody*>(body);
-	if (!activeBody)
-		return true; // Not an ActiveBody - assume functional
 	
 	// Map weapon slot to component name
 	AsciiString componentName;
 	switch (static_cast<Int>(m_wslot))
 	{
 		case 0: // PRIMARY
-			componentName = ActiveBody::COMPONENT_PRIMARY_WEAPON;
+			componentName = BodyModule::COMPONENT_PRIMARY_WEAPON;
 			break;
 		case 1: // SECONDARY
-			componentName = ActiveBody::COMPONENT_SECONDARY_WEAPON;
+			componentName = BodyModule::COMPONENT_SECONDARY_WEAPON;
 			break;
 		case 2: // TERTIARY
-			componentName = ActiveBody::COMPONENT_TERTIARY_WEAPON;
+			componentName = BodyModule::COMPONENT_TERTIARY_WEAPON;
 			break;
 		case 3: // WEAPON_FOUR
-			componentName = ActiveBody::COMPONENT_WEAPON_FOUR;
+			componentName = BodyModule::COMPONENT_WEAPON_FOUR;
 			break;
 		case 4: // WEAPON_FIVE
-			componentName = ActiveBody::COMPONENT_WEAPON_FIVE;
+			componentName = BodyModule::COMPONENT_WEAPON_FIVE;
 			break;
 		case 5: // WEAPON_SIX
-			componentName = ActiveBody::COMPONENT_WEAPON_SIX;
+			componentName = BodyModule::COMPONENT_WEAPON_SIX;
 			break;
 		case 6: // WEAPON_SEVEN
-			componentName = ActiveBody::COMPONENT_WEAPON_SEVEN;
+			componentName = BodyModule::COMPONENT_WEAPON_SEVEN;
 			break;
 		case 7: // WEAPON_EIGHT
-			componentName = ActiveBody::COMPONENT_WEAPON_EIGHT;
+			componentName = BodyModule::COMPONENT_WEAPON_EIGHT;
 			break;
 		default:
 			// Invalid weapon slot - assume functional (no component restriction)
@@ -4039,7 +4035,7 @@ Bool Weapon::isWeaponSlotFunctional(const Object* source) const
 	}
 	
 	// Check component status
-		ComponentStatus status = activeBody->getComponentStatus(componentName);
+		ComponentStatus status = body->getComponentStatus(componentName);
 	
 	// If component doesn't exist, weapon should work (no component restriction)
 	if (status == COMPONENT_STATUS_NONE)
@@ -4074,16 +4070,12 @@ Bool WeaponTemplate::areRequiredComponentsFunctional(const Object* source) const
 	if (!body)
 		return true; // No body module - assume functional
 	
-	ActiveBody* activeBody = dynamic_cast<ActiveBody*>(body);
-	if (!activeBody)
-		return true; // Not an ActiveBody - assume functional
-	
 	// Check each required component
 	for (std::vector<AsciiString>::const_iterator it = m_affectedByComponents.begin();
 		 it != m_affectedByComponents.end(); ++it)
 	{
 		const AsciiString& componentName = *it;
-		ComponentStatus status = activeBody->getComponentStatus(componentName);
+		ComponentStatus status = body->getComponentStatus(componentName);
 		
 		// If component doesn't exist, skip it (not required)
 		if (status == COMPONENT_STATUS_NONE)
