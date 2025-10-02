@@ -204,6 +204,12 @@ Weapons are defined in `.ini` files within the game's data directories in a root
 - **Example**: `RadiusDamageAffects = ALLIES ENEMIES NEUTRALS`
 - **Available Values**: See [WeaponAffectsMaskType Values](#weaponaffectsmasktype-values) section below
 
+#### `RadiusDamageAffectsMaxSimultaneous` *(GMX Upcoming)*
+- **Type**: `Int`
+- **Description**: Maximum number of objects that can be affected by radius damage simultaneously. When set to 0 (default), there is no limit. When set to a positive value, the weapon will only affect the first N objects that pass all other targeting checks.
+- **Default**: `0` (no limit)
+- **Example**: `RadiusDamageAffectsMaxSimultaneous = 5`
+
 #### `ProjectileCollidesWith` *(v1.04)*
 - **Type**: `WeaponCollideMaskType` (bit flags)
 - **Description**: What objects projectiles can collide with
@@ -1004,6 +1010,31 @@ Weapon ArtilleryCannon
   ShockWaveAmount             = 15.0
   ShockWaveRadius             = 35.0
   ShockWaveTaperOff           = 0.4
+End
+```
+
+### Limited Area Effect Weapon
+```
+Weapon PrecisionStrike
+  PrimaryDamage               = 500.0
+  PrimaryDamageRadius         = 30.0
+  AttackRange                 = 300.0
+  DamageType                  = EXPLOSION
+  DeathType                   = EXPLODED
+  WeaponSpeed                 = 999999.0
+  DelayBetweenShots           = 15000
+  ClipSize                    = 1
+  ClipReloadTime              = 15000
+  AutoReloadsClip             = Yes
+  RadiusDamageAffects         = ENEMIES
+  RadiusDamageAffectsMaxSimultaneous = 3
+  AntiGround                  = Yes
+  FireSound                   = PrecisionStrikeLaunch
+  FireFX                      = FX_PrecisionStrikeLaunch
+  ProjectileDetonationFX      = FX_PrecisionStrikeExplosion
+  ShockWaveAmount             = 20.0
+  ShockWaveRadius             = 25.0
+  ShockWaveTaperOff           = 0.3
 End
 ```
 

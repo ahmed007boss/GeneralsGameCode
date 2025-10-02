@@ -329,6 +329,7 @@ const FieldParse WeaponTemplate::TheWeaponTemplateFieldParseTable[] =
 	{ "ShotsPerBarrel",						INI::parseInt,													NULL,							offsetof(WeaponTemplate, m_shotsPerBarrel) },
 	{ "DamageDealtAtSelfPosition",INI::parseBool,													NULL,							offsetof(WeaponTemplate, m_damageDealtAtSelfPosition) },
 	{ "RadiusDamageAffects",			INI::parseBitString32,	TheWeaponAffectsMaskNames,				offsetof(WeaponTemplate, m_affectsMask) },
+	{ "RadiusDamageAffectsMaxSimultaneous",	INI::parseInt,													NULL,							offsetof(WeaponTemplate, m_radiusDamageAffectsMaxSimultaneous) },
 	{ "TargetPrerequisite",				WeaponTemplate::parseTargetPrerequisites,	NULL,								0 },
 	{ "ShooterPrerequisite",			WeaponTemplate::parseShooterPrerequisites,	NULL,								0 },
 	{ "RadiusDamageAffectsPrerequisite",	WeaponTemplate::parseRadiusDamageAffectsPrerequisites,	NULL,								0 },
@@ -456,6 +457,7 @@ WeaponTemplate::WeaponTemplate() : m_nextTemplate(NULL)
 	m_suspendFXDelay = 0;
 	m_dieOnDetonate = FALSE;
 	m_consumeInventory.clear();
+	m_radiusDamageAffectsMaxSimultaneous = 0;	// 0 means no limit
 	m_primaryHitSideOverride = HIT_SIDE_UNKNOWN;
 	m_secondaryHitSideOverride = HIT_SIDE_UNKNOWN;
 	m_directHitSideOverride = HIT_SIDE_UNKNOWN;
@@ -1564,6 +1566,10 @@ void WeaponTemplate::dealDamageInternal(ObjectID sourceID, ObjectID victimID, co
 		}
 		MemoryPoolObjectHolder hold(iter);
 
+		// TheSuperHackers @feature author 01/01/2025 Track simultaneous damage limit
+		Int maxSimultaneous = getRadiusDamageAffectsMaxSimultaneous();
+		Int affectedCount = 0;
+
 		for (; curVictim != NULL; curVictim = iter ? iter->nextWithNumeric(&curVictimDistSqr) : NULL)
 		{
 			Bool killSelf = false;
@@ -1642,6 +1648,13 @@ void WeaponTemplate::dealDamageInternal(ObjectID sourceID, ObjectID victimID, co
 						if (!satisfiesPrerequisites)
 						{
 							//Skip if object doesn't satisfy radius damage affects prerequisites
+							continue;
+						}
+
+						// TheSuperHackers @feature author 01/01/2025 Check simultaneous damage limit
+						if (maxSimultaneous > 0 && affectedCount >= maxSimultaneous)
+						{
+							//Skip if we've already reached the maximum simultaneous targets
 							continue;
 						}
 					}
@@ -1831,6 +1844,9 @@ void WeaponTemplate::dealDamageInternal(ObjectID sourceID, ObjectID victimID, co
 			}
 
 			curVictim->attemptDamage(&damageInfo);
+			
+			// TheSuperHackers @feature author 01/01/2025 Increment affected count for simultaneous limit
+			affectedCount++;
 			
 			//DEBUG_ASSERTLOG(damageInfo.out.m_noEffect, ("WeaponTemplate::dealDamageInternal: dealt to %s %08lx: attempted %f, actual %f (%f)",
 			//	curVictim->getTemplate()->getName().str(),curVictim,

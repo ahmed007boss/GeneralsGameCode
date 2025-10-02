@@ -485,6 +485,7 @@ public:
 	inline const std::vector<ObjectPrerequisite>& getRadiusDamageAffectsPrerequisites() const { return m_radiusDamageAffectsPrerequisites; }
 	inline BOOL canAttackWithoutTarget() const { return m_canAttackWithoutTarget; }
 	inline const AsciiString& getConsumeInventory() const { return m_consumeInventory; }
+	inline Int getRadiusDamageAffectsMaxSimultaneous() const { return m_radiusDamageAffectsMaxSimultaneous; }
 	inline Bool isLeechRangeWeapon() const { return m_leechRangeWeapon; }
 	inline Bool isCapableOfFollowingWaypoint() const { return m_capableOfFollowingWaypoint; }
 	inline Bool isShowsAmmoPips() const { return m_isShowsAmmoPips; }
@@ -600,6 +601,7 @@ private:
 	UnsignedInt m_suspendFXDelay;						///< The fx can be suspended for any delay, in frames, then they will execute as normal
 	Bool m_dieOnDetonate;
 	AsciiString m_consumeInventory;
+	Int m_radiusDamageAffectsMaxSimultaneous;		///< Maximum number of objects that can be affected by radius damage simultaneously
 	HitSide m_primaryHitSideOverride;							///< Override hit side for primary damage (jets, mines, etc.)
 	HitSide m_secondaryHitSideOverride;						///< Override hit side for secondary damage (jets, mines, etc.)
 	HitSide m_directHitSideOverride;							///< Override hit side for direct hits when distance > 2.0f

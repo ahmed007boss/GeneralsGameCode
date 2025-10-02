@@ -1312,10 +1312,10 @@ void ObjectPrerequisite::parseObjectPrerequisites(INI* ini, void* instance, void
 		{ "ObjectHasNearbyKindOf", ObjectPrerequisite::parseObjectHasNearbyKindOf, 0, 0 },
 		{ "ObjectHasNoNearbyObject", ObjectPrerequisite::parseObjectHasNoNearbyObject, 0, 0 },
 		{ "ObjectHasNoNearbyKindOf", ObjectPrerequisite::parseObjectHasNoNearbyKindOf, 0, 0 },
-		{ "ObjectHasModelConditionFlag", ObjectPrerequisite::parseObjectHasModelConditionFlag, 0, 0 },
-		{ "ObjectHasNoModelConditionFlag", ObjectPrerequisite::parseObjectHasNoModelConditionFlag, 0, 0 },
-		{ "ObjectHasStatusFlag", ObjectPrerequisite::parseObjectHasStatusFlag, 0, 0 },
-		{ "ObjectHasNoStatusFlag", ObjectPrerequisite::parseObjectHasNoStatusFlag, 0, 0 },
+		{ "ObjectHasModelCondition", ObjectPrerequisite::parseObjectHasModelConditionFlag, 0, 0 },
+		{ "ObjectHasNoModelCondition", ObjectPrerequisite::parseObjectHasNoModelConditionFlag, 0, 0 },
+		{ "ObjectHasStatus", ObjectPrerequisite::parseObjectHasStatusFlag, 0, 0 },
+		{ "ObjectHasNoStatus", ObjectPrerequisite::parseObjectHasNoStatusFlag, 0, 0 },
 		{ "HasAtLeastItem", ObjectPrerequisite::parseHasAtLeastItem, 0, 0 },     // True if the unit has ≥ a given number of a specific item
 		{ "HasAtMostItem", ObjectPrerequisite::parseHasAtMostItem, 0, 0 },       // True if the unit has ≤ a given number of a specific item
 		{ "ItemStorageFull", ObjectPrerequisite::parseItemStorageFull, 0, 0 },   // True if storage for a specific item is completely full
