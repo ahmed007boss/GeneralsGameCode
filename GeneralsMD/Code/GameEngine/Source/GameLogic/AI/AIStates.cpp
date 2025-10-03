@@ -5247,6 +5247,13 @@ StateReturnType AIAttackFireWeaponState::update()
 		return STATE_FAILURE;
 	}
 
+	// TheSuperHackers @feature author 02/10/2025 Validate weapon use before firing
+	WeaponValidationResult validationResult = weapon->validateWeaponUse(obj, victim);
+	if (validationResult != WEAPON_VALIDATION_VALID)
+	{
+		return STATE_FAILURE;
+	}
+
 	/**
 		this is the weird case where we have multi turrets, and turret 'a' wants
 		to fire, but someone has changed the current weapon to be one not on him.
@@ -5323,10 +5330,15 @@ StateReturnType AIAttackFireWeaponState::update()
 				Weapon* weapon = obj->getWeaponInWeaponSlot((WeaponSlotType)slot);
 				if (weapon)
 				{
+					// TheSuperHackers @feature author 02/10/2025 Validate weapon use before firing (linked turrets)
+					WeaponValidationResult validationResult = weapon->validateWeaponUse(obj, nullptr);
+					if (validationResult == WEAPON_VALIDATION_VALID)
+				{
 					if (weapon->fireWeapon(obj, getMachineGoalPosition())) //fire() returns 'reloaded'
 						obj->releaseWeaponLock(LOCKED_TEMPORARILY);// unlock, 'cause we're loaded
 
 					obj->notifyFiringTrackerShotFired(weapon, INVALID_ID);
+					}
 				}
 			}
 		}
@@ -5352,12 +5364,17 @@ StateReturnType AIAttackFireWeaponState::update()
 		Weapon* weapon = obj->getWeaponInWeaponSlot((WeaponSlotType)slot);
 		if (weapon)
 		{
+			// TheSuperHackers @feature author 02/10/2025 Validate weapon use before firing (synced weapons)
+			WeaponValidationResult validationResult = weapon->validateWeaponUse(obj, nullptr);
+			if (validationResult == WEAPON_VALIDATION_VALID)
+		{
 			if (weapon->fireWeapon(obj, getMachineGoalPosition())) { //fire() returns 'reloaded'
 				obj->releaseWeaponLock(LOCKED_TEMPORARILY);// unlock, 'cause we're loaded
 				// DEBUG_LOG((">> On firing Weapon in slot %d: fire synced weapon slot %d. Shot Fired!\n", wslot, slot));
 			}
 
 			obj->notifyFiringTrackerShotFired(weapon, INVALID_ID);
+			}
 		}
 	}
 

@@ -53,11 +53,10 @@ class Weapon;
 class WeaponTemplate;
 class INI;
 class ParticleSystemTemplate;
+class SimpleObjectIterator;
 enum NameKeyType CPP_11(: Int);
-
 //-------------------------------------------------------------------------------------------------
 const Int NO_MAX_SHOTS_LIMIT = 0x7fffffff;
-
 //-------------------------------------------------------------------------------------------------
 enum WeaponReloadType CPP_11(: Int)
 {
@@ -524,6 +523,15 @@ public:
 protected:
 
 	// actually deal out the damage.
+	// TheSuperHackers @feature author 02/10/2025 Prepare list of applicable affected victims
+	std::vector<Object*> getApplicableAffectedVictims(
+		SimpleObjectIterator* iter,
+		Object* curVictim,
+		const Object* source,
+		const Object* primaryVictim,
+		Int affects
+	) const;
+	
 	void dealDamageInternal(ObjectID sourceID, ObjectID victimID, const Coord3D *pos, const WeaponBonus& bonus, Bool isProjectileDetonation) const;
 	void trimOldHistoricDamage() const;
 

@@ -843,8 +843,8 @@ Bool WeaponTemplate::shouldProjectileCollideWith(
 	if (intendedVictimID == thingWeCollidedWith->getID())
 		return true;
 
- 	if (projectileLauncher != NULL)
- 	{
+	if(projectileLauncher != NULL)
+	{
 
  		// Don't hit your own launcher, ever.
  		if (projectileLauncher == thingWeCollidedWith)
@@ -919,8 +919,6 @@ Bool WeaponTemplate::shouldProjectileCollideWith(
 	// if any in requiredMask are present in collidemask, do the collision. (srj)
 	if ((getProjectileCollideMask() & requiredMask) != 0)
 		return true;
-
-	//DEBUG_LOG(("Rejecting projectile collision between %s and %s!",projectile->getTemplate()->getName().str(),thingWeCollidedWith->getTemplate()->getName().str()));
 	return false;
 }//-------------------------------------------------------------------------------------------------
 Bool Weapon::hasEnoughInventoryToFire(const Object* source) const {
@@ -1100,17 +1098,12 @@ UnsignedInt WeaponTemplate::fireWeaponTemplate
 		distSqr = ThePartitionManager->getDistanceSquared(sourceObj, victimPos, ATTACK_RANGE_CALC_TYPE);
 	}
 
-//	DEBUG_LOG(("WeaponTemplate::fireWeaponTemplate: firing weapon %s (source=%s, victim=%s)",
-//		m_name.str(),sourceObj->getTemplate()->getName().str(),victimObj?victimObj->getTemplate()->getName().str():"NULL"));
-
 	//Only perform this check if the weapon isn't a leech range weapon (which can have unlimited range!)
 	if (!ignoreRanges && !isLeechRangeWeapon())
 	{
 		Real attackRangeSqr = sqr(getAttackRange(bonus));
 		if (distSqr > attackRangeSqr)
-		{
-			//DEBUG_ASSERTCRASH(distSqr < 5*5 || distSqr < attackRangeSqr*1.2f, ("*** victim is out of range (%f vs %f) of this weapon -- why did we attempt to fire?",sqrtf(distSqr),sqrtf(attackRangeSqr)));
-
+		{			
 			//-extraLogging
 			#if defined(RTS_DEBUG)
 			if (TheGlobalData->m_extraLogging)
@@ -1192,7 +1185,6 @@ UnsignedInt WeaponTemplate::fireWeaponTemplate
 		if (handled == false && fx != NULL)
 		{
 			// bah. just play it at the drawable's pos.
-			//DEBUG_LOG(("*** WeaponFireFX not fully handled by the client"));
 			const Coord3D* where = isContactWeapon() ? &targetPos : sourceObj->getDrawable()->getPosition();
 			FXList::doFXPos(fx, where, sourceObj->getDrawable()->getTransformMatrix(), getWeaponSpeed(), &targetPos, getPrimaryDamageRadius(bonus));
 		}
@@ -1209,7 +1201,7 @@ UnsignedInt WeaponTemplate::fireWeaponTemplate
 
 	Coord3D projectileDestination = *victimPos; //Need to copy this, as we have a pointer to their actual position
 	Real scatterRadius = 0.0f;
-	if (m_scatterRadius > 0.0f || m_infantryInaccuracyDist > 0.0f && victimObj && victimObj->isKindOf(KINDOF_INFANTRY))
+	if (m_scatterRadius > 0.0f || (m_infantryInaccuracyDist > 0.0f && victimObj && victimObj->isKindOf(KINDOF_INFANTRY)))
 	{
 		// This weapon scatters, so clear the victimObj, as we are no longer shooting it directly,
 		// and find a random point within the radius to shoot at as victimPos
@@ -1294,7 +1286,6 @@ UnsignedInt WeaponTemplate::fireWeaponTemplate
 		if (delayInFrames < 1.0f)
 		{
 			// go ahead and do it now
-			//DEBUG_LOG(("WeaponTemplate::fireWeaponTemplate: firing weapon immediately!"));
 			if (inflictDamage)
 			{
 				dealDamageInternal(sourceID, damageID, damagePos, bonus, isProjectileDetonation);
@@ -1317,7 +1308,6 @@ UnsignedInt WeaponTemplate::fireWeaponTemplate
 			{
 				UnsignedInt delayInWholeFrames = REAL_TO_INT_CEIL(delayInFrames);
 				when = TheGameLogic->getFrame() + delayInWholeFrames;
-				//DEBUG_LOG(("WeaponTemplate::fireWeaponTemplate: firing weapon in %d frames (= %d)!", delayInWholeFrames,when));
 				TheWeaponStore->setDelayedDamage(this, damagePos, when, sourceID, damageID, bonus);
 			}
 
@@ -1452,6 +1442,162 @@ static Bool is2DDistSquaredLessThan(const Coord3D& a, const Coord3D& b, Real dis
 }
 
 //-------------------------------------------------------------------------------------------------
+// TheSuperHackers @feature author 02/10/2025 Prepare list of applicable affected victims
+std::vector<Object*> WeaponTemplate::getApplicableAffectedVictims(
+	SimpleObjectIterator* iter,
+	Object* curVictim,
+	const Object* source,
+	const Object* primaryVictim,
+	Int affects
+) const
+{
+	std::vector<Object*> applicableVictims;
+	// TheSuperHackers @feature author 02/10/2025 Track counts for priority sorting
+	Int selfKillCount = 0;
+	Int enemyCount = 0;
+	Int neutralCount = 0;
+	Real curVictimDistSqr;
+	
+	for (; curVictim != NULL; curVictim = iter ? iter->nextWithNumeric(&curVictimDistSqr) : NULL)
+	{
+		Bool killSelf = false;
+		Bool shouldInclude = true;
+		
+		if (source != NULL)
+		{
+			// anytime something is designated as the "primary victim" (ie, the direct target
+			// of the weapon), we ignore all the "affects" flags.
+			if (curVictim != primaryVictim)
+			{
+				if ((affects & WEAPON_KILLS_SELF) && source == curVictim)
+				{
+					killSelf = true;
+				}
+				else
+				{
+					// should object ever be allowed to damage themselves? methinks not...
+					// exception: a few weapons allow this (eg, for suicide bombers).
+					if ((affects & WEAPON_AFFECTS_SELF) == 0)
+					{
+						// Remember that source is a missile for some units, and they don't want to injure them'selves' either
+						if (source == curVictim || source->getProducerID() == curVictim->getID())
+						{
+							shouldInclude = false;
+						}
+					}
+
+					if (shouldInclude && (affects & WEAPON_DOESNT_AFFECT_SIMILAR))
+					{
+						//This means we probably are affecting allies, but don't want to kill nearby members that are the same type as us.
+						//A good example are a group of terrorists blowing themselves up. We don't want to cause a domino effect that kills
+						//all of them.
+						if (source->getTemplate()->isEquivalentTo(curVictim->getTemplate()) && source->getRelationship(curVictim) == ALLIES)
+						{
+							shouldInclude = false;
+						}
+					}
+
+					if (shouldInclude && (affects & WEAPON_DOESNT_AFFECT_AIRBORNE) != 0 && curVictim->isSignificantlyAboveTerrain())
+					{
+						shouldInclude = false;
+					}
+
+					if (shouldInclude)
+					{
+						/*
+							The idea here is: if its our ally(/enemies), AND it's not the direct target, AND the weapon doesn't
+							do radius-damage to allies(/enemies)... skip it.
+						*/
+						Relationship r = curVictim->getRelationship(source);
+						Int requiredMask;
+						if (r == ALLIES)
+							requiredMask = WEAPON_AFFECTS_ALLIES;
+						else if (r == ENEMIES)
+							requiredMask = WEAPON_AFFECTS_ENEMIES;
+						else /* r == NEUTRAL */
+							requiredMask = WEAPON_AFFECTS_NEUTRALS;
+
+						if (!(affects & requiredMask))
+						{
+							//Skip if we aren't affected by this weapon.
+							shouldInclude = false;
+						}
+					}
+
+					if (shouldInclude)
+					{
+						// Check radius damage affects prerequisites using ObjectPrerequisite system
+						const std::vector<ObjectPrerequisite>& radiusDamageAffectsPrereqs = getRadiusDamageAffectsPrerequisites();
+						for (size_t i = 0; i < radiusDamageAffectsPrereqs.size(); i++)
+						{
+							if (!radiusDamageAffectsPrereqs[i].isSatisfied(curVictim))
+							{
+								shouldInclude = false;
+								break;
+							}
+						}
+					}
+
+					if (shouldInclude)
+					{
+						// TheSuperHackers @feature author 02/10/2025 Skip victims that already have the status for status damage types
+						ObjectStatusTypes damageStatusType = getDamageStatusType();
+						if (damageStatusType != OBJECT_STATUS_NONE && curVictim->testStatus(damageStatusType))
+						{
+							shouldInclude = false;
+						}
+					}
+				}
+			}
+		}
+		
+		if (shouldInclude || killSelf)
+		{
+			// TheSuperHackers @feature author 02/10/2025 Insert victims at correct position based on relationship priority
+			if (killSelf)
+			{
+				// Self-kill targets have highest priority - insert at beginning
+				applicableVictims.insert(applicableVictims.begin() + selfKillCount, curVictim);
+				selfKillCount++;
+			}
+			else if (source != NULL)
+			{
+				Relationship r = curVictim->getRelationship(source);
+				if (r == ENEMIES)
+				{
+					// Insert enemies after self-kill targets
+					applicableVictims.insert(applicableVictims.begin() + selfKillCount + enemyCount, curVictim);
+					enemyCount++;
+				}
+				else if (r == NEUTRAL)
+				{
+					// Insert neutrals after enemies
+					applicableVictims.insert(applicableVictims.begin() + selfKillCount + enemyCount + neutralCount, curVictim);
+					neutralCount++;
+				}
+				else if (r == ALLIES)
+				{
+					// Insert allies after neutrals - add to end
+					applicableVictims.push_back(curVictim);
+				}
+				else
+				{
+					// Unknown relationship, add to end
+					applicableVictims.push_back(curVictim);
+				}
+			}
+			else
+			{
+				// No source, can't determine relationship - add to end
+				applicableVictims.push_back(curVictim);
+			}
+		}
+	}
+	
+	return applicableVictims;
+}
+
+//-------------------------------------------------------------------------------------------------
 void WeaponTemplate::dealDamageInternal(ObjectID sourceID, ObjectID victimID, const Coord3D* pos, const WeaponBonus& bonus, Bool isProjectileDetonation) const
 {
 	if (sourceID == 0)	// must have a source
@@ -1508,8 +1654,6 @@ void WeaponTemplate::dealDamageInternal(ObjectID sourceID, ObjectID victimID, co
 
 	}
 
-//DEBUG_LOG(("WeaponTemplate::dealDamageInternal: dealing damage %s at frame %d",m_name.str(),TheGameLogic->getFrame()));
-
 	// if there's a specific victim, use it's pos (overriding the value passed in)
 	Object* primaryVictim = victimID ? TheGameLogic->findObjectByID(victimID) : NULL;	// might be null...
 	if (primaryVictim)
@@ -1542,11 +1686,9 @@ void WeaponTemplate::dealDamageInternal(ObjectID sourceID, ObjectID victimID, co
 			curVictim = iter->firstWithNumeric(&curVictimDistSqr);
 		}
 		else
-		{
-			//DEBUG_ASSERTCRASH(primaryVictim != NULL, ("weapons without radii should always pass in specific victims"));
+		{			
 			// check against victimID rather than primaryVictim, since we may have targeted a legitimate victim
 			// that got killed before the damage was dealt... (srj)
-			//DEBUG_ASSERTCRASH(victimID != 0, ("weapons without radii should always pass in specific victims"));
 			iter = NULL;
 			curVictim = primaryVictim;
 			curVictimDistSqr = 0.0f;
@@ -1566,99 +1708,33 @@ void WeaponTemplate::dealDamageInternal(ObjectID sourceID, ObjectID victimID, co
 		}
 		MemoryPoolObjectHolder hold(iter);
 
-		// TheSuperHackers @feature author 01/01/2025 Track simultaneous damage limit
+		// TheSuperHackers @feature author 02/10/2025 Get applicable affected victims
+		std::vector<Object*> applicableVictims = getApplicableAffectedVictims(iter, curVictim, source, primaryVictim, affects);
+		
+		// TheSuperHackers @feature author 02/10/2025 Apply simultaneous damage limit during execution
 		Int maxSimultaneous = getRadiusDamageAffectsMaxSimultaneous();
 		Int affectedCount = 0;
-
-		for (; curVictim != NULL; curVictim = iter ? iter->nextWithNumeric(&curVictimDistSqr) : NULL)
+		
+		// Process each applicable victim (up to maxSimultaneous limit)
+		for (size_t victimIndex = 0; victimIndex < applicableVictims.size(); victimIndex++)
 		{
-			Bool killSelf = false;
-			if (source != NULL)
+			// Check simultaneous damage limit during execution
+			if (maxSimultaneous > 0 && affectedCount >= maxSimultaneous)
 			{
-				// anytime something is designated as the "primary victim" (ie, the direct target
-				// of the weapon), we ignore all the "affects" flags.
-				if (curVictim != primaryVictim)
-				{
-
-					if ((affects & WEAPON_KILLS_SELF) && source == curVictim)
-					{
-						killSelf = true;
-					}
-					else
-					{
-
-						// should object ever be allowed to damage themselves? methinks not...
-						// exception: a few weapons allow this (eg, for suicide bombers).
-						if ((affects & WEAPON_AFFECTS_SELF) == 0)
-						{
-							// Remember that source is a missile for some units, and they don't want to injure them'selves' either
-							if (source == curVictim || source->getProducerID() == curVictim->getID())
-							{
-								//DEBUG_LOG(("skipping damage done to SELF..."));
-								continue;
-							}
-						}
-
-						if (affects & WEAPON_DOESNT_AFFECT_SIMILAR)
-						{
-							//This means we probably are affecting allies, but don't want to kill nearby members that are the same type as us.
-							//A good example are a group of terrorists blowing themselves up. We don't want to cause a domino effect that kills
-							//all of them.
-							if (source->getTemplate()->isEquivalentTo(curVictim->getTemplate()) && source->getRelationship(curVictim) == ALLIES)
-							{
-								continue;
-							}
-						}
-
-						if ((affects & WEAPON_DOESNT_AFFECT_AIRBORNE) != 0 && curVictim->isSignificantlyAboveTerrain())
-						{
-							continue;
-						}
-
-						/*
-							The idea here is: if its our ally(/enemies), AND it's not the direct target, AND the weapon doesn't
-							do radius-damage to allies(/enemies)... skip it.
-						*/
-						Relationship r = curVictim->getRelationship(source);
-						Int requiredMask;
-						if (r == ALLIES)
-							requiredMask = WEAPON_AFFECTS_ALLIES;
-						else if (r == ENEMIES)
-							requiredMask = WEAPON_AFFECTS_ENEMIES;
-						else /* r == NEUTRAL */
-							requiredMask = WEAPON_AFFECTS_NEUTRALS;
-
-						if (!(affects & requiredMask))
-						{
-							//Skip if we aren't affected by this weapon.
-							continue;
-						}
-
-						// Check radius damage affects prerequisites using ObjectPrerequisite system
-						const std::vector<ObjectPrerequisite>& radiusDamageAffectsPrereqs = getRadiusDamageAffectsPrerequisites();
-						Bool satisfiesPrerequisites = true;
-						for (size_t i = 0; i < radiusDamageAffectsPrereqs.size(); i++)
-						{
-							if (!radiusDamageAffectsPrereqs[i].isSatisfied(curVictim))
-							{
-								satisfiesPrerequisites = false;
-								break;
-							}
-						}
-						if (!satisfiesPrerequisites)
-						{
-							//Skip if object doesn't satisfy radius damage affects prerequisites
-							continue;
-						}
-
-						// TheSuperHackers @feature author 01/01/2025 Check simultaneous damage limit
-						if (maxSimultaneous > 0 && affectedCount >= maxSimultaneous)
-						{
-							//Skip if we've already reached the maximum simultaneous targets
-							continue;
-						}
-					}
-				}
+				//Stop processing if we've reached the maximum simultaneous targets
+				break;
+			}
+			
+			curVictim = applicableVictims[victimIndex];
+			
+			// Calculate distance for this victim
+			if (primaryVictim && curVictim == primaryVictim)
+			{
+				curVictimDistSqr = 0.0f; // Primary victim distance doesn't matter for damage calculation
+			}
+			else
+			{
+				curVictimDistSqr = ThePartitionManager->getDistanceSquared(curVictim, pos, DAMAGE_RANGE_CALC_TYPE);
 			}
 
 			// TheSuperHackers @feature author 01/01/2025 Calculate hit side for side-specific armor
@@ -1792,6 +1868,9 @@ void WeaponTemplate::dealDamageInternal(ObjectID sourceID, ObjectID victimID, co
 			// that's handled internally by the attemptDamage() method.
 			damageInfo.in.m_amount = (curVictimDistSqr <= primaryRadiusSqr) ? primaryDamage : secondaryDamage;
 
+			// Check if this is a self-kill scenario
+			Bool killSelf = (affects & WEAPON_KILLS_SELF) && source == curVictim;
+			
 			if (killSelf)
 			{
 				//Deal enough damage to kill yourself. I thought about getting the current health and applying
@@ -1845,7 +1924,7 @@ void WeaponTemplate::dealDamageInternal(ObjectID sourceID, ObjectID victimID, co
 
 			curVictim->attemptDamage(&damageInfo);
 			
-			// TheSuperHackers @feature author 01/01/2025 Increment affected count for simultaneous limit
+			// TheSuperHackers @feature author 02/10/2025 Increment affected count for simultaneous limit
 			affectedCount++;
 			
 			//DEBUG_ASSERTLOG(damageInfo.out.m_noEffect, ("WeaponTemplate::dealDamageInternal: dealt to %s %08lx: attempted %f, actual %f (%f)",
@@ -2754,6 +2833,10 @@ Real Weapon::getPercentReadyToFire() const
 				return (Real)timeSoFar / (Real)totalTime;
 			}
 		}
+		
+		case WEAPON_STATUS_COUNT:
+		default:
+			break;
 	}
 	DEBUG_CRASH(("should not get here"));
 	return 0.0f;
@@ -2971,7 +3054,7 @@ Bool Weapon::privateFireWeapon(
 				}
 
 				// it's a mine, but doesn't have LandMineInterface...
-			if (!found && victimObj->isKindOf(KINDOF_MINE) || victimObj->isKindOf(KINDOF_BOOBY_TRAP) || victimObj->isKindOf(KINDOF_DEMOTRAP))
+			if (!found && (victimObj->isKindOf(KINDOF_MINE) || victimObj->isKindOf(KINDOF_BOOBY_TRAP) || victimObj->isKindOf(KINDOF_DEMOTRAP)))
 				{
 					VeterancyLevel v = sourceObj->getVeterancyLevel();
 					FXList::doFXPos(m_template->getFireFX(v), victimObj->getPosition(), victimObj->getTransformMatrix(), 0, victimObj->getPosition(), 0);
@@ -3003,7 +3086,12 @@ Bool Weapon::privateFireWeapon(
 			//We're using a hacker unit to hack a target. Hacking has various effects and
 			//instead of inflicting damage, we are waiting for a period of time until the hack takes effect.
 			//return FALSE;
+			break;
 		}
+		
+		default:
+			// Most damage types don't require special handling
+			break;
 	}
 
 	WeaponBonus bonus;
@@ -3258,9 +3346,7 @@ Bool Weapon::isWithinTargetPitch(const Object* source, const Object* victim) con
 	if ((minPitch >= m_template->getMinTargetPitch() && minPitch <= m_template->getMaxTargetPitch()) ||
 			(maxPitch >= m_template->getMinTargetPitch() && maxPitch <= m_template->getMaxTargetPitch()) ||
 			(minPitch <= m_template->getMinTargetPitch() && maxPitch >= m_template->getMaxTargetPitch()))
-		return true;
-
-	//DEBUG_LOG(("pitch %f-%f is out of range",rad2deg(minPitch),rad2deg(maxPitch),rad2deg(m_template->getMinTargetPitch()),rad2deg(m_template->getMaxTargetPitch())));
+		return true;	
 	return false;
 }
 
@@ -3291,6 +3377,9 @@ Bool Weapon::isDamageWeapon() const
 
 		case DAMAGE_HACK:
 			return FALSE;
+			
+		default:
+			break;
 	}
 
 	//Use no bonus
