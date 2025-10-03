@@ -50,6 +50,11 @@ public:
 	Real m_moneyChance;		///< Chance to get money, if weaponChance fails
 	Int m_minimumMoney;		///< How much, if we get money
 	Int m_maximumMoney;		///< How much, if we get money
+	Real m_shareRadius;		///< Radius to check for nearby units to share benefits with
+	Real m_fullRestoreChance;	///< Chance to get full restore components
+	Real m_fillInventoryChance;	///< Chance to fill inventory items
+	Real m_fullRepairChance;	///< Chance to get full repair
+	Int m_salvageCrateValue;	///< Number of times to execute crate behavior
 
 	SalvageCrateCollideModuleData()
 	{
@@ -58,6 +63,11 @@ public:
 		m_moneyChance = .75f;
 		m_minimumMoney = 25;
 		m_maximumMoney = 75;
+		m_shareRadius = 0.0f;
+		m_fullRestoreChance = 0.0f;
+		m_fillInventoryChance = 0.0f;
+		m_fullRepairChance = 0.0f;
+		m_salvageCrateValue = 1;
 	}
 
 	static void buildFieldParse(MultiIniFieldParse& p)
@@ -71,6 +81,11 @@ public:
 			{ "MoneyChance",	INI::parsePercentToReal,	NULL, offsetof( SalvageCrateCollideModuleData, m_moneyChance ) },
 			{ "MinMoney",			INI::parseInt,						NULL, offsetof( SalvageCrateCollideModuleData, m_minimumMoney ) },
 			{ "MaxMoney",			INI::parseInt,						NULL, offsetof( SalvageCrateCollideModuleData, m_maximumMoney ) },
+			{ "ShareRadius",	INI::parseReal,						NULL, offsetof( SalvageCrateCollideModuleData, m_shareRadius ) },
+			{ "FullRestoreChance",	INI::parsePercentToReal,	NULL, offsetof( SalvageCrateCollideModuleData, m_fullRestoreChance ) },
+			{ "FillInventoryChance",	INI::parsePercentToReal,	NULL, offsetof( SalvageCrateCollideModuleData, m_fillInventoryChance ) },
+			{ "FullRepairChance",	INI::parsePercentToReal,	NULL, offsetof( SalvageCrateCollideModuleData, m_fullRepairChance ) },
+			{ "SalvageCrateValue",	INI::parseInt,						NULL, offsetof( SalvageCrateCollideModuleData, m_salvageCrateValue ) },
 			{ 0, 0, 0, 0 }
 		};
     p.add(dataFieldParse);
@@ -104,12 +119,31 @@ private:
 	Bool eligibleForWeaponSet( Object *other );
 	Bool eligibleForArmorSet( Object *other );
 	Bool eligibleForLevel( Object *other );
+	Bool eligibleForFullRestore( Object *other );
+	Bool eligibleForFillInventory( Object *other );
+	Bool eligibleForFullRepair( Object *other );
+	Object* eligibleForWeaponSetShare( Object *other );
+	Object* eligibleForArmorSetShare( Object *other );
+	Object* eligibleForLevelShare( Object *other );
+	Object* eligibleForFullRestoreShare( Object *other );
+	Object* eligibleForFillInventoryShare( Object *other );
+	Object* eligibleForFullRepairShare( Object *other );
 	Bool testWeaponChance();
 	Bool testLevelChance();
+
+private:
+	/// Helper function to get objects in range with team and KINDOF_SALVAGER filtering
+	std::vector<Object*> getObjectsInRange( Object *other, Real radius );
+	Bool testFullRestoreChance();
+	Bool testFillInventoryChance();
+	Bool testFullRepairChance();
 
 	void doWeaponSet( Object *other );
 	void doArmorSet( Object *other );
 	void doLevelGain( Object *other );
+	void doFullRestore( Object *other );
+	void doFillInventory( Object *other );
+	void doFullRepair( Object *other );
 	void doMoney( Object *other );
 
 };
