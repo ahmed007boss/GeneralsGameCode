@@ -126,7 +126,7 @@ static inline uint64_t _rdtsc()
     #elif __has_builtin(__builtin_trap)
     #define __debugbreak() __builtin_trap()
     #else
-    #error "No implementation for __debugbreak"
+    //#error "No implementation for __debugbreak"
     #endif
 #elif !defined(_MSC_VER)
 #error "No implementation for __debugbreak"

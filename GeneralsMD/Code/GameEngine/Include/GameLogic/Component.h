@@ -78,4 +78,4 @@ struct Component
 	Component() : maxHealth(0.0f), initialHealth(0.0f), healingType(COMPONENT_HEALING_NORMAL), damageOnSides(), replacementCost(0), forceReturnOnDestroy(FALSE), ewDamageCap(0.0f), ewDamageHealRate(0), ewDamageHealAmount(0.0f) {}
 };
 
-#endif // _COMPONENT_H_
+#endif
