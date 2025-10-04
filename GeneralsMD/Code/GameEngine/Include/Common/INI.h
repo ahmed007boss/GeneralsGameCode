@@ -34,6 +34,7 @@
 
 // INCLUDES ///////////////////////////////////////////////////////////////////////////////////////
 #include <stddef.h>	// for offsetof, which we don't use but everyone who includes us does
+#include <map>
 #include "Common/STLTypedefs.h"
 #include "Common/AsciiString.h"
 #include "Common/GameCommon.h"
@@ -52,7 +53,8 @@ enum INILoadType CPP_11(: Int)
 	INI_LOAD_INVALID,						///< invalid load type
 	INI_LOAD_OVERWRITE,					///< create new or load *over* existing data instance
 	INI_LOAD_CREATE_OVERRIDES,	///< create new or load into *new* override data instance
-	INI_LOAD_MULTIFILE					///< create new or continue loading into existing data instance.
+	INI_LOAD_MULTIFILE,					///< create new or continue loading into existing data instance.
+	INI_LOAD_INCLUDE						///< load file for include without block parsing
 };
 
 //-------------------------------------------------------------------------------------------------
@@ -268,6 +270,13 @@ public:
 	void initFromINI( void *what, const FieldParse* parseTable );
 	void initFromINIMulti( void *what, const MultiIniFieldParse& parseTableList );
 	void initFromINIMultiProc( void *what, BuildMultiIniFieldProc proc );
+	void continueParsing( void *what, const FieldParse* parseTable, const std::vector<AsciiString>& parameters );
+	
+	// TheSuperHackers @feature Ahmed Salah 15/01/2025 Parameter management for cascading to nested parsing operations
+	void addParameters( const std::vector<AsciiString>& parameters );
+	void addParameter( const AsciiString& key, const AsciiString& value );
+	const std::map<AsciiString, AsciiString>& getParameters() const;
+	void applyParameterSubstitution( char* buffer );
 
 	static void parseUnsignedByte( INI *ini, void *instance, void *store, const void* userData );
 	static void parseShort( INI *ini, void *instance, void *store, const void* userData );
@@ -426,6 +435,8 @@ protected:
 #ifdef DEBUG_CRASHING
 	char m_curBlockStart[ INI_MAX_CHARS_PER_LINE ];	///< first line of cur block
 #endif
+	// TheSuperHackers @feature Ahmed Salah 15/01/2025 Parameter storage for cascading to nested parsing operations
+	std::map<AsciiString, AsciiString> m_parameters;					///< parameters for parameter substitution (key-value pairs)
 };
 
 #endif // __INI_H_

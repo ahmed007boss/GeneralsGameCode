@@ -173,6 +173,17 @@ const char* const ModelConditionFlags::s_bitNameList[] =
 	"USER_4",
 	"USER_5",
 
+	"ARMOR_UPGRADE_1",
+	"ARMOR_UPGRADE_2",
+	"ARMOR_UPGRADE_3",
+	"ARMOR_UPGRADE_4",
+	"ARMOR_UPGRADE_5",
+
+	"WEAPON_UPGRADE_1",
+	"WEAPON_UPGRADE_2",
+	"WEAPON_UPGRADE_3",
+	"WEAPON_UPGRADE_4",
+	"WEAPON_UPGRADE_5",
 
 	"DISGUISED",
 

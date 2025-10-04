@@ -694,6 +694,7 @@ protected:
 	static void parseModuleName(INI* ini, void *instance, void* /*store*/, const void* userData);
 	static void parseIntList(INI* ini, void *instance, void* store, const void* userData);
 	static void parsePrerequisites(INI* ini, void* instance, void* store, const void* userData);
+	static void parseInclude(INI* ini, void* instance, void* store, const void* userData);
 
 	static void parsePerUnitSounds(INI* ini, void *instance, void* store, const void* userData);
 	static void parsePerUnitFX(INI* ini, void *instance, void* store, const void* userData);

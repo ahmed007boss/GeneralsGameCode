@@ -237,6 +237,21 @@ enum ModelConditionFlagType CPP_11(: Int)
 	MODELCONDITION_USER_4,		
 	MODELCONDITION_USER_5,		///< Wildcard flag to use with upgrade modules or other random little things
 
+
+	MODELCONDITION_ARMOR_UPGRADE_1,		///< Wildcard flag to use with upgrade modules or other random little things
+	MODELCONDITION_ARMOR_UPGRADE_2,
+	MODELCONDITION_ARMOR_UPGRADE_3,
+	MODELCONDITION_ARMOR_UPGRADE_4,
+	MODELCONDITION_ARMOR_UPGRADE_5,		///< Wildcard flag to use with upgrade modules or other random little things
+
+
+	MODELCONDITION_WEAPON_UPGRADE_1,		///< Wildcard flag to use with upgrade modules or other random little things
+	MODELCONDITION_WEAPON_UPGRADE_2,
+	MODELCONDITION_WEAPON_UPGRADE_3,
+	MODELCONDITION_WEAPON_UPGRADE_4,
+	MODELCONDITION_WEAPON_UPGRADE_5,		///< Wildcard flag to use with upgrade modules or other random little things
+
+
 	MODELCONDITION_DISGUISED,
 
 	// ---

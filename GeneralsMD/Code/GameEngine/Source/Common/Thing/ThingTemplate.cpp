@@ -165,6 +165,7 @@ const FieldParse ThingTemplate::s_objectFieldParseTable[] =
 			{ "Body",									ThingTemplate::parseModuleName,		(const void*)999, offsetof(ThingTemplate, m_behaviorModuleInfo) },
 			{ "Draw",									ThingTemplate::parseModuleName,		(const void*)MODULETYPE_DRAW, offsetof(ThingTemplate, m_drawModuleInfo) },
 			{ "ClientUpdate",					ThingTemplate::parseModuleName,		(const void*)MODULETYPE_CLIENT_UPDATE, offsetof(ThingTemplate, m_clientUpdateModuleInfo) },
+			{ "Include",								ThingTemplate::parseInclude,				NULL, 0 },
 			// NOTE NOTE NOTE -- s_objectFieldParseTable and s_objectReskinFieldParseTable must be updated in tandem -- see comment above
 
 				{ "SelectPortrait",					INI::parseAsciiString,	NULL,		offsetof(ThingTemplate, m_selectedPortraitImageName) },
@@ -652,6 +653,57 @@ void ThingTemplate::parsePrerequisites(INI* ini, void* instance, void* store, co
 {
 	ThingTemplate* self = (ThingTemplate*)instance;
 	ProductionPrerequisite::parsePrerequisites(ini, &self->m_prereqInfo, store, userData);
+}
+
+//-------------------------------------------------------------------------------------------------
+// TheSuperHackers @feature Ahmed Salah 15/01/2025 Parse Include directive to load external INI files
+void ThingTemplate::parseInclude(INI* ini, void* instance, void* store, const void* userData)
+{
+	ThingTemplate* self = (ThingTemplate*)instance;
+	
+	// Get the filename (first parameter after "Include")
+	const char* includeFile = ini->getNextToken();
+
+	if (!includeFile || strlen(includeFile) == 0)
+	{
+		DEBUG_CRASH(("[LINE: %d - FILE: '%s'] Include directive requires a filename",
+			ini->getLineNum(), ini->getFilename().str()));
+		throw INI_INVALID_DATA;
+	}
+
+	AsciiString includePath = includeFile;
+	
+	// Collect parameters from the include directive
+	std::vector<AsciiString> parameters;
+	const char* param = ini->getNextTokenOrNull();
+	while (param != NULL && strlen(param) > 0)
+	{
+		parameters.push_back(AsciiString(param));
+		param = ini->getNextTokenOrNull();
+	}
+	
+	try
+	{
+		INI includeIni;
+		includeIni.load(includePath, INI_LOAD_INCLUDE, NULL);
+		
+		// TheSuperHackers @feature Ahmed Salah 15/01/2025 Inherit parameters from parent INI object
+		const std::map<AsciiString, AsciiString>& parentParameters = ini->getParameters();
+		for (std::map<AsciiString, AsciiString>::const_iterator it = parentParameters.begin(); it != parentParameters.end(); ++it)
+		{
+			includeIni.addParameter(it->first, it->second);
+		}
+		
+		// TheSuperHackers @feature Ahmed Salah 15/01/2025 Add parameters to nested Include directives for cascading
+		includeIni.addParameters(parameters);
+		includeIni.continueParsing(self, self->getFieldParse(), parameters);
+	}
+	catch (...)
+	{
+		DEBUG_CRASH(("[LINE: %d - FILE: '%s'] Failed to include INI file: %s", 
+			ini->getLineNum(), ini->getFilename().str(), includePath.str()));
+		throw INI_INVALID_DATA;
+	}
 }
 
 //-------------------------------------------------------------------------------------------Static
