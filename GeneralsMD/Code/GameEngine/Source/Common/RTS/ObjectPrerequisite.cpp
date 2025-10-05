@@ -51,6 +51,8 @@
 #include "Common/KindOf.h"
 #include "GameLogic/Object.h"
 #include "GameLogic/PartitionManager.h"
+#include "GameLogic/Module/BodyModule.h"
+#include "GameLogic/Component.h"
 #include "GameClient/Drawable.h"
 #include "GameClient/GameText.h"
 
@@ -95,6 +97,11 @@ void ObjectPrerequisite::init()
 	m_objectHasNoStatusFlagNames.clear();
 	m_objectHasStatusFlags.clear();
 	m_objectHasNoStatusFlags.clear();
+	
+	m_objectHasComponentNames.clear();
+	m_objectHasNoComponentNames.clear();
+	m_objectHasWorkingComponentNames.clear();
+	m_objectHasNoWorkingComponentNames.clear();
 	
 	m_objectHasNearbyObjects.clear();
 	m_objectHasNoNearbyObjects.clear();
@@ -325,6 +332,54 @@ Bool ObjectPrerequisite::isSatisfied(const Object* object) const
 	if (m_objectHasNoStatusFlags.any())
 	{
 		if (objectStatusFlags.testForAny(m_objectHasNoStatusFlags) == TRUE)
+			return false;
+	}
+
+	// Check component prerequisites
+	BodyModuleInterface* bodyModule = object->getBodyModule();
+	if (bodyModule)
+	{
+		// Check for required components
+		for (size_t i = 0; i < m_objectHasComponentNames.size(); i++)
+		{
+			const AsciiString& componentName = m_objectHasComponentNames[i];
+			Real maxHealth = bodyModule->getComponentMaxHealth(componentName);
+			if (maxHealth <= 0.0f)
+				return false; // Component doesn't exist
+		}
+		
+		// Check for forbidden components
+		for (size_t i = 0; i < m_objectHasNoComponentNames.size(); i++)
+		{
+			const AsciiString& componentName = m_objectHasNoComponentNames[i];
+			Real maxHealth = bodyModule->getComponentMaxHealth(componentName);
+			if (maxHealth > 0.0f)
+				return false; // Component exists
+		}
+		
+		// Check for working components
+		for (size_t i = 0; i < m_objectHasWorkingComponentNames.size(); i++)
+		{
+			const AsciiString& componentName = m_objectHasWorkingComponentNames[i];
+			ComponentStatus status = bodyModule->getComponentStatus(componentName);
+			if ( status == COMPONENT_STATUS_DOWNED || status == COMPONENT_STATUS_USER_DISABLED)
+				return false; // Component doesn't exist or is not working
+		}
+		
+		// Check for non-working components
+		for (size_t i = 0; i < m_objectHasNoWorkingComponentNames.size(); i++)
+		{
+			const AsciiString& componentName = m_objectHasNoWorkingComponentNames[i];
+			ComponentStatus status = bodyModule->getComponentStatus(componentName);
+			if ( status != COMPONENT_STATUS_DOWNED && status != COMPONENT_STATUS_USER_DISABLED)
+				return false; // Component exists and is working
+		}
+	}
+	else
+	{
+		// If object has no body module, it can't have components
+		// So if any components are required, this fails
+		if (!m_objectHasComponentNames.empty() || !m_objectHasWorkingComponentNames.empty())
 			return false;
 	}
 
@@ -663,6 +718,69 @@ UnicodeString ObjectPrerequisite::getRequiresList(const Object* object) const
 					statusFlagName.concat(L"\n");
 				requiresList.concat(statusFlagName);
 			}
+		}
+	}
+
+	// Check component prerequisites
+	BodyModuleInterface* bodyModule = object->getBodyModule();
+	if (bodyModule)
+	{
+		// Check for required components
+		for (size_t i = 0; i < m_objectHasComponentNames.size(); i++)
+		{
+			const AsciiString& componentName = m_objectHasComponentNames[i];
+			Real maxHealth = bodyModule->getComponentMaxHealth(componentName);
+			if (maxHealth <= 0.0f)
+			{
+				UnicodeString componentName = formatObjectDisplayText(m_objectHasComponentNames[i]);
+				if (firstRequirement)
+					firstRequirement = false;
+				else
+					componentName.concat(L"\n");
+				requiresList.concat(componentName);
+			}
+		}
+		
+		// Check for working components
+		for (size_t i = 0; i < m_objectHasWorkingComponentNames.size(); i++)
+		{
+			const AsciiString& componentName = m_objectHasWorkingComponentNames[i];
+			ComponentStatus status = bodyModule->getComponentStatus(componentName);
+			if ( status == COMPONENT_STATUS_DOWNED || status == COMPONENT_STATUS_USER_DISABLED)
+			{
+				UnicodeString componentName = formatObjectDisplayText(m_objectHasWorkingComponentNames[i]);
+				componentName.concat(L" (working)");
+				if (firstRequirement)
+					firstRequirement = false;
+				else
+					componentName.concat(L"\n");
+				requiresList.concat(componentName);
+			}
+		}
+	}
+	else
+	{
+		// If object has no body module, it can't have components
+		// So if any components are required, add them to requirements
+		for (size_t i = 0; i < m_objectHasComponentNames.size(); i++)
+		{
+			UnicodeString componentName = formatObjectDisplayText(m_objectHasComponentNames[i]);
+			if (firstRequirement)
+				firstRequirement = false;
+			else
+				componentName.concat(L"\n");
+			requiresList.concat(componentName);
+		}
+		
+		for (size_t i = 0; i < m_objectHasWorkingComponentNames.size(); i++)
+		{
+			UnicodeString componentName = formatObjectDisplayText(m_objectHasWorkingComponentNames[i]);
+			componentName.concat(L" (working)");
+			if (firstRequirement)
+				firstRequirement = false;
+			else
+				componentName.concat(L"\n");
+			requiresList.concat(componentName);
 		}
 	}
 
@@ -1078,6 +1196,44 @@ UnicodeString ObjectPrerequisite::getConflictList(const Object* object) const
 		}
 	}
 
+	// Check component conflicts
+	BodyModuleInterface* bodyModule = object->getBodyModule();
+	if (bodyModule)
+	{
+		// Check for forbidden components
+		for (size_t i = 0; i < m_objectHasNoComponentNames.size(); i++)
+		{
+			const AsciiString& componentName = m_objectHasNoComponentNames[i];
+			Real maxHealth = bodyModule->getComponentMaxHealth(componentName);
+			if (maxHealth > 0.0f)
+			{
+				UnicodeString componentName = formatObjectDisplayText(m_objectHasNoComponentNames[i]);
+				if (firstConflict)
+					firstConflict = false;
+				else
+					componentName.concat(L"\n");
+				conflictList.concat(componentName);
+			}
+		}
+		
+		// Check for forbidden working components
+		for (size_t i = 0; i < m_objectHasNoWorkingComponentNames.size(); i++)
+		{
+			const AsciiString& componentName = m_objectHasNoWorkingComponentNames[i];
+			ComponentStatus status = bodyModule->getComponentStatus(componentName);
+			if ( status != COMPONENT_STATUS_DOWNED && status != COMPONENT_STATUS_USER_DISABLED)
+			{
+				UnicodeString componentName = formatObjectDisplayText(m_objectHasNoWorkingComponentNames[i]);
+				componentName.concat(L" (working)");
+				if (firstConflict)
+					firstConflict = false;
+				else
+					componentName.concat(L"\n");
+				conflictList.concat(componentName);
+			}
+		}
+	}
+
 	// Check nearby object conflicts
 	for (size_t i = 0; i < m_objectHasNoNearbyObjects.size(); i++)
 	{
@@ -1258,6 +1414,30 @@ void ObjectPrerequisite::addObjectHasNoStatusFlagPrereq(AsciiString statusFlagNa
 }
 
 //-------------------------------------------------------------------------------------------------
+void ObjectPrerequisite::addObjectHasComponentPrereq(AsciiString componentName)
+{
+	m_objectHasComponentNames.push_back(componentName);
+}
+
+//-------------------------------------------------------------------------------------------------
+void ObjectPrerequisite::addObjectHasNoComponentPrereq(AsciiString componentName)
+{
+	m_objectHasNoComponentNames.push_back(componentName);
+}
+
+//-------------------------------------------------------------------------------------------------
+void ObjectPrerequisite::addObjectHasWorkingComponentPrereq(AsciiString componentName)
+{
+	m_objectHasWorkingComponentNames.push_back(componentName);
+}
+
+//-------------------------------------------------------------------------------------------------
+void ObjectPrerequisite::addObjectHasNoWorkingComponentPrereq(AsciiString componentName)
+{
+	m_objectHasNoWorkingComponentNames.push_back(componentName);
+}
+
+//-------------------------------------------------------------------------------------------------
 void ObjectPrerequisite::addObjectHasAtLeastItemPrereq(AsciiString itemName, Int count)
 {
 	ItemCountPrereq prereq;
@@ -1316,6 +1496,10 @@ void ObjectPrerequisite::parseObjectPrerequisites(INI* ini, void* instance, void
 		{ "ObjectHasNoModelCondition", ObjectPrerequisite::parseObjectHasNoModelConditionFlag, 0, 0 },
 		{ "ObjectHasStatus", ObjectPrerequisite::parseObjectHasStatusFlag, 0, 0 },
 		{ "ObjectHasNoStatus", ObjectPrerequisite::parseObjectHasNoStatusFlag, 0, 0 },
+		{ "ObjectHasComponent", ObjectPrerequisite::parseObjectHasComponent, 0, 0 },
+		{ "ObjectHasNoComponent", ObjectPrerequisite::parseObjectHasNoComponent, 0, 0 },
+		{ "ObjectHasWorkingComponent", ObjectPrerequisite::parseObjectHasWorkingComponent, 0, 0 },
+		{ "ObjectHasNoWorkingComponent", ObjectPrerequisite::parseObjectHasNoWorkingComponent, 0, 0 },
 		{ "HasAtLeastItem", ObjectPrerequisite::parseHasAtLeastItem, 0, 0 },     // True if the unit has ≥ a given number of a specific item
 		{ "HasAtMostItem", ObjectPrerequisite::parseHasAtMostItem, 0, 0 },       // True if the unit has ≤ a given number of a specific item
 		{ "ItemStorageFull", ObjectPrerequisite::parseItemStorageFull, 0, 0 },   // True if storage for a specific item is completely full
@@ -1519,6 +1703,42 @@ void ObjectPrerequisite::parseObjectHasNoStatusFlag(INI* ini, void* instance, vo
 	std::vector<ObjectPrerequisite>* v = (std::vector<ObjectPrerequisite>*)instance;
 	ObjectPrerequisite prereq;
 	prereq.addObjectHasNoStatusFlagPrereq(AsciiString(ini->getNextToken()));
+	v->push_back(prereq);
+}
+
+//-------------------------------------------------------------------------------------------------
+void ObjectPrerequisite::parseObjectHasComponent(INI* ini, void* instance, void* /*store*/, const void* /*userData*/)
+{
+	std::vector<ObjectPrerequisite>* v = (std::vector<ObjectPrerequisite>*)instance;
+	ObjectPrerequisite prereq;
+	prereq.addObjectHasComponentPrereq(AsciiString(ini->getNextToken()));
+	v->push_back(prereq);
+}
+
+//-------------------------------------------------------------------------------------------------
+void ObjectPrerequisite::parseObjectHasNoComponent(INI* ini, void* instance, void* /*store*/, const void* /*userData*/)
+{
+	std::vector<ObjectPrerequisite>* v = (std::vector<ObjectPrerequisite>*)instance;
+	ObjectPrerequisite prereq;
+	prereq.addObjectHasNoComponentPrereq(AsciiString(ini->getNextToken()));
+	v->push_back(prereq);
+}
+
+//-------------------------------------------------------------------------------------------------
+void ObjectPrerequisite::parseObjectHasWorkingComponent(INI* ini, void* instance, void* /*store*/, const void* /*userData*/)
+{
+	std::vector<ObjectPrerequisite>* v = (std::vector<ObjectPrerequisite>*)instance;
+	ObjectPrerequisite prereq;
+	prereq.addObjectHasWorkingComponentPrereq(AsciiString(ini->getNextToken()));
+	v->push_back(prereq);
+}
+
+//-------------------------------------------------------------------------------------------------
+void ObjectPrerequisite::parseObjectHasNoWorkingComponent(INI* ini, void* instance, void* /*store*/, const void* /*userData*/)
+{
+	std::vector<ObjectPrerequisite>* v = (std::vector<ObjectPrerequisite>*)instance;
+	ObjectPrerequisite prereq;
+	prereq.addObjectHasNoWorkingComponentPrereq(AsciiString(ini->getNextToken()));
 	v->push_back(prereq);
 }
 

@@ -112,6 +112,12 @@ public:
 	void addObjectHasStatusFlagPrereq(AsciiString statusFlagName);
 	void addObjectHasNoStatusFlagPrereq(AsciiString statusFlagName);
 
+	// Component prerequisites
+	void addObjectHasComponentPrereq(AsciiString componentName);
+	void addObjectHasNoComponentPrereq(AsciiString componentName);
+	void addObjectHasWorkingComponentPrereq(AsciiString componentName);
+	void addObjectHasNoWorkingComponentPrereq(AsciiString componentName);
+
 	// Inventory item prerequisites
 	void addObjectHasAtLeastItemPrereq(AsciiString itemName, Int count);
 	void addObjectHasAtMostItemPrereq(AsciiString itemName, Int count);
@@ -157,6 +163,12 @@ private:
 	mutable ObjectStatusMaskType	m_objectHasStatusFlags;
 	mutable ObjectStatusMaskType	m_objectHasNoStatusFlags;
 
+	// Component prerequisites
+	mutable std::vector<AsciiString>	m_objectHasComponentNames;
+	mutable std::vector<AsciiString>	m_objectHasNoComponentNames;
+	mutable std::vector<AsciiString>	m_objectHasWorkingComponentNames;
+	mutable std::vector<AsciiString>	m_objectHasNoWorkingComponentNames;
+
 	// Nearby object prerequisites
 	struct NearbyObjectPrereq
 	{
@@ -201,6 +213,10 @@ private:
 	static void parseObjectHasNoModelConditionFlag(INI* ini, void* instance, void* /*store*/, const void* /*userData*/);
 	static void parseObjectHasStatusFlag(INI* ini, void* instance, void* /*store*/, const void* /*userData*/);
 	static void parseObjectHasNoStatusFlag(INI* ini, void* instance, void* /*store*/, const void* /*userData*/);
+	static void parseObjectHasComponent(INI* ini, void* instance, void* /*store*/, const void* /*userData*/);
+	static void parseObjectHasNoComponent(INI* ini, void* instance, void* /*store*/, const void* /*userData*/);
+	static void parseObjectHasWorkingComponent(INI* ini, void* instance, void* /*store*/, const void* /*userData*/);
+	static void parseObjectHasNoWorkingComponent(INI* ini, void* instance, void* /*store*/, const void* /*userData*/);
 	static void parseHasAtLeastItem(INI* ini, void* instance, void* /*store*/, const void* /*userData*/);
 	static void parseHasAtMostItem(INI* ini, void* instance, void* /*store*/, const void* /*userData*/);
 	static void parseItemStorageFull(INI* ini, void* instance, void* /*store*/, const void* /*userData*/);
