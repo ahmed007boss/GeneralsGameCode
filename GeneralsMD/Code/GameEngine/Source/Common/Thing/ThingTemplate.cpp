@@ -694,7 +694,6 @@ void ThingTemplate::parseInclude(INI* ini, void* instance, void* store, const vo
 			includeIni.addParameter(it->first, it->second);
 		}
 		
-		// TheSuperHackers @feature Ahmed Salah 15/01/2025 Add parameters to nested Include directives for cascading
 		includeIni.addParameters(parameters);
 		includeIni.continueParsing(self, self->getFieldParse(), parameters);
 	}

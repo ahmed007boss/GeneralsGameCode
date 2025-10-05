@@ -429,16 +429,11 @@ UnsignedInt INI::load( AsciiString filename, INILoadType loadType, Xfer *pXfer )
 				INIBlockParse parse = findBlockParse(token);
 				if (parse)
 				{
-					// TheSuperHackers @feature Ahmed Salah 15/01/2025 Add P:BLOCK parameter with block name if not empty
-					if (strlen(token) > 0)
-					{
-						char blockKey[64];
-						sprintf(blockKey, "P:%s", token);
-						addParameter(AsciiString(blockKey), AsciiString(token));
-					}
+					// TheSuperHackers @feature Ahmed Salah 15/01/2025 Add P:BLOCK parameter with block value if not empty
+					extractBlockParameters(token, currentLine);
 					
 					#ifdef DEBUG_CRASHING
-					strcpy(m_curBlockStart, m_buffer);
+						strcpy(m_curBlockStart, m_buffer);
 					#endif
 					try {
 						(*parse)( this );
@@ -1758,8 +1753,10 @@ const std::map<AsciiString, AsciiString>& INI::getParameters() const
 void INI::applyParameterSubstitution( char* buffer )
 {
 	if( m_parameters.empty() )
+	{
 		return;
-		
+	}
+	
 	// Apply parameter substitution to the buffer using key-value pairs
 	for (std::map<AsciiString, AsciiString>::const_iterator it = m_parameters.begin(); it != m_parameters.end(); ++it)
 	{
@@ -1795,6 +1792,46 @@ void INI::applyParameterSubstitution( char* buffer )
 			// Find next occurrence from the current position
 			searchStart = newLine + beforeLen + strlen(it->second.str());
 			pos = strstr(searchStart, placeholder);
+		}
+	}
+}
+
+//-------------------------------------------------------------------------------------------------
+// TheSuperHackers @feature Ahmed Salah 15/01/2025 Extract block parameters for all block types
+void INI::extractBlockParameters( const char* blockType, const AsciiString& currentLine )
+{
+	// Find the block type in the line
+	const char* lineStart = currentLine.str();
+	const char* blockStart = strstr(lineStart, blockType);
+	if (blockStart)
+	{
+		// Move past the block type to find the next token
+		blockStart += strlen(blockType);
+		
+		// Skip whitespace
+		while (*blockStart == ' ' || *blockStart == '\t')
+			blockStart++;
+		
+		// Check if there's a value
+		if (*blockStart != '\0' && *blockStart != '\r' && *blockStart != '\n')
+		{
+			// Find the end of the first value (next space, equals sign, or end of line)
+			const char* valueEnd = blockStart;
+			while (*valueEnd != '\0' && *valueEnd != ' ' && *valueEnd != '\t' && *valueEnd != '=' && *valueEnd != '\r' && *valueEnd != '\n')
+				valueEnd++;
+			
+			// Extract the first value
+			Int valueLen = valueEnd - blockStart;
+			if (valueLen > 0)
+			{
+				char blockValue[256];
+				strncpy(blockValue, blockStart, valueLen);
+				blockValue[valueLen] = '\0';
+				
+				char blockKey[64];
+				sprintf(blockKey, "P:%s", blockType);
+				addParameter(AsciiString(blockKey), AsciiString(blockValue));
+			}
 		}
 	}
 }

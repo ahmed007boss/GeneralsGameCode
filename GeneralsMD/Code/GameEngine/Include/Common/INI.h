@@ -411,6 +411,9 @@ protected:
 	void unPrepFile();
 
 	void readLine( void );
+	
+	// TheSuperHackers @feature Ahmed Salah 15/01/2025 Extract block parameters for all block types
+	void extractBlockParameters( const char* blockType, const AsciiString& currentLine );
 
 	File *m_file;															///< file pointer of file currently loading
 
