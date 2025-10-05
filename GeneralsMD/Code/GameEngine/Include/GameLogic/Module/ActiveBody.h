@@ -37,9 +37,10 @@
 #include "GameLogic/Module/BodyModule.h"
 #include "GameLogic/Damage.h"
 #include "GameLogic/Armor.h"
+#include "GameLogic/Component.h"
+#include <set>
 #include "GameLogic/ArmorSet.h"
 #include "Common/UnicodeString.h"
-#include "GameLogic/Component.h"
 #include <map>
 
 // FORWARD REFERENCES /////////////////////////////////////////////////////////////////////////////
@@ -187,6 +188,11 @@ public:
 	
 	virtual ComponentStatus getComponentStatus(const AsciiString& componentName) const;
 	
+	// TheSuperHackers @feature Ahmed Salah 15/01/2025 User component toggle methods
+	virtual void toggleComponentDisabled(const AsciiString& componentName);
+	virtual Bool isComponentUserDisabled(const AsciiString& componentName) const;
+	virtual void setComponentUserDisabled(const AsciiString& componentName, Bool disabled);
+	
 	// TheSuperHackers @feature author 15/01/2025 Update model state based on current damage
 	virtual void setCorrectDamageState();
 
@@ -246,6 +252,9 @@ private:
 	// TheSuperHackers @feature Ahmed Salah 15/01/2025 Runtime component EW damage tracking
 	std::map<AsciiString, Real>			m_componentEWDamage;		///< Current EW damage of each component
 	std::map<AsciiString, UnsignedInt>	m_componentEWHealCountdown;	///< Countdown for EW damage healing
+	
+	// TheSuperHackers @feature Ahmed Salah 15/01/2025 Per-object component disabled state
+	std::set<AsciiString>							m_userDisabledComponents;	///< Components disabled by user (per-object)
 
 };
 

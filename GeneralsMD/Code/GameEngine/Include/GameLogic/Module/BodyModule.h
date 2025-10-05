@@ -221,6 +221,11 @@ public:
 	virtual std::vector<Component> getComponents() const = 0;
 	
 	virtual ComponentStatus getComponentStatus(const AsciiString& componentName) const = 0;
+	
+	// TheSuperHackers @feature Ahmed Salah 15/01/2025 User component toggle methods
+	virtual void toggleComponentDisabled(const AsciiString& componentName) = 0;
+	virtual Bool isComponentUserDisabled(const AsciiString& componentName) const = 0;
+	virtual void setComponentUserDisabled(const AsciiString& componentName, Bool disabled) = 0;
 
 	// TheSuperHackers @feature author 15/01/2025 Update visual damage state based on component health
 	virtual void setCorrectDamageState() = 0;
@@ -417,6 +422,11 @@ public:
 	static const AsciiString COMPONENT_POWER;
 	static const AsciiString COMPONENT_COMMUNICATION_A;
 	static const AsciiString COMPONENT_COMMUNICATION_B;
+
+	// TheSuperHackers @feature Ahmed Salah 15/01/2025 Default component toggle implementations
+	void toggleComponentDisabled(const AsciiString& componentName);
+	Bool isComponentUserDisabled(const AsciiString& componentName) const;
+	void setComponentUserDisabled(const AsciiString& componentName, Bool disabled);
 
 protected:
 

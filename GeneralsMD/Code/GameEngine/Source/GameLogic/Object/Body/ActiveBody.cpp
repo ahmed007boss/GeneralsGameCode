@@ -2214,6 +2214,10 @@ ComponentStatus ActiveBody::getComponentStatus(const AsciiString& componentName)
 	if (maxHealth <= 0.0f)
 		return COMPONENT_STATUS_NONE;
 
+	// TheSuperHackers @feature Ahmed Salah 15/01/2025 Check if component is user disabled
+	if (isComponentUserDisabled(componentName))
+		return COMPONENT_STATUS_USER_DISABLED;
+
 	// Get current health and calculate percentage
 	Real currentHealth = getComponentHealth(componentName);
 	Real healthPercentage = (currentHealth / maxHealth) * 100.0f;
@@ -2246,4 +2250,48 @@ std::vector<Component> ActiveBody::getComponents() const
 	
 	// Return a copy of the components vector
 	return data->m_components;
+}
+
+//-------------------------------------------------------------------------------------------------
+// TheSuperHackers @feature Ahmed Salah 15/01/2025 User component toggle methods
+//-------------------------------------------------------------------------------------------------
+void ActiveBody::toggleComponentDisabled(const AsciiString& componentName)
+{
+	if (componentName.isEmpty())
+		return;
+
+	// Check if component exists
+	Real maxHealth = getComponentMaxHealth(componentName);
+	if (maxHealth <= 0.0f)
+		return;
+
+	// Toggle the disabled status
+	Bool currentlyDisabled = isComponentUserDisabled(componentName);
+	setComponentUserDisabled(componentName, !currentlyDisabled);
+}
+
+Bool ActiveBody::isComponentUserDisabled(const AsciiString& componentName) const
+{
+	if (componentName.isEmpty())
+		return FALSE;
+
+	// Check if component is in the user disabled set (per-object)
+	return m_userDisabledComponents.find(componentName) != m_userDisabledComponents.end();
+}
+
+void ActiveBody::setComponentUserDisabled(const AsciiString& componentName, Bool disabled)
+{
+	if (componentName.isEmpty())
+		return;
+
+	if (disabled)
+	{
+		// Add to disabled set (per-object)
+		m_userDisabledComponents.insert(componentName);
+	}
+	else
+	{
+		// Remove from disabled set (per-object)
+		m_userDisabledComponents.erase(componentName);
+	}
 }

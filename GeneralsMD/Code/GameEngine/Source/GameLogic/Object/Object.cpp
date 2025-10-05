@@ -5311,7 +5311,7 @@ Real Object::getShroudClearingRange() const
 	{
 		ComponentStatus radarStatus = activeBody->getComponentStatus(BodyModule::COMPONENT_RADAR);
 		
-		if (radarStatus == COMPONENT_STATUS_DOWNED)
+		if (radarStatus == COMPONENT_STATUS_DOWNED || radarStatus == COMPONENT_STATUS_USER_DISABLED)
 		{
 			// RADAR component is destroyed - use disabled range or default to 30
 			if (m_shroudClearingDisabledRange > 0)

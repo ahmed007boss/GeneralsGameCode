@@ -57,6 +57,7 @@
 #include "GameLogic/Module/ProductionUpdate.h"
 #include "GameLogic/Module/WeaponRangeDecalBehavior.h"
 #include "GameLogic/Module/InventoryBehavior.h"
+#include "GameLogic/Module/BodyModule.h"
 
 
 
@@ -1052,6 +1053,28 @@ CBCommandStatus ControlBar::processCommandUI( GameWindow *control,
 			msg->appendIntegerArgument( componentLength );
 			
 			markUIDirty();
+			break;
+		}
+
+		//---------------------------------------------------------------------------------------------
+		case GUI_COMMAND_TOGGLE_COMPONENT_DISABLED:
+		{
+			// TheSuperHackers @feature Ahmed Salah 15/01/2025 Toggle component disabled status
+			if (obj)
+			{
+				const AsciiString& componentName = actualCommandButton->getComponentName();
+				
+				// Get the body module interface to toggle component status
+				BodyModuleInterface* bodyModule = obj->getBodyModule();
+				if (bodyModule && !componentName.isEmpty())
+				{
+					// Toggle the component disabled status
+					bodyModule->toggleComponentDisabled(componentName);
+					
+					// Mark UI dirty to refresh component status display
+					markUIDirty();
+				}
+			}
 			break;
 		}
 

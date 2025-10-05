@@ -1683,6 +1683,37 @@ CommandAvailability ControlBar::getCommandAvailability( const CommandButton *com
 			break;
 		}
 
+		case GUI_COMMAND_TOGGLE_COMPONENT_DISABLED:
+		{
+			// TheSuperHackers @feature Ahmed Salah 15/01/2025 Check if object has components and the specified component exists
+			BodyModuleInterface* bodyModule = obj->getBodyModule();
+			if (!bodyModule)
+			{
+				return COMMAND_HIDDEN;
+			}
+
+			const AsciiString& componentName = command->getComponentName();
+			if (componentName.isEmpty())
+			{
+				return COMMAND_RESTRICTED;
+			}
+
+			// Check if the component exists (has max health > 0)
+			Real maxHealth = bodyModule->getComponentMaxHealth(componentName);
+			if (maxHealth <= 0.0f)
+			{
+				return COMMAND_RESTRICTED;
+			}
+
+			// Check if the component is currently enabled (show as active/pressed when enabled)
+			if (!bodyModule->isComponentUserDisabled(componentName))
+			{
+				return COMMAND_ACTIVE;
+			}
+
+			break;
+		}
+
 		case GUI_COMMAND_HACK_INTERNET:
 		{
 			AIUpdateInterface *ai = obj->getAI();

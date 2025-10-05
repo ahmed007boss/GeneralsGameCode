@@ -41,7 +41,8 @@ enum ComponentStatus
 	COMPONENT_STATUS_NONE = 0,           // Component does not exist
 	COMPONENT_STATUS_FULLY_FUNCTIONAL,   // 50% - 100% health
 	COMPONENT_STATUS_PARTIALLY_FUNCTIONAL, // 10% - 50% health  
-	COMPONENT_STATUS_DOWNED              // 0% - 10% health
+	COMPONENT_STATUS_DOWNED,             // 0% - 10% health
+	COMPONENT_STATUS_USER_DISABLED       // User disabled component
 };
 //-------------------------------------------------------------------------------------------------
 // TheSuperHackers @feature author 15/01/2025 Component healing behavior types

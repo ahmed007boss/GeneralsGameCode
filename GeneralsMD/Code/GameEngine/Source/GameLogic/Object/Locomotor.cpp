@@ -954,7 +954,7 @@ Real Locomotor::getMaxSpeedForCondition(BodyDamageType condition, const Object* 
 
 	// TheSuperHackers @feature author 15/01/2025 Check engine and required components status
 	ComponentStatus engineStatus = getEngineComponentStatus(obj);
-	if (engineStatus == COMPONENT_STATUS_DOWNED)
+	if (engineStatus == COMPONENT_STATUS_DOWNED || engineStatus == COMPONENT_STATUS_USER_DISABLED)
 	{
 		speed = m_template->m_maxSpeedDestroyed; // Engine or required components destroyed - use destroyed speed
 	}
@@ -993,7 +993,7 @@ Real Locomotor::getMaxTurnRate(BodyDamageType condition, const Object* obj) cons
 
 	// TheSuperHackers @feature author 15/01/2025 Check engine and required components status
 	ComponentStatus engineStatus = getEngineComponentStatus(obj);
-	if (engineStatus == COMPONENT_STATUS_DOWNED)
+	if (engineStatus == COMPONENT_STATUS_DOWNED|| engineStatus == COMPONENT_STATUS_USER_DISABLED)
 	{
 		turn = m_template->m_maxTurnRateDestroyed; // Engine or required components destroyed - use destroyed turn rate
 	}
@@ -1032,7 +1032,7 @@ Real Locomotor::getMaxAcceleration(BodyDamageType condition, const Object* obj) 
 
 	// TheSuperHackers @feature author 15/01/2025 Check engine and required components status
 	ComponentStatus engineStatus = getEngineComponentStatus(obj);
-	if (engineStatus == COMPONENT_STATUS_DOWNED)
+	if (engineStatus == COMPONENT_STATUS_DOWNED|| engineStatus == COMPONENT_STATUS_USER_DISABLED)
 	{
 		accel = m_template->m_accelerationDestroyed; // Engine or required components destroyed - use destroyed acceleration
 	}
@@ -1078,7 +1078,7 @@ Real Locomotor::getMaxLift(BodyDamageType condition, const Object* obj) const
 
 	// TheSuperHackers @feature author 15/01/2025 Check engine and required components status
 	Int engineStatus = getEngineComponentStatus(obj);
-	if (engineStatus == COMPONENT_STATUS_DOWNED)
+	if (engineStatus == COMPONENT_STATUS_DOWNED|| engineStatus == COMPONENT_STATUS_USER_DISABLED)
 	{
 		lift = m_template->m_liftDestroyed; // Engine or required components destroyed - use destroyed lift
 	}

@@ -4106,6 +4106,15 @@ Bool Weapon::isWeaponSlotFunctional(const Object* source) const
 	if (!body)
 		return true; // No body module - assume functional
 	
+	// Check if object has no components - if so, weapon should work
+	if (body->getComponents().empty())
+		return true; // No components - assume functional
+
+
+	if (!m_template->areRequiredComponentsFunctional(source))
+		return false;
+
+
 	// Map weapon slot to component name
 	AsciiString componentName;
 	switch (static_cast<Int>(m_wslot))
@@ -4140,7 +4149,7 @@ Bool Weapon::isWeaponSlotFunctional(const Object* source) const
 	}
 	
 	// Check component status
-		ComponentStatus status = body->getComponentStatus(componentName);
+	ComponentStatus status = body->getComponentStatus(componentName);
 	
 	// If component doesn't exist, weapon should work (no component restriction)
 	if (status == COMPONENT_STATUS_NONE)
@@ -4150,10 +4159,13 @@ Bool Weapon::isWeaponSlotFunctional(const Object* source) const
 	if (status == COMPONENT_STATUS_DOWNED)
 		return false;
 	
+	// If component exists, it must not be user disabled
+	if (status == COMPONENT_STATUS_USER_DISABLED)
+		return false;
+
 	// TheSuperHackers @feature author 15/01/2025 Check weapon template's required components
 	// Check if the weapon template has any required components that are not functional
-	if (!m_template->areRequiredComponentsFunctional(source))
-		return false;
+	
 	
 	// All checks passed - weapon is functional
 	return true;
@@ -4188,6 +4200,10 @@ Bool WeaponTemplate::areRequiredComponentsFunctional(const Object* source) const
 		
 		// If component exists and is downed, weapon is not functional
 		if (status == COMPONENT_STATUS_DOWNED)
+			return false;
+
+		// If component exists, it must not be user disabled
+		if (status == COMPONENT_STATUS_USER_DISABLED)
 			return false;
 	}
 	

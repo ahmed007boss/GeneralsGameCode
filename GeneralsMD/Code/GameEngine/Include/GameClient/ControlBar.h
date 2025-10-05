@@ -210,6 +210,7 @@ enum GUICommandType CPP_11(: Int)
 	GUI_COMMAND_SWITCH_WEAPON,						///< switch weapon use
 	GUI_COMMAND_REPLENISH_INVENTORY_ITEM,		///< TheSuperHackers @feature author 15/01/2025 replenish inventory items
 	GUI_COMMAND_REPLACE_COMPONENT,				///< TheSuperHackers @feature author 15/01/2025 replace damaged component
+	GUI_COMMAND_TOGGLE_COMPONENT_DISABLED,		///< TheSuperHackers @feature Ahmed Salah 15/01/2025 toggle component disabled status
 
 	//Context senstive command modes
 	GUICOMMANDMODE_HIJACK_VEHICLE,
@@ -277,6 +278,7 @@ static const char *const TheGuiCommandNames[] =
 	"SWITCH_WEAPON",
 	"REPLENISH_INVENTORY_ITEM",
 	"REPLACE_COMPONENT",
+	"TOGGLE_COMPONENT_DISABLED",
 	"HIJACK_VEHICLE",
 	"CONVERT_TO_CARBOMB",
 	"SABOTAGE_BUILDING",

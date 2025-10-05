@@ -112,3 +112,22 @@ const AsciiString BodyModule::COMPONENT_ELECTRONICS = "ELECTRONICS";
 const AsciiString BodyModule::COMPONENT_POWER = "POWER";
 const AsciiString BodyModule::COMPONENT_COMMUNICATION_A = "COMMUNICATION_A";
 const AsciiString BodyModule::COMPONENT_COMMUNICATION_B = "COMMUNICATION_B";
+
+//-------------------------------------------------------------------------------------------------
+// TheSuperHackers @feature Ahmed Salah 15/01/2025 Default component toggle implementations for BodyModule base class
+//-------------------------------------------------------------------------------------------------
+void BodyModule::toggleComponentDisabled(const AsciiString& componentName)
+{
+	// Default implementation: do nothing (components not supported by this body type)
+}
+
+Bool BodyModule::isComponentUserDisabled(const AsciiString& componentName) const
+{
+	// Default implementation: components not disabled (components not supported by this body type)
+	return FALSE;
+}
+
+void BodyModule::setComponentUserDisabled(const AsciiString& componentName, Bool disabled)
+{
+	// Default implementation: do nothing (components not supported by this body type)
+}
