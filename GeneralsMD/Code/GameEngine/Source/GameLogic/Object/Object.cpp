@@ -3529,6 +3529,44 @@ Bool Object::isAbleToAttack() const
 
 //-------------------------------------------------------------------------------------------------
 /**
+ * TheSuperHackers @feature Ahmed Salah 15/01/2025 Returns true if object can attack specific target using weapon validation
+ */
+Bool Object::canAttackTarget(const Object* target) const
+{
+	// First check if we can attack at all
+	if (!isAbleToAttack())
+		return false;
+	
+	// If no target provided, check if we have any valid weapons
+	if (!target)
+	{
+		// Check if we have any weapons that can be used without a target
+		for (Int i = 0; i < WEAPONSLOT_COUNT; i++)
+		{
+			Weapon* weapon = getWeaponInWeaponSlot((WeaponSlotType)i);
+			if (weapon && weapon->validateWeaponUse(this, nullptr) == WEAPON_VALIDATION_VALID)
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+	
+	// Check if we have any weapons that can attack this specific target
+	for (Int i = 0; i < WEAPONSLOT_COUNT; i++)
+	{
+		Weapon* weapon = getWeaponInWeaponSlot((WeaponSlotType)i);
+		if (weapon && weapon->validateWeaponUse(this, target) == WEAPON_VALIDATION_VALID)
+		{
+			return true;
+		}
+	}
+	
+	return false;
+}
+
+//-------------------------------------------------------------------------------------------------
+/**
 	* Mask/Un-Mask an object
 	*/
 void Object::maskObject(Bool mask)

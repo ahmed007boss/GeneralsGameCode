@@ -48,6 +48,8 @@
 #include "GameLogic/Module/AIUpdate.h"
 #include "GameLogic/Module/BodyModule.h"
 #include "GameLogic/Module/ContainModule.h"
+#include "GameLogic/PartitionManager.h"
+#include "GameLogic/Weapon.h"
 #include "GameLogic/Module/InventoryBehavior.h"
 #include "GameLogic/Module/OverchargeBehavior.h"
 #include "GameLogic/Module/ProductionUpdate.h"
@@ -3291,6 +3293,159 @@ void AIGroup::groupGuardInPlaceFlyingUnitsOnly( CommandSourceType cmdSource )
 		{
 			Coord3D currentPos = *obj->getPosition();
 			ai->aiGuardPosition( &currentPos, GUARDMODE_GUARD_FLYING_UNITS_ONLY, cmdSource );
+		}
+	}
+}
+
+//-------------------------------------------------------------------------------------------------
+/**
+* TheSuperHackers @feature Ahmed Salah 15/01/2025 Raid command - each unit attacks one enemy in area
+*/
+void AIGroup::groupRaidArea( const Coord3D *pos, CommandSourceType cmdSource )
+{
+	if (!pos) {
+		return;
+	}
+
+	// Find all enemies in the area around the target position
+	Real raidRadius = 600.0f; // Default raid radius
+	std::vector<Object*> enemies;
+	
+	// Use the partition manager to find objects in range
+	ObjectIterator* iter = ThePartitionManager->iterateObjectsInRange(pos, raidRadius, FROM_CENTER_2D, NULL, ITER_SORTED_NEAR_TO_FAR);
+	MemoryPoolObjectHolder iterHolder(iter);
+	
+	// Get the first unit to determine the controlling player
+	Object* firstUnit = NULL;
+	if (!m_memberList.empty()) {
+		firstUnit = m_memberList.front();
+	}
+	
+	if (!firstUnit) {
+		return; // No units to assign
+	}
+	
+	Player* controllingPlayer = firstUnit->getControllingPlayer();
+	if (!controllingPlayer) {
+		return;
+	}
+	
+	// Collect all enemy objects in the area
+	for (Object* obj = iter->first(); obj; obj = iter->next()) {
+		if (obj->isDestroyed() || obj->isEffectivelyDead()) {
+			continue;
+		}
+		
+		// Check if this is an enemy using relationship
+		Relationship relationship = firstUnit->getRelationship(obj);
+		if (relationship == ENEMIES) {
+			// Check if the object can be attacked
+			if (obj->isAbleToAttack() || obj->isKindOf(KINDOF_CAN_ATTACK)) {
+				enemies.push_back(obj);
+			}
+		}
+	}
+	
+	// Track which enemies have been assigned
+	std::set<Object*> assignedEnemies;
+	
+	// First pass: Assign each unit to attack the nearest unassigned enemy
+	std::list<Object*>::iterator unitIter = m_memberList.begin();
+	
+	while (unitIter != m_memberList.end()) {
+		Object* unit = *unitIter;
+		
+		// Skip units that can't attack
+		if (unit->isAbleToAttack() && !unit->isDisabled() && unit->isDisabledByType(DISABLED_HELD)) {
+			++unitIter;
+			continue;
+		}
+		
+		// Find the nearest unassigned enemy to this unit
+		Object* nearestEnemy = NULL;
+		Real nearestDistance = 999999.0f;
+		
+		for (std::vector<Object*>::iterator enemyIter = enemies.begin(); enemyIter != enemies.end(); ++enemyIter) {
+			Object* enemy = *enemyIter;
+			
+			// Skip if enemy is already destroyed or already assigned
+			if (enemy->isDestroyed() || enemy->isEffectivelyDead() || assignedEnemies.find(enemy) != assignedEnemies.end()) {
+				continue;
+			}
+			if (!unit->canAttackTarget(enemy))
+			{
+				continue;
+			}
+
+			// Calculate distance to this enemy
+			Real distanceSquared = ThePartitionManager->getDistanceSquared(unit, enemy, FROM_CENTER_2D);
+			Real distance = sqrt(distanceSquared);
+			if (distance < nearestDistance) {
+				nearestDistance = distance;
+				nearestEnemy = enemy;
+			}
+		}
+		
+		// Attack the nearest unassigned enemy if found
+		if (nearestEnemy) {
+			// Mark this enemy as assigned
+			assignedEnemies.insert(nearestEnemy);
+			
+			AIUpdateInterface* ai = unit->getAIUpdateInterface();
+			if (ai) {
+				ai->aiAttackObject(nearestEnemy, NO_MAX_SHOTS_LIMIT, cmdSource);
+			}
+		}
+		
+		++unitIter;
+	}
+	
+	// Second pass: If we have more units than enemies, allow reassignment to remaining units
+	if (assignedEnemies.size() == enemies.size() && !enemies.empty()) {
+		// Reset assignment tracking to allow reassignment
+		assignedEnemies.clear();
+		
+		// Reassign remaining units to any available enemy
+		unitIter = m_memberList.begin();
+		while (unitIter != m_memberList.end()) {
+			Object* unit = *unitIter;
+			
+			// Skip units that can't attack
+			if (unit->isDisabledByType(DISABLED_HELD)) {
+				++unitIter;
+				continue;
+			}
+			
+			// Find the nearest enemy to this unit (any enemy now)
+			Object* nearestEnemy = NULL;
+			Real nearestDistance = 999999.0f;
+			
+			for (std::vector<Object*>::iterator enemyIter = enemies.begin(); enemyIter != enemies.end(); ++enemyIter) {
+				Object* enemy = *enemyIter;
+				
+				// Skip if enemy is already destroyed
+				if (enemy->isDestroyed() || enemy->isEffectivelyDead()) {
+					continue;
+				}
+				
+				// Calculate distance to this enemy
+				Real distanceSquared = ThePartitionManager->getDistanceSquared(unit, enemy, FROM_CENTER_2D);
+				Real distance = sqrt(distanceSquared);
+				if (distance < nearestDistance) {
+					nearestDistance = distance;
+					nearestEnemy = enemy;
+				}
+			}
+			
+			// Attack the nearest enemy if found
+			if (nearestEnemy) {
+				AIUpdateInterface* ai = unit->getAIUpdateInterface();
+				if (ai) {
+					ai->aiAttackObject(nearestEnemy, NO_MAX_SHOTS_LIMIT, cmdSource);
+				}
+			}
+			
+			++unitIter;
 		}
 	}
 }

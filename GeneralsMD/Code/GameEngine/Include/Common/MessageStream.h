@@ -592,6 +592,7 @@ public:
 		MSG_GUARD_IN_PLACE,											///< TheSuperHackers @feature Ahmed Salah 15/01/2025 Guard at current location
 		MSG_GUARD_IN_PLACE_WITHOUT_PURSUIT,				///< TheSuperHackers @feature Ahmed Salah 15/01/2025 Guard at current location without pursuit
 		MSG_GUARD_IN_PLACE_FLYING_UNITS_ONLY,			///< TheSuperHackers @feature Ahmed Salah 15/01/2025 Guard at current location, flying units only
+		MSG_DO_RAID,														///< TheSuperHackers @feature Ahmed Salah 15/01/2025 Raid command - each unit attacks one enemy in area
 		MSG_SWITCH_WEAPONS,													///< Switches which weapon slot to use for an object
 		MSG_CONVERT_TO_CARBOMB,
 		MSG_CAPTUREBUILDING,

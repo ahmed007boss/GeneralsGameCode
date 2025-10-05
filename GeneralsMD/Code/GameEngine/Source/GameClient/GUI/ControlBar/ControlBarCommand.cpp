@@ -1467,6 +1467,9 @@ CommandAvailability ControlBar::getCommandAvailability( const CommandButton *com
 				return COMMAND_HIDDEN;
 			break;
 
+		case GUI_COMMAND_RAID:
+			break;
+
 		// TheSuperHackers @restriction Ahmed Salah 27/06/2025 Disable move and attack move commands when holding position
 		case GUI_COMMAND_ATTACK_MOVE:
 		{

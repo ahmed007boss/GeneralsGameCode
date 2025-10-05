@@ -271,7 +271,8 @@ CBCommandStatus ControlBar::processCommandUI( GameWindow *control,
 		// TheSuperHackers @restriction Ahmed Salah 27/06/2025 Check if guard commands should guard in position when units are holding position
 		if( actualCommandButton->getCommandType() == GUI_COMMAND_GUARD ||
 			actualCommandButton->getCommandType() == GUI_COMMAND_GUARD_WITHOUT_PURSUIT ||
-			actualCommandButton->getCommandType() == GUI_COMMAND_GUARD_FLYING_UNITS_ONLY )
+			actualCommandButton->getCommandType() == GUI_COMMAND_GUARD_FLYING_UNITS_ONLY ||
+			actualCommandButton->getCommandType() == GUI_COMMAND_RAID)
 		{
 			// Check if the current object is holding position
 			if( obj && obj->isDisabledByType( DISABLED_HELD ) )
@@ -969,6 +970,13 @@ CBCommandStatus ControlBar::processCommandUI( GameWindow *control,
 		{
 			// TheSuperHackers @feature Ahmed Salah 15/01/2025 Guard at current location, flying units only
 			TheMessageStream->appendMessage( GameMessage::MSG_GUARD_IN_PLACE_FLYING_UNITS_ONLY );
+			break;
+		}
+
+		case GUI_COMMAND_RAID:
+		{
+			// TheSuperHackers @feature Ahmed Salah 15/01/2025 Raid command - each unit attacks one enemy in area
+			TheMessageStream->appendMessage( GameMessage::MSG_DO_RAID );
 			break;
 		}
 

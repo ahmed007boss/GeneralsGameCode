@@ -253,7 +253,7 @@ static const char *const TheGuiCommandNames[] =
 	NULL
 };
 static_assert(ARRAY_SIZE(TheGuiCommandNames) == GUI_COMMAND_NUM_COMMANDS + 1, "Incorrect array size");
-#endif  // end DEFINE_GUI_COMMAND_NAMES
+#endif 
 
 enum CommandButtonMappedBorderType CPP_11(: Int)
 {

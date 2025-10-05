@@ -969,6 +969,7 @@ public:
 	void groupGuardInPlace( CommandSourceType cmdSource );									///< TheSuperHackers @feature Ahmed Salah 15/01/2025 Guard at current location
 	void groupGuardInPlaceWithoutPursuit( CommandSourceType cmdSource );		///< TheSuperHackers @feature Ahmed Salah 15/01/2025 Guard at current location without pursuit
 	void groupGuardInPlaceFlyingUnitsOnly( CommandSourceType cmdSource );		///< TheSuperHackers @feature Ahmed Salah 15/01/2025 Guard at current location, flying units only
+	void groupRaidArea( const Coord3D *pos, CommandSourceType cmdSource );		///< TheSuperHackers @feature Ahmed Salah 15/01/2025 Raid command - each unit attacks one enemy in area
 #ifdef ALLOW_SURRENDER
 	void groupPickUpPrisoner( Object *prisoner, CommandSourceType cmdSource );	///< pick up prisoner
 	void groupReturnToPrison( Object *prison, CommandSourceType cmdSource );		///< return to prison

@@ -1981,6 +1981,16 @@ void GameLogic::logicMessageDispatcher( GameMessage *msg, void *userData )
 			break;
 		}
 
+		case GameMessage::MSG_DO_RAID:
+		{
+			// TheSuperHackers @feature Ahmed Salah 15/01/2025 Raid command - each unit attacks one enemy in area
+			Coord3D loc = msg->getArgument( 0 )->location;
+			if( currentlySelectedGroup )
+				currentlySelectedGroup->groupRaidArea( &loc, CMD_FROM_PLAYER );
+
+			break;
+		}
+
 #ifdef ALLOW_SURRENDER
 		// --------------------------------------------------------------------------------------------
 		case GameMessage::MSG_PICK_UP_PRISONER:
