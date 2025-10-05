@@ -228,6 +228,7 @@ const char* const ModelConditionFlags::s_bitNameList[] =
 	// TheSuperHackers @feature author 15/01/2025 Component-specific damage model conditions
 	"COMPONENT_ENGINE_DESTROYED",
 	"COMPONENT_TURRET_DESTROYED",
+	"COMPONENT_RADAR_DESTROYED",
 	"COMPONENT_WEAPON_A_DESTROYED",
 	"COMPONENT_WEAPON_B_DESTROYED",
 	"COMPONENT_WEAPON_C_DESTROYED",

@@ -295,6 +295,7 @@ enum ModelConditionFlagType CPP_11(: Int)
 	// TheSuperHackers @feature author 15/01/2025 Component-specific damage model conditions
 	MODELCONDITION_COMPONENT_ENGINE_DESTROYED,
 	MODELCONDITION_COMPONENT_TURRET_DESTROYED,
+	MODELCONDITION_COMPONENT_RADAR_DESTROYED,
 	
 	// TheSuperHackers @feature author 15/01/2025 Specific weapon slot damage model conditions
 	MODELCONDITION_COMPONENT_WEAPON_A_DESTROYED,

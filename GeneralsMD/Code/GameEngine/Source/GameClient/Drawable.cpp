@@ -1103,6 +1103,7 @@ void Drawable::reactToBodyDamageStateChange(BodyDamageType newState)
 		// TheSuperHackers @feature author 15/01/2025 Component-specific damage states
 		MODELCONDITION_COMPONENT_ENGINE_DESTROYED,
 		MODELCONDITION_COMPONENT_TURRET_DESTROYED,
+		MODELCONDITION_COMPONENT_RADAR_DESTROYED,
 		// TheSuperHackers @feature author 15/01/2025 Specific weapon slot damage states
 		MODELCONDITION_COMPONENT_WEAPON_A_DESTROYED,
 		MODELCONDITION_COMPONENT_WEAPON_B_DESTROYED,
@@ -1125,6 +1126,7 @@ void Drawable::reactToBodyDamageStateChange(BodyDamageType newState)
 	clearFlags.set(MODELCONDITION_RUBBLE);
 	clearFlags.set(MODELCONDITION_COMPONENT_ENGINE_DESTROYED);
 	clearFlags.set(MODELCONDITION_COMPONENT_TURRET_DESTROYED);
+	clearFlags.set(MODELCONDITION_COMPONENT_RADAR_DESTROYED);
 	// Clear all weapon slot model conditions
 	clearFlags.set(MODELCONDITION_COMPONENT_WEAPON_A_DESTROYED);
 	clearFlags.set(MODELCONDITION_COMPONENT_WEAPON_B_DESTROYED);

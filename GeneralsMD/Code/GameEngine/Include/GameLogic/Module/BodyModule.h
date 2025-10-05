@@ -63,6 +63,7 @@ enum BodyDamageType CPP_11(: Int)
 	// TheSuperHackers @feature author 15/01/2025 Component-specific damage states
 	BODY_COMPONENT_ENGINE_DESTROYED,	///< engine component has been destroyed
 	BODY_COMPONENT_TURRET_DESTROYED,	///< turret component has been destroyed
+	BODY_COMPONENT_RADAR_DESTROYED,	///< radar component has been destroyed
 	
 	// TheSuperHackers @feature author 15/01/2025 Specific weapon slot damage states
 	BODY_COMPONENT_WEAPON_A_DESTROYED,	///< weapon slot A component has been destroyed
@@ -86,6 +87,7 @@ static const char* const TheBodyDamageTypeNames[] =
 	"RUBBLE",
 	"COMPONENT_ENGINE_DESTROYED",
 	"COMPONENT_TURRET_DESTROYED",
+	"COMPONENT_RADAR_DESTROYED",
 	"COMPONENT_WEAPON_A_DESTROYED",
 	"COMPONENT_WEAPON_B_DESTROYED",
 	"COMPONENT_WEAPON_C_DESTROYED",
