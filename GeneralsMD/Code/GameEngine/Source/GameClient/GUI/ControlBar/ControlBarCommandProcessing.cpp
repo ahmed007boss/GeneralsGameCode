@@ -950,6 +950,28 @@ CBCommandStatus ControlBar::processCommandUI( GameWindow *control,
 			break;
 		}
 
+		//---------------------------------------------------------------------------------------------
+		case GUI_COMMAND_GUARD_IN_PLACE:
+		{
+			// TheSuperHackers @feature Ahmed Salah 15/01/2025 Guard at current location
+			TheMessageStream->appendMessage( GameMessage::MSG_GUARD_IN_PLACE );
+			break;
+		}
+
+		case GUI_COMMAND_GUARD_IN_PLACE_WITHOUT_PURSUIT:
+		{
+			// TheSuperHackers @feature Ahmed Salah 15/01/2025 Guard at current location without pursuit
+			TheMessageStream->appendMessage( GameMessage::MSG_GUARD_IN_PLACE_WITHOUT_PURSUIT );
+			break;
+		}
+
+		case GUI_COMMAND_GUARD_IN_PLACE_FLYING_UNITS_ONLY:
+		{
+			// TheSuperHackers @feature Ahmed Salah 15/01/2025 Guard at current location, flying units only
+			TheMessageStream->appendMessage( GameMessage::MSG_GUARD_IN_PLACE_FLYING_UNITS_ONLY );
+			break;
+		}
+
 #ifdef ALLOW_SURRENDER
 		// ------------------------------------------------------------------------------------------------
 		case GUI_COMMAND_POW_RETURN_TO_PRISON:

@@ -966,6 +966,9 @@ public:
 	void groupToggleOvercharge( CommandSourceType cmdSource );
 	void groupToggleHoldPosition( CommandSourceType cmdSource );
 	void groupToggleHoldPositionAndGuard( CommandSourceType cmdSource );
+	void groupGuardInPlace( CommandSourceType cmdSource );									///< TheSuperHackers @feature Ahmed Salah 15/01/2025 Guard at current location
+	void groupGuardInPlaceWithoutPursuit( CommandSourceType cmdSource );		///< TheSuperHackers @feature Ahmed Salah 15/01/2025 Guard at current location without pursuit
+	void groupGuardInPlaceFlyingUnitsOnly( CommandSourceType cmdSource );		///< TheSuperHackers @feature Ahmed Salah 15/01/2025 Guard at current location, flying units only
 #ifdef ALLOW_SURRENDER
 	void groupPickUpPrisoner( Object *prisoner, CommandSourceType cmdSource );	///< pick up prisoner
 	void groupReturnToPrison( Object *prison, CommandSourceType cmdSource );		///< return to prison

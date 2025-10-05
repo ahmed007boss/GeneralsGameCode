@@ -589,6 +589,9 @@ public:
 		MSG_TOGGLE_OVERCHARGE,											///< Toggle overcharge status of a power plant
 		MSG_TOGGLE_HOLD_POSITION,									///< Toggle hold position (disabled status HELD)
 		MSG_ENABLE_HOLD_POSITION_AND_GUARD,					///< Toggle hold position and guard from current position
+		MSG_GUARD_IN_PLACE,											///< TheSuperHackers @feature Ahmed Salah 15/01/2025 Guard at current location
+		MSG_GUARD_IN_PLACE_WITHOUT_PURSUIT,				///< TheSuperHackers @feature Ahmed Salah 15/01/2025 Guard at current location without pursuit
+		MSG_GUARD_IN_PLACE_FLYING_UNITS_ONLY,			///< TheSuperHackers @feature Ahmed Salah 15/01/2025 Guard at current location, flying units only
 		MSG_SWITCH_WEAPONS,													///< Switches which weapon slot to use for an object
 		MSG_CONVERT_TO_CARBOMB,
 		MSG_CAPTUREBUILDING,

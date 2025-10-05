@@ -6858,3 +6858,42 @@ Bool Object::refreshWeaponRangeDecalState()
 	}
 	return foundAny;
 }
+
+//-------------------------------------------------------------------------------------------------
+/**
+* TheSuperHackers @feature Ahmed Salah 15/01/2025 Returns true if object can attack air units
+*/
+Bool Object::canAttackAir() const
+{
+	// First check if we can attack at all
+	if (!isAbleToAttack())
+		return false;
+
+	// Check if we have any weapons that can target air units
+	// We'll do this by checking if any weapon can attack a hypothetical air target
+	// For now, we'll use a simple approach: check if any weapon exists and is functional
+	const AIUpdateInterface* ai = getAI();
+	if (!ai)
+		return false;
+
+	// Check all weapon slots for functional weapons
+	for (Int i = 0; i < WEAPONSLOT_COUNT; i++)
+	{
+		Weapon* weapon = getWeaponInWeaponSlot((WeaponSlotType)i);
+		if (!weapon)
+			continue;
+		const WeaponTemplate* tmp = weapon->getTemplate();
+		if (!tmp)
+			continue;
+		if (tmp->getAntiMask() & WEAPON_ANTI_AIRBORNE_VEHICLE)
+		{
+			return true;
+		}
+		if (tmp->getAntiMask() & WEAPON_ANTI_AIRBORNE_INFANTRY)
+		{
+			return true;
+		}
+	}
+
+	return false;
+}

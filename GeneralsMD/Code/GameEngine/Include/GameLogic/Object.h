@@ -202,6 +202,7 @@ public:
 	// physical properties
 	Bool isMobile() const;																	///< returns true if object is currently able to move
 	Bool isAbleToAttack() const;														///< returns true if object currently has some kind of attack capability
+	Bool canAttackAir() const;															///< TheSuperHackers @feature Ahmed Salah 15/01/2025 returns true if object can attack air units
 	Bool isJet() const;																			///< returns true if object is a jet (has JetAIUpdate module)
 	Bool canMove() const;																		///< returns true if object can move (not out of fuel, not held, etc.)
 	Bool hasFuelToMove() const;																	///< returns true if object has fuel to move (checks all locomotor surfaces)

@@ -3223,6 +3223,78 @@ void AIGroup::groupToggleHoldPositionAndGuard( CommandSourceType cmdSource )
 
 }
 
+//-------------------------------------------------------------------------------------------------
+/**
+* TheSuperHackers @feature Ahmed Salah 15/01/2025 Guard at current location
+*/
+void AIGroup::groupGuardInPlace( CommandSourceType cmdSource )
+{
+	std::list<Object *>::iterator i;
+	Object *obj;
+
+	for( i = m_memberList.begin(); i != m_memberList.end(); ++i )
+	{
+		// get object
+		obj = *i;
+
+		// Set guard position at current location
+		AIUpdateInterface *ai = obj->getAIUpdateInterface();
+		if (ai)
+		{
+			Coord3D currentPos = *obj->getPosition();
+			ai->aiGuardPosition( &currentPos, GUARDMODE_NORMAL, cmdSource );
+		}
+	}
+}
+
+//-------------------------------------------------------------------------------------------------
+/**
+* TheSuperHackers @feature Ahmed Salah 15/01/2025 Guard at current location without pursuit
+*/
+void AIGroup::groupGuardInPlaceWithoutPursuit( CommandSourceType cmdSource )
+{
+	std::list<Object *>::iterator i;
+	Object *obj;
+
+	for( i = m_memberList.begin(); i != m_memberList.end(); ++i )
+	{
+		// get object
+		obj = *i;
+
+		// Set guard position at current location without pursuit
+		AIUpdateInterface *ai = obj->getAIUpdateInterface();
+		if (ai)
+		{
+			Coord3D currentPos = *obj->getPosition();
+			ai->aiGuardPosition( &currentPos, GUARDMODE_GUARD_WITHOUT_PURSUIT, cmdSource );
+		}
+	}
+}
+
+//-------------------------------------------------------------------------------------------------
+/**
+* TheSuperHackers @feature Ahmed Salah 15/01/2025 Guard at current location, flying units only
+*/
+void AIGroup::groupGuardInPlaceFlyingUnitsOnly( CommandSourceType cmdSource )
+{
+	std::list<Object *>::iterator i;
+	Object *obj;
+
+	for( i = m_memberList.begin(); i != m_memberList.end(); ++i )
+	{
+		// get object
+		obj = *i;
+
+		// Set guard position at current location, flying units only
+		AIUpdateInterface *ai = obj->getAIUpdateInterface();
+		if (ai)
+		{
+			Coord3D currentPos = *obj->getPosition();
+			ai->aiGuardPosition( &currentPos, GUARDMODE_GUARD_FLYING_UNITS_ONLY, cmdSource );
+		}
+	}
+}
+
 #ifdef ALLOW_SURRENDER
 /**
 	* Pick up prisoners of war

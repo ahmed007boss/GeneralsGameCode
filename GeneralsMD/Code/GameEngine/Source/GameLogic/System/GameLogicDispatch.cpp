@@ -1953,6 +1953,34 @@ void GameLogic::logicMessageDispatcher( GameMessage *msg, void *userData )
 
 		}
 
+		// --------------------------------------------------------------------------------------------
+		case GameMessage::MSG_GUARD_IN_PLACE:
+		{
+			// TheSuperHackers @feature Ahmed Salah 15/01/2025 Guard at current location
+			if( currentlySelectedGroup )
+				currentlySelectedGroup->groupGuardInPlace( CMD_FROM_PLAYER );
+
+			break;
+		}
+
+		case GameMessage::MSG_GUARD_IN_PLACE_WITHOUT_PURSUIT:
+		{
+			// TheSuperHackers @feature Ahmed Salah 15/01/2025 Guard at current location without pursuit
+			if( currentlySelectedGroup )
+				currentlySelectedGroup->groupGuardInPlaceWithoutPursuit( CMD_FROM_PLAYER );
+
+			break;
+		}
+
+		case GameMessage::MSG_GUARD_IN_PLACE_FLYING_UNITS_ONLY:
+		{
+			// TheSuperHackers @feature Ahmed Salah 15/01/2025 Guard at current location, flying units only
+			if( currentlySelectedGroup )
+				currentlySelectedGroup->groupGuardInPlaceFlyingUnitsOnly( CMD_FROM_PLAYER );
+
+			break;
+		}
+
 #ifdef ALLOW_SURRENDER
 		// --------------------------------------------------------------------------------------------
 		case GameMessage::MSG_PICK_UP_PRISONER:

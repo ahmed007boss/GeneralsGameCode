@@ -136,13 +136,13 @@ const FieldParse CommandButton::s_commandButtonFieldParseTable[] =
 	{ "VisibleCallerPrerequisites",				CommandButton::parseVisibleCallerUnitPrerequisites,	0, 0 },
 
 	// Modifier key and click type button name strings
-	{ "LeftClickCtrlButton",					INI::parseAsciiString, NULL, offsetof( CommandButton, m_leftClickCtrlButtonName ) },
-	{ "LeftClickAltButton",						INI::parseAsciiString, NULL, offsetof( CommandButton, m_leftClickAltButtonName ) },
-	{ "LeftClickShiftButton",					INI::parseAsciiString, NULL, offsetof( CommandButton, m_leftClickShiftButtonName ) },
-	{ "LeftClickCtrlAltButton",				INI::parseAsciiString, NULL, offsetof( CommandButton, m_leftClickCtrlAltButtonName ) },
-	{ "LeftClickCtrlShiftButton",			INI::parseAsciiString, NULL, offsetof( CommandButton, m_leftClickCtrlShiftButtonName ) },
-	{ "LeftClickAltShiftButton",			INI::parseAsciiString, NULL, offsetof( CommandButton, m_leftClickAltShiftButtonName ) },
-	{ "LeftClickCtrlAltShiftButton",	INI::parseAsciiString, NULL, offsetof( CommandButton, m_leftClickCtrlAltShiftButtonName ) },
+	{ "ClickCtrlButton",					INI::parseAsciiString, NULL, offsetof( CommandButton, m_leftClickCtrlButtonName ) },
+	{ "ClickAltButton",						INI::parseAsciiString, NULL, offsetof( CommandButton, m_leftClickAltButtonName ) },
+	{ "ClickShiftButton",					INI::parseAsciiString, NULL, offsetof( CommandButton, m_leftClickShiftButtonName ) },
+	{ "ClickCtrlAltButton",				INI::parseAsciiString, NULL, offsetof( CommandButton, m_leftClickCtrlAltButtonName ) },
+	{ "ClickCtrlShiftButton",			INI::parseAsciiString, NULL, offsetof( CommandButton, m_leftClickCtrlShiftButtonName ) },
+	{ "ClickAltShiftButton",			INI::parseAsciiString, NULL, offsetof( CommandButton, m_leftClickAltShiftButtonName ) },
+	{ "ClickCtrlAltShiftButton",	INI::parseAsciiString, NULL, offsetof( CommandButton, m_leftClickCtrlAltShiftButtonName ) },
 
 	{ "RightClickButton",							INI::parseAsciiString, NULL, offsetof( CommandButton, m_rightClickButtonName ) },
 	{ "RightClickCtrlButton",					INI::parseAsciiString, NULL, offsetof( CommandButton, m_rightClickCtrlButtonName ) },

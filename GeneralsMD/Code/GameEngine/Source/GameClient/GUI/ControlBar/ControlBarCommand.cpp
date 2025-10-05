@@ -1455,8 +1455,16 @@ CommandAvailability ControlBar::getCommandAvailability( const CommandButton *com
 
 		case GUI_COMMAND_GUARD:
 		case GUI_COMMAND_GUARD_WITHOUT_PURSUIT:
-		case GUI_COMMAND_GUARD_FLYING_UNITS_ONLY:
+		case GUI_COMMAND_GUARD_IN_PLACE:
+		case GUI_COMMAND_GUARD_IN_PLACE_WITHOUT_PURSUIT:
 			// always available
+			break;
+
+		case GUI_COMMAND_GUARD_FLYING_UNITS_ONLY:
+		case GUI_COMMAND_GUARD_IN_PLACE_FLYING_UNITS_ONLY:
+			// TheSuperHackers @feature Ahmed Salah 15/01/2025 Only available if object can attack air units
+			if (!obj->canAttackAir())
+				return COMMAND_HIDDEN;
 			break;
 
 		// TheSuperHackers @restriction Ahmed Salah 27/06/2025 Disable move and attack move commands when holding position
