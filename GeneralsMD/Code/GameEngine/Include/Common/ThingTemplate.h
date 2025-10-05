@@ -668,6 +668,7 @@ public:
 	UnsignedByte getCrusherLevel() const { return m_crusherLevel; }
 
 	AsciiString getUpgradeCameoName( Int n)const{ return m_upgradeCameoUpgradeNames[n];	}
+	void setUpgradeCameoName(Int n, const AsciiString& name) { m_upgradeCameoUpgradeNames[n] = name; }
 
 	const WeaponTemplateSetVector& getWeaponTemplateSets(void) const {return m_weaponTemplateSets;}
 	const ArmorTemplateSetVector&  getArmorTemplateSets(void) const {return m_armorTemplateSets;}

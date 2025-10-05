@@ -28,6 +28,7 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 // INCLUDES ///////////////////////////////////////////////////////////////////////////////////////
+#include "GameLogic/Damage.h"
 #include "PreRTS.h"	// This must go first in EVERY cpp file int the GameEngine
 #define DEFINE_WEAPONCONDITIONMAP
 #include "Common/BitFlagsIO.h"
@@ -91,6 +92,7 @@
 #include "GameLogic/Module/RadarUpgrade.h"
 #include "GameLogic/Module/RebuildHoleBehavior.h"
 #include "GameLogic/Module/SpawnBehavior.h"
+#include "GameLogic/Module/SlavedUpdate.h"
 #include "GameLogic/Module/SpecialPowerModule.h"
 #include "GameLogic/Module/SpecialAbilityUpdate.h"
 #include "GameLogic/Module/StatusDamageHelper.h"
@@ -826,6 +828,38 @@ void Object::onDestroy()
 		m_containedBy->getContain()->removeFromContain(this);
 	}
 
+	// TheSuperHackers @feature Ahmed Salah 15/01/2025 Check if this object is being sold and trigger DieWhenSlaverDies for slaved objects
+	if (testStatus(OBJECT_STATUS_SOLD))
+	{
+		// Notify all slaved objects that their slaver is being sold
+		for (std::vector<Object*>::iterator it = m_slavedObjects.begin(); it != m_slavedObjects.end(); ++it)
+		{
+			Object* slavedObject = *it;
+			if (slavedObject)
+			{
+				// Get the SlavedUpdate module from the slaved object by iterating through behavior modules
+				for (BehaviorModule** update = slavedObject->getBehaviorModules(); *update; ++update)
+				{
+					SlavedUpdateInterface* slavedUpdate = (*update)->getSlavedUpdateInterface();
+					if (slavedUpdate)
+					{
+						// Create a fake DamageInfo to represent the "death" of the slaver due to selling
+						DamageInfo sellDamageInfo;
+						sellDamageInfo.in.m_sourceID = getID();
+						sellDamageInfo.in.m_damageType = DAMAGE_UNRESISTABLE; // Use a valid damage type
+						sellDamageInfo.in.m_deathType = DEATH_NONE;
+						sellDamageInfo.in.m_amount = 0.0f;
+						
+						// Call onSlaverDie to trigger DieWhenSlaverDies behavior
+						// The onSlaverDie method will check the DieWhenSlaverDies property internally
+						slavedUpdate->onSlaverDie(&sellDamageInfo);
+						break; // Only expect one SlavedUpdate module
+					}
+				}
+			}
+		}
+	}
+	
 	// Clean up slaved object references - just clear the list without killing slaved objects
 	m_slavedObjects.clear();
 

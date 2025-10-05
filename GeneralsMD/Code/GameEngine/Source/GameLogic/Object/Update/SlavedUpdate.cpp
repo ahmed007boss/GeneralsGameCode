@@ -101,6 +101,8 @@ void SlavedUpdate::onEnslave( const Object *slaver )
 //-------------------------------------------------------------------------------------------------
 void SlavedUpdate::onSlaverDie( const DamageInfo *info )
 {
+	const SlavedUpdateModuleData* data = getSlavedUpdateModuleData();
+	
 	stopSlavedEffects();
 	
 	// Remove this slaved object from its master's list
@@ -110,6 +112,16 @@ void SlavedUpdate::onSlaverDie( const DamageInfo *info )
 		if (master)
 		{
 			master->removeSlavedObject(getObject());
+		}
+	}
+	
+	// TheSuperHackers @feature Ahmed Salah 15/01/2025 Kill slave if configured to die when slaver dies
+	if (data->m_dieWhenSlaverDies)
+	{
+		Object* me = getObject();
+		if (me)
+		{
+			me->kill();
 		}
 	}
 }

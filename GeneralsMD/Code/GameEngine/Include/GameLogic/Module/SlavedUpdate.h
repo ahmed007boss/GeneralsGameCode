@@ -72,6 +72,7 @@ public:
 	AsciiString m_weldingFXBone;
 
 	Bool m_stayOnSameLayerAsMaster;
+	Bool m_dieWhenSlaverDies;		///< TheSuperHackers @feature Ahmed Salah 15/01/2025 Whether slave dies when slaver dies
 
 	SlavedUpdateModuleData()
 	{
@@ -91,6 +92,7 @@ public:
 		m_minReadyFrames = 0;
 		m_maxReadyFrames = 0;
 		m_stayOnSameLayerAsMaster = false;
+		m_dieWhenSlaverDies = false;
 	}
 
 	static void buildFieldParse(MultiIniFieldParse& p)
@@ -117,6 +119,7 @@ public:
 			{ "RepairWeldingSys",		INI::parseAsciiString,	NULL, offsetof( SlavedUpdateModuleData, m_weldingSysName ) },
 			{ "RepairWeldingFXBone", INI::parseAsciiString, NULL, offsetof( SlavedUpdateModuleData, m_weldingFXBone ) },
 			{ "StayOnSameLayerAsMaster", INI::parseBool, NULL, offsetof( SlavedUpdateModuleData, m_stayOnSameLayerAsMaster ) },
+			{ "DieWhenSlaverDies", INI::parseBool, NULL, offsetof( SlavedUpdateModuleData, m_dieWhenSlaverDies ) },
 			{ 0, 0, 0, 0 }
 		};
     p.add(dataFieldParse);

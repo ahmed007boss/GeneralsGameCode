@@ -81,6 +81,33 @@
 //-------------------------------------------------------------------------------------------------
 const Int USE_EXP_VALUE_FOR_SKILL_VALUE = -999;
 
+//-------------------------------------------------------------------------------------------------
+// TheSuperHackers @feature Ahmed Salah 15/01/2025 Custom parser for UpgradeCameo that auto-assigns to next empty slot
+static void parseUpgradeCameo(INI* ini, void* instance, void* /*store*/, const void* /*userData*/)
+{
+	ThingTemplate* self = (ThingTemplate*)instance;
+	
+	// Get the upgrade cameo name
+	const char* token = ini->getNextToken();
+	if (!token) return;
+	
+	AsciiString upgradeCameoName = token;
+	
+	if(upgradeCameoName.isEmpty()) return;
+	
+	// Find the next empty slot from UpgradeCameo1 to UpgradeCameo5
+	for (int i = 0; i < 5; i++)
+	{
+		if (self->getUpgradeCameoName(i).isEmpty())
+		{
+			self->setUpgradeCameoName(i, upgradeCameoName);
+			return;
+		}
+	}
+
+	//skip if no slot left
+}
+
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // PRIVATE DATA ///////////////////////////////////////////////////////////////////////////////////
@@ -177,6 +204,7 @@ const FieldParse ThingTemplate::s_objectFieldParseTable[] =
 				//{ "InventoryImageHilite",		INI::parseAsciiString,	NULL,		offsetof( ThingTemplate, m_inventoryImage[ INV_IMAGE_HILITE ] ) },
 				//{ "InventoryImagePushed",		INI::parseAsciiString,	NULL,		offsetof( ThingTemplate, m_inventoryImage[ INV_IMAGE_PUSHED ] ) },
 
+				{ "UpgradeCameo",		parseUpgradeCameo,		NULL,		0 },
 				{ "UpgradeCameo1",		INI::parseAsciiString,	NULL,		offsetof(ThingTemplate, m_upgradeCameoUpgradeNames[0]) },
 				{ "UpgradeCameo2",		INI::parseAsciiString,	NULL,		offsetof(ThingTemplate, m_upgradeCameoUpgradeNames[1]) },
 				{ "UpgradeCameo3",		INI::parseAsciiString,	NULL,		offsetof(ThingTemplate, m_upgradeCameoUpgradeNames[2]) },
@@ -654,6 +682,7 @@ void ThingTemplate::parsePrerequisites(INI* ini, void* instance, void* store, co
 	ThingTemplate* self = (ThingTemplate*)instance;
 	ProductionPrerequisite::parsePrerequisites(ini, &self->m_prereqInfo, store, userData);
 }
+
 
 //-------------------------------------------------------------------------------------------------
 // TheSuperHackers @feature Ahmed Salah 15/01/2025 Parse Include directive to load external INI files
