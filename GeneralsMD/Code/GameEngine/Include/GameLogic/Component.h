@@ -33,6 +33,7 @@
 
 #include "Lib/BaseType.h"
 #include "Common/AsciiString.h"
+#include "Common/GameType.h"
 #include "GameLogic/Damage.h"
 
 // TheSuperHackers @feature author 15/01/2025 Component functionality status
@@ -70,13 +71,15 @@ struct Component
 	HitSideFlags damageOnSides;					///< TheSuperHackers @feature author 15/01/2025 Which hit sides can damage this component (empty = all sides)
 	UnsignedInt replacementCost;				///< TheSuperHackers @feature author 15/01/2025 Cost to replace this component (0 = cannot be replaced)
 	Bool forceReturnOnDestroy;					///< TheSuperHackers @feature Ahmed Salah 30/09/2025 Force jet to return to parking when this component is destroyed
+	ValueType maxHealthValueType;				///< TheSuperHackers @feature Ahmed Salah 15/01/2025 How maxHealth is calculated (absolute or percentage of main object health)
+	ValueType initialHealthValueType;			///< TheSuperHackers @feature Ahmed Salah 15/01/2025 How initialHealth is calculated (absolute or percentage of main object health)
 	
 	// TheSuperHackers @feature Ahmed Salah 15/01/2025 EW damage properties for components
 	Real ewDamageCap;							///< Maximum EW damage this component can accumulate
 	UnsignedInt ewDamageHealRate;				///< How often EW damage heals (in frames)
 	Real ewDamageHealAmount;					///< How much EW damage heals per cycle
 	
-	Component() : maxHealth(0.0f), initialHealth(0.0f), healingType(COMPONENT_HEALING_NORMAL), damageOnSides(), replacementCost(0), forceReturnOnDestroy(FALSE), ewDamageCap(0.0f), ewDamageHealRate(0), ewDamageHealAmount(0.0f) {}
+	Component() : maxHealth(0.0f), initialHealth(0.0f), healingType(COMPONENT_HEALING_NORMAL), damageOnSides(), replacementCost(0), forceReturnOnDestroy(FALSE), maxHealthValueType(VALUE_TYPE_ABSOLUTE), initialHealthValueType(VALUE_TYPE_ABSOLUTE), ewDamageCap(0.0f), ewDamageHealRate(0), ewDamageHealAmount(0.0f) {}
 };
 
 #endif

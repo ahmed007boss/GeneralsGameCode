@@ -46,3 +46,12 @@ const char *const WeatherNames[] =
 	NULL
 };
 static_assert(ARRAY_SIZE(WeatherNames) == WEATHER_COUNT + 1, "Incorrect array size");
+
+const char *const TheValueTypeNames[] =
+{
+	"ABSOLUTE",
+	"PERCENTAGE",
+
+	NULL
+};
+static_assert(ARRAY_SIZE(TheValueTypeNames) == VALUE_TYPE_COUNT + 1, "Incorrect array size");

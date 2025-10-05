@@ -198,6 +198,22 @@ enum WeaponSlotType CPP_11(: Int)
 enum PathfindLayerEnum CPP_11(: Int) {LAYER_INVALID = 0, LAYER_GROUND = 1, LAYER_WALL = 15, LAYER_LAST=15};
 
 //-------------------------------------------------------------------------------------------------
+// Value type enumeration for upgrades and modifications
+//-------------------------------------------------------------------------------------------------
+enum ValueType CPP_11(: Int)
+{
+	VALUE_TYPE_ABSOLUTE,		///< Absolute value (add/subtract directly)
+	VALUE_TYPE_PERCENTAGE,		///< Percentage value (multiply by percentage)
+	
+	VALUE_TYPE_COUNT
+};
+
+//-------------------------------------------------------------------------------------------------
+// Value type names for INI parsing
+//-------------------------------------------------------------------------------------------------
+extern const char *const TheValueTypeNames[];
+
+//-------------------------------------------------------------------------------------------------
 
 #endif // _GAME_TYPE_H_
 

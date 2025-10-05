@@ -60,11 +60,87 @@
 #include "GameClient/GameText.h"
 #include "GameLogic/Module/ActiveBody.h"
 #include "GameLogic/Module/EWDamageHelper.h"
+#include "Common/GameType.h"
 #include "ActiveBodyEW.cpp"
 
-
-
 #define YELLOW_DAMAGE_PERCENT (0.25f)
+
+//-------------------------------------------------------------------------------------------------
+// Custom parsers for component health values that auto-detect percentage values
+//-------------------------------------------------------------------------------------------------
+static void parseComponentMaxHealth(INI* ini, void* instance, void* /*store*/, const void* /*userData*/)
+{
+	Component* self = (Component*)instance;
+	
+	// Get the token and check if it contains a percentage symbol
+	const char* token = ini->getNextToken();
+	if (!token) return;
+	
+	// Check if the token contains a percentage symbol
+	const char* percentPos = strchr(token, '%');
+	if (percentPos != NULL)
+	{
+		// Extract the numeric value (copy everything before the %)
+		char valueBuffer[256];
+		strncpy(valueBuffer, token, percentPos - token);
+		valueBuffer[percentPos - token] = '\0';
+		
+		// Parse the numeric value
+		Real value = 0.0f;
+		if (sscanf(valueBuffer, "%f", &value) == 1)
+		{
+			self->maxHealth = value;
+			self->maxHealthValueType = VALUE_TYPE_PERCENTAGE;
+		}
+	}
+	else
+	{
+		// Parse as absolute value
+		Real value = 0.0f;
+		if (sscanf(token, "%f", &value) == 1)
+		{
+			self->maxHealth = value;
+			self->maxHealthValueType = VALUE_TYPE_ABSOLUTE;
+		}
+	}
+}
+
+static void parseComponentInitialHealth(INI* ini, void* instance, void* /*store*/, const void* /*userData*/)
+{
+	Component* self = (Component*)instance;
+	
+	// Get the token and check if it contains a percentage symbol
+	const char* token = ini->getNextToken();
+	if (!token) return;
+	
+	// Check if the token contains a percentage symbol
+	const char* percentPos = strchr(token, '%');
+	if (percentPos != NULL)
+	{
+		// Extract the numeric value (copy everything before the %)
+		char valueBuffer[256];
+		strncpy(valueBuffer, token, percentPos - token);
+		valueBuffer[percentPos - token] = '\0';
+		
+		// Parse the numeric value
+		Real value = 0.0f;
+		if (sscanf(valueBuffer, "%f", &value) == 1)
+		{
+			self->initialHealth = value;
+			self->initialHealthValueType = VALUE_TYPE_PERCENTAGE;
+		}
+	}
+	else
+	{
+		// Parse as absolute value
+		Real value = 0.0f;
+		if (sscanf(token, "%f", &value) == 1)
+		{
+			self->initialHealth = value;
+			self->initialHealthValueType = VALUE_TYPE_ABSOLUTE;
+		}
+	}
+}
 
 // FORWARD REFERENCES /////////////////////////////////////////////////////////////////////////////
 
@@ -272,12 +348,14 @@ static void parseComponent(INI* ini, void* instance, void* /*store*/, const void
 	
 	// Parse component properties using FieldParse table
 	static const FieldParse componentFieldParse[] = {
-		{ "MaxHealth", INI::parseReal, NULL, offsetof(Component, maxHealth) },
-		{ "InitialHealth", INI::parseReal, NULL, offsetof(Component, initialHealth) },
+		{ "MaxHealth", parseComponentMaxHealth, NULL, 0 },
+		{ "InitialHealth", parseComponentInitialHealth, NULL, 0 },
 		{ "HealingType", parseComponentHealingType, NULL, offsetof(Component, healingType) },
 		{ "DamageOnSides", parseComponentDamageOnSides, NULL, offsetof(Component, damageOnSides) },
 		{ "ReplacementCost", INI::parseUnsignedInt, NULL, offsetof(Component, replacementCost) },
 		{ "ForceReturnOnDestroy", INI::parseBool, NULL, offsetof(Component, forceReturnOnDestroy) },
+		{ "MaxHealthValueType", INI::parseIndexList, TheValueTypeNames, offsetof(Component, maxHealthValueType) },
+		{ "InitialHealthValueType", INI::parseIndexList, TheValueTypeNames, offsetof(Component, initialHealthValueType) },
 		
 		// TheSuperHackers @feature Ahmed Salah 15/01/2025 Component EW damage properties
 		{ "EWDamageCap", INI::parseReal, NULL, offsetof(Component, ewDamageCap) },
@@ -2189,14 +2267,34 @@ void ActiveBody::initializeComponentHealth()
 	const ActiveBodyModuleData* data = static_cast<const ActiveBodyModuleData*>(getModuleData());
 	if (!data) return;
 
-	// Initialize component health from module data
+		// Initialize component health from module data
 	for (size_t i = 0; i < data->m_components.size(); i++)
 	{
 		const Component& component = data->m_components[i];
 		if (!component.name.isEmpty())
 		{
-			m_componentMaxHealth[component.name] = component.maxHealth;
-			m_componentHealth[component.name] = component.initialHealth;
+			Real componentMaxHealth = component.maxHealth;
+			Real componentInitialHealth = component.initialHealth;
+			Real mainMaxHealth = getMaxHealth();
+			
+			// Calculate max health based on its value type
+			if (component.maxHealthValueType == VALUE_TYPE_PERCENTAGE)
+			{
+				// Percentage: calculate as percentage of main object's max health
+				componentMaxHealth = mainMaxHealth * (component.maxHealth / 100.0f);
+			}
+			// For VALUE_TYPE_ABSOLUTE, use the value directly
+			
+			// Calculate initial health based on its value type
+			if (component.initialHealthValueType == VALUE_TYPE_PERCENTAGE)
+			{
+				// Percentage: calculate as percentage of main object's max health
+				componentInitialHealth = mainMaxHealth * (component.initialHealth / 100.0f);
+			}
+			// For VALUE_TYPE_ABSOLUTE, use the value directly
+			
+			m_componentMaxHealth[component.name] = componentMaxHealth;
+			m_componentHealth[component.name] = componentInitialHealth;
 		}
 	}
 }
