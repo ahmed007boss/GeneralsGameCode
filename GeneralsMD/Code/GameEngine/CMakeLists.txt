@@ -481,6 +481,7 @@ set(GAMEENGINE_SRC
     Include/GameLogic/Module/VeterancyCrateCollide.h
     Include/GameLogic/Module/VeterancyGainCreate.h
     Include/GameLogic/Module/WanderAIUpdate.h
+    Include/GameLogic/Module/WarningBehavior.h
     Include/GameLogic/Module/WaveGuideUpdate.h
     Include/GameLogic/Module/WeaponBonusUpdate.h
     Include/GameLogic/Module/WeaponBonusUpgrade.h
@@ -1071,6 +1072,7 @@ set(GAMEENGINE_SRC
     Source/GameLogic/Object/Update/TensileFormationUpdate.cpp
     Source/GameLogic/Object/Update/ToppleUpdate.cpp
     Source/GameLogic/Object/Update/UpdateModule.cpp
+    Source/GameLogic/Object/Update/WarningBehavior.cpp
     Source/GameLogic/Object/Update/WaveGuideUpdate.cpp
     Source/GameLogic/Object/Update/WeaponBonusUpdate.cpp
     Source/GameLogic/Object/Upgrade/ActiveShroudUpgrade.cpp

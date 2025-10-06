@@ -3072,6 +3072,28 @@ Bool Object::isJet() const
 
 //-------------------------------------------------------------------------------------------------
 /**
+ * TheSuperHackers @feature Ahmed Salah 15/01/2025 Returns true if object can send radio messages
+ * (infantry, vehicle, aircraft, not stealth, detected)
+ */
+Bool Object::shouldSendRadioMessage() const
+{
+	// Check if object is destroyed or disabled
+	if (isDestroyed() || isDisabled())
+		return false;
+
+	// Check if object is stealth and not detected
+	if (testStatus(OBJECT_STATUS_STEALTHED) && !testStatus(OBJECT_STATUS_DETECTED))
+		return false;
+
+	// Check if object is of the right kind (infantry, vehicle, aircraft)
+	if (isKindOf(KINDOF_INFANTRY) || isKindOf(KINDOF_VEHICLE) || isKindOf(KINDOF_AIRCRAFT))
+		return true;
+
+	return false;
+}
+
+//-------------------------------------------------------------------------------------------------
+/**
  * TheSuperHackers @feature Ahmed Salah 30/09/2025 Returns true if object has enough of the specified inventory item
  */
 Bool Object::hasInventoryItem(const AsciiString& itemName, Real requiredCount) const

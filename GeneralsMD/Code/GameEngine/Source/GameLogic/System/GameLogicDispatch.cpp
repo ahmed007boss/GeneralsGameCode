@@ -63,7 +63,9 @@
 #include "GameLogic/Module/ProductionUpdate.h"
 #include "GameLogic/Module/SpecialPowerModule.h"
 #include "GameLogic/Module/InventoryBehavior.h"
+#include "GameLogic/Module/WarningBehavior.h"
 #include "GameLogic/Module/ActiveBody.h"
+#include "GameLogic/PartitionManager.h"
 #include "GameLogic/Component.h"
 #include "GameLogic/ScriptActions.h"
 #include "GameLogic/ScriptEngine.h"
@@ -347,6 +349,52 @@ void GameLogic::prepareNewGame( GameMode gameMode, GameDifficulty diff, Int rank
 /** This message handles dispatches object command messages to the
   * appropriate objects.
 	* @todo Rename this to "CommandProcessor", or similar. */
+//-------------------------------------------------------------------------------------------------
+// TheSuperHackers @feature Ahmed Salah 15/01/2025 Check for nearby objects with WarningBehavior and trigger warnings
+//-------------------------------------------------------------------------------------------------
+void checkForWarningObjects( GameMessage::Type commandType, const Coord3D *commandPos, Object *commandingObject )
+{
+	if( !commandPos || !commandingObject )
+		return;
+		
+	// Get all objects in a reasonable range around the command position
+	// We'll use a larger radius to catch potential warning objects
+	Real searchRadius = 500.0f; // Search radius for warning objects
+	ObjectIterator *iter = ThePartitionManager->iterateObjectsInRange( commandPos, searchRadius, FROM_CENTER_2D );
+	MemoryPoolObjectHolder hold(iter);
+	
+	if( !iter )
+		return;
+		
+	// Check each nearby object for WarningBehavior
+	for( Object *nearbyObj = iter->first(); nearbyObj; nearbyObj = iter->next() )
+	{
+		// Skip the commanding object itself
+		if( nearbyObj == commandingObject )
+			continue;
+			
+		// Find WarningBehavior module in this object
+		WarningBehavior *warningBehavior = NULL;
+		for( BehaviorModule **b = nearbyObj->getBehaviorModules(); *b; ++b )
+		{
+			if( (*b)->getModuleNameKey() == TheNameKeyGenerator->nameToKey("WarningBehavior") )
+			{
+				warningBehavior = (WarningBehavior*)(*b);
+				break;
+			}
+		}
+		
+		if( !warningBehavior )
+			continue;
+			
+		// Use the WarningBehavior's own logic to determine if warning should trigger
+		if( warningBehavior->shouldTriggerWarning( commandPos, commandingObject ) )
+		{
+			warningBehavior->doWarning( commandType, commandPos, commandingObject );
+		}
+	}
+}
+
 //-------------------------------------------------------------------------------------------------
 void GameLogic::logicMessageDispatcher( GameMessage *msg, void *userData )
 {
@@ -1155,6 +1203,17 @@ void GameLogic::logicMessageDispatcher( GameMessage *msg, void *userData )
 			{
 				currentlySelectedGroup->releaseWeaponLockForGroup(LOCKED_TEMPORARILY);	// release any temporary locks.
 				currentlySelectedGroup->groupAttackMoveToPosition( &dest, NO_MAX_SHOTS_LIMIT, CMD_FROM_PLAYER );
+				
+				// TheSuperHackers @feature Ahmed Salah 15/01/2025 Check for nearby warning objects when processing attack-move commands
+				const VecObjectID& selectedObjects = currentlySelectedGroup->getAllIDs();
+				if( !selectedObjects.empty() )
+				{
+					Object* firstObj = TheGameLogic->findObjectByID(selectedObjects[0]);
+					if( firstObj )
+					{
+						checkForWarningObjects( msgType, &dest, firstObj );
+					}
+				}
 			}
 
 			break;
@@ -1183,6 +1242,17 @@ void GameLogic::logicMessageDispatcher( GameMessage *msg, void *userData )
 			{
 				currentlySelectedGroup->releaseWeaponLockForGroup(LOCKED_TEMPORARILY);	// release any temporary locks.
 				currentlySelectedGroup->groupMoveToPosition( &dest, false, CMD_FROM_PLAYER, TRUE );
+				
+				// TheSuperHackers @feature Ahmed Salah 15/01/2025 Check for nearby warning objects when processing group move commands
+				const VecObjectID& selectedObjects = currentlySelectedGroup->getAllIDs();
+				if( !selectedObjects.empty() )
+				{
+					Object* firstObj = TheGameLogic->findObjectByID(selectedObjects[0]);
+					if( firstObj )
+					{
+						checkForWarningObjects( msgType, &dest, firstObj );
+					}
+				}
 			}
 
 			break;
@@ -1197,6 +1267,17 @@ void GameLogic::logicMessageDispatcher( GameMessage *msg, void *userData )
 			{
 				currentlySelectedGroup->releaseWeaponLockForGroup(LOCKED_TEMPORARILY);	// release any temporary locks.
 				currentlySelectedGroup->groupAttackMoveToPosition( &dest, NO_MAX_SHOTS_LIMIT, CMD_FROM_PLAYER, TRUE );
+				
+				// TheSuperHackers @feature Ahmed Salah 15/01/2025 Check for nearby warning objects when processing group attack-move commands
+				const VecObjectID& selectedObjects = currentlySelectedGroup->getAllIDs();
+				if( !selectedObjects.empty() )
+				{
+					Object* firstObj = TheGameLogic->findObjectByID(selectedObjects[0]);
+					if( firstObj )
+					{
+						checkForWarningObjects( msgType, &dest, firstObj );
+					}
+				}
 			}
 
 			break;
@@ -1214,6 +1295,17 @@ void GameLogic::logicMessageDispatcher( GameMessage *msg, void *userData )
 				//DEBUG_LOG(("GameLogicDispatch - got a MSG_DO_MOVETO command"));
 				currentlySelectedGroup->releaseWeaponLockForGroup(LOCKED_TEMPORARILY);	// release any temporary locks.
 				currentlySelectedGroup->groupMoveToPosition( &dest, false, CMD_FROM_PLAYER, FALSE );
+				
+				// TheSuperHackers @feature Ahmed Salah 15/01/2025 Check for nearby warning objects when processing move commands
+				const VecObjectID& selectedObjects = currentlySelectedGroup->getAllIDs();
+				if( !selectedObjects.empty() )
+				{
+					Object* firstObj = TheGameLogic->findObjectByID(selectedObjects[0]);
+					if( firstObj )
+					{
+						checkForWarningObjects( msgType, &dest, firstObj );
+					}
+				}
 			}
 
 			break;
@@ -1229,6 +1321,17 @@ void GameLogic::logicMessageDispatcher( GameMessage *msg, void *userData )
 				//DEBUG_LOG(("GameLogicDispatch - got a MSG_DO_MOVETO command"));
 				currentlySelectedGroup->releaseWeaponLockForGroup(LOCKED_TEMPORARILY);	// release any temporary locks.
 				currentlySelectedGroup->groupMoveToPosition( &dest, true, CMD_FROM_PLAYER, FALSE );
+				
+				// TheSuperHackers @feature Ahmed Salah 15/01/2025 Check for nearby warning objects when processing waypoint commands
+				const VecObjectID& selectedObjects = currentlySelectedGroup->getAllIDs();
+				if( !selectedObjects.empty() )
+				{
+					Object* firstObj = TheGameLogic->findObjectByID(selectedObjects[0]);
+					if( firstObj )
+					{
+						checkForWarningObjects( msgType, &dest, firstObj );
+					}
+				}
 			}
 
 			break;
@@ -1631,6 +1734,18 @@ void GameLogic::logicMessageDispatcher( GameMessage *msg, void *userData )
 
 					currentlySelectedGroup->releaseWeaponLockForGroup(LOCKED_TEMPORARILY);	// release any temporary locks.
 					currentlySelectedGroup->groupAttackObject( enemy, NO_MAX_SHOTS_LIMIT, CMD_FROM_PLAYER );
+					
+					// TheSuperHackers @feature Ahmed Salah 15/01/2025 Check for nearby warning objects when processing attack commands
+					const VecObjectID& selectedObjects = currentlySelectedGroup->getAllIDs();
+					if( !selectedObjects.empty() )
+					{
+						Object* firstObj = TheGameLogic->findObjectByID(selectedObjects[0]);
+						if( firstObj )
+						{
+							Coord3D attackPos = *enemy->getPosition();
+							checkForWarningObjects( msgType, &attackPos, firstObj );
+						}
+					}
 
 				}
 
