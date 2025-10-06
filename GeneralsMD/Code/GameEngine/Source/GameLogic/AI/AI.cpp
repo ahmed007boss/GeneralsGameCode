@@ -40,10 +40,12 @@
 #include "GameLogic/PartitionManager.h"
 #include "GameLogic/Module/AIUpdate.h"
 #include "GameLogic/Module/ContainModule.h"
+#include "GameLogic/Module/WarningBehavior.h"
 #include "GameLogic/ScriptEngine.h"
 #include "GameLogic/SidesList.h"
 #include "GameLogic/AIPathfind.h"
 #include "GameLogic/Weapon.h"
+#include "Common/MessageStream.h"
 
 extern void addIcon(const Coord3D *pos, Real width, Int numFramesDuration, RGBColor color);
 
@@ -1047,6 +1049,87 @@ void AI::xfer( Xfer *xfer )
 void AI::loadPostProcess( void )
 {
 
+}
+
+//-------------------------------------------------------------------------------------------------
+// Warning detection for AI commands
+//-------------------------------------------------------------------------------------------------
+void checkForWarningObjectsAI(GameMessage::Type commandType, const Coord3D* commandPos, Object* victim, Object* commandingObject)
+{
+	if (!commandPos)
+		return;
+
+	// Find all objects with WarningBehavior in range
+	ObjectIterator* iter = ThePartitionManager->iterateObjectsInRange(commandPos, 200.0f, FROM_CENTER_2D);
+	if (!iter)
+		return;
+
+	MemoryPoolObjectHolder hold(iter);
+	for (Object* obj = iter->first(); obj; obj = iter->next())
+	{
+		// Find WarningBehavior module in this object
+		WarningBehavior *warningBehavior = NULL;
+		for (BehaviorModule **b = obj->getBehaviorModules(); *b; ++b)
+		{
+			warningBehavior = dynamic_cast<WarningBehavior*>(*b);
+			if (warningBehavior)
+				break;
+		}
+		
+		if (!warningBehavior)
+			continue;
+
+		// Check if this object should trigger a warning
+		if (warningBehavior->shouldTriggerWarning(commandPos, commandingObject))
+		{
+			Object* targetObject = NULL;
+
+			// Determine target object based on command type and victim
+			switch (commandType)
+			{
+				case GameMessage::MSG_DO_ATTACK_OBJECT:
+				case GameMessage::MSG_DO_ATTACKSQUAD:
+				case GameMessage::MSG_DO_FORCE_ATTACK_OBJECT:
+				{
+					// Use the victim if provided, otherwise search for nearby objects
+					if (victim)
+					{
+						targetObject = victim;
+					}
+					else
+					{
+						ObjectIterator* targetIter = ThePartitionManager->iterateObjectsInRange(commandPos, 50.0f, FROM_CENTER_2D);
+						if (targetIter)
+						{
+							MemoryPoolObjectHolder targetHold(targetIter);
+							targetObject = targetIter->first();
+						}
+					}
+					break;
+				}
+
+				case GameMessage::MSG_DO_ATTACKMOVETO:
+				case GameMessage::MSG_DO_GROUPATTACKMOVETO:
+				case GameMessage::MSG_DO_FORCE_ATTACK_GROUND:
+				{
+					targetObject = NULL; // Ground attacks - no specific target object
+					break;
+				}
+
+				default:
+					targetObject = NULL; // Non-attack commands - no target object
+					break;
+			}
+
+			// Trigger warning if we have a target or it's a ground attack
+			if (targetObject || commandType == GameMessage::MSG_DO_ATTACKMOVETO ||
+				commandType == GameMessage::MSG_DO_GROUPATTACKMOVETO ||
+				commandType == GameMessage::MSG_DO_FORCE_ATTACK_GROUND)
+			{
+				warningBehavior->doWarning(commandType, commandPos, commandingObject, targetObject);
+			}
+		}
+	}
 }
 
 

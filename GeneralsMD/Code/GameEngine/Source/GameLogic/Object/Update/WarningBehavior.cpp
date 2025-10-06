@@ -30,18 +30,15 @@
 // INCLUDES ///////////////////////////////////////////////////////////////////////////////////////
 #include "PreRTS.h"	// This must go first in EVERY cpp file int the GameEngine
 
-#include "Common/Xfer.h"
-#include "Common/MessageStream.h"
-#include "Common/GameAudio.h"
-#include "GameLogic/Object.h"
-#include "GameLogic/Module/WarningBehavior.h"
-#include "Common/Player.h"
-#include "GameLogic/PartitionManager.h"
-#include "GameLogic/Locomotor.h"
-#include "GameLogic/Module/AIUpdate.h"
-#include "GameLogic/GameLogic.h"
-#include "Common/ThingTemplate.h"
-#include <map>
+// Core includes - only what we actually use
+#include "Common/GameAudio.h"        // AudioEventRTS, TheAudio
+#include "GameLogic/Object.h"        // Object class
+#include "GameLogic/Module/WarningBehavior.h"  // WarningBehavior class
+#include "Common/Player.h"           // Player class
+#include "GameLogic/PartitionManager.h"  // ThePartitionManager, FROM_CENTER_2D
+#include "GameLogic/GameLogic.h"     // TheGameLogic
+#include "GameClient/Drawable.h"     // Drawable class for visual effects
+#include <map>                       // std::map for static data
 
 //-------------------------------------------------------------------------------------------------
 // Static data for player-based cooldown tracking
@@ -67,34 +64,108 @@ WarningBehavior::~WarningBehavior(void)
 }
 
 //-------------------------------------------------------------------------------------------------
-void WarningBehavior::doWarning(GameMessage::Type commandType, const Coord3D* commandPos, Object* commandingObject)
+void WarningBehavior::doWarning(GameMessage::Type commandType, const Coord3D* commandPos, Object* commandingObject, Object* targetObject)
 {
-	// Implement warning behavior
+	// TheSuperHackers @feature Ahmed Salah 15/01/2025 Warning behavior only works for the player who owns this unit
 	const Object* thisObject = getObject();
 	if (!thisObject)
 		return;
 
-	// TheSuperHackers @feature Ahmed Salah 15/01/2025 Check player-based cooldown to prevent sound spam
-	const Player* thisPlayer = thisObject->getControllingPlayer();
-	if (!thisPlayer)
+	// Get the player who owns this unit - this is who will receive the warning
+	const Player* unitOwner = thisObject->getControllingPlayer();
+	if (!unitOwner)
 		return;
 
-	if (isWarningSoundCooldownReady(thisPlayer))
+	if (targetObject)
 	{
-		
-		// TheSuperHackers @feature Ahmed Salah 15/01/2025 Play warning sound effect
-		AudioEventRTS warningSound("preAttackSiren");
-		warningSound.setIsLogicalAudio(true);
-		warningSound.setPosition(thisObject->getPosition());
-		warningSound.setPlayerIndex(thisPlayer->getPlayerIndex());
-
-		TheAudio->addAudioEvent(&warningSound);
-
-		// Update the last warning sound frame for this player
-		UnsignedInt currentFrame = TheGameLogic->getFrame();
-		s_playerLastWarningFrame[thisPlayer->getPlayerIndex()] = currentFrame;
-
+		// TheSuperHackers @feature Ahmed Salah 15/01/2025 Trigger visual warning effect on target object (immediate feedback)
+		triggerVisualWarning(commandType, targetObject);
 	}
+
+
+	// Check if this player is ready for a warning sound (cooldown system)
+	if (!isWarningSoundCooldownReady(unitOwner))
+		return;
+
+	// TheSuperHackers @feature Ahmed Salah 15/01/2025 Get configurable warning sounds from module data
+	const WarningBehaviorModuleData* md = getWarningBehaviorModuleData();
+	if (!md)
+		return;
+
+	// TheSuperHackers @feature Ahmed Salah 15/01/2025 Check if the commanding object is an aircraft
+	Bool isAircraft = isCommandingObjectAircraft(commandingObject);
+
+	AsciiString soundName;
+
+	switch (commandType)
+	{
+	case GameMessage::MSG_DO_ATTACK_OBJECT:
+	case GameMessage::MSG_DO_ATTACKSQUAD:
+	case GameMessage::MSG_DO_ATTACKMOVETO:
+	case GameMessage::MSG_DO_GROUPATTACKMOVETO:
+	case GameMessage::MSG_DO_FORCE_ATTACK_OBJECT:
+	case GameMessage::MSG_DO_FORCE_ATTACK_GROUND:
+		// Attack/Attack Move commands - use air or ground attack warning sound
+		if (isAircraft)
+		{
+			soundName = md->m_airAttackWarningSound;
+			// Fall back to ground attack sound if air sound is empty
+			if (soundName.isEmpty())
+				soundName = md->m_attackWarningSound;
+		}
+		else
+		{
+			soundName = md->m_attackWarningSound;
+		}
+		break;
+
+	case GameMessage::MSG_DO_MOVETO:
+	case GameMessage::MSG_DO_FORCEMOVETO:
+	case GameMessage::MSG_DO_GROUPMOVETO:
+		// Move commands - use air or ground movement warning sound
+		if (isAircraft)
+		{
+			soundName = md->m_airMoveWarningSound;
+			// Fall back to ground move sound if air sound is empty
+			if (soundName.isEmpty())
+				soundName = md->m_moveWarningSound;
+		}
+		else
+		{
+			soundName = md->m_moveWarningSound;
+		}
+		break;
+
+	case GameMessage::MSG_DO_SPECIAL_POWER:
+	case GameMessage::MSG_DO_SPECIAL_POWER_AT_LOCATION:
+	case GameMessage::MSG_DO_SPECIAL_POWER_AT_OBJECT:
+		// Special ability commands - use configurable ability warning sound (no air variant)
+		soundName = md->m_abilityWarningSound;
+		break;
+
+	default:
+		// Default warning sound for unknown commands (no air variant)
+		soundName = md->m_defaultWarningSound;
+		break;
+	}
+
+	// TheSuperHackers @feature Ahmed Salah 15/01/2025 Check if sound name is not empty before playing
+	if (soundName.isEmpty())
+	{
+		// No sound configured, skip playing warning sound
+		return;
+	}
+
+	AudioEventRTS warningSound(soundName);
+	warningSound.setIsLogicalAudio(true);
+	warningSound.setPosition(thisObject->getPosition());
+	warningSound.setPlayerIndex(unitOwner->getPlayerIndex());
+
+	TheAudio->addAudioEvent(&warningSound);
+
+	// Update cooldown for this specific player
+	UnsignedInt currentFrame = TheGameLogic->getFrame();
+	s_playerLastWarningFrame[unitOwner->getPlayerIndex()] = currentFrame;
 
 
 
@@ -112,47 +183,45 @@ Bool WarningBehavior::shouldTriggerWarning(const Coord3D* commandPos, Object* co
 {
 	if (!commandPos || !commandingObject)
 	{
-		DEBUG_LOG(("WarningBehavior: Invalid parameters - commandPos: %p, commandingObject: %p", commandPos, commandingObject));
 		return FALSE;
 	}
 
 	const Object* thisObject = getObject();
 	if (!thisObject)
 	{
-		DEBUG_LOG(("WarningBehavior: No thisObject"));
+		return FALSE;
+	}
+
+	// TheSuperHackers @feature Ahmed Salah 15/01/2025 Check if this unit is under construction
+	if (thisObject->testStatus(OBJECT_STATUS_UNDER_CONSTRUCTION))
+	{
 		return FALSE;
 	}
 
 	//Check if the commanding object can send radio messages
 	if (!commandingObject->shouldSendRadioMessage())
 	{
-		DEBUG_LOG(("WarningBehavior: Commanding object cannot send radio messages (not infantry/vehicle/aircraft or stealth/undetected)"));
 		return FALSE;
 	}
 
 	//Check if the commanding object is an enemy of this object
 	if (!isEnemy(commandingObject))
 	{
-		DEBUG_LOG(("WarningBehavior: Commanding object is not an enemy"));
 		return FALSE;
 	}
 
 	//Check if the command position is within the warning radius
 	if (!isCommandTargetInRange(commandPos))
 	{
-		DEBUG_LOG(("WarningBehavior: Command position not in range"));
 		return FALSE;
 	}
 
 	// Check if the commanding object is active (moving/attacking)
 	if (!isEnemyUnitActive(commandingObject))
 	{
-		DEBUG_LOG(("WarningBehavior: Enemy unit not active"));
 		return FALSE;
 	}
 
-	//All conditions met, should trigger warning
-	DEBUG_LOG(("WarningBehavior: All conditions met, should trigger warning!"));
 	return TRUE;
 }
 
@@ -171,18 +240,14 @@ Bool WarningBehavior::isEnemy(Object* other) const
 
 	if (!thisPlayer || !otherPlayer)
 	{
-		DEBUG_LOG(("WarningBehavior: Missing players - thisPlayer: %p, otherPlayer: %p", thisPlayer, otherPlayer));
+
 		return FALSE;
 	}
 
 	// Check if players are enemies
 	// For now, simple check: different players are enemies
 	Bool isEnemy = thisPlayer != otherPlayer;
-	DEBUG_LOG(("WarningBehavior: Enemy check - thisPlayer: %d, otherPlayer: %d, isEnemy: %s", 
-		thisPlayer->getPlayerIndex(), 
-		otherPlayer->getPlayerIndex(), 
-		isEnemy ? "YES" : "NO"));
-	
+
 	return isEnemy;
 }
 
@@ -199,7 +264,6 @@ Bool WarningBehavior::isCommandTargetInRange(const Coord3D* targetPos) const
 	const WarningBehaviorModuleData* md = getWarningBehaviorModuleData();
 	if (!md || md->m_warningRadius <= 0.0f)
 	{
-		DEBUG_LOG(("WarningBehavior: No module data or invalid warning radius (%f)", md ? md->m_warningRadius : -1.0f));
 		return FALSE;
 	}
 
@@ -208,13 +272,6 @@ Bool WarningBehavior::isCommandTargetInRange(const Coord3D* targetPos) const
 	Real distance = sqrt(distanceSquared);
 
 	Bool inRange = distance <= md->m_warningRadius;
-	
-	// TheSuperHackers @feature Ahmed Salah 15/01/2025 Debug logging for range checking
-	DEBUG_LOG(("WarningBehavior: Distance check - Object: %s, Distance: %f, Radius: %f, InRange: %s", 
-		thisObject->getTemplate()->getName().str(), 
-		distance, 
-		md->m_warningRadius, 
-		inRange ? "YES" : "NO"));
 
 	return inRange;
 }
@@ -279,4 +336,49 @@ void WarningBehavior::loadPostProcess(void)
 {
 	// TheSuperHackers @feature Ahmed Salah 15/01/2025 Load post-process for WarningBehavior
 	BehaviorModule::loadPostProcess();
+}
+
+//-------------------------------------------------------------------------------------------------
+void WarningBehavior::triggerVisualWarning(GameMessage::Type commandType, Object* targetObject)
+{
+	// TheSuperHackers @feature Ahmed Salah 15/01/2025 Trigger red flashing visual warning effect on target object
+	const WarningBehaviorModuleData* md = getWarningBehaviorModuleData();
+	if (!md || !md->m_enableVisualWarning)
+		return;
+
+	if (!targetObject)
+		return;
+
+
+
+	// Get the drawable of the target object and trigger red flashing effect
+	Drawable* drawable = targetObject->getDrawable();
+	if (drawable)
+	{
+		RGBColor redColor;
+		redColor.red = 1.0f;    // Maximum red
+		redColor.green = 0.0f;  // No green
+		redColor.blue = 0.0f;   // No blue
+
+		// Apply red color flash with duration and intensity
+		drawable->colorFlash(&redColor, md->m_visualWarningDuration);
+		
+		// Set the second material pass opacity to create flashing effect
+		// This warns the player that THIS target object is in danger of being attacked
+		drawable->setSecondMaterialPassOpacity(md->m_visualWarningIntensity);
+
+	}
+
+}
+
+//-------------------------------------------------------------------------------------------------
+Bool WarningBehavior::isCommandingObjectAircraft(Object* commandingObject) const
+{
+	// TheSuperHackers @feature Ahmed Salah 15/01/2025 Check if the commanding object is an aircraft
+	if (!commandingObject)
+		return FALSE;
+
+	// Check if the object is an aircraft using the KINDOF_AIRCRAFT flag
+	// This is the most reliable way to detect aircraft in the game engine
+	return commandingObject->isKindOf(KINDOF_AIRCRAFT);
 }

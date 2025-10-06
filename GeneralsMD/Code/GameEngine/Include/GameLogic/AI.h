@@ -39,6 +39,11 @@
 #include "Common/STLTypedefs.h"
 #include "refcount.h"
 #include "ref_ptr.h"
+#include "GameLogic/Object.h"
+#include "Common/MessageStream.h"
+
+// Function declarations
+void checkForWarningObjectsAI(GameMessage::Type commandType, const Coord3D* commandPos, Object* victim = NULL, Object* commandingObject = NULL);
 
 class AIGroup;
 class AttackPriorityInfo;
@@ -482,6 +487,7 @@ class AICommandInterface
 public:
 
 	virtual void aiDoCommand(const AICommandParms* parms) = 0;
+	virtual Object* getObject() const = 0;
 
 	inline void aiMoveToPosition( const Coord3D *pos, CommandSourceType cmdSource )
 	{
@@ -590,6 +596,10 @@ public:
 
 	inline void aiAttackObject( Object *victim, Int maxShotsToFire, CommandSourceType cmdSource )
 	{
+		// TheSuperHackers @feature Ahmed Salah 15/01/2025 Trigger warning for AI attack object
+		if (victim)
+			checkForWarningObjectsAI(GameMessage::MSG_DO_ATTACK_OBJECT, victim->getPosition(), victim, getObject());
+		
 		AICommandParms parms(AICMD_ATTACK_OBJECT, cmdSource);
 		parms.m_obj = victim;
 		parms.m_intValue = maxShotsToFire;
@@ -598,6 +608,10 @@ public:
 
 	inline void aiForceAttackObject( Object *victim, Int maxShotsToFire, CommandSourceType cmdSource )
 	{
+		// TheSuperHackers @feature Ahmed Salah 15/01/2025 Trigger warning for AI force attack object
+		if (victim)
+			checkForWarningObjectsAI(GameMessage::MSG_DO_FORCE_ATTACK_OBJECT, victim->getPosition(), victim, getObject());
+		
 		AICommandParms parms(AICMD_FORCE_ATTACK_OBJECT, cmdSource);
 		parms.m_obj = victim;
 		parms.m_intValue = maxShotsToFire;
@@ -606,6 +620,12 @@ public:
 
 	inline void aiGuardRetaliate( Object *victim, const Coord3D *pos, Int maxShotsToFire, CommandSourceType cmdSource )
 	{
+		// TheSuperHackers @feature Ahmed Salah 15/01/2025 Trigger warning for AI guard retaliate
+		if (victim)
+			checkForWarningObjectsAI(GameMessage::MSG_DO_ATTACK_OBJECT, victim->getPosition(), victim, getObject());
+		else if (pos)
+			checkForWarningObjectsAI(GameMessage::MSG_DO_ATTACK_OBJECT, pos, NULL, getObject());
+		
 		AICommandParms parms(AICMD_GUARD_RETALIATE, cmdSource);
 		parms.m_obj = victim;
 		parms.m_pos = *pos;
@@ -623,6 +643,9 @@ public:
 
 	inline void aiAttackPosition( const Coord3D *pos, Int maxShotsToFire, CommandSourceType cmdSource )
 	{
+		// TheSuperHackers @feature Ahmed Salah 15/01/2025 Trigger warning for AI attack position
+		checkForWarningObjectsAI(GameMessage::MSG_DO_ATTACK_OBJECT, pos, NULL, getObject());
+		
 		AICommandParms parms(AICMD_ATTACK_POSITION, cmdSource);
 		parms.m_pos = *pos;
 		parms.m_intValue = maxShotsToFire;
@@ -631,6 +654,9 @@ public:
 
 	inline void aiAttackMoveToPosition( const Coord3D *pos, Int maxShotsToFire, CommandSourceType cmdSource )
 	{
+		// TheSuperHackers @feature Ahmed Salah 15/01/2025 Trigger warning for AI attack move to position
+		checkForWarningObjectsAI(GameMessage::MSG_DO_ATTACKMOVETO, pos, NULL, getObject());
+		
 		AICommandParms parms(AICMD_ATTACKMOVE_TO_POSITION, cmdSource);
 		parms.m_pos = *pos;
 		parms.m_intValue = maxShotsToFire;
