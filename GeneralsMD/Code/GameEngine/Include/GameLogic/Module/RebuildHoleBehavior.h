@@ -52,6 +52,12 @@ public:
 	Real m_holeHealthRegenPercentPerSecond; ///< the hole recovers this % of the max hit points per second
 	AsciiString m_workerTemplateName;				///< name of worker object
 
+	// TheSuperHackers @feature author 01/01/2025 Override getModuleDescription for UI display
+	virtual UnicodeString getModuleDescription() const override;
+
+	// TheSuperHackers @feature author 01/01/2025 Override getModuleOrder for display ordering
+	virtual Int getModuleOrder() const { return 100; } // High priority - shows first
+
 private:
 
 };

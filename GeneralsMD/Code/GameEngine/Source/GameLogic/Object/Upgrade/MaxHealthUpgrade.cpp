@@ -32,10 +32,51 @@
 
 #define DEFINE_MAXHEALTHCHANGETYPE_NAMES
 #include "Common/Xfer.h"
+#include "Common/GameType.h"
 #include "GameLogic/Object.h"
 #include "GameLogic/ExperienceTracker.h"
 #include "GameLogic/Module/MaxHealthUpgrade.h"
 #include "GameLogic/Module/BodyModule.h"
+
+//-------------------------------------------------------------------------------------------------
+// Custom parser for AddMaxHealth that auto-detects percentage values
+//-------------------------------------------------------------------------------------------------
+static void parseAddMaxHealth(INI* ini, void* instance, void* /*store*/, const void* /*userData*/)
+{
+	MaxHealthUpgradeModuleData* self = (MaxHealthUpgradeModuleData*)instance;
+	
+	// Get the token and check if it contains a percentage symbol
+	const char* token = ini->getNextToken();
+	if (!token) return;
+	
+	// Check if the token contains a percentage symbol
+	const char* percentPos = strchr(token, '%');
+	if (percentPos != NULL)
+	{
+		// Extract the numeric value (copy everything before the %)
+		char valueBuffer[256];
+		strncpy(valueBuffer, token, percentPos - token);
+		valueBuffer[percentPos - token] = '\0';
+		
+		// Parse the numeric value
+		Real value = 0.0f;
+		if (sscanf(valueBuffer, "%f", &value) == 1)
+		{
+			self->m_addMaxHealth = value;
+			self->m_valueType = VALUE_TYPE_PERCENTAGE;
+		}
+	}
+	else
+	{
+		// Parse as absolute value
+		Real value = 0.0f;
+		if (sscanf(token, "%f", &value) == 1)
+		{
+			self->m_addMaxHealth = value;
+			self->m_valueType = VALUE_TYPE_ABSOLUTE;
+		}
+	}
+}
 
 //-------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------
@@ -43,6 +84,7 @@ MaxHealthUpgradeModuleData::MaxHealthUpgradeModuleData( void )
 {
 	m_addMaxHealth = 0.0f;
 	m_maxHealthChangeType = SAME_CURRENTHEALTH;
+	m_valueType = VALUE_TYPE_ABSOLUTE;
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -54,8 +96,9 @@ void MaxHealthUpgradeModuleData::buildFieldParse(MultiIniFieldParse& p)
 
 	static const FieldParse dataFieldParse[] =
 	{
-		{ "AddMaxHealth",					INI::parseReal,					NULL,										offsetof( MaxHealthUpgradeModuleData, m_addMaxHealth ) },
+		{ "AddMaxHealth",					parseAddMaxHealth,			NULL,										0 },
 		{ "ChangeType",						INI::parseIndexList,		TheMaxHealthChangeTypeNames, offsetof( MaxHealthUpgradeModuleData, m_maxHealthChangeType ) },
+		{ "ValueType",						INI::parseIndexList,		TheValueTypeNames, offsetof( MaxHealthUpgradeModuleData, m_valueType ) },
 		{ 0, 0, 0, 0 }
 	};
 
@@ -87,7 +130,18 @@ void MaxHealthUpgrade::upgradeImplementation( )
 	BodyModuleInterface *body = obj->getBodyModule();
 	if( body )
 	{
-		body->setMaxHealth( body->getMaxHealth() + data->m_addMaxHealth, data->m_maxHealthChangeType );
+		Real currentMaxHealth = body->getMaxHealth();
+		Real healthChange = data->m_addMaxHealth;
+		
+		// Apply value based on type
+		if( data->m_valueType == VALUE_TYPE_PERCENTAGE )
+		{
+			// Percentage: multiply current max health by the percentage
+			healthChange = currentMaxHealth * (data->m_addMaxHealth / 100.0f);
+		}
+		// For VALUE_TYPE_ABSOLUTE, use the value directly
+		
+		body->setMaxHealth( currentMaxHealth + healthChange, data->m_maxHealthChangeType );
 	}
 }
 

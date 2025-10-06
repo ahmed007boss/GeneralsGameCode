@@ -50,7 +50,7 @@
 #include "GameLogic/WeaponSet.h"
 #include "Common/STLTypedefs.h"
 #include "GameClient/Color.h"
-
+#include "Common/GlobalData.h"
 // FORWARD REFERENCES /////////////////////////////////////////////////////////////////////////////
 class AIUpdateModuleData;
 class Image;
@@ -406,6 +406,12 @@ public:
 		return TEST_KINDOFMASK(m_kindof, t);
 	}
 
+	/// return true iff this template is an extension object (created via ObjectExtend)
+	inline Bool isExtensionObject() const
+	{
+		return m_isExtensionObject;
+	}
+
 	/// convenience for doing multiple kindof testing at once.
 	inline Bool isKindOfMulti(const KindOfMaskType& mustBeSet, const KindOfMaskType& mustBeClear) const
 	{
@@ -435,6 +441,7 @@ public:
 	// Only Object can ask this.  Everyone else should ask the Object.  In fact, you really should ask the Object everything.
 	Real friend_calcVisionRange() const { return m_visionRange; }  ///< get vision range
 	Real friend_calcShroudClearingRange() const { return m_shroudClearingRange; }  ///< get vision range for Shroud ONLY (Design requested split)
+  Real friend_calcShroudClearingDisabledRange() const { return m_shroudClearingDisabledRange; }  ///< get vision range for Shroud ONLY when disabled (Design requested split)
 
 	//This one is okay to check directly... because it doesn't get effected by bonuses.
 	Real getShroudRevealToAllRange() const { return m_shroudRevealToAllRange; }
@@ -454,6 +461,17 @@ public:
 	const ModuleInfo& getBehaviorModuleInfo() const { return m_behaviorModuleInfo; }
 	const ModuleInfo& getDrawModuleInfo() const { return m_drawModuleInfo; }
 	const ModuleInfo& getClientUpdateModuleInfo() const { return m_clientUpdateModuleInfo; }
+	
+	// Non-const versions for internal use
+	ModuleInfo& getBehaviorModuleInfo() { return m_behaviorModuleInfo; }
+	ModuleInfo& getDrawModuleInfo() { return m_drawModuleInfo; }
+	ModuleInfo& getClientUpdateModuleInfo() { return m_clientUpdateModuleInfo; }
+
+	// TheSuperHackers @feature author 01/01/2025 Get extended description from template modules
+	UnicodeString getExtendedDescription() const;
+
+	// TheSuperHackers @feature author 01/01/2025 Get KindOf description from thing types
+	UnicodeString getKindOfDescription() const;
 
 	const Image *getSelectedPortraitImage( void ) const { return m_selectedPortraitImage; }
 	const Image *getButtonImage( void ) const { return m_buttonImage; }
@@ -468,6 +486,7 @@ public:
 	Bool isTrainable() const{return m_isTrainable; }
 	Bool isEnterGuard() const{return m_enterGuard; }
 	Bool isHijackGuard() const{return m_hijackGuard; }
+	Bool isExcludedFromGroupMove() const{return m_excludeFromGroupMove; }
 
 	const AudioEventRTS *getVoiceSelect() const								{ return getAudio(TTAUDIO_voiceSelect); }
 	const AudioEventRTS *getVoiceGroupSelect() const					{ return getAudio(TTAUDIO_voiceGroupSelect); }
@@ -530,6 +549,21 @@ public:
 // The version that does not take an Object argument is labeled friend for use by WorldBuilder.  All game requests
 // for CommandSet must use Object::getCommandSetString, as we have two different sources for dynamic answers.
 	const AsciiString& friend_getCommandSetString() const { return m_commandSetString; }
+	const AsciiString& friend_getCommandSet2String() const {
+		if (m_commandSet2String.isNotEmpty())
+			return m_commandSet2String;
+		return m_commandSetString;
+	}
+	const AsciiString& friend_getCommandSet3String() const {
+		if (m_commandSet3String.isNotEmpty())
+			return m_commandSet3String;
+		return m_commandSetString;
+	}
+	const AsciiString& friend_getCommandSet4String() const {
+		if (m_commandSet4String.isNotEmpty())
+			return m_commandSet4String;
+		return m_commandSetString;
+	}
 
 	const std::vector<AsciiString>& getBuildVariations() const { return m_buildVariations; }
 
@@ -566,7 +600,15 @@ public:
 
 	BuildableStatus getBuildable() const;
 
-	Int getPrereqCount() const { return m_prereqInfo.size(); }
+	Int getPrereqCount() const {
+#if defined( RTS_DEBUG )
+		if (TheGlobalData->m_disablePrerequisite)
+		{
+			return 0;
+		}
+#endif
+		return m_prereqInfo.size();
+	}
 	const ProductionPrerequisite *getNthPrereq(Int i) const { return &m_prereqInfo[i]; }
 
 	/**
@@ -606,6 +648,9 @@ public:
 
 	void setCopiedFromDefault();
 
+	// Only set non removable modules as copied when using ObjectExtend
+	void setCopiedFromDefaultExtended();
+
 	void setReskinnedFrom(const ThingTemplate* tt) { DEBUG_ASSERTCRASH(m_reskinnedFrom == NULL, ("should be null")); m_reskinnedFrom = tt; }
 
 	Bool isPrerequisite() const { return m_isPrerequisite; }
@@ -623,8 +668,10 @@ public:
 	UnsignedByte getCrusherLevel() const { return m_crusherLevel; }
 
 	AsciiString getUpgradeCameoName( Int n)const{ return m_upgradeCameoUpgradeNames[n];	}
+	void setUpgradeCameoName(Int n, const AsciiString& name) { m_upgradeCameoUpgradeNames[n] = name; }
 
 	const WeaponTemplateSetVector& getWeaponTemplateSets(void) const {return m_weaponTemplateSets;}
+	const ArmorTemplateSetVector&  getArmorTemplateSets(void) const {return m_armorTemplateSets;}
 
 protected:
 
@@ -645,9 +692,10 @@ protected:
 
 	static void parseArmorTemplateSet( INI* ini, void *instance, void *store, const void* /*userData*/ );
 	static void parseWeaponTemplateSet( INI* ini, void *instance, void *store, const void* /*userData*/ );
-	static void parsePrerequisites( INI* ini, void *instance, void * /*store*/, const void* /*userData*/ );
 	static void parseModuleName(INI* ini, void *instance, void* /*store*/, const void* userData);
 	static void parseIntList(INI* ini, void *instance, void* store, const void* userData);
+	static void parsePrerequisites(INI* ini, void* instance, void* store, const void* userData);
+	static void parseInclude(INI* ini, void* instance, void* store, const void* userData);
 
 	static void parsePerUnitSounds(INI* ini, void *instance, void* store, const void* userData);
 	static void parsePerUnitFX(INI* ini, void *instance, void* store, const void* userData);
@@ -674,6 +722,9 @@ private:
 	AsciiString				m_nameString;					///< name of this thing template
 	AsciiString				m_defaultOwningSide;	///< default owning side (owning player is inferred)
 	AsciiString				m_commandSetString;
+	AsciiString				m_commandSet2String;
+	AsciiString				m_commandSet3String;
+	AsciiString				m_commandSet4String;
 	AsciiString				m_selectedPortraitImageName;
 	AsciiString				m_buttonImageName;
 	AsciiString				m_upgradeCameoUpgradeNames[MAX_UPGRADE_CAMEO_UPGRADES];	///< Use these to find the upgrade images to display on the control bar
@@ -727,6 +778,7 @@ private:
 	Real					m_fenceXOffset;							///< Fence X offset for fence type objects.
 	Real					m_visionRange;								///< object "sees" this far around itself
 	Real					m_shroudClearingRange;				///< Since So many things got added to "Seeing" functionality, we need to split this part out.
+	Real					m_shroudClearingDisabledRange;				///< Since So many things got added to "Seeing" functionality, we need to split this part out.
 	Real					m_shroudRevealToAllRange;			///< When > zero, the shroud gets revealed to all players.
 	Real					m_placementViewAngle;				///< when placing buildings this will be the angle of the building when "floating" at the mouse
 	Real					m_factoryExitWidth;					///< when placing buildings this will be the width of the reserved exit area on the right side.
@@ -764,6 +816,8 @@ private:
 	Bool					m_isForbidden;								///< useful when overriding in <mapfile>.ini
 	Bool					m_armorCopiedFromDefault;
 	Bool					m_weaponsCopiedFromDefault;
+	Bool					m_isExtensionObject;
+	Bool					m_excludeFromGroupMove;				///< exclude this thing from group movement speed limits
 
 	// ---- Byte-sized things
 	Byte					m_radarPriority;						///< does object appear on radar, and if so at what priority

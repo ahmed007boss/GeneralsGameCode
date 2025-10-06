@@ -405,7 +405,12 @@ public:
 	/**
 		simply returns the number of objects on this team with a specific KindOfMaskType
 	*/
-	Int countObjects(KindOfMaskType setMask, KindOfMaskType clearMask);
+	Int countObjects(KindOfMaskType setMask, KindOfMaskType clearMask, VeterancyLevel minVeterancyLevel);
+	
+	/**
+		simply returns the number of objects on this team with a specific KindOfMaskType (backward compatibility)
+	*/
+	Int countObjects(KindOfMaskType setMask, KindOfMaskType clearMask) { return countObjects(setMask, clearMask, LEVEL_REGULAR); }
 
 	/**
 		This Team will heal all its members
@@ -565,7 +570,12 @@ public:
 	/**
 		simply returns the number of objects on this team with a specific KindOfMaskType
 	*/
-	Int countObjects(KindOfMaskType setMask, KindOfMaskType clearMask);
+	Int countObjects(KindOfMaskType setMask, KindOfMaskType clearMask, VeterancyLevel minVeterancyLevel);
+	
+	/**
+		simply returns the number of objects on this team with a specific KindOfMaskType (backward compatibility)
+	*/
+	Int countObjects(KindOfMaskType setMask, KindOfMaskType clearMask) { return countObjects(setMask, clearMask, LEVEL_REGULAR); }
 
 	/**
 		This TeamProtoType will heal all objects in all its instances

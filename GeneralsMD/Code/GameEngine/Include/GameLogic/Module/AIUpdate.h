@@ -210,6 +210,7 @@ public:
 	virtual Bool isAiModuleData() const { return true; }
 
 	const LocomotorTemplateVector* findLocomotorTemplateVector(LocomotorSetType t) const;
+	const LocomotorTemplateMap& getLocomotorTemplates(void) const {return m_locomotorTemplates;}
 	static void buildFieldParse(MultiIniFieldParse& p);
 	static void parseLocomotorSet( INI* ini, void *instance, void *store, const void* /*userData*/ );
 
@@ -304,7 +305,7 @@ public:
 	virtual AIUpdateInterface* getAIUpdateInterface() { return this; }
 
 	// Disabled conditions to process (AI will still process held status)
-	virtual DisabledMaskType getDisabledTypesToProcess() const { return MAKE_DISABLED_MASK( DISABLED_HELD ); }
+	virtual DisabledMaskType getDisabledTypesToProcess() const { return MAKE_DISABLED_MASK2( DISABLED_HELD , DISABLED_EW); }
 
 	// Some very specific, complex behaviors are used by more than one AIUpdate.  Here are their interfaces.
 	virtual DozerAIInterface* getDozerAIInterface() {return NULL;}

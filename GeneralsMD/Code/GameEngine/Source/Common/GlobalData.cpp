@@ -526,6 +526,9 @@ GlobalData* GlobalData::m_theOriginal = NULL;
 	{ "BaseStatsDir",								INI::parseAsciiString,NULL,			offsetof( GlobalData, m_baseStatsDir ) },
 	{ "LocalMOTDPath",							INI::parseAsciiString,NULL,			offsetof( GlobalData, m_MOTDPath ) },
 	{ "ExtraLogging",								INI::parseBool,				NULL,			offsetof( GlobalData, m_extraLogging ) },
+	{ "DisableBuildPrerequisite",				INI::parseBool,				NULL,			offsetof( GlobalData, m_disablePrerequisite) },
+	{ "DisableBuildCost",								INI::parseBool,				NULL,			offsetof( GlobalData, m_disableCost) },
+	{ "DisableBuildTime",								INI::parseBool,				NULL,			offsetof( GlobalData, m_disableTime) },
 #endif
 
 	{ NULL,					NULL,						NULL,						0 }
@@ -600,6 +603,9 @@ GlobalData::GlobalData()
 	m_baseStatsDir = ".\\";
 	m_MOTDPath = "MOTD.txt";
 	m_extraLogging = FALSE;
+	m_disableCost = FALSE;
+	m_disablePrerequisite = FALSE;
+	m_disableTime = FALSE;
 #endif
 
 #ifdef DEBUG_CRASHING
@@ -994,8 +1000,13 @@ GlobalData::GlobalData()
 
 	m_shellMapName.set("Maps\\ShellMap1\\ShellMap1.map");
 	m_shellMapOn =TRUE;
+#if defined( RTS_DEBUG )
+	m_playIntro = FALSE;
+	m_playSizzle = FALSE;
+#else
 	m_playIntro = TRUE;
 	m_playSizzle = TRUE;
+#endif
 	m_afterIntro = FALSE;
 	m_allowExitOutOfMovies = FALSE;
 	m_loadScreenRender = FALSE;

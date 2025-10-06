@@ -35,7 +35,9 @@
 #include "Common/ModelState.h"
 #include "Common/SparseMatchFinder.h"
 #include "Common/Snapshot.h"
+#include "Common/UnicodeString.h"
 #include "GameLogic/Damage.h"
+#include "GameClient/GameText.h"
 
 //-------------------------------------------------------------------------------------------------
 class INI;
@@ -59,6 +61,11 @@ static const char *const TheWeaponSlotTypeNames[] =
 	"PRIMARY",
 	"SECONDARY",
 	"TERTIARY",
+	"WEAPON_FOUR",
+	"WEAPON_FIVE",
+	"WEAPON_SIX",
+	"WEAPON_SEVEN",
+	"WEAPON_EIGHT",
 
 	NULL
 };
@@ -69,8 +76,13 @@ static const LookupListRec TheWeaponSlotTypeNamesLookupList[] =
 	{ "PRIMARY",		PRIMARY_WEAPON },
 	{ "SECONDARY",	SECONDARY_WEAPON },
 	{ "TERTIARY",		TERTIARY_WEAPON },
-
-	{ NULL, 0	}
+	{ "WEAPON_FOUR",	WEAPON_FOUR },
+	{ "WEAPON_FIVE",	WEAPON_FIVE },
+	{ "WEAPON_SIX",		WEAPON_SIX },
+	{ "WEAPON_SEVEN",	WEAPON_SEVEN },
+	{ "WEAPON_EIGHT",	WEAPON_EIGHT },
+	
+	{ NULL, 0	}// keep this last!
 };
 static_assert(ARRAY_SIZE(TheWeaponSlotTypeNamesLookupList) == WEAPONSLOT_COUNT + 1, "Incorrect array size");
 
@@ -105,6 +117,9 @@ static const ModelConditionFlagType TheWeaponSetTypeToModelConditionTypeMap[WEAP
 	/*WEAPONSET_RIDER6*/								MODELCONDITION_RIDER6,
 	/*WEAPONSET_RIDER7*/								MODELCONDITION_RIDER7,
 	/*WEAPONSET_RIDER8*/								MODELCONDITION_RIDER8,
+	/*WEAPONSET_PLAYER_UPGRADE2*/						MODELCONDITION_WEAPONSET_PLAYER_UPGRADE2,
+	/*WEAPONSET_PLAYER_UPGRADE3*/						MODELCONDITION_WEAPONSET_PLAYER_UPGRADE3,
+	/*WEAPONSET_PLAYER_UPGRADE4*/						MODELCONDITION_WEAPONSET_PLAYER_UPGRADE4,
 };
 #endif
 
@@ -118,7 +133,6 @@ enum WeaponSetConditionType CPP_11(: Int)
 	WSF_BETWEEN,
 	WSF_RELOADING,
 	WSF_PREATTACK,
-
 	WSF_COUNT
 };
 
@@ -133,15 +147,26 @@ private:
 	KindOfMaskType					m_preferredAgainst[WEAPONSLOT_COUNT];
 	Bool										m_isReloadTimeShared;
 	Bool										m_isWeaponLockSharedAcrossSets; ///< A weapon set so similar that it is safe to hold locks across
+	mutable UnicodeString*						m_description; ///< weapon set description for UI display
 
 	static void parseWeapon(INI* ini, void *instance, void *store, const void* userData);
 	static void parseAutoChoose(INI* ini, void *instance, void *store, const void* userData);
 	static void parsePreferredAgainst(INI* ini, void *instance, void *store, const void* userData);
+	static void parseDescription(INI* ini, void *instance, void *store, const void* userData);
 
 public:
 	inline WeaponTemplateSet()
 	{
 		clear();
+	}
+	
+	~WeaponTemplateSet()
+	{
+		if (m_description)
+		{
+			delete m_description;
+			m_description = NULL;
+		}
 	}
 
 	const ThingTemplate* friend_getThingTemplate() const { return m_thingTemplate; }	// only for WeaponSet::xfer
@@ -152,6 +177,9 @@ public:
 	Bool testWeaponSetFlag( WeaponSetType wst ) const;
 	Bool isSharedReloadTime( void ) const { return m_isReloadTimeShared; }
 	Bool isWeaponLockSharedAcrossSets() const {return m_isWeaponLockSharedAcrossSets; }
+
+	// TheSuperHackers @feature author 01/01/2025 Get weapon set description for UI display
+	UnicodeString getModuleDescription() const;
 
 	Bool hasAnyWeapons() const;
 	inline const WeaponTemplate* getNth(WeaponSlotType n) const { return m_template[n]; }
@@ -237,7 +265,7 @@ public:
 	UnsignedInt getMostPercentReadyToFireAnyWeapon() const;
 	inline UnsignedInt getNthCommandSourceMask( WeaponSlotType n ) const { return m_curWeaponTemplateSet ? m_curWeaponTemplateSet->getNthCommandSourceMask( n ) : NULL; }
 
-	Bool setWeaponLock( WeaponSlotType weaponSlot, WeaponLockType lockType );
+	Bool setWeaponLock( WeaponSlotType weaponSlot, WeaponLockType lockType, const Object* obj = NULL );
 	void releaseWeaponLock(WeaponLockType lockType);
 	Bool isSharedReloadTime() const;
 

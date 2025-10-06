@@ -48,6 +48,7 @@
 #include "GameClient/InGameUI.h"
 #include "GameClient/ControlBar.h"
 #include "GameClient/GameWindowManager.h"
+#include "GameClient/Keyboard.h"
 #include "GameClient/LanguageFilter.h"
 #include "GameClient/CommandXlat.h"
 
@@ -115,7 +116,7 @@ WindowMsgHandledType LeftHUDInput( GameWindow *window, UnsignedInt msg,
 
 				if (!(drawableList->empty() || msg == GWM_MOUSE_LEAVING))
 				{
-					if (command && command->getCommandType() == GUI_COMMAND_ATTACK_MOVE)
+					if (command && (command->getCommandType() == GUI_COMMAND_ATTACK_MOVE || command->getCommandType() == GUI_COMMAND_GROUP_ATTACK_MOVE))
 					{
 						cur = Mouse::ATTACKMOVETO;
 					}
@@ -198,7 +199,7 @@ WindowMsgHandledType LeftHUDInput( GameWindow *window, UnsignedInt msg,
 
 					if (!(drawableList->empty() || msg == GWM_MOUSE_LEAVING))
 					{
-						if (command && command->getCommandType() == GUI_COMMAND_ATTACK_MOVE)
+						if (command && (command->getCommandType() == GUI_COMMAND_ATTACK_MOVE || command->getCommandType() == GUI_COMMAND_GROUP_ATTACK_MOVE))
 						{
 							cur = Mouse::ATTACKMOVETO;
 						}
@@ -284,8 +285,27 @@ WindowMsgHandledType LeftHUDInput( GameWindow *window, UnsignedInt msg,
 					TheGameClient->evaluateContextCommand( NULL, &world, CommandTranslator::DO_COMMAND );
 
 				}
-				else if( command && command->getCommandType() == GUI_COMMAND_ATTACK_MOVE)
+				else if( command && (command->getCommandType() == GUI_COMMAND_ATTACK_MOVE || command->getCommandType() == GUI_COMMAND_GROUP_ATTACK_MOVE))
 				{
+					// TheSuperHackers @restriction Ahmed Salah 27/06/2025 Check if any selected unit is holding position
+					Bool anyUnitHoldingPosition = FALSE;
+					for( DrawableListCIt it = drawableList->begin(); it != drawableList->end(); ++it )
+					{
+						Drawable *draw = *it;
+						if( draw && draw->getObject() && draw->getObject()->isLocallyControlled() && 
+							draw->getObject()->isDisabledByType( DISABLED_HELD ) )
+						{
+							anyUnitHoldingPosition = TRUE;
+							break;
+						}
+					}
+					
+					if( anyUnitHoldingPosition )
+					{
+						// Units are holding position, don't issue attack move command
+						break;
+					}
+					
 					// Attack move has changed from a modifier to a command, so it moves up here.
 
 					GameMessage *msg = TheMessageStream->appendMessage( GameMessage::MSG_DO_ATTACKMOVETO );
@@ -296,6 +316,25 @@ WindowMsgHandledType LeftHUDInput( GameWindow *window, UnsignedInt msg,
 				}
 				else
 				{
+					// TheSuperHackers @restriction Ahmed Salah 27/06/2025 Check if any selected unit is holding position
+					Bool anyUnitHoldingPosition = FALSE;
+					for( DrawableListCIt it = drawableList->begin(); it != drawableList->end(); ++it )
+					{
+						Drawable *draw = *it;
+						if( draw && draw->getObject() && draw->getObject()->isLocallyControlled() && 
+							draw->getObject()->isDisabledByType( DISABLED_HELD ) )
+						{
+							anyUnitHoldingPosition = TRUE;
+							break;
+						}
+					}
+					
+					if( anyUnitHoldingPosition )
+					{
+						// Units are holding position, don't issue move command
+						break;
+					}
+					
 					GameMessage *newMsg = NULL;
 
 					// Do the superweapon stuff here, before issuing these other messages
@@ -352,6 +391,7 @@ void ToggleQuitMenu(void);
 WindowMsgHandledType ControlBarSystem( GameWindow *window, UnsignedInt msg,
 																			 WindowMsgData mData1, WindowMsgData mData2 )
 {
+
 	static NameKeyType buttonCommunicator = NAMEKEY_INVALID;
 	if(TheScriptEngine && TheScriptEngine->isGameEnding())
 		return MSG_IGNORED;
@@ -450,7 +490,16 @@ WindowMsgHandledType ControlBarSystem( GameWindow *window, UnsignedInt msg,
 				// all buttons from all the context sensitive user interface windows are part of the
 				// control bar, send the button processing that way
 				//
-				TheControlBar->processContextSensitiveButtonClick( control, (GadgetGameMessage)msg );
+
+				// Determine if this is a right-click
+				Bool isRightClick = (msg == GBM_SELECTED_RIGHT);
+				// Check modifier keys using the keyboard system
+				// TheSuperHackers @modifier Ahmed Salah 27/06/2025 Use TheKeyboard system to detect modifier keys instead of relying on mData2
+				Bool ctrlPressed = TheKeyboard->isCtrl();
+				Bool altPressed = TheKeyboard->isAlt();
+				Bool shiftPressed = TheKeyboard->isShift();
+
+				TheControlBar->processContextSensitiveButtonClick( control, (GadgetGameMessage)msg, ctrlPressed, altPressed, shiftPressed, isRightClick );
 			}
 			break;
 

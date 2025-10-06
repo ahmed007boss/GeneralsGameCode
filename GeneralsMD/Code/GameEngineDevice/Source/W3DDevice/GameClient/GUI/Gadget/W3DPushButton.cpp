@@ -250,6 +250,16 @@ void W3DGadgetPushButtonDraw( GameWindow *window, WinInstanceData *instData )
 			//Render the overlay image now.
 			TheDisplay->drawImage( pData->overlayImage, origin.x, origin.y, origin.x + size.x, origin.y + size.y );
 		}
+		if( pData->overlayImage2 )
+		{
+			//Render the second overlay image now.
+			TheDisplay->drawImage( pData->overlayImage2, origin.x, origin.y, origin.x + size.x, origin.y + size.y );
+		}
+		if( pData->overlayImage3 )
+		{
+			//Render the third overlay image now.
+			TheDisplay->drawImage( pData->overlayImage3, origin.x, origin.y, origin.x + size.x, origin.y + size.y );
+		}
 
 		if( pData->drawClock )
 		{
@@ -418,6 +428,16 @@ void W3DGadgetPushButtonImageDrawOne( GameWindow *window,
 		{
 			//Render the overlay image now.
 			TheDisplay->drawImage( pData->overlayImage, start.x, start.y, start.x + size.x, start.y + size.y );
+		}
+		if( pData->overlayImage2 )
+		{
+			//Render the second overlay image now.
+			TheDisplay->drawImage( pData->overlayImage2, start.x, start.y, start.x + size.x, start.y + size.y );
+		}
+		if( pData->overlayImage3 )
+		{
+			//Render the third overlay image now.
+			TheDisplay->drawImage( pData->overlayImage3, start.x, start.y, start.x + size.x, start.y + size.y );
 		}
 
 		if( pData->drawClock )
@@ -677,6 +697,16 @@ void W3DGadgetPushButtonImageDrawThree(GameWindow *window, WinInstanceData *inst
 		{
 			//Render the overlay image now.
 			TheDisplay->drawImage( pData->overlayImage, origin.x, origin.y, origin.x + size.x, origin.y + size.y );
+		}
+		if( pData->overlayImage2 )
+		{
+			//Render the second overlay image now.
+			TheDisplay->drawImage( pData->overlayImage2, origin.x, origin.y, origin.x + size.x, origin.y + size.y );
+		}
+		if( pData->overlayImage3 )
+		{
+			//Render the third overlay image now.
+			TheDisplay->drawImage( pData->overlayImage3, origin.x, origin.y, origin.x + size.x, origin.y + size.y );
 		}
 
 		if( pData->drawClock )

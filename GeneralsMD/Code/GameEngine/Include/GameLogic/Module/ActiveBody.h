@@ -37,7 +37,11 @@
 #include "GameLogic/Module/BodyModule.h"
 #include "GameLogic/Damage.h"
 #include "GameLogic/Armor.h"
+#include "GameLogic/Component.h"
+#include <set>
 #include "GameLogic/ArmorSet.h"
+#include "Common/UnicodeString.h"
+#include <map>
 
 // FORWARD REFERENCES /////////////////////////////////////////////////////////////////////////////
 class BodyParticleSystem;
@@ -58,9 +62,21 @@ public:
 	UnsignedInt m_subdualDamageHealRate;		///< Every this often, we drop subdual damage...
 	Real m_subdualDamageHealAmount;					///< by this much.
 
+	Real m_ewDamageCap;								///< Subdual damage will never accumulate past this
+	UnsignedInt m_ewDamageHealRate;		///< Every this often, we drop subdual damage...
+	Real m_ewDamageHealAmount;					///< by this much.
+
+	std::vector<Component> m_components;		///< List of components with individual health values
+
 	ActiveBodyModuleData();
 
 	static void buildFieldParse(MultiIniFieldParse& p);
+
+	// TheSuperHackers @feature author 01/01/2025 Override getModuleDescription for UI display
+	virtual UnicodeString getModuleDescription() const;
+
+	// TheSuperHackers @feature author 01/01/2025 Override getModuleOrder for display ordering
+	virtual Int getModuleOrder() const { return 150; } // Second priority - shows after RebuildHoleBehavior
 };
 
 //-------------------------------------------------------------------------------------------------
@@ -84,10 +100,26 @@ public:
 	virtual BodyDamageType getDamageState() const;
 	virtual void setDamageState( BodyDamageType newState );	///< control damage state directly.  Will adjust hitpoints.
 	virtual void setAflame( Bool setting );///< This is a major change like a damage state.
+
 	virtual UnsignedInt getSubdualDamageHealRate() const;
 	virtual Real getSubdualDamageHealAmount() const;
 	virtual Bool hasAnySubdualDamage() const;
 	virtual Real getCurrentSubdualDamageAmount() const { return m_currentSubdualDamage; }
+
+	virtual UnsignedInt getEWDamageHealRate() const;
+	virtual Real getEWDamageHealAmount() const;
+	virtual Bool hasAnyEWDamage() const;
+	virtual Real getCurrentEWDamageAmount() const { return m_currentEWDamage; }
+	
+	// TheSuperHackers @feature Ahmed Salah 15/01/2025 Component-aware EW damage methods
+	virtual Real getTotalEWDamage() const;									///< Get total EW damage (global + components)
+	virtual Real getEWDamagePercentage() const;							///< Get EW damage as percentage of total capacity
+	
+	// TheSuperHackers @feature Ahmed Salah 15/01/2025 Component-based EW damage property methods
+	virtual Real getTotalComponentEWDamageCap() const;					///< Get total component EW damage cap
+	virtual Real getEffectiveEWDamageCap() const;							///< Get effective EW damage cap (global + components)
+	virtual UnsignedInt getFastestComponentEWHealRate() const;			///< Get fastest component EW heal rate
+	virtual Real getTotalComponentEWHealAmount() const;					///< Get total component EW heal amount
 
 	virtual const DamageInfo *getLastDamageInfo() const { return &m_lastDamageInfo; }	///< return info on last damage dealt to this object
 	virtual UnsignedInt getLastDamageTimestamp() const { return m_lastDamageTimestamp; }	///< return frame of last damage dealt
@@ -128,6 +160,44 @@ public:
 	virtual Bool canBeSubdued() const;
 	virtual void onSubdualChange( Bool isNowSubdued );///< Override this if you want a totally different effect than DISABLED_SUBDUED
 
+	virtual Bool isEWJammed() const;
+	virtual Bool canBeEWJammed() const;
+	virtual void onEWChange( Bool isNowEWJammed );///< Override this if you want a totally different effect than DISABLED_SUBDUED
+
+	// TheSuperHackers @feature author 15/01/2025 Component health management - now inherited from BodyModule
+	virtual Real getComponentHealth(const AsciiString& componentName) const;
+	virtual Real getComponentMaxHealth(const AsciiString& componentName) const;
+	virtual Bool setComponentHealth(const AsciiString& componentName, Real health);
+	virtual Bool damageComponent(const AsciiString& componentName, Real damage);
+	virtual Bool healComponent(const AsciiString& componentName, Real healing);
+	virtual Bool isComponentDestroyed(const AsciiString& componentName) const;
+	virtual void initializeComponentHealth();
+	
+	// TheSuperHackers @feature Ahmed Salah 15/01/2025 Component EW damage management - now inherited from BodyModule
+	virtual Real getComponentEWDamage(const AsciiString& componentName) const;
+	virtual Real getComponentEWDamageCap(const AsciiString& componentName) const;
+	virtual UnsignedInt getComponentEWDamageHealRate(const AsciiString& componentName) const;
+	virtual Real getComponentEWDamageHealAmount(const AsciiString& componentName) const;
+	virtual Bool setComponentEWDamage(const AsciiString& componentName, Real damage);
+	virtual Bool addComponentEWDamage(const AsciiString& componentName, Real damage);
+	virtual Bool hasAnyComponentEWDamage() const;
+	virtual void healComponentEWDamage(const AsciiString& componentName, Real healing);
+	
+	// TheSuperHackers @feature author 15/01/2025 Get component definitions - now inherited from BodyModule
+	virtual std::vector<Component> getComponents() const;
+	
+	virtual ComponentStatus getComponentStatus(const AsciiString& componentName) const;
+	
+	// TheSuperHackers @feature Ahmed Salah 15/01/2025 User component toggle methods
+	virtual void toggleComponentDisabled(const AsciiString& componentName);
+	virtual Bool isComponentUserDisabled(const AsciiString& componentName) const;
+	virtual void setComponentUserDisabled(const AsciiString& componentName, Bool disabled);
+	
+	// TheSuperHackers @feature author 15/01/2025 Update model state based on current damage
+	virtual void setCorrectDamageState();
+
+	// TheSuperHackers @feature author 15/01/2025 Basic component name constants - now inherited from BodyModule
+
 protected:
 
 	void validateArmorAndDamageFX() const;
@@ -137,20 +207,22 @@ protected:
 															const ParticleSystemTemplate *systemTemplate,
 															Int maxSystems );
 	void deleteAllParticleSystems( void );
-	void setCorrectDamageState();
 
 	Bool shouldRetaliate(Object *obj);
 	Bool shouldRetaliateAgainstAggressor(Object *obj, Object *damager);
 
 	virtual void internalAddSubdualDamage( Real delta );								///< change health
 
+	virtual void internalAddEWDamage( Real delta );								///< change health
+
 private:
 
 	Real									m_currentHealth;				///< health of the object
 	Real									m_prevHealth;						///< previous health value before current health change op
-  Real									m_maxHealth;						///< max health this object can have
-  Real									m_initialHealth;				///< starting health for this object
+  	Real									m_maxHealth;						///< max health this object can have
+  	Real									m_initialHealth;				///< starting health for this object
 	Real									m_currentSubdualDamage;	///< Starts at zero and goes up.  Inherited modules will do something when "subdued".
+	Real									m_currentEWDamage;	///< Starts at zero and goes up.  Inherited modules will do something when "subdued".
 
 	BodyDamageType				m_curDamageState;				///< last known damage state
 	UnsignedInt						m_nextDamageFXTime;
@@ -172,6 +244,17 @@ private:
 	mutable const ArmorTemplateSet*		m_curArmorSet;
 	mutable Armor											m_curArmor;
 	mutable const DamageFX*						m_curDamageFX;
+
+	// TheSuperHackers @feature author 15/01/2025 Runtime component health tracking
+	std::map<AsciiString, Real>			m_componentHealth;		///< Current health of each component
+	std::map<AsciiString, Real>			m_componentMaxHealth;	///< Maximum health of each component
+	
+	// TheSuperHackers @feature Ahmed Salah 15/01/2025 Runtime component EW damage tracking
+	std::map<AsciiString, Real>			m_componentEWDamage;		///< Current EW damage of each component
+	std::map<AsciiString, UnsignedInt>	m_componentEWHealCountdown;	///< Countdown for EW damage healing
+	
+	// TheSuperHackers @feature Ahmed Salah 15/01/2025 Per-object component disabled state
+	std::set<AsciiString>							m_userDisabledComponents;	///< Components disabled by user (per-object)
 
 };
 

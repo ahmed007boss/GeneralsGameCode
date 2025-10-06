@@ -34,6 +34,7 @@
 #include "GameLogic/Object.h"
 #include "GameLogic/Damage.h"
 #include "GameLogic/Module/StructureBody.h"
+#include "GameClient/GameText.h"
 
 // PUBLIC FUNCTIONS ///////////////////////////////////////////////////////////////////////////////
 
@@ -105,4 +106,25 @@ void StructureBody::loadPostProcess( void )
 	// extend base class
 	ActiveBody::loadPostProcess();
 
+}
+
+//-------------------------------------------------------------------------------------------------
+// TheSuperHackers @feature author 01/01/2025 Override getModuleDescription for UI display
+//-------------------------------------------------------------------------------------------------
+UnicodeString StructureBodyModuleData::getModuleDescription() const
+{
+	if (!m_description)
+	{
+		// Get the max health value from the module data
+		Int maxHealth = static_cast<Int>(m_maxHealth);
+		
+		// Get the localized format string and format it with the health value
+		UnicodeString formatString = TheGameText->fetch("MODULE:STRUCTUREBODY_DESCRIPTION");
+		UnicodeString result;
+		result.format(formatString.str(), maxHealth);
+		
+		m_description = new UnicodeString(result);
+	}
+
+	return *m_description;
 }

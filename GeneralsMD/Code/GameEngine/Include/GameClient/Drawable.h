@@ -94,6 +94,7 @@ enum DrawableIconType CPP_11(: Int)
 	ICON_BOMB_TIMED,
 	ICON_BOMB_REMOTE,
 	ICON_DISABLED,
+	ICON_JAMMED,
 	ICON_BATTLEPLAN_BOMBARD,
 	ICON_BATTLEPLAN_HOLDTHELINE,
 	ICON_BATTLEPLAN_SEARCHANDDESTROY,
@@ -246,6 +247,7 @@ enum TintStatus CPP_11(: Int)
 	TINT_STATUS_IRRADIATED	= 0x00000002,///< drawable tint color is sickly green
 	TINT_STATUS_POISONED		= 0x00000004,///< drawable tint color is open-sore red
 	TINT_STATUS_GAINING_SUBDUAL_DAMAGE		= 0x00000008,///< When gaining subdual damage, we tint SUBDUAL_DAMAGE_COLOR
+	TINT_STATUS_GAINING_EW_DAMAGE		= 0x00000012,///< When gaining subdual damage, we tint SUBDUAL_DAMAGE_COLOR
 	TINT_STATUS_FRENZY			= 0x00000010,///< When frenzied, we tint FRENZY_COLOR
 
 };
@@ -756,6 +758,7 @@ private:
 
 	void drawEmoticon( const IRegion2D* healthBarRegion );
 	void drawHealthBar( const IRegion2D* healthBarRegion );					///< draw heath bar
+	void drawFuelBar( const IRegion2D* healthBarRegion, Object* obj );		///< draw fuel/consumed item bar
 	void drawHealing( const IRegion2D* healthBarRegion );						///< draw icons
 	void drawEnthusiastic( const IRegion2D* healthBarRegin );				///< draw icons
 #ifdef ALLOW_DEMORALIZE
@@ -763,6 +766,7 @@ private:
 #endif
 	void drawBombed( const IRegion2D* healthBarRegion );						///< draw icons
 	void drawDisabled( const IRegion2D* healthBarRegion );					///< draw icons
+	void drawJammed( const IRegion2D* healthBarRegion );					///< draw icons
 	void drawBattlePlans( const IRegion2D* healthBarRegion );				///< Icons rendering for active battle plan statii
 
 	Bool drawsAnyUIText( void );

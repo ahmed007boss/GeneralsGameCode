@@ -57,6 +57,8 @@ ArmorTemplate::ArmorTemplate()
 //-------------------------------------------------------------------------------------------------
 void ArmorTemplate::clear()
 {
+	m_name = AsciiString();
+	m_displayName = UnicodeString();
 	for (int i = 0; i < DAMAGE_NUM_TYPES; i++)
 	{
 		m_damageCoefficient[i] = 1.0f;
@@ -70,13 +72,73 @@ Real ArmorTemplate::adjustDamage(DamageType t, Real damage) const
 		return damage;
 	if (t == DAMAGE_SUBDUAL_UNRESISTABLE)
 		return damage;
-
+	if (t == DAMAGE_EW_UNRESISTABLE)
+		return damage;
 	damage *= m_damageCoefficient[t];
 
 	if (damage < 0.0f)
 		damage = 0.0f;
 
 	return damage;
+}
+
+//-------------------------------------------------------------------------------------------------
+// TheSuperHackers @feature author 01/01/2025 Get armor display name with fallback
+//-------------------------------------------------------------------------------------------------
+UnicodeString ArmorTemplate::getDisplayName() const
+{
+	if (!m_displayName.isEmpty())
+	{
+		return m_displayName;
+	}
+	else
+	{
+		// Fallback to empty string if display name is not set
+		return UnicodeString();
+	}
+}
+
+//-------------------------------------------------------------------------------------------------
+// TheSuperHackers @feature author 01/01/2025 Get armor display name with fallback
+//-------------------------------------------------------------------------------------------------
+UnicodeString Armor::getDisplayName() const
+{
+	if (m_template)
+	{
+		return m_template->getDisplayName();
+	}
+	else
+	{
+		return UnicodeString();
+	}
+}
+
+//-------------------------------------------------------------------------------------------------
+// TheSuperHackers @feature author 01/01/2025 Get armor description
+//-------------------------------------------------------------------------------------------------
+UnicodeString ArmorTemplate::getModuleDescription() const
+{
+	UnicodeString result;
+	
+	// Get the display name (either override or translated name)
+	UnicodeString armorName;
+	if (!m_displayName.isEmpty())
+	{
+		armorName = m_displayName;
+	}
+	else
+	{
+		armorName = L"";
+	}
+	
+	// Return in natural statement format
+	if (!armorName.isEmpty())
+	{
+		result = L"Protected by ";
+		result += armorName;
+	}
+	
+	return result;
 }
 
 //-------------------------------------------------------------------------------------------Static
@@ -135,7 +197,9 @@ const ArmorTemplate* ArmorStore::findArmorTemplate(AsciiString name) const
 {
 	static const FieldParse myFieldParse[] =
 	{
-		{ "Armor", ArmorTemplate::parseArmorCoefficients, NULL, 0 }
+		{ "DisplayName", INI::parseAndTranslateLabel, NULL, offsetof(ArmorTemplate, m_displayName) },
+		{ "Armor", ArmorTemplate::parseArmorCoefficients, NULL, 0 },
+		{ NULL, NULL, NULL, 0 }
 	};
 
 	const char *c = ini->getNextToken();

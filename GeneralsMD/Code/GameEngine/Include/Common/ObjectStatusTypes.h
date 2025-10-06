@@ -83,12 +83,18 @@ enum ObjectStatusTypes CPP_11(: Int)
 	OBJECT_STATUS_RIDER7,
 	OBJECT_STATUS_RIDER8,
 	OBJECT_STATUS_FAERIE_FIRE,			///< Anyone shooting at you shoots faster than normal
-  OBJECT_STATUS_MISSILE_KILLING_SELF, ///< Object (likely a missile or bomb) is *BUSTING* its way through the *BUNKER*, building or ground, awaiting death at the bottom.
+  	OBJECT_STATUS_MISSILE_KILLING_SELF, ///< Object (likely a missile or bomb) is *BUSTING* its way through the *BUNKER*, building or ground, awaiting death at the bottom.
 	OBJECT_STATUS_REASSIGN_PARKING,			///< Jet is trying to get a better parking assignment.
 	OBJECT_STATUS_BOOBY_TRAPPED,				///< We need to know we have a booby trap on us so we can detonate it from many different code segments
 	OBJECT_STATUS_IMMOBILE,							///< Do not move!
 	OBJECT_STATUS_DISGUISED,						///< Object is disguised (a type of stealth)
 	OBJECT_STATUS_DEPLOYED,							///< Object is deployed.
+	
+	OBJECT_STATUS_LASER_LOCKED,						///< Object is locked by laser.
+	OBJECT_STATUS_RADAR_LOCKED,						///< Object is locked by radar.
+	OBJECT_STATUS_IR_LOCKED,							///< Object is locked by IR.
+	OBJECT_STATUS_GPS_LOCKED,							///< Object is locked by GPS.
+	OBJECT_STATUS_RF_LOCKED,							///< Object is locked by RF.
 	// add more status types here and don't forget to add to the string table ObjectStatusMaskType::s_bitNameList[]
 
 	OBJECT_STATUS_COUNT

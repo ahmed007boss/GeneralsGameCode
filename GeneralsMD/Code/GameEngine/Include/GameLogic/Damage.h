@@ -37,6 +37,7 @@
 #include "Common/GameType.h"
 #include "Common/ObjectStatusTypes.h" // Precompiled header anyway, no detangling possibility
 #include "Common/Snapshot.h"
+#include <map>
 
 
 // FORWARD REFERENCES /////////////////////////////////////////////////////////////////////////////
@@ -87,7 +88,10 @@ enum DamageType CPP_11(: Int)
 	DAMAGE_MICROWAVE							= 35, ///< Radiation that only affects infantry
 	DAMAGE_KILL_GARRISONED				= 36, ///< Kills Passengers up to the number specified in Damage
 	DAMAGE_STATUS									= 37, ///< Damage that gives a status condition, not that does hitpoint damage
-
+	DAMAGE_EW_MISSILE = 38,	
+	DAMAGE_EW_VEHICLE = 39,
+	DAMAGE_EW_BUILDING = 40,
+	DAMAGE_EW_UNRESISTABLE = 41,
 	// Please note: There is a string array DamageTypeFlags::s_bitNameList[]
 
 	DAMAGE_NUM_TYPES
@@ -129,7 +133,19 @@ inline Bool IsSubdualDamage( DamageType type )
 
 	return FALSE;
 }
+inline Bool IsEWDamage(DamageType type)
+{
+	switch (type)
+	{
+	case DAMAGE_EW_MISSILE:
+	case DAMAGE_EW_VEHICLE:
+	case DAMAGE_EW_BUILDING:
+	case DAMAGE_EW_UNRESISTABLE:
+		return TRUE;
+	}
 
+	return FALSE;
+}
 /// Does this type of damage go to internalChangeHealth?
 inline Bool IsHealthDamagingDamage( DamageType type )
 {
@@ -144,6 +160,11 @@ inline Bool IsHealthDamagingDamage( DamageType type )
 		case DAMAGE_SUBDUAL_UNRESISTABLE:
 		case DAMAGE_KILLPILOT:
 		case DAMAGE_KILL_GARRISONED:
+		case DAMAGE_EW_MISSILE:
+		case DAMAGE_EW_VEHICLE:
+		case DAMAGE_EW_BUILDING:
+		case DAMAGE_EW_UNRESISTABLE:
+			
 			return FALSE;
 	}
 
@@ -160,6 +181,54 @@ extern DamageTypeFlags DAMAGE_TYPE_FLAGS_NONE;
 extern DamageTypeFlags DAMAGE_TYPE_FLAGS_ALL;
 void initDamageTypeFlags();
 
+
+//-------------------------------------------------------------------------------------------------
+/** Hit side types for side-specific armor */
+//-------------------------------------------------------------------------------------------------
+enum HitSide CPP_11(: Int)
+{
+	HIT_SIDE_FRONT		= 0,
+	HIT_SIDE_BACK		= 1,
+	HIT_SIDE_LEFT		= 2,
+	HIT_SIDE_RIGHT		= 3,
+	HIT_SIDE_TOP		= 4,
+	HIT_SIDE_BOTTOM		= 5,
+	HIT_SIDE_UNKNOWN	= 6,	///< Used when hit side cannot be determined
+	
+	HIT_SIDE_COUNT
+};
+
+//-------------------------------------------------------------------------------------------------
+/** Hit side flags for component damage */
+//-------------------------------------------------------------------------------------------------
+typedef BitFlags<HIT_SIDE_COUNT> HitSideFlags;
+
+inline Bool getHitSideFlag(HitSideFlags flags, HitSide side)
+{
+	return flags.test(side);
+}
+
+inline HitSideFlags setHitSideFlag(HitSideFlags flags, HitSide side)
+{
+	flags.set(side, TRUE);
+	return flags;
+}
+
+inline HitSideFlags clearHitSideFlag(HitSideFlags flags, HitSide side)
+{
+	flags.set(side, FALSE);
+	return flags;
+}
+
+inline void SET_ALL_HIT_SIDE_BITS(HitSideFlags& m)
+{
+	m.clear();
+	m.flip();
+}
+
+extern HitSideFlags HIT_SIDE_FLAGS_NONE;
+extern HitSideFlags HIT_SIDE_FLAGS_ALL;
+void initHitSideFlags();
 
 //-------------------------------------------------------------------------------------------------
 /** Death types, keep this in sync with TheDeathNames[] */
@@ -228,6 +297,22 @@ static const char *const TheDeathNames[] =
 static_assert(ARRAY_SIZE(TheDeathNames) == DEATH_NUM_TYPES + 1, "Incorrect array size");
 #endif // end DEFINE_DEATH_NAMES
 
+#ifdef DEFINE_HIT_SIDE_NAMES
+static const char *const TheHitSideNames[] =
+{
+	"FRONT",
+	"BACK", 
+	"LEFT",
+	"RIGHT",
+	"TOP",
+	"BOTTOM",
+	"UNKNOWN",
+
+	NULL
+};
+static_assert(ARRAY_SIZE(TheHitSideNames) == HIT_SIDE_COUNT + 1, "Incorrect array size");
+#endif // end DEFINE_HIT_SIDE_NAMES
+
 
 //-------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------
@@ -271,11 +356,15 @@ public:
 		m_deathType = DEATH_NORMAL;
 		m_amount = 0;
 		m_kill = FALSE;
+		m_hitSide = HIT_SIDE_UNKNOWN;
 
     m_shockWaveVector.zero();
     m_shockWaveAmount   = 0.0f;
     m_shockWaveRadius   = 0.0f;
     m_shockWaveTaperOff = 0.0f;
+    
+    // TheSuperHackers @feature author 15/01/2025 Initialize component damage map
+    m_componentDamage.clear();
 	}
 
 	ObjectID		   m_sourceID;							///< source of the damage
@@ -287,6 +376,7 @@ public:
 	DeathType			 m_deathType;						///< if this kills us, death type to be used
 	Real					 m_amount;								///< # value of how much damage to inflict
 	Bool						m_kill;									///< will always cause object to die regardless of damage.
+	HitSide				 m_hitSide;								///< which side of the object was hit
 
 	// These are used for damage causing shockwave, forcing units affected to be pushed around
 	Coord3D				 m_shockWaveVector;				///< This represents the incoming damage vector
@@ -294,6 +384,8 @@ public:
 	Real					 m_shockWaveRadius;			  ///< This represents the effect radius of the shockwave.
 	Real					 m_shockWaveTaperOff;			///< This represents the taper off effect of the shockwave at the tip of the radius. 0.0 means shockwave is 0% at the radius edge.
 
+	// TheSuperHackers @feature author 15/01/2025 Component damage system
+	std::map<AsciiString, Real> m_componentDamage;		///< Component-specific damage amounts
 
 protected:
 

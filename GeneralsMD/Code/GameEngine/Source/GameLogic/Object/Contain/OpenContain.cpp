@@ -56,6 +56,7 @@
 #include "GameLogic/Object.h"
 #include "GameLogic/PartitionManager.h"
 #include "GameLogic/Weapon.h"
+#include "GameClient/GameText.h"
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1900,4 +1901,16 @@ void OpenContain::loadPostProcess( void )
 	// clear the list as we don't need it anymore
 	m_xferContainIDList.clear();
 
+}
+
+//-------------------------------------------------------------------------------------------------
+// TheSuperHackers @feature author 01/01/2025 Override getModuleDescription for UI display
+//-------------------------------------------------------------------------------------------------
+UnicodeString OpenContainModuleData::getModuleDescription() const
+{
+	if (!m_description)
+	{
+		m_description = new UnicodeString(TheGameText->fetch("MODULE:OPENCONTAIN_DESCRIPTION"));
+	}
+	return *m_description;
 }

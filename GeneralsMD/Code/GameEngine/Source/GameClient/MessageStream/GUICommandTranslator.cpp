@@ -255,7 +255,7 @@ static CommandStatus doGuardCommand( const CommandButton *command, GuardMode gua
 }
 
 //-------------------------------------------------------------------------------------------------
-/** Do the set rally point command */
+/** Do the attack move command */
 //-------------------------------------------------------------------------------------------------
 static CommandStatus doAttackMoveCommand( const CommandButton *command, const ICoord2D *mouse )
 {
@@ -285,6 +285,68 @@ static CommandStatus doAttackMoveCommand( const CommandButton *command, const IC
 
 	// Play the unit voice response
 	pickAndPlayUnitVoiceResponse(TheInGameUI->getAllSelectedDrawables(), GameMessage::MSG_DO_ATTACKMOVETO);
+
+	return COMMAND_COMPLETE;
+
+}
+
+//-------------------------------------------------------------------------------------------------
+/** Do the raid command - each unit attacks one enemy in area */
+//-------------------------------------------------------------------------------------------------
+static CommandStatus doRaidCommand( const CommandButton *command, const ICoord2D *mouse )
+{
+	// sanity
+	if( command == NULL || mouse == NULL )
+		return COMMAND_COMPLETE;
+
+	if( TheInGameUI->getSelectCount() == 0 )
+		return COMMAND_COMPLETE;
+
+	// convert mouse point to world coords
+	Coord3D world;
+	TheTacticalView->screenToTerrain( mouse, &world );
+
+	// send the message to raid the area
+	GameMessage *msg = TheMessageStream->appendMessage( GameMessage::MSG_DO_RAID );
+	msg->appendLocationArgument( world );
+
+	// Play the unit voice response
+	pickAndPlayUnitVoiceResponse(TheInGameUI->getAllSelectedDrawables(), GameMessage::MSG_DO_RAID);
+
+	return COMMAND_COMPLETE;
+}
+
+//-------------------------------------------------------------------------------------------------
+/** Do the group attack move command with speed matching */
+//-------------------------------------------------------------------------------------------------
+static CommandStatus doGroupAttackMoveCommand( const CommandButton *command, const ICoord2D *mouse )
+{
+
+	// sanity
+	if( command == NULL || mouse == NULL )
+		return COMMAND_COMPLETE;
+
+	//
+	// we can only set rally points for structures ... and we never multiple select structures
+	// so we must be sure there is only one thing selected (that thing we will set the point on)
+	//
+	Drawable *draw = TheInGameUI->getFirstSelectedDrawable();
+	DEBUG_ASSERTCRASH( draw, ("doGroupAttackMoveCommand: No selected object(s)") );
+
+	// sanity
+	if( draw == NULL || draw->getObject() == NULL )
+		return COMMAND_COMPLETE;
+
+	// convert mouse point to world coords
+	Coord3D world;
+	TheTacticalView->screenToTerrain( mouse, &world );
+
+	// send the message to set the rally point
+	GameMessage *msg = TheMessageStream->appendMessage( GameMessage::MSG_DO_GROUPATTACKMOVETO );
+	msg->appendLocationArgument( world );
+
+	// Play the unit voice response
+	pickAndPlayUnitVoiceResponse(TheInGameUI->getAllSelectedDrawables(), GameMessage::MSG_DO_GROUPATTACKMOVETO);
 
 	return COMMAND_COMPLETE;
 
@@ -433,7 +495,11 @@ GameMessageDisposition GUICommandTranslator::translateGameMessage(const GameMess
 						commandStatus = doGuardCommand( command, GUARDMODE_NORMAL, &mouse );
 						break;
 					}
-
+					case GUI_COMMAND_RAID:
+					{
+						commandStatus = doRaidCommand( command, &mouse );
+						break;
+					}
 					//---------------------------------------------------------------------------------------
 					case GUI_COMMAND_GUARD_WITHOUT_PURSUIT:
 					{
@@ -461,6 +527,13 @@ GameMessageDisposition GUICommandTranslator::translateGameMessage(const GameMess
 					case GUI_COMMAND_ATTACK_MOVE:
 					{
 						commandStatus = doAttackMoveCommand( command, &mouse );
+						break;
+					}
+
+					//---------------------------------------------------------------------------------------
+					case GUI_COMMAND_GROUP_ATTACK_MOVE:
+					{
+						commandStatus = doGroupAttackMoveCommand( command, &mouse );
 						break;
 					}
 

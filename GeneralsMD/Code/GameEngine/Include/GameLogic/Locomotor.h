@@ -38,12 +38,15 @@
 #include "Common/Snapshot.h"
 #include "GameLogic/Damage.h"
 #include "GameLogic/LocomotorSet.h"
+#include <vector>
+#include "Module/ActiveBody.h"
 
 // FORWARD REFERENCES /////////////////////////////////////////////////////////////////////////////
 class Locomotor;
 class LocomotorTemplate;
 class INI;
 class PhysicsBehavior;
+class ActiveBody;
 enum BodyDamageType CPP_11(: Int);
 enum PhysicsTurningType CPP_11(: Int);
 
@@ -140,7 +143,20 @@ public:
 
 	void friend_setName(const AsciiString& n) { m_name = n; }
 
+	inline AsciiString getName() const { return m_name; }
+	inline const UnicodeString& getDisplayName() const { return m_displayName; }
+	inline void setDisplayName(const UnicodeString& newName) { m_displayName = newName; }
+
+	UnicodeString getModuleDescription() const;
+
 	void validate();
+
+	// TheSuperHackers @feature author 15/01/2025 Component dependency system
+	inline const std::vector<AsciiString>& getAffectedByComponents() const { return m_affectedByComponents; }
+	ComponentStatus getRequiredComponentsStatus(const Object* source) const;
+
+	// TheSuperHackers @feature author 15/01/2025 Component dependency system
+	std::vector<AsciiString> m_affectedByComponents;			///< List of component names that affect this locomotor's functionality
 
 protected:
 
@@ -154,22 +170,31 @@ private:
 		-- Forces:				(mass*dist)/(frame*frame)
 	*/
 	AsciiString								m_name;
+	UnicodeString							m_displayName;					///< Display Name
 	LocomotorSurfaceTypeMask	m_surfaces;							///< flags indicating the kinds of surfaces we can use
 	Real											m_maxSpeed;							///< max speed
 	Real											m_maxSpeedDamaged;			///< max speed when "damaged"
+	Real											m_maxSpeedDestroyed;		///< max speed when destroyed (default 0)
 	Real											m_minSpeed;							///< we should never brake past this
 	Real											m_maxTurnRate;					///< max rate at which we can turn, in rads/frame
 	Real											m_maxTurnRateDamaged;		///< max turn rate when "damaged"
+	Real											m_maxTurnRateDestroyed;	///< max turn rate when destroyed (default 0)
 	Real											m_acceleration;					///< max acceleration
 	Real											m_accelerationDamaged;	///< max acceleration when damaged
+	Real											m_accelerationDestroyed;	///< max acceleration when destroyed (default 0)
 	Real											m_lift;									///< max lifting acceleration (flying objects only)
 	Real											m_liftDamaged;					///< max lift when damaged
+	Real											m_liftDestroyed;					///< max lift when destroyed (default 0)
 	Real											m_braking;							///< max braking (deceleration)
 	Real											m_minTurnSpeed;					///< we must be going >= this speed in order to turn
 	Real											m_preferredHeight;			///< our preferred height (if flying)
 	Real											m_preferredHeightDamping;		///< how aggressively to adjust to preferred height: 1.0 = very much so, 0.1 = gradually, etc
 	Real											m_circlingRadius;				///< for flying things, the radius at which they circle their "maintain" destination. (pos = cw, neg = ccw, 0 = smallest possible)
 	Real											m_speedLimitZ;					///< try to avoid going up or down at more than this speed, if possible
+	Real											m_speedLimit;					///< temporary speed limit for group movement (0 = no limit)
+	Bool											m_excludeFromGroupMove;		///< exclude this locomotor from group movement speed limits
+	AsciiString										m_consumeItem;					///< TheSuperHackers @feature Ahmed Salah 30/09/2025 Item to consume as fuel while moving
+	Real											m_consumeRate;					///< TheSuperHackers @feature Ahmed Salah 30/09/2025 Rate of fuel consumption per second
 	Real											m_extra2DFriction;			///< extra 2dfriction to apply (via Physics)
 	Real											m_maxThrustAngle;				///< THRUST locos only: how much we deflect our thrust angle
 	LocomotorBehaviorZ				m_behaviorZ;						///< z-axis behavior
@@ -247,11 +272,14 @@ public:
 	*/
 	Bool locoUpdate_maintainCurrentPosition(Object* obj);
 
-	Real getMaxSpeedForCondition(BodyDamageType condition) const;  ///< get max speed given condition
-	Real getMaxTurnRate(BodyDamageType condition) const;  ///< get max turning rate given condition
-	Real getMaxAcceleration(BodyDamageType condition) const;  ///< get acceleration given condition
-	Real getMaxLift(BodyDamageType condition) const;  ///< get acceleration given condition
+	Real getMaxSpeedForCondition(BodyDamageType condition, const Object* obj = NULL) const;  ///< get max speed given condition
+	Real getMaxTurnRate(BodyDamageType condition, const Object* obj = NULL) const;  ///< get max turning rate given condition
+	Real getMaxAcceleration(BodyDamageType condition, const Object* obj = NULL) const;  ///< get acceleration given condition
+	Real getMaxLift(BodyDamageType condition, const Object* obj = NULL) const;  ///< get lift given condition
 	Real getBraking() const;  ///< get braking given condition
+
+	ComponentStatus getEngineComponentStatus(const Object* obj) const;  ///< TheSuperHackers @feature author 15/01/2025 Get engine component status from object (returns ComponentStatus enum value)
+	Real getMaxReachableDistance(const Object* obj) const;  ///< TheSuperHackers @feature Ahmed Salah 30/09/2025 Calculate max distance object can reach based on fuel, speed, and acceleration
 
 	inline Real getPreferredHeight() const { return m_preferredHeight;} ///< Just return preferredheight, no damage consideration
 	inline void restorePreferredHeightFromTemplate() { m_preferredHeight = m_template->m_preferredHeight; };
@@ -261,6 +289,8 @@ public:
 	inline LocomotorSurfaceTypeMask getLegalSurfaces() const { return m_template->m_surfaces; }
 
 	inline AsciiString getTemplateName() const { return m_template->m_name;}
+	inline AsciiString getName() const { return m_template->getName(); }
+	inline const UnicodeString& getDisplayName() const { return m_template->getDisplayName(); }
 	inline Real getMinSpeed() const { return m_template->m_minSpeed;}
 	inline Real getAccelPitchLimit() const { return m_template->m_accelPitchLimit;}	///< Maximum amount we will pitch up or down under acceleration (including recoil.)
 	inline Real getDecelPitchLimit() const { return m_template->m_decelPitchLimit;}	///< Maximum amount we will pitch down under deceleration (including recoil.)
@@ -321,6 +351,17 @@ public:
 	inline void setCloseEnoughDist( Real dist ) { m_closeEnoughDist = dist; }
 	inline void setCloseEnoughDist3D( Bool setting ) { setFlag(IS_CLOSE_ENOUGH_DIST_3D, setting); }
 	inline Bool isInvalidPositionAllowed() const { return getFlag( ALLOW_INVALID_POSITION ); }
+	
+	inline void setSpeedLimit(Real limit) { m_speedLimit = limit; }
+	inline Real getSpeedLimit() const { return m_speedLimit; }
+	inline void clearSpeedLimit() { m_speedLimit = 0.0f; }
+	inline Bool isExcludedFromGroupMove() const { return m_excludeFromGroupMove; }
+	
+	// TheSuperHackers @feature Ahmed Salah 30/09/2025 Inventory consumption methods
+	inline const AsciiString& getConsumeItem() const { return m_consumeItem; }
+	inline Real getConsumeRate() const { return m_consumeRate; }
+	Bool consumeInventoryItem(Object* obj) const;
+	Bool hasInventoryItem(Object* obj) const;
 
 	inline void setPreferredHeight( Real height ) { m_preferredHeight = height; }
 
@@ -451,6 +492,10 @@ private:
 	Real				m_maxAccel;
 	Real				m_maxBraking;
 	Real				m_maxTurnRate;
+	Real				m_speedLimit;					///< temporary speed limit for group movement (0 = no limit)
+	Bool				m_excludeFromGroupMove;		///< exclude this locomotor from group movement speed limits
+	AsciiString			m_consumeItem;					///< TheSuperHackers @feature Ahmed Salah 30/09/2025 Item to consume as fuel while moving
+	Real				m_consumeRate;					///< TheSuperHackers @feature Ahmed Salah 30/09/2025 Rate of fuel consumption per second
 	Real				m_closeEnoughDist;
 #ifdef CIRCLE_FOR_LANDING
 	Real				m_circleThresh;

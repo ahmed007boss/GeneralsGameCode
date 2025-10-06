@@ -262,6 +262,7 @@ public:
 		MSG_META_TAKE_SCREENSHOT,										///< take screenshot
 		MSG_META_ALL_CHEER,													///< Yay! :)
 		MSG_META_TOGGLE_ATTACKMOVE,									///< enter attack-move mode
+		MSG_META_TOGGLE_GROUPMOVE,									///< enter group-move mode
 
 		MSG_META_BEGIN_CAMERA_ROTATE_LEFT,
 		MSG_META_END_CAMERA_ROTATE_LEFT,
@@ -540,6 +541,8 @@ public:
 		MSG_DO_WEAPON,															///< fire specific weapon
 		MSG_DO_WEAPON_AT_LOCATION,									///< fire a specific weapon at location
 		MSG_DO_WEAPON_AT_OBJECT,										///< fire a specific weapon at a target object
+		MSG_REPLENISH_INVENTORY_ITEM,								///< TheSuperHackers @feature author 15/01/2025 replenish inventory items
+		MSG_REPLACE_COMPONENT,											///< TheSuperHackers @feature author 15/01/2025 replace damaged component
 		MSG_DO_SPECIAL_POWER,												///< do special
 		MSG_DO_SPECIAL_POWER_AT_LOCATION,						///< do special with target location
 		MSG_DO_SPECIAL_POWER_AT_OBJECT,							///< do special at with target object
@@ -574,6 +577,8 @@ public:
 		MSG_DO_MOVETO,															///< location
 		MSG_DO_ATTACKMOVETO,												///< location
 		MSG_DO_FORCEMOVETO,													///< location
+		MSG_DO_GROUPMOVETO,												///< location - group move with speed matching
+		MSG_DO_GROUPATTACKMOVETO,									///< location - group attack move with speed matching
 		MSG_ADD_WAYPOINT,														///< location
 		MSG_DO_GUARD_POSITION,											///< Guard with the currently selected group
 		MSG_DO_GUARD_OBJECT,												///< Guard with the currently selected group
@@ -582,6 +587,12 @@ public:
 		MSG_INTERNET_HACK,													///< Begin a persistent internet hack (free slow income)
 		MSG_DO_CHEER,																///< Orders selected units to play cheer animation (if possible)
 		MSG_TOGGLE_OVERCHARGE,											///< Toggle overcharge status of a power plant
+		MSG_TOGGLE_HOLD_POSITION,									///< Toggle hold position (disabled status HELD)
+		MSG_ENABLE_HOLD_POSITION_AND_GUARD,					///< Toggle hold position and guard from current position
+		MSG_GUARD_IN_PLACE,											///< TheSuperHackers @feature Ahmed Salah 15/01/2025 Guard at current location
+		MSG_GUARD_IN_PLACE_WITHOUT_PURSUIT,				///< TheSuperHackers @feature Ahmed Salah 15/01/2025 Guard at current location without pursuit
+		MSG_GUARD_IN_PLACE_FLYING_UNITS_ONLY,			///< TheSuperHackers @feature Ahmed Salah 15/01/2025 Guard at current location, flying units only
+		MSG_DO_RAID,														///< TheSuperHackers @feature Ahmed Salah 15/01/2025 Raid command - each unit attacks one enemy in area
 		MSG_SWITCH_WEAPONS,													///< Switches which weapon slot to use for an object
 		MSG_CONVERT_TO_CARBOMB,
 		MSG_CAPTUREBUILDING,

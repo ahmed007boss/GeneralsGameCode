@@ -102,6 +102,7 @@ static const char *const TheDrawableIconNames[] =
 	"BombTimed",
 	"BombRemote",
 	"Disabled",
+	"Jammed",
 	"BattlePlanIcon_Bombard",
 	"BattlePlanIcon_HoldTheLine",
 	"BattlePlanIcon_SeekAndDestroy",
@@ -249,6 +250,7 @@ const RGBColor SICKLY_GREEN_POISONED_COLOR	= {-1.0f,  1.0f, -1.0f};
 const RGBColor DARK_GRAY_DISABLED_COLOR			= {-0.5f, -0.5f, -0.5f};
 const RGBColor RED_IRRADIATED_COLOR					= { 1.0f, -1.0f, -1.0f};
 const RGBColor SUBDUAL_DAMAGE_COLOR					= {-0.2f, -0.2f,  0.8f};
+const RGBColor EW_DAMAGE_COLOR							= { -0.7f, -0.5f, -0.1f };
 const RGBColor FRENZY_COLOR									= { 0.2f, -0.2f, -0.2f};
 const RGBColor FRENZY_COLOR_INFANTRY				= { 0.0f, -0.7f, -0.7f};
 const Int MAX_ENABLED_MODULES								= 16;
@@ -294,6 +296,7 @@ const Int MAX_ENABLED_MODULES								= 16;
 	s_animationTemplates[ICON_BOMB_TIMED]				= TheAnim2DCollection->findTemplate(TheDrawableIconNames[ICON_BOMB_TIMED]);
 	s_animationTemplates[ICON_BOMB_REMOTE]			= TheAnim2DCollection->findTemplate(TheDrawableIconNames[ICON_BOMB_REMOTE]);
 	s_animationTemplates[ICON_DISABLED]					= TheAnim2DCollection->findTemplate(TheDrawableIconNames[ICON_DISABLED]);
+	s_animationTemplates[ICON_JAMMED]					= TheAnim2DCollection->findTemplate(TheDrawableIconNames[ICON_JAMMED]);
 	s_animationTemplates[ICON_BATTLEPLAN_BOMBARD]						= TheAnim2DCollection->findTemplate(TheDrawableIconNames[ICON_BATTLEPLAN_BOMBARD]);
 	s_animationTemplates[ICON_BATTLEPLAN_HOLDTHELINE]				= TheAnim2DCollection->findTemplate(TheDrawableIconNames[ICON_BATTLEPLAN_HOLDTHELINE]);
 	s_animationTemplates[ICON_BATTLEPLAN_SEARCHANDDESTROY]	= TheAnim2DCollection->findTemplate(TheDrawableIconNames[ICON_BATTLEPLAN_SEARCHANDDESTROY]);
@@ -841,6 +844,7 @@ Bool Drawable::getCurrentWorldspaceClientBonePositions(const char* boneName, Mat
 //-------------------------------------------------------------------------------------------------
 void Drawable::setTerrainDecal(TerrainDecalType type)
 {
+	DEBUG_LOG(("Drawable::setTerrainDecal - type = %d\n", type));
 	if (m_terrainDecalType == type)
 		return;
 
@@ -1096,15 +1100,44 @@ void Drawable::reactToBodyDamageStateChange(BodyDamageType newState)
 		MODELCONDITION_DAMAGED,
 		MODELCONDITION_REALLY_DAMAGED,
 		MODELCONDITION_RUBBLE,
+		// TheSuperHackers @feature author 15/01/2025 Component-specific damage states
+		MODELCONDITION_COMPONENT_ENGINE_DESTROYED,
+		MODELCONDITION_COMPONENT_TURRET_DESTROYED,
+		MODELCONDITION_COMPONENT_RADAR_DESTROYED,
+		// TheSuperHackers @feature author 15/01/2025 Specific weapon slot damage states
+		MODELCONDITION_COMPONENT_WEAPON_A_DESTROYED,
+		MODELCONDITION_COMPONENT_WEAPON_B_DESTROYED,
+		MODELCONDITION_COMPONENT_WEAPON_C_DESTROYED,
+		MODELCONDITION_COMPONENT_WEAPON_D_DESTROYED,
+		MODELCONDITION_COMPONENT_WEAPON_E_DESTROYED,
+		MODELCONDITION_COMPONENT_WEAPON_F_DESTROYED,
+		MODELCONDITION_COMPONENT_WEAPON_G_DESTROYED,
+		MODELCONDITION_COMPONENT_WEAPON_H_DESTROYED,
 	};
 
 	ModelConditionFlags newDamage;
 	if (TheDamageMap[newState] != MODELCONDITION_INVALID)
 		newDamage.set(TheDamageMap[newState]);
 
-	clearAndSetModelConditionFlags(
-		MAKE_MODELCONDITION_MASK3(MODELCONDITION_DAMAGED, MODELCONDITION_REALLY_DAMAGED, MODELCONDITION_RUBBLE),
-		newDamage);
+	// TheSuperHackers @feature author 15/01/2025 Clear all damage-related model conditions
+	ModelConditionFlags clearFlags;
+	clearFlags.set(MODELCONDITION_DAMAGED);
+	clearFlags.set(MODELCONDITION_REALLY_DAMAGED);
+	clearFlags.set(MODELCONDITION_RUBBLE);
+	clearFlags.set(MODELCONDITION_COMPONENT_ENGINE_DESTROYED);
+	clearFlags.set(MODELCONDITION_COMPONENT_TURRET_DESTROYED);
+	clearFlags.set(MODELCONDITION_COMPONENT_RADAR_DESTROYED);
+	// Clear all weapon slot model conditions
+	clearFlags.set(MODELCONDITION_COMPONENT_WEAPON_A_DESTROYED);
+	clearFlags.set(MODELCONDITION_COMPONENT_WEAPON_B_DESTROYED);
+	clearFlags.set(MODELCONDITION_COMPONENT_WEAPON_C_DESTROYED);
+	clearFlags.set(MODELCONDITION_COMPONENT_WEAPON_D_DESTROYED);
+	clearFlags.set(MODELCONDITION_COMPONENT_WEAPON_E_DESTROYED);
+	clearFlags.set(MODELCONDITION_COMPONENT_WEAPON_F_DESTROYED);
+	clearFlags.set(MODELCONDITION_COMPONENT_WEAPON_G_DESTROYED);
+	clearFlags.set(MODELCONDITION_COMPONENT_WEAPON_H_DESTROYED);
+	
+	clearAndSetModelConditionFlags(clearFlags, newDamage);
 
   // When loading map, ambient sound starting is handled by onLevelStart(), so that we can
   // correctly react to customizations
@@ -1247,22 +1280,28 @@ void Drawable::updateDrawable( void )
 		{
 			if (m_colorTintEnvelope == NULL)
 				m_colorTintEnvelope = newInstance(TintEnvelope);
-			m_colorTintEnvelope->play( &DARK_GRAY_DISABLED_COLOR, 30, 30, SUSTAIN_INDEFINITELY);
+				m_colorTintEnvelope->play( &DARK_GRAY_DISABLED_COLOR, 30, 30, SUSTAIN_INDEFINITELY);
 		}
 		else if( testTintStatus(TINT_STATUS_GAINING_SUBDUAL_DAMAGE) )
 		{
 			// Disabled has precendence, so it goes first
 			if (m_colorTintEnvelope == NULL)
 				m_colorTintEnvelope = newInstance(TintEnvelope);
-			m_colorTintEnvelope->play( &SUBDUAL_DAMAGE_COLOR, 150, 150, SUSTAIN_INDEFINITELY);
+				m_colorTintEnvelope->play( &SUBDUAL_DAMAGE_COLOR, 150, 150, SUSTAIN_INDEFINITELY);
+		}
+		else if (testTintStatus(TINT_STATUS_GAINING_EW_DAMAGE))
+		{
+			// Disabled has precendence, so it goes first
+			if (m_colorTintEnvelope == NULL)
+				m_colorTintEnvelope = newInstance(TintEnvelope);
+				m_colorTintEnvelope->play(&EW_DAMAGE_COLOR, 120, 120, SUSTAIN_INDEFINITELY);
 		}
 		else if( testTintStatus(TINT_STATUS_FRENZY) )
 		{
 			// Disabled has precendence, so it goes first
 			if (m_colorTintEnvelope == NULL)
 				m_colorTintEnvelope = newInstance(TintEnvelope);
-
-      m_colorTintEnvelope->play( isKindOf( KINDOF_INFANTRY) ? &FRENZY_COLOR_INFANTRY:&FRENZY_COLOR, 30, 30, SUSTAIN_INDEFINITELY);
+				m_colorTintEnvelope->play( isKindOf( KINDOF_INFANTRY) ? &FRENZY_COLOR_INFANTRY:&FRENZY_COLOR, 30, 30, SUSTAIN_INDEFINITELY);
 
     }
 //		else if ( testTintStatus( TINT_STATUS_POISONED) )
@@ -2780,6 +2819,7 @@ void Drawable::drawIconUI( void )
 		drawDemoralized( healthBarRegion );
 #endif
 		drawDisabled( healthBarRegion );
+		drawJammed( healthBarRegion );
 
 		drawAmmo( healthBarRegion );
 		drawContained( healthBarRegion );
@@ -3671,6 +3711,59 @@ void Drawable::drawDisabled(const IRegion2D* healthBarRegion)
 
 }
 
+// ------------------------------------------------------------------------------------------------
+/** Draw any icon information that needs to be drawn */
+// ------------------------------------------------------------------------------------------------
+void Drawable::drawJammed(const IRegion2D* healthBarRegion)
+{
+	
+	const Object* obj = getObject();
+
+
+	//
+	// Disabled Emoticon /Lightning
+	//                   7/
+	if (obj->isDisabledByType(DISABLED_EW)		)		
+	{
+		// create icon if necessary
+		if (getIconInfo()->m_icon[ICON_JAMMED] == NULL)
+		{
+			getIconInfo()->m_icon[ICON_JAMMED] = newInstance(Anim2D)
+				(s_animationTemplates[ICON_JAMMED], TheAnim2DCollection);
+		}
+
+		// draw the icon
+		if (healthBarRegion)
+		{
+			Int barHeight = healthBarRegion->hi.y - healthBarRegion->lo.y;
+
+			Int frameWidth = getIconInfo()->m_icon[ICON_JAMMED]->getCurrentFrameWidth();
+			Int frameHeight = getIconInfo()->m_icon[ICON_JAMMED]->getCurrentFrameHeight();
+
+#ifdef SCALE_ICONS_WITH_ZOOM_ML
+			// adjust the width to be a % of the health bar region size
+			Int barWidth = healthBarRegion->hi.x - healthBarRegion->lo.x;
+			Int size = REAL_TO_INT(barWidth * 0.3f);
+			frameHeight = REAL_TO_INT((INT_TO_REAL(size) / INT_TO_REAL(frameWidth)) * frameHeight);
+			frameWidth = size;
+#endif
+			// given our scaled width and height we need to find the top left point to draw the image at
+			ICoord2D screen;
+			screen.x = healthBarRegion->lo.x;
+			screen.y = healthBarRegion->hi.y - (frameHeight + barHeight);
+			getIconInfo()->m_icon[ICON_JAMMED]->draw(screen.x, screen.y, frameWidth, frameHeight);
+
+		}
+	}
+	else
+	{
+		// delete icon if necessary
+		killIcon(ICON_JAMMED);
+
+	}
+
+}
+
 //-------------------------------------------------------------------------------------------------
 /** Draw construction percent for drawables that have objects that are "under construction" */
 //-------------------------------------------------------------------------------------------------
@@ -3942,8 +4035,126 @@ void Drawable::drawHealthBar(const IRegion2D* healthBarRegion)
 		TheDisplay->drawFillRect( healthBarRegion->lo.x + 1, healthBarRegion->lo.y + 1,
 															(healthBoxWidth - 2) * healthRatio, healthBoxHeight - 2,
 															color );
+
+		// TheSuperHackers @feature Ahmed Salah 30/09/2025 Draw fuel/consumed item bar below health bar
+		drawFuelBar(healthBarRegion, obj);
 	}
 
+}
+
+//-------------------------------------------------------------------------------------------------
+// TheSuperHackers @feature Ahmed Salah 30/09/2025 Draw fuel/consumed item bar below health bar
+//-------------------------------------------------------------------------------------------------
+void Drawable::drawFuelBar(const IRegion2D* healthBarRegion, Object* obj)
+{
+	if (!healthBarRegion || !obj)
+		return;
+
+	// Get the locomotor to check for consumed items
+	AIUpdateInterface* ai = obj->getAIUpdateInterface();
+	if (!ai)
+		return;
+
+	LocomotorSet& locomotorSet = const_cast<LocomotorSet&>(ai->getLocomotorSet());
+	
+	// Check all locomotor surfaces for consumed items
+	Locomotor* groundLoco = locomotorSet.findLocomotor(LOCOMOTORSURFACE_GROUND);
+	Locomotor* waterLoco = locomotorSet.findLocomotor(LOCOMOTORSURFACE_WATER);
+	Locomotor* airLoco = locomotorSet.findLocomotor(LOCOMOTORSURFACE_AIR);
+	
+	Locomotor* activeLoco = nullptr;
+	AsciiString consumeItem;
+	Int consumeRate = 0;
+	
+	// Find the first locomotor with a consumed item
+	if (groundLoco && !groundLoco->getConsumeItem().isEmpty())
+	{
+		activeLoco = groundLoco;
+		consumeItem = groundLoco->getConsumeItem();
+		consumeRate = groundLoco->getConsumeRate();
+	}
+	else if (waterLoco && !waterLoco->getConsumeItem().isEmpty())
+	{
+		activeLoco = waterLoco;
+		consumeItem = waterLoco->getConsumeItem();
+		consumeRate = waterLoco->getConsumeRate();
+	}
+	else if (airLoco && !airLoco->getConsumeItem().isEmpty())
+	{
+		activeLoco = airLoco;
+		consumeItem = airLoco->getConsumeItem();
+		consumeRate = airLoco->getConsumeRate();
+	}
+	
+	// If no locomotor has consumed items, don't draw anything
+	if (!activeLoco || consumeItem.isEmpty())
+		return;
+
+	// Get inventory behavior to check current item count
+	InventoryBehavior* inventoryBehavior = obj->getInventoryBehavior();
+	if (!inventoryBehavior)
+		return;
+
+	Int currentAmount = inventoryBehavior->getItemCount(consumeItem);
+	
+	// Get max storage from module data
+	const InventoryBehaviorModuleData* moduleData = inventoryBehavior->getInventoryModuleData();
+	if (!moduleData)
+		return;
+	
+	Int maxStorage = moduleData->getMaxStorageCount(consumeItem);
+	
+	// If no max storage or current amount, don't draw
+	if (maxStorage <= 0 || currentAmount < 0)
+		return;
+
+	// Calculate fuel ratio
+	Real fuelRatio = (Real)currentAmount / (Real)maxStorage;
+	
+	// Clamp fuel ratio to valid range
+	if (fuelRatio < 0.0f) fuelRatio = 0.0f;
+	if (fuelRatio > 1.0f) fuelRatio = 1.0f;
+	
+	// Position the fuel bar below the health bar
+	Real healthBoxWidth = healthBarRegion->hi.x - healthBarRegion->lo.x;
+	Real healthBoxHeight = max(3, healthBarRegion->hi.y - healthBarRegion->lo.y);
+	
+	Int fuelBarY = healthBarRegion->hi.y + 1; // 1 pixel below health bar (reduced distance)
+	Int fuelBarHeight = max(4, (Int)(healthBoxHeight * 1.4f)); // 140% of health bar height (doubled)
+	
+	// Dynamic fuel bar color based on fuel level (olive to brown progression)
+	Color fuelColor, fuelOutlineColor;
+	
+	// Olive to brown color progression
+	// 100% = Bright Olive (128, 128, 0)
+	// 0% = Dark Brown (64, 32, 0)
+	Real redComponent = 0.5f + (0.5f * (1.0f - fuelRatio));    // 0.5 to 1.0
+	Real greenComponent = 0.5f + (0.5f * (1.0f - fuelRatio));  // 0.5 to 1.0
+	Real blueComponent = 0.0f; // Always 0 for olive/brown tones
+	
+	// Ensure color components are in valid range
+	if (redComponent < 0.0f) redComponent = 0.0f;
+	if (redComponent > 1.0f) redComponent = 1.0f;
+	if (greenComponent < 0.0f) greenComponent = 0.0f;
+	if (greenComponent > 1.0f) greenComponent = 1.0f;
+	
+	fuelColor = GameMakeColor(255.0f * redComponent, 255.0f * greenComponent, 255.0f * blueComponent, 255);
+	fuelOutlineColor = GameMakeColor(0, 0, 0, 255); // Black outline
+	
+	// Draw fuel bar outline (black outline)
+	TheDisplay->drawOpenRect(healthBarRegion->lo.x, fuelBarY, healthBoxWidth, fuelBarHeight, 1.0f, fuelOutlineColor);
+	
+	// Draw filled fuel bar (size reduces with consumption like health bar)
+	// The bar width should reduce from left to right as fuel decreases
+	Real fuelBarWidth = (healthBoxWidth - 2) * fuelRatio;
+	
+	// Only draw the filled bar if there's fuel left
+	if (fuelBarWidth > 0)
+	{
+		TheDisplay->drawFillRect(healthBarRegion->lo.x + 1, fuelBarY + 1,
+								fuelBarWidth, fuelBarHeight - 2,
+								fuelColor);
+	}
 }
 
 //-------------------------------------------------------------------------------------------------

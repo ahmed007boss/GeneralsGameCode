@@ -671,7 +671,7 @@ void SpecialPowerModule::aboutToDoSpecialPower( const Coord3D *location )
 //-------------------------------------------------------------------------------------------------
 void SpecialPowerModule::doSpecialPower( UnsignedInt commandOptions )
 {
-	if (m_pausedCount > 0 || getObject()->isDisabled()) {
+	if (m_pausedCount > 0 || (getObject()->isDisabled() && !getObject()->isDisabledByType( DISABLED_HELD ))) {
 		return;
 	}
 
@@ -693,7 +693,7 @@ void SpecialPowerModule::doSpecialPower( UnsignedInt commandOptions )
 //-------------------------------------------------------------------------------------------------
 void SpecialPowerModule::doSpecialPowerAtObject( Object *obj, UnsignedInt commandOptions )
 {
-	if (m_pausedCount > 0 || getObject()->isDisabled()) {
+	if (m_pausedCount > 0 || (getObject()->isDisabled() && !getObject()->isDisabledByType( DISABLED_HELD ))) {
 		return;
 	}
 
@@ -715,7 +715,7 @@ void SpecialPowerModule::doSpecialPowerAtObject( Object *obj, UnsignedInt comman
 //-------------------------------------------------------------------------------------------------
 void SpecialPowerModule::doSpecialPowerAtLocation( const Coord3D *loc, Real angle, UnsignedInt commandOptions )
 {
-	if (m_pausedCount > 0 || getObject()->isDisabled()) {
+	if (m_pausedCount > 0 || (getObject()->isDisabled() && !getObject()->isDisabledByType( DISABLED_HELD ))) {
 		return;
 	}
 
@@ -743,7 +743,7 @@ void SpecialPowerModule::doSpecialPowerAtLocation( const Coord3D *loc, Real angl
 //-------------------------------------------------------------------------------------------------
 void SpecialPowerModule::doSpecialPowerUsingWaypoints( const Waypoint *way, UnsignedInt commandOptions )
 {
-	if (m_pausedCount > 0 || getObject()->isDisabled()) {
+	if (m_pausedCount > 0 || (getObject()->isDisabled() && !getObject()->isDisabledByType( DISABLED_HELD ))) {
 		return;
 	}
 
@@ -804,7 +804,7 @@ UnsignedInt SpecialPowerModule::getReadyFrame( void ) const
 		}
 	}
 
-	if (m_pausedCount > 0 || getObject()->isDisabled())
+	if (m_pausedCount > 0 || (getObject()->isDisabled() && !getObject()->isDisabledByType( DISABLED_HELD )))
 	{
 		Int pausedFrames = TheGameLogic->getFrame() - m_pausedOnFrame;
 		return m_availableOnFrame + pausedFrames;

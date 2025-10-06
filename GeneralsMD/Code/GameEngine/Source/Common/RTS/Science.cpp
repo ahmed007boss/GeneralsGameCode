@@ -32,6 +32,7 @@
 #include "Common/INI.h"
 #include "Common/Player.h"
 #include "Common/Science.h"
+#include "Common/GlobalData.h"
 
 ScienceStore* TheScienceStore = NULL;
 
@@ -232,6 +233,12 @@ Int ScienceStore::getSciencePurchaseCost(ScienceType st) const
 	const ScienceInfo* si = findScienceInfo(st);
 	if (si)
 	{
+#if defined( RTS_DEBUG )
+		if (TheGlobalData->m_disableCost)
+		{
+			return 1;
+		}
+#endif
 		return si->m_sciencePurchasePointCost;
 	}
 	else

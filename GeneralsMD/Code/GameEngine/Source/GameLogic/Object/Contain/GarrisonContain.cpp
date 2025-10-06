@@ -48,6 +48,7 @@
 #include "GameLogic/Module/BodyModule.h"
 #include "GameLogic/PartitionManager.h"
 #include "GameLogic/Weapon.h"
+#include "GameClient/GameText.h"
 
 #include "GameClient/Drawable.h"
 #include "GameClient/GameClient.h"
@@ -2058,3 +2059,30 @@ void GarrisonContain::loadStationGarrisonPoints( void )
 
 
 
+
+//-------------------------------------------------------------------------------------------------
+// TheSuperHackers @feature author 01/01/2025 Override getModuleDescription for UI display
+//-------------------------------------------------------------------------------------------------
+UnicodeString GarrisonContainModuleData::getModuleDescription() const
+{
+	if (!m_description)
+	{
+		UnicodeString formatString;
+		
+		// TheSuperHackers @feature author 15/01/2025 Use separate string for healing description
+		if (m_doIHealObjects)
+		{
+			formatString = TheGameText->fetch("MODULE:GARRISONCONTAIN_DESCRIPTION_WITH_HEAL");
+		}
+		else
+		{
+			formatString = TheGameText->fetch("MODULE:GARRISONCONTAIN_DESCRIPTION");
+		}
+		
+		UnicodeString result;
+		result.format(formatString.str(), m_containMax);
+		m_description = new UnicodeString(result);
+	}
+
+	return *m_description;
+}

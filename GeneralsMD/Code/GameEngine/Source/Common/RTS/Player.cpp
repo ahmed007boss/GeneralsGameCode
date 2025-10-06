@@ -1787,18 +1787,17 @@ Int Player::countBuildings(void)
 }
 
 //=============================================================================
-Int Player::countObjects(KindOfMaskType setMask, KindOfMaskType clearMask)
+Int Player::countObjects(KindOfMaskType setMask, KindOfMaskType clearMask, VeterancyLevel minVeterancyLevel) 
 {
 	int retVal = 0;
 
 	for (PlayerTeamList::const_iterator it = m_playerTeamPrototypes.begin();
 			 it != m_playerTeamPrototypes.end(); ++it)
 	{
-		retVal += (*it)->countObjects(setMask, clearMask);
+		retVal += (*it)->countObjects(setMask, clearMask, minVeterancyLevel);
 	}
 	return retVal;
 }
-
 //=============================================================================
 Object *Player::findClosestByKindOf( Object *queryObject, KindOfMaskType setMask, KindOfMaskType clearMask )
 {
@@ -2477,8 +2476,16 @@ Bool Player::addSkillPointsForKill(const Object* killer, const Object* victim)
 		return false;
 
 	Int victimLevel = victim->getVeterancyLevel();
+
 	Int skillValue = victim->getTemplate()->getSkillPointValue(victimLevel);
 
+	//New: We can now upgrade XP value, so we check the XP tracker for a scalar
+	const ExperienceTracker* xpTracker = victim->getExperienceTracker();
+	if (xpTracker)
+	{
+		skillValue *= xpTracker->getExperienceValueScalar();
+	}
+	
 	return addSkillPoints(skillValue);
 }
 
@@ -3493,13 +3500,14 @@ Int Player::getBattlePlansActiveSpecific( BattlePlanStatus plan ) const
 //------------------------------------------------------------------------------------------------
 static void localApplyBattlePlanBonusesToObject( Object *obj, void *userData )
 {
+	if (!obj)
+	{
+		return;
+	}
+
 	const BattlePlanBonuses* bonus = (const BattlePlanBonuses*)userData;
 	Object *objectToValidate = obj;
 	Object *objectToModify = obj;
-
-	DEBUG_LOG(("localApplyBattlePlanBonusesToObject() - looking at object %d (%s)",
-		(objectToValidate)?objectToValidate->getID():INVALID_ID,
-		(objectToValidate)?objectToValidate->getTemplate()->getName().str():"<No Object>"));
 
 	//First check if the obj is a projectile -- if so split the
 	//object so that the producer is validated, not the projectile.
@@ -3507,20 +3515,14 @@ static void localApplyBattlePlanBonusesToObject( Object *obj, void *userData )
 	if( isProjectile )
 	{
 		objectToValidate = TheGameLogic->findObjectByID( obj->getProducerID() );
-		DEBUG_LOG(("Object is a projectile - looking at object %d (%s) instead",
-			(objectToValidate)?objectToValidate->getID():INVALID_ID,
-			(objectToValidate)?objectToValidate->getTemplate()->getName().str():"<No Object>"));
 	}
 	if( objectToValidate && objectToValidate->isAnyKindOf( bonus->m_validKindOf ) )
 	{
-		DEBUG_LOG(("Is valid kindof"));
 		if( !objectToValidate->isAnyKindOf( bonus->m_invalidKindOf ) )
 		{
-			DEBUG_LOG(("Is not invalid kindof"));
 			//Quite the trek eh? Now we can apply the bonuses!
 			if( !isProjectile )
 			{
-				DEBUG_LOG(("Is not projectile.  Armor scalar is %g", bonus->m_armorScalar));
 				//Really important to not apply certain bonuses like health augmentation to projectiles!
 				if( bonus->m_armorScalar != 1.0f )
 				{
@@ -3530,7 +3532,6 @@ static void localApplyBattlePlanBonusesToObject( Object *obj, void *userData )
 						bonus->m_armorScalar, AS_INT(bonus->m_armorScalar), objectToModify->getID(),
 						objectToModify->getTemplate()->getDisplayName().str(),
 						objectToModify->getControllingPlayer()->getPlayerIndex()));
-					DEBUG_LOG(("After apply, armor scalar is %g", body->getDamageScalar()));
 				}
 				if( bonus->m_sightRangeScalar != 1.0f )
 				{

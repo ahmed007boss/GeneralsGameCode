@@ -37,6 +37,8 @@
 #include "Common/GameType.h"
 #include "Common/Overridable.h"
 #include "Common/Science.h"
+#include "Common/PlayerPrerequisite.h"
+#include "Common/ObjectPrerequisite.h"
 #include "GameClient/Color.h"
 
 // FORWARD REFERENCES /////////////////////////////////////////////////////////////////////////////
@@ -102,6 +104,10 @@ enum CommandOption CPP_11(: Int)
 	USES_MINE_CLEARING_WEAPONSET= 0x00200000,	// uses the special mine-clearing weaponset, even if not current
 	CAN_USE_WAYPOINTS						= 0x00400000, // button has option to use a waypoint path
 	MUST_BE_STOPPED							= 0x00800000, // Unit must be stopped in order to be able to use button.
+	NEED_UPGRADE_TO_APPEAR = 0x01000000, // command requires upgrade to be enabled
+	// TheSuperHackers @feature Ahmed Salah 27/06/2025 Enable select-all buttons when special powers are available
+	ENABLE_SELECT_ALL_BUTTON_IF_ANY_POWER_AVAILABLE = 0x02000000, // If of type GUI_COMMAND_SELECT_ALL_UNITS_OF_TYPE and any special Power available the button should be enabled 
+
 };
 
 #ifdef DEFINE_COMMAND_OPTION_NAMES
@@ -135,7 +141,8 @@ static const char *const TheCommandOptionNames[] =
 	"USES_MINE_CLEARING_WEAPONSET",
 	"CAN_USE_WAYPOINTS",
 	"MUST_BE_STOPPED",
-
+	"NEED_UPGRADE_TO_APPEAR",
+	"ENABLE_SELECT_ALL_BUTTON_IF_ANY_POWER_AVAILABLE",
 	NULL
 };
 #endif  // end DEFINE_COMMAND_OPTION_NAMES
@@ -175,9 +182,15 @@ enum GUICommandType CPP_11(: Int)
 	GUI_COMMAND_OBJECT_UPGRADE,						///< put an object upgrade in the queue
 	GUI_COMMAND_CANCEL_UPGRADE,						///< cancel an upgrade
 	GUI_COMMAND_ATTACK_MOVE,							///< attack move command
+	GUI_COMMAND_GROUP_MOVE,							///< group move command with speed matching
+	GUI_COMMAND_GROUP_ATTACK_MOVE,				///< group attack move command with speed matching
 	GUI_COMMAND_GUARD,										///< guard command
 	GUI_COMMAND_GUARD_WITHOUT_PURSUIT,		///< guard command, no pursuit out of guard area
 	GUI_COMMAND_GUARD_FLYING_UNITS_ONLY,	///< guard command, ignore nonflyers
+	GUI_COMMAND_GUARD_IN_PLACE,							///< TheSuperHackers @feature Ahmed Salah 15/01/2025 guard command at current location
+	GUI_COMMAND_GUARD_IN_PLACE_WITHOUT_PURSUIT,	///< TheSuperHackers @feature Ahmed Salah 15/01/2025 guard command at current location, no pursuit out of guard area
+	GUI_COMMAND_GUARD_IN_PLACE_FLYING_UNITS_ONLY,	///< TheSuperHackers @feature Ahmed Salah 15/01/2025 guard command at current location, ignore nonflyers
+	GUI_COMMAND_RAID,											///< TheSuperHackers @feature Ahmed Salah 15/01/2025 raid command - each unit attacks one enemy in area
 	GUI_COMMAND_STOP,											///< stop moving
 	GUI_COMMAND_WAYPOINTS,								///< create a set of waypoints for this unit
 	GUI_COMMAND_EXIT_CONTAINER,						///< an inventory box for a container like a structure or transport
@@ -191,11 +204,17 @@ enum GUICommandType CPP_11(: Int)
 	GUI_COMMAND_PURCHASE_SCIENCE,					///< purchase science
 	GUI_COMMAND_HACK_INTERNET,						///< gain income from the ether (by hacking the internet)
 	GUI_COMMAND_TOGGLE_OVERCHARGE,				///< Overcharge command for power plants
+	GUI_COMMAND_TOGGLE_RANGE_DECAL,				///< Toggle weapon range decals on/off
+	GUI_COMMAND_TOGGLE_HOLD_POSITION,			///< Toggle hold position (disabled status HELD)
+	GUI_COMMAND_ENABLE_HOLD_POSITION_AND_GUARD,	///< Toggle hold position and guard from current position
 #ifdef ALLOW_SURRENDER
 	GUI_COMMAND_POW_RETURN_TO_PRISON,			///< POW Truck, return to prison
 #endif
 	GUI_COMMAND_COMBATDROP,								///< rappel contents to ground or bldg
 	GUI_COMMAND_SWITCH_WEAPON,						///< switch weapon use
+	GUI_COMMAND_REPLENISH_INVENTORY_ITEM,		///< TheSuperHackers @feature author 15/01/2025 replenish inventory items
+	GUI_COMMAND_REPLACE_COMPONENT,				///< TheSuperHackers @feature author 15/01/2025 replace damaged component
+	GUI_COMMAND_TOGGLE_COMPONENT_DISABLED,		///< TheSuperHackers @feature Ahmed Salah 15/01/2025 toggle component disabled status
 
 	//Context senstive command modes
 	GUICOMMANDMODE_HIJACK_VEHICLE,
@@ -213,6 +232,10 @@ enum GUICommandType CPP_11(: Int)
 	GUI_COMMAND_SPECIAL_POWER_CONSTRUCT_FROM_SHORTCUT, ///< do a shortcut special power using the construct building interface
 
 	GUI_COMMAND_SELECT_ALL_UNITS_OF_TYPE,
+	GUI_COMMAND_SWITCH_COMMAND_SET,
+	GUI_COMMAND_SWITCH_COMMAND_SET2,
+	GUI_COMMAND_SWITCH_COMMAND_SET3,
+	GUI_COMMAND_SWITCH_COMMAND_SET4,
 
 	// add more commands here, don't forget to update the string command list below too ...
 
@@ -231,9 +254,15 @@ static const char *const TheGuiCommandNames[] =
 	"OBJECT_UPGRADE",
 	"CANCEL_UPGRADE",
 	"ATTACK_MOVE",
+	"GROUP_MOVE",
+	"GROUP_ATTACK_MOVE",
 	"GUARD",
 	"GUARD_WITHOUT_PURSUIT",
 	"GUARD_FLYING_UNITS_ONLY",
+	"GUARD_IN_PLACE",
+	"GUARD_IN_PLACE_WITHOUT_PURSUIT",
+	"GUARD_IN_PLACE_FLYING_UNITS_ONLY",
+	"RAID",
 	"STOP",
 	"WAYPOINTS",
 	"EXIT_CONTAINER",
@@ -247,11 +276,17 @@ static const char *const TheGuiCommandNames[] =
 	"PURCHASE_SCIENCE",
 	"HACK_INTERNET",
 	"TOGGLE_OVERCHARGE",
+	"TOGGLE_RANGE_DECAL",
+	"TOGGLE_HOLD_POSITION",
+	"ENABLE_HOLD_POSITION_AND_GUARD",
 #ifdef ALLOW_SURRENDER
 	"POW_RETURN_TO_PRISON",
 #endif
 	"COMBATDROP",
 	"SWITCH_WEAPON",
+	"REPLENISH_INVENTORY_ITEM",
+	"REPLACE_COMPONENT",
+	"TOGGLE_COMPONENT_DISABLED",
 	"HIJACK_VEHICLE",
 	"CONVERT_TO_CARBOMB",
 	"SABOTAGE_BUILDING",
@@ -263,6 +298,11 @@ static const char *const TheGuiCommandNames[] =
 	"SPECIAL_POWER_CONSTRUCT",
 	"SPECIAL_POWER_CONSTRUCT_FROM_SHORTCUT",
 	"SELECT_ALL_UNITS_OF_TYPE",
+
+	"COMMAND_SWITCH_COMMAND_SET",
+	"COMMAND_SWITCH_COMMAND_SET2",
+	"COMMAND_SWITCH_COMMAND_SET3",
+	"COMMAND_SWITCH_COMMAND_SET4",
 
 	NULL
 };
@@ -329,7 +369,21 @@ public:
 	const AsciiString& getDescriptionLabel() const { return m_descriptionLabel; }
 	const AsciiString& getPurchasedLabel() const { return m_purchasedLabel; }
 	const AsciiString& getConflictingLabel() const { return m_conflictingLabel; }
+	const AsciiString& getOverlayImageName() const { return m_overlayImageName; }
+	const AsciiString& getOverlayImage2Name() const { return m_overlayImage2Name; }
+	const AsciiString& getItemToReplenish() const { return m_itemToReplenish; }
+	const AsciiString& getComponentName() const { return m_componentName; }
 	const AudioEventRTS* getUnitSpecificSound() const { return &m_unitSpecificSound; }
+	const bool isRequireElectronics() const { return m_isRequireElectronics; }
+
+
+
+	std::vector<PlayerPrerequisite>	m_enablePrereqInfo;
+	std::vector<PlayerPrerequisite>	m_visiblePrereqInfo;
+	std::vector<ObjectPrerequisite>	m_enableCallerUnitPrereqInfo;
+	std::vector<ObjectPrerequisite>	m_visibleCallerUnitPrereqInfo;
+
+	Bool m_prereqInfoResloved;
 
 	GUICommandType getCommandType() const { return m_command; }
 	UnsignedInt getOptions() const { return m_options; }
@@ -341,13 +395,58 @@ public:
 	Int getMaxShotsToFire() const { return m_maxShotsToFire; }
 	const ScienceVec& getScienceVec() const { return m_science; }
 	CommandButtonMappedBorderType getCommandButtonMappedBorderType() const { return m_commandButtonBorder; }
+	Int getAmount() const { return m_amount; }
+	Bool getEnableMassProduction() const { return m_enableMassProduction; }
 	const Image* getButtonImage() const { return m_buttonImage;	}
 	void cacheButtonImage();
+
+	// Modifier key and click type button reference getters (with caching)
+	const CommandButton* getLeftClickCtrlButton() const;
+	const CommandButton* getLeftClickAltButton() const;
+	const CommandButton* getLeftClickShiftButton() const;
+	const CommandButton* getLeftClickCtrlAltButton() const;
+	const CommandButton* getLeftClickCtrlShiftButton() const;
+	const CommandButton* getLeftClickAltShiftButton() const;
+	const CommandButton* getLeftClickCtrlAltShiftButton() const;
+
+	const CommandButton* getRightClickButton() const;
+	const CommandButton* getRightClickCtrlButton() const;
+	const CommandButton* getRightClickAltButton() const;
+	const CommandButton* getRightClickShiftButton() const;
+	const CommandButton* getRightClickCtrlAltButton() const;
+	const CommandButton* getRightClickCtrlShiftButton() const;
+	const CommandButton* getRightClickAltShiftButton() const;
+	const CommandButton* getRightClickCtrlAltShiftButton() const;
+
+	// Alternative button getters (completely replace original button when prerequisites are satisfied)
+	const CommandButton* getAlternativeButton1() const;
+	const CommandButton* getAlternativeButton2() const;
+	const CommandButton* getAlternativeButton3() const;
+	const CommandButton* getAlternativeButton4() const;
+
+	// Get the appropriate button based on modifier keys and click type
+	const CommandButton* getButtonForModifiers(Bool ctrlPressed, Bool altPressed, Bool shiftPressed, Bool isRightClick) const;
+
+	// Get the appropriate alternative button based on prerequisites (replaces original button completely)
+	const CommandButton* getAlternativeButtonForPrerequisites(const Player* player, const Object* object) const;
 
 	GameWindow* getWindow() const { return m_window;	}
 	Int getFlashCount() const { return m_flashCount; }
 
 	const CommandButton* getNext() const { return m_next; }
+
+
+	Int getEnablePrereqCount() const {	return m_enablePrereqInfo.size();	}
+	const PlayerPrerequisite* getNthEnablePrereq(Int i) const { return &m_enablePrereqInfo[i]; }
+
+	Int getVisiblePrereqCount() const { return m_visiblePrereqInfo.size(); }
+	const PlayerPrerequisite* getNthVisiblePrereq(Int i) const { return &m_visiblePrereqInfo[i]; }
+
+	Int getEnableCallerUnitPrereqCount() const { return m_enableCallerUnitPrereqInfo.size(); }
+	const ObjectPrerequisite* getNthEnableCallerUnitPrereq(Int i) const { return &m_enableCallerUnitPrereqInfo[i]; }
+
+	Int getVisibleCallerUnitPrereqCount() const { return m_visibleCallerUnitPrereqInfo.size(); }
+	const ObjectPrerequisite* getNthVisibleCallerUnitPrereq(Int i) const { return &m_visibleCallerUnitPrereqInfo[i]; }
 
 	void setName(const AsciiString& n) { m_name = n; }
 
@@ -366,17 +465,43 @@ public:
 	void friend_addToList(CommandButton** list) {	m_next = *list;	*list = this; }
 	CommandButton* friend_getNext() { return m_next; }
 
+	static void parseEnablePrerequisites(INI* ini, void* instance, void* /*store*/, const void* /*userData*/);
+	static void parseVisiblePrerequisites(INI* ini, void* instance, void* /*store*/, const void* /*userData*/);
+	static void parseEnableCallerUnitPrerequisites(INI* ini, void* instance, void* /*store*/, const void* /*userData*/);
+	static void parseVisibleCallerUnitPrerequisites(INI* ini, void* instance, void* /*store*/, const void* /*userData*/);
+
+	// Alternative button prerequisite parsing functions
+	static void parseAlternativeButton1Prerequisites(INI* ini, void* instance, void* /*store*/, const void* /*userData*/);
+	static void parseAlternativeButton2Prerequisites(INI* ini, void* instance, void* /*store*/, const void* /*userData*/);
+	static void parseAlternativeButton3Prerequisites(INI* ini, void* instance, void* /*store*/, const void* /*userData*/);
+	static void parseAlternativeButton4Prerequisites(INI* ini, void* instance, void* /*store*/, const void* /*userData*/);
+
+	// Alternative button object prerequisite parsing functions
+	static void parseAlternativeButton1ObjectPrerequisites(INI* ini, void* instance, void* /*store*/, const void* /*userData*/);
+	static void parseAlternativeButton2ObjectPrerequisites(INI* ini, void* instance, void* /*store*/, const void* /*userData*/);
+	static void parseAlternativeButton3ObjectPrerequisites(INI* ini, void* instance, void* /*store*/, const void* /*userData*/);
+	static void parseAlternativeButton4ObjectPrerequisites(INI* ini, void* instance, void* /*store*/, const void* /*userData*/);
+
+	// TheSuperHackers @alternative Ahmed Salah 27/06/2025 Helper function to check all alternative buttons
+	const CommandButton* getAlternativeButtonByIndex(Int index) const;
+
+	// TheSuperHackers @feature author 15/01/2025 Get the cost of executing this command button
+	UnsignedInt getCostOfExecution(const Player* player, const Object* object) const;
+
 private:
 	AsciiString										m_name;												///< template name
 	GUICommandType								m_command;										///< type of command this button
 	CommandButton*								m_next;
 	UnsignedInt										m_options;										///< command options (see CommandOption enum)
 	const ThingTemplate*					m_thingTemplate;							///< for commands that use thing templates in command data
+
 	const UpgradeTemplate*				m_upgradeTemplate;						///< for commands that use upgrade templates in command data
+
 	const SpecialPowerTemplate*		m_specialPower;								///< actual special power template
 	RadiusCursorType							m_radiusCursor;								///< radius cursor, if any
 	AsciiString										m_cursorName;									///< cursor name for placement (NEED_TARGET_POS) or valid version (CONTEXTMODE_COMMAND)
 	AsciiString										m_invalidCursorName;					///< cursor name for invalid version
+	Bool													m_isRequireElectronics;
 
 	// bleah. shouldn't be mutable, but is. sue me. (Kris) -snork!
 	mutable AsciiString										m_textLabel;									///< string manager text label
@@ -389,6 +514,12 @@ private:
 	ScienceVec										m_science;										///< actual science
 	CommandButtonMappedBorderType	m_commandButtonBorder;
 	AsciiString										m_buttonImageName;
+	AsciiString										m_overlayImageName;						///< overlay image name for additional visual indicators
+	AsciiString										m_overlayImage2Name;					///< second overlay image name for additional visual indicators
+	AsciiString										m_itemToReplenish;						///< TheSuperHackers @feature author 15/01/2025 Item key to replenish (empty means all items)
+	AsciiString										m_componentName;						///< TheSuperHackers @feature author 15/01/2025 Component name to replace (empty means all damaged components)
+	Int												m_amount;											///< TheSuperHackers @feature author 15/01/2025 Amount of units to queue when button is pressed (default 1)
+	Bool											m_enableMassProduction;					///< TheSuperHackers @feature author 15/01/2025 Enable mass production with modifier keys (default true)
 	GameWindow*										m_window;											///< used during the run-time assignment of a button to a gadget button window
 	AudioEventRTS									m_unitSpecificSound;					///< Unit sound played whenever button is clicked.
 
@@ -397,13 +528,75 @@ private:
 	// bleah. shouldn't be mutable, but is. sue me. (srj)
 	mutable Int										m_flashCount;                 ///< the number of times a cameo is supposed to flash
 
+	// Modifier key and click type button name strings (for INI parsing)
+	// Left-click combinations
+	AsciiString							m_leftClickCtrlButtonName;					///< name for Ctrl+left-click button
+	AsciiString							m_leftClickAltButtonName;					///< name for Alt+left-click button
+	AsciiString							m_leftClickShiftButtonName;					///< name for Shift+left-click button
+	AsciiString							m_leftClickCtrlAltButtonName;				///< name for Ctrl+Alt+left-click button
+	AsciiString							m_leftClickCtrlShiftButtonName;				///< name for Ctrl+Shift+left-click button
+	AsciiString							m_leftClickAltShiftButtonName;				///< name for Alt+Shift+left-click button
+	AsciiString							m_leftClickCtrlAltShiftButtonName;			///< name for Ctrl+Alt+Shift+left-click button
+
+	// Right-click combinations
+	AsciiString							m_rightClickButtonName;						///< name for right-click button
+	AsciiString							m_rightClickCtrlButtonName;					///< name for Ctrl+right-click button
+	AsciiString							m_rightClickAltButtonName;					///< name for Alt+right-click button
+	AsciiString							m_rightClickShiftButtonName;				///< name for Shift+right-click button
+	AsciiString							m_rightClickCtrlAltButtonName;				///< name for Ctrl+Alt+right-click button
+	AsciiString							m_rightClickCtrlShiftButtonName;			///< name for Ctrl+Shift+right-click button
+	AsciiString							m_rightClickAltShiftButtonName;				///< name for Alt+Shift+right-click button
+	AsciiString							m_rightClickCtrlAltShiftButtonName;		///< name for Ctrl+Alt+Shift+right-click button
+
+	// Alternative command buttons (completely replace original button when prerequisites are satisfied)
+	AsciiString							m_alternativeButton1Name;					///< name for alternative button 1
+	AsciiString							m_alternativeButton2Name;					///< name for alternative button 2
+	AsciiString							m_alternativeButton3Name;					///< name for alternative button 3
+	AsciiString							m_alternativeButton4Name;					///< name for alternative button 4
+
+	// Prerequisites for alternative buttons
+	std::vector<PlayerPrerequisite>	m_alternativeButton1Prereq;				///< prerequisites for alternative button 1
+	std::vector<PlayerPrerequisite>	m_alternativeButton2Prereq;				///< prerequisites for alternative button 2
+	std::vector<PlayerPrerequisite>	m_alternativeButton3Prereq;				///< prerequisites for alternative button 3
+	std::vector<PlayerPrerequisite>	m_alternativeButton4Prereq;				///< prerequisites for alternative button 4
+
+	// Object-based prerequisites for alternative buttons
+	std::vector<ObjectPrerequisite>	m_alternativeButton1ObjectPrereq;		///< object prerequisites for alternative button 1
+	std::vector<ObjectPrerequisite>	m_alternativeButton2ObjectPrereq;		///< object prerequisites for alternative button 2
+	std::vector<ObjectPrerequisite>	m_alternativeButton3ObjectPrereq;		///< object prerequisites for alternative button 3
+	std::vector<ObjectPrerequisite>	m_alternativeButton4ObjectPrereq;		///< object prerequisites for alternative button 4
+
+	// Cached button references (assigned once when first accessed)
+	mutable const CommandButton*			m_leftClickCtrlButton;						///< cached button for Ctrl+left-click
+	mutable const CommandButton*			m_leftClickAltButton;						///< cached button for Alt+left-click
+	mutable const CommandButton*			m_leftClickShiftButton;						///< cached button for Shift+left-click
+	mutable const CommandButton*			m_leftClickCtrlAltButton;					///< cached button for Ctrl+Alt+left-click
+	mutable const CommandButton*			m_leftClickCtrlShiftButton;					///< cached button for Ctrl+Shift+left-click
+	mutable const CommandButton*			m_leftClickAltShiftButton;					///< cached button for Alt+Shift+left-click
+	mutable const CommandButton*			m_leftClickCtrlAltShiftButton;				///< cached button for Ctrl+Alt+Shift+left-click
+
+	mutable const CommandButton*			m_rightClickButton;							///< cached button for right-click
+	mutable const CommandButton*			m_rightClickCtrlButton;						///< cached button for Ctrl+right-click
+	mutable const CommandButton*			m_rightClickAltButton;						///< cached button for Alt+right-click
+	mutable const CommandButton*			m_rightClickShiftButton;					///< cached button for Shift+right-click
+	mutable const CommandButton*			m_rightClickCtrlAltButton;					///< cached button for Ctrl+Alt+right-click
+	mutable const CommandButton*			m_rightClickCtrlShiftButton;				///< cached button for Ctrl+Shift+right-click
+	mutable const CommandButton*			m_rightClickAltShiftButton;					///< cached button for Alt+Shift+right-click
+	mutable const CommandButton*			m_rightClickCtrlAltShiftButton;			///< cached button for Ctrl+Alt+Shift+right-click
+
+	// Cached alternative button references
+	mutable const CommandButton*			m_alternativeButton1;						///< cached alternative button 1
+	mutable const CommandButton*			m_alternativeButton2;						///< cached alternative button 2
+	mutable const CommandButton*			m_alternativeButton3;						///< cached alternative button 3
+	mutable const CommandButton*			m_alternativeButton4;						///< cached alternative button 4
+
 };
 
 //-------------------------------------------------------------------------------------------------
 /** Command sets are collections of configurable command buttons.  They are used in the
 	* command context sensitive window in the battle user interface */
 //-------------------------------------------------------------------------------------------------
-enum { MAX_COMMANDS_PER_SET = 18 };  // user interface max is 14 (but internally it's 18 for script only buttons!)
+enum { MAX_COMMANDS_PER_SET = 30 };  // user interface max is 14 (but internally it's 18 for script only buttons!)
 enum { MAX_RIGHT_HUD_UPGRADE_CAMEOS = 5};
 enum {
 			 MAX_PURCHASE_SCIENCE_RANK_1 = 4,
@@ -673,7 +866,11 @@ public:
 	/** if this button is part of the context sensitive command system, process a button click
 	the gadgetMessage is either a GBM_SELECTED or GBM_SELECTED_RIGHT */
 	CBCommandStatus processContextSensitiveButtonClick( GameWindow *button,
-																											GadgetGameMessage gadgetMessage );
+																											GadgetGameMessage gadgetMessage,
+																											Bool ctrlPressed ,
+																											Bool altPressed ,
+																											Bool shiftPressed ,
+																											Bool isRightClick );
 
 	/** if this button is part of the context sensitive command system, process the Transition
 	gadgetMessage is either a GBM_MOUSE_LEAVING or GBM_MOUSE_ENTERING */
@@ -684,6 +881,13 @@ public:
 	/// is the drawable the currently selected drawable for the context sensitive UI?
 	Bool isDrivingContextUI( Drawable *draw ) const { return draw == m_currentSelectedDrawable; }
 
+	/// is the object currently selected in the control bar?
+	Bool isObjectSelected( const Object *obj ) const;
+
+	CommandAvailability getCommandAvailability(const CommandButton* command, Object* obj, GameWindow* win, GameWindow* applyToWin = NULL, Bool forceDisabledEvaluation = FALSE) const;
+
+	// Helper method to check prerequisites
+	CommandAvailability checkPrerequisites(const CommandButton* command, Object* obj, Player* player) const;
 	//-----------------------------------------------------------------------------------------------
 	// the remaining methods are used to construct the command buttons and command sets for
 	// the command bar
@@ -847,7 +1051,7 @@ protected:
 	static void populateInvDataCallback( Object *obj, void *userData );
 
 	// the following methods are for updating the currently showing context
-	CommandAvailability getCommandAvailability( const CommandButton *command, Object *obj, GameWindow *win, GameWindow *applyToWin = NULL, Bool forceDisabledEvaluation = FALSE ) const;
+	
 	void updateContextMultiSelect( void );
 	void updateContextPurchaseScience( void );
 	void updateContextCommand( void );
@@ -865,7 +1069,7 @@ protected:
 	static const Image* calculateVeterancyOverlayForObject( const Object *obj );
 
 	// the following methods do command processing for GUI selections
-	CBCommandStatus processCommandUI( GameWindow *control, GadgetGameMessage gadgetMessage );
+	CBCommandStatus processCommandUI( GameWindow *control, GadgetGameMessage gadgetMessage, Bool ctrlPressed = FALSE, Bool altPressed = FALSE, Bool shiftPressed = FALSE, Bool isRightClick = FALSE );
 	CBCommandStatus processCommandTransitionUI( GameWindow *control, GadgetGameMessage gadgetMessage );
 
 	// methods to help out with each context

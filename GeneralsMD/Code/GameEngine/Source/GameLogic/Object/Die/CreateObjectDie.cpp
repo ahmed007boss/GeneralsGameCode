@@ -118,6 +118,15 @@ void CreateObjectDie::onDie( const DamageInfo * damageInfo )
 				newBody->attemptDamage( &damInfo );
 			}
 
+			Real ewDamageAmount = oldBody->getCurrentEWDamageAmount();
+			if (ewDamageAmount > 0.0f)
+			{
+				damInfo.in.m_amount = ewDamageAmount;
+				damInfo.in.m_damageType = DAMAGE_EW_UNRESISTABLE;
+				damInfo.in.m_sourceID = INVALID_ID;
+				newBody->attemptDamage(&damInfo);
+			}
+
 			//Now transfer the previous health from the old object to the new.
 			damInfo.in.m_amount = oldBody->getMaxHealth() - oldBody->getPreviousHealth();
 			damInfo.in.m_damageType = DAMAGE_UNRESISTABLE;

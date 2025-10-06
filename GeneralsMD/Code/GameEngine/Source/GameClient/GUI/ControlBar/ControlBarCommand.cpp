@@ -51,6 +51,7 @@
 #include "GameLogic/Module/BattlePlanUpdate.h"
 #include "GameLogic/Module/VeterancyGainCreate.h"
 #include "GameLogic/Module/HackInternetAIUpdate.h"
+#include "GameLogic/Module/InventoryBehavior.h"
 #include "GameLogic/Weapon.h"
 
 #include "GameClient/InGameUI.h"
@@ -204,7 +205,10 @@ void ControlBar::doTransportInventoryUI( Object *transport, const CommandSet *co
 
 			//Clear any potential veterancy rank, or else we'll see it when it's empty!
 			GadgetButtonDrawOverlayImage( m_commandWindows[ i ], NULL );
-
+			//TheSuperHackers @overlay Ahmed Salah 27/06/2025 Clear all overlay images when clearing transport buttons
+			GadgetButtonDrawOverlayImage2( m_commandWindows[ i ], NULL );
+			GadgetButtonDrawOverlayImage3( m_commandWindows[ i ], NULL );
+			
 			//Unmanned vehicles don't have any commands available -- in fact they are hidden!
  			if( transport->isDisabledByType( DISABLED_UNMANNED ) )
  			{
@@ -282,6 +286,15 @@ void ControlBar::populateCommand( Object *obj )
 		for( i = 0; i < MAX_COMMANDS_PER_SET; i++ )
 			if (m_commandWindows[ i ])
 			{
+				//Clear all overlay images when hiding buttons
+				//TheSuperHackers @overlay Ahmed Salah 27/06/2025 Clear overlay images when hiding command buttons
+				GadgetButtonDrawOverlayImage( m_commandWindows[ i ], NULL );
+				GadgetButtonDrawOverlayImage2( m_commandWindows[ i ], NULL );
+				GadgetButtonDrawOverlayImage3( m_commandWindows[ i ], NULL );
+				
+				// TheSuperHackers @feature author 15/01/2025 Clear button text when hiding buttons
+				GadgetButtonSetText( m_commandWindows[ i ], UnicodeString( L"" ) );
+				
 				m_commandWindows[ i ]->winHide( TRUE );
 			}
 
@@ -304,10 +317,28 @@ void ControlBar::populateCommand( Object *obj )
 		// get command button
 		commandButton = commandSet->getCommandButton(i);
 
+		// TheSuperHackers @alternative Ahmed Salah 27/06/2025 Check for alternative buttons that can replace the original button based on prerequisites
+		if (commandButton)
+		{
+			const CommandButton* alternativeButton = commandButton->getAlternativeButtonForPrerequisites(player, obj);
+			if (alternativeButton)
+			{
+				// Replace the original button with the alternative button
+				commandButton = alternativeButton;
+			}
+		}
+
 		// if button is not present, just hide the window
 		if( commandButton == NULL )
 		{
-
+			//Clear all overlay images when hiding individual buttons
+			//TheSuperHackers @overlay Ahmed Salah 27/06/2025 Clear overlay images when hiding individual command buttons
+			GadgetButtonDrawOverlayImage( m_commandWindows[ i ], NULL );
+			GadgetButtonDrawOverlayImage2( m_commandWindows[ i ], NULL );
+			GadgetButtonDrawOverlayImage3( m_commandWindows[ i ], NULL );
+			// TheSuperHackers @feature author 15/01/2025 Clear button text when hiding individual buttons
+			GadgetButtonSetText( m_commandWindows[ i ], UnicodeString( L"" ) );
+			
 			// hide window on interface
 			m_commandWindows[ i ]->winHide( TRUE );
 
@@ -594,6 +625,9 @@ void ControlBar::populateBuildQueue( Object *producer )
 
 		//Clear any potential veterancy rank, or else we'll see it when it's empty!
 		GadgetButtonDrawOverlayImage( m_queueData[ i ].control, NULL );
+		//TheSuperHackers @overlay Ahmed Salah 27/06/2025 Clear all overlay images when clearing build queue buttons
+		GadgetButtonDrawOverlayImage2( m_queueData[ i ].control, NULL );
+		GadgetButtonDrawOverlayImage3( m_queueData[ i ].control, NULL );
 
 	}
 
@@ -875,6 +909,30 @@ void ControlBar::updateContextCommand( void )
 			GadgetButtonDrawOverlayImage( win, image );
 		}
 
+		//Clear overlay images first to prevent persistence from previous command sets
+		//TheSuperHackers @overlay Ahmed Salah 27/06/2025 Clear overlay images before setting new ones
+		GadgetButtonDrawOverlayImage2( win, NULL );
+		GadgetButtonDrawOverlayImage3( win, NULL );
+		
+		//Set overlay images from INI configuration
+		//TheSuperHackers @overlay Ahmed Salah 27/06/2025 Set overlay images from CommandButton INI properties
+		if( command->getOverlayImageName().isNotEmpty() )
+		{
+			const Image *overlayImage = TheMappedImageCollection->findImageByName( command->getOverlayImageName() );
+			if( overlayImage )
+			{
+				GadgetButtonDrawOverlayImage2( win, overlayImage );
+			}
+		}
+		if( command->getOverlayImage2Name().isNotEmpty() )
+		{
+			const Image *overlayImage2 = TheMappedImageCollection->findImageByName( command->getOverlayImage2Name() );
+			if( overlayImage2 )
+			{
+				GadgetButtonDrawOverlayImage3( win, overlayImage2 );
+			}
+		}
+
 		//
 		// for check-like commands we will keep the push button "pushed" or "unpushed" depending
 		// on the current running status of the command
@@ -1020,7 +1078,7 @@ CommandAvailability ControlBar::getCommandAvailability( const CommandButton *com
 		else
 			obj = NULL;
 	}
-
+	
 	//If we modify the button (like a gadget clock overlay), then sometimes we may wish to apply it to a specific different button.
 	//But if we don't specify anything (default), then make them the same.
 	if( !applyToWin )
@@ -1032,6 +1090,10 @@ CommandAvailability ControlBar::getCommandAvailability( const CommandButton *com
 		return COMMAND_HIDDEN;	// probably better than crashing....
 
 	Player *player = obj->getControllingPlayer();
+
+	if (command->getCommandType() == GUI_COMMAND_TOGGLE_RANGE_DECAL) {
+		return checkPrerequisites(command, obj, player);
+	}
 
 	if (obj->testScriptStatusBit(OBJECT_STATUS_SCRIPT_DISABLED) || obj->testScriptStatusBit(OBJECT_STATUS_SCRIPT_UNPOWERED))
 	{
@@ -1063,7 +1125,13 @@ CommandAvailability ControlBar::getCommandAvailability( const CommandButton *com
 
 	//Other disabled objects are unable to use buttons -- so gray them out.
 	Bool disabled = obj->isDisabled();
+	//Other disabled objects are unable to use buttons -- so gray them out.
 
+
+	if ( obj->isElectronicallyDisabled() && command->isRequireElectronics())
+	{
+		return COMMAND_RESTRICTED;
+	}
 	// if we are only disabled by being underpowered, and this button doesn't care, well, fix it
 	if (disabled
 			&& BitIsSet(command->getOptions(), IGNORES_UNDERPOWERED)
@@ -1072,7 +1140,10 @@ CommandAvailability ControlBar::getCommandAvailability( const CommandButton *com
 	{
 		disabled = false;
 	}
-
+	if (obj->getDisabledFlags().test(DISABLED_HELD))
+	{
+		disabled = false;
+	}
  	if (disabled && !forceDisabledEvaluation)
  	{
 
@@ -1083,7 +1154,8 @@ CommandAvailability ControlBar::getCommandAvailability( const CommandButton *com
 				commandType != GUI_COMMAND_BEACON_DELETE &&
 				commandType != GUI_COMMAND_SET_RALLY_POINT &&
 				commandType != GUI_COMMAND_STOP &&
-				commandType != GUI_COMMAND_SWITCH_WEAPON )
+				commandType != GUI_COMMAND_SWITCH_WEAPON &&
+				commandType != GUI_COMMAND_TOGGLE_HOLD_POSITION )
 		{
 			if( getCommandAvailability( command, obj, win, applyToWin, TRUE ) == COMMAND_HIDDEN )
 			{
@@ -1092,6 +1164,27 @@ CommandAvailability ControlBar::getCommandAvailability( const CommandButton *com
  			return COMMAND_RESTRICTED;
 		}
  	}
+
+	// if the command requires an upgrade and we don't have it we can't do it
+	if (BitIsSet(command->getOptions(), NEED_UPGRADE_TO_APPEAR))
+	{
+		const UpgradeTemplate* upgradeT = command->getUpgradeTemplate();
+		if (upgradeT)
+		{
+			// upgrades come in the form of player upgrades and object upgrades
+			if (upgradeT->getUpgradeType() == UPGRADE_TYPE_PLAYER)
+			{
+				if (player->hasUpgradeComplete(upgradeT) == FALSE)
+					return COMMAND_HIDDEN;
+			}
+			else if (upgradeT->getUpgradeType() == UPGRADE_TYPE_OBJECT &&
+				obj->hasUpgrade(upgradeT) == FALSE)
+			{
+				return COMMAND_HIDDEN;
+			}
+		}
+	}
+
 
 	// if the command requires an upgrade and we don't have it we can't do it
 	if( BitIsSet( command->getOptions(), NEED_UPGRADE ) )
@@ -1112,6 +1205,8 @@ CommandAvailability ControlBar::getCommandAvailability( const CommandButton *com
 			}
 		}
 	}
+
+
 
 	ProductionUpdateInterface *pu = obj->getProductionUpdateInterface();
 	if( pu && pu->firstProduction() && BitIsSet( command->getOptions(), NOT_QUEUEABLE ) )
@@ -1288,19 +1383,33 @@ CommandAvailability ControlBar::getCommandAvailability( const CommandButton *com
 				return COMMAND_RESTRICTED;
 
 			// ask the ai if the weapon is ready to fire
-			const Weapon* w = obj->getWeaponInWeaponSlot( command->getWeaponSlot() );
+			const Weapon* w;
+			auto slot = command->getWeaponSlot();
+			if (slot == NONE_WEAPON )
+			{
+				w = obj->getCurrentWeapon();
+			}
+			else
+			{
+				w = obj->getWeaponInWeaponSlot(slot);
+			}
 
+			if (w && !w->hasEnoughInventoryToFire(obj))
+			{
+				return COMMAND_RESTRICTED;
+			}
 			// changed this to Log rather than Crash, because this can legitimately happen now for
 			// dozers and workers with mine-clearing stuff... (srj)
 			//DEBUG_ASSERTLOG( w, ("Unit %s's CommandButton %s is trying to access weaponslot %d, but doesn't have a weapon there in its FactionUnit ini entry.",
 			//	obj->getTemplate()->getName().str(), command->getName().str(), (Int)command->getWeaponSlot() ) );
-
+			//const Weapon* w = obj->getWeaponInWeaponSlot( command->getWeaponSlot() );
+			
 			UnsignedInt now = TheGameLogic->getFrame();
 
 			/// @Kris -- We need to show the button as always available for anything with a 0 clip reload time.
 			if( w && w->getClipReloadTime( obj ) == 0 )
 			{
-				return COMMAND_AVAILABLE;
+				return checkPrerequisites(command, obj, player);
 			}
 
 			if( w == NULL																	// No weapon
@@ -1333,7 +1442,7 @@ CommandAvailability ControlBar::getCommandAvailability( const CommandButton *com
 						&& !obj->testWeaponSetFlag(WEAPONSET_MINE_CLEARING_DETAIL)
 					)
 					{
-						return COMMAND_AVAILABLE;
+						return checkPrerequisites(command, obj, player);
 					}
 
 					// no weapon in the slot means "gray me out"
@@ -1346,9 +1455,50 @@ CommandAvailability ControlBar::getCommandAvailability( const CommandButton *com
 
 		case GUI_COMMAND_GUARD:
 		case GUI_COMMAND_GUARD_WITHOUT_PURSUIT:
-		case GUI_COMMAND_GUARD_FLYING_UNITS_ONLY:
+		case GUI_COMMAND_GUARD_IN_PLACE:
+		case GUI_COMMAND_GUARD_IN_PLACE_WITHOUT_PURSUIT:
 			// always available
 			break;
+
+		case GUI_COMMAND_GUARD_FLYING_UNITS_ONLY:
+		case GUI_COMMAND_GUARD_IN_PLACE_FLYING_UNITS_ONLY:
+			// TheSuperHackers @feature Ahmed Salah 15/01/2025 Only available if object can attack air units
+			if (!obj->canAttackAir())
+				return COMMAND_HIDDEN;
+			break;
+
+		case GUI_COMMAND_RAID:
+			break;
+
+		// TheSuperHackers @restriction Ahmed Salah 27/06/2025 Disable move and attack move commands when holding position
+		case GUI_COMMAND_ATTACK_MOVE:
+		{
+			// Check if the current object is holding position
+			if( obj && obj->isDisabledByType( DISABLED_HELD ) )
+			{
+				return COMMAND_RESTRICTED;  // Disable attack move when unit is holding position
+			}
+			break;
+		}
+
+		case GUI_COMMAND_GROUP_MOVE:
+		{
+			// Check if the current object is holding position
+			if( obj && obj->isDisabledByType( DISABLED_HELD ) )
+			{
+				return COMMAND_RESTRICTED;  // Disable group move when unit is holding position
+			}
+			break;
+		}
+		case GUI_COMMAND_GROUP_ATTACK_MOVE:
+		{
+			// Check if the current object is holding position
+			if( obj && obj->isDisabledByType( DISABLED_HELD ) )
+			{
+				return COMMAND_RESTRICTED;  // Disable group attack move when unit is holding position
+			}
+			break;
+		}
 
 		case GUI_COMMAND_COMBATDROP:
 		{
@@ -1407,7 +1557,14 @@ CommandAvailability ControlBar::getCommandAvailability( const CommandButton *com
 			DEBUG_ASSERTCRASH( command->getSpecialPowerTemplate() != NULL,
 												 ("The special power in the command '%s' is NULL", command->getName().str()) );
 			// get special power module from the object to execute it
-			SpecialPowerModuleInterface *mod = obj->getSpecialPowerModule( command->getSpecialPowerTemplate() );
+			auto specialPowerTemplate = command->getSpecialPowerTemplate();
+
+			if (!specialPowerTemplate->canAffordUsingPower(player, obj))
+			{
+				return COMMAND_CANT_AFFORD;
+			}
+
+			SpecialPowerModuleInterface *mod = obj->getSpecialPowerModule(specialPowerTemplate);
 
 			if( mod == NULL )
 			{
@@ -1480,11 +1637,92 @@ CommandAvailability ControlBar::getCommandAvailability( const CommandButton *com
 				{
 					WeaponSlotType wslot = draw->getObject()->getCurrentWeapon()->getWeaponSlot();
 					if (wslot != command->getWeaponSlot())
-						return COMMAND_AVAILABLE;
+						return checkPrerequisites(command, obj, player);
 				}
 			}
 
 			return COMMAND_ACTIVE;
+		}
+		// toggle hold position command
+		case GUI_COMMAND_TOGGLE_HOLD_POSITION:
+		{
+			// Check if the unit is currently holding position
+			if( obj->isDisabledByType( DISABLED_HELD ) )
+			{
+				return COMMAND_ACTIVE;  // Show as active/pressed when holding position
+			}
+			break;
+		}
+
+		case GUI_COMMAND_REPLENISH_INVENTORY_ITEM:
+		{
+			// TheSuperHackers @feature author 15/01/2025 Check cost for inventory replenishment using centralized method
+			UnsignedInt totalCost = command->getCostOfExecution(player, obj);
+			
+			// Check if there are items to replenish
+			if (totalCost == 0)
+			{
+				return COMMAND_RESTRICTED;
+			}
+
+			// Check if player can afford the replenishment
+			if (player->getMoney()->countMoney() < totalCost)
+			{
+				return COMMAND_CANT_AFFORD;
+			}
+
+			break;
+		}
+
+		case GUI_COMMAND_REPLACE_COMPONENT:
+		{
+			// TheSuperHackers @feature author 15/01/2025 Check if there are damaged components to replace
+			UnsignedInt totalCost = command->getCostOfExecution(player, obj);
+			
+			// Check if there are damaged components to replace
+			if (totalCost == 0)
+			{
+				return COMMAND_RESTRICTED;
+			}
+
+			// Check if player can afford the replacement
+			if (player->getMoney()->countMoney() < totalCost)
+			{
+				return COMMAND_CANT_AFFORD;
+			}
+
+			break;
+		}
+
+		case GUI_COMMAND_TOGGLE_COMPONENT_DISABLED:
+		{
+			// TheSuperHackers @feature Ahmed Salah 15/01/2025 Check if object has components and the specified component exists
+			BodyModuleInterface* bodyModule = obj->getBodyModule();
+			if (!bodyModule)
+			{
+				return COMMAND_HIDDEN;
+			}
+
+			const AsciiString& componentName = command->getComponentName();
+			if (componentName.isEmpty())
+			{
+				return COMMAND_RESTRICTED;
+			}
+
+			// Check if the component exists (has max health > 0)
+			Real maxHealth = bodyModule->getComponentMaxHealth(componentName);
+			if (maxHealth <= 0.0f)
+			{
+				return COMMAND_RESTRICTED;
+			}
+
+			// Check if the component is currently enabled (show as active/pressed when enabled)
+			if (!bodyModule->isComponentUserDisabled(componentName))
+			{
+				return COMMAND_ACTIVE;
+			}
+
+			break;
 		}
 
 		case GUI_COMMAND_HACK_INTERNET:
@@ -1498,14 +1736,14 @@ CommandAvailability ControlBar::getCommandAvailability( const CommandButton *com
 					return COMMAND_RESTRICTED;
 				}
 			}
-			return COMMAND_AVAILABLE;
+			return checkPrerequisites(command, obj, player);
 		}
 
 		case GUI_COMMAND_STOP:
 		{
 			if( !BitIsSet( command->getOptions(), OPTION_ONE ) )
 			{
-				return COMMAND_AVAILABLE;
+				return checkPrerequisites(command, obj, player);
 			}
 
 			//We're dealing with a strategy center stop button. Only show the button
@@ -1516,18 +1754,67 @@ CommandAvailability ControlBar::getCommandAvailability( const CommandButton *com
 			{
 				return COMMAND_RESTRICTED;
 			}
-			return COMMAND_AVAILABLE;
+			return checkPrerequisites(command, obj, player);
 		}
 
 		case GUI_COMMAND_SELECT_ALL_UNITS_OF_TYPE:
 		{
 			//We can *always* select a unit :)
-			return COMMAND_AVAILABLE;
+			return checkPrerequisites(command, obj, player);
 		}
 	}
 
-	// all is well with the command
-	return COMMAND_AVAILABLE;
+	// Check prerequisites and upgrade requirements
 
+	// all is well with the command
+	return checkPrerequisites(command, obj, player);
+
+}
+
+//-------------------------------------------------------------------------------------------------
+// Helper method to check prerequisites
+//-------------------------------------------------------------------------------------------------
+CommandAvailability ControlBar::checkPrerequisites(const CommandButton* command, Object* obj, Player* player) const
+{
+
+
+	// Check visible player prerequisites
+	for (Int i = 0; i < command->getVisiblePrereqCount(); i++)
+	{
+		const PlayerPrerequisite* pre = command->getNthVisiblePrereq(i);
+		// Names are resolved at parse time; just check satisfaction here
+		if (pre->isSatisfied(player) == false)
+			return COMMAND_HIDDEN;
+	}
+
+	// Check visible caller unit prerequisites
+	for (Int i = 0; i < command->getVisibleCallerUnitPrereqCount(); i++)
+	{
+		const ObjectPrerequisite* pre = command->getNthVisibleCallerUnitPrereq(i);
+		// Names are resolved at parse time; just check satisfaction here
+		if (pre->isSatisfied(obj) == false)
+			return COMMAND_HIDDEN;
+	}
+
+
+	// Check enable player prerequisites
+	for (Int i = 0; i < command->getEnablePrereqCount(); i++)
+	{
+		const PlayerPrerequisite* pre = command->getNthEnablePrereq(i);
+		// Names are resolved at parse time; just check satisfaction here
+		if (pre->isSatisfied(player) == false)
+			return COMMAND_RESTRICTED;
+	}
+
+	// Check enable caller unit prerequisites
+	for (Int i = 0; i < command->getEnableCallerUnitPrereqCount(); i++)
+	{
+		const ObjectPrerequisite* pre = command->getNthEnableCallerUnitPrereq(i);
+		// Names are resolved at parse time; just check satisfaction here
+		if (pre->isSatisfied(obj) == false)
+			return COMMAND_RESTRICTED;
+	}
+
+	return COMMAND_AVAILABLE;
 }
 

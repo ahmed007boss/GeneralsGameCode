@@ -45,6 +45,7 @@
 #include "GameLogic/Module/TransportContain.h"
 #include "GameLogic/Object.h"
 #include "GameLogic/Weapon.h"
+#include "GameClient/GameText.h"
 
 
 // ------------------------------------------------------------------------------------------------
@@ -61,7 +62,7 @@ TransportContainModuleData::TransportContainModuleData()
 	m_resetMoodCheckTimeOnExit = true;
 	m_destroyRidersWhoAreNotFreeToExit = false;
 	m_exitPitchRate = 0.0f;
-	m_initialPayload.count = 0;
+	// m_initialPayload is now a vector, no initialization needed
 	m_healthRegen = 0.0f;
 	m_exitDelay = 0;
 	m_isDelayExitInAir = FALSE;
@@ -79,12 +80,44 @@ TransportContainModuleData::TransportContainModuleData()
 void TransportContainModuleData::parseInitialPayload( INI* ini, void *instance, void *store, const void* /*userData*/ )
 {
 	TransportContainModuleData* self = (TransportContainModuleData*)instance;
-	const char* name = ini->getNextToken();
-	const char* countStr = ini->getNextTokenOrNull();
-	Int count = countStr ? INI::scanInt(countStr) : 1;
-
-	self->m_initialPayload.name.set(name);
-	self->m_initialPayload.count = count;
+	
+	// Parse multiple unit types and counts from a single line
+	// Format: InitialPayload = Infantry 3 Engineer 1 Tank 2
+	const char* token = ini->getNextToken();
+	while (token != NULL)
+	{
+		// Get unit name
+		AsciiString unitName;
+		unitName.set(token);
+		
+		// Get count (next token)
+		token = ini->getNextTokenOrNull();
+		Int count = 1;
+		if (token != NULL)
+		{
+			// Try to parse as integer - if it fails, treat as unit name
+			try
+			{
+				count = INI::scanInt(token);
+				token = ini->getNextTokenOrNull(); // Move to next unit name
+			}
+			catch (...)
+			{
+				// If scanInt fails, treat current token as unit name with count 1
+				count = 1;
+			}
+		}
+		
+		// Add payload entry
+		InitialPayload payload;
+		payload.name = unitName;
+		payload.count = count;
+		self->m_initialPayload.push_back(payload);
+		
+		// Continue with next token if available
+		if (token == NULL)
+			break;
+	}
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -434,26 +467,32 @@ void TransportContain::onRemoving( Object *rider )
 void TransportContain::createPayload()
 {
 	TransportContainModuleData* self = (TransportContainModuleData*)getTransportContainModuleData();
-
-	Int count = self->m_initialPayload.count;
-	const ThingTemplate* payloadTemplate = TheThingFactory->findTemplate( self->m_initialPayload.name );
 	Object* object = getObject();
 	ContainModuleInterface *contain = object->getContain();
 
 	if( contain )
 	{
 		contain->enableLoadSounds( FALSE );
-		for( int i = 0; i < count; i++ )
+		
+		// Iterate through all payload entries
+		for( size_t payloadIndex = 0; payloadIndex < self->m_initialPayload.size(); payloadIndex++ )
 		{
-			//We are creating a transport that comes with a initial payload, so add it now!
-			Object* payload = TheThingFactory->newObject( payloadTemplate, object->getControllingPlayer()->getDefaultTeam() );
-			if( contain->isValidContainerFor( payload, true ) )
+			const TransportContainModuleData::InitialPayload& payload = self->m_initialPayload[payloadIndex];
+			Int count = payload.count;
+			const ThingTemplate* payloadTemplate = TheThingFactory->findTemplate( payload.name );
+			
+			for( int i = 0; i < count; i++ )
 			{
-				contain->addToContain( payload );
-			}
-			else
-			{
-				DEBUG_CRASH( ( "DeliverPayload: PutInContainer %s is full, or not valid for the payload %s!", object->getName().str(), self->m_initialPayload.name.str() ) );
+				//We are creating a transport that comes with a initial payload, so add it now!
+				Object* payloadObj = TheThingFactory->newObject( payloadTemplate, object->getControllingPlayer()->getDefaultTeam() );
+				if( contain->isValidContainerFor( payloadObj, true ) )
+				{
+					contain->addToContain( payloadObj );
+				}
+				else
+				{
+					DEBUG_CRASH( ( "DeliverPayload: PutInContainer %s is full, or not valid for the payload %s!", object->getName().str(), payload.name.str() ) );
+				}
 			}
 		}
 		contain->enableLoadSounds( TRUE );
@@ -696,4 +735,68 @@ void TransportContain::loadPostProcess( void )
 	// extend base class
 	OpenContain::loadPostProcess();
 
+}
+
+//-------------------------------------------------------------------------------------------------
+// TheSuperHackers @feature author 01/01/2025 Override getModuleDescription for UI display
+//-------------------------------------------------------------------------------------------------
+UnicodeString TransportContainModuleData::getModuleDescription() const
+{
+	if (!m_description)
+	{
+		UnicodeString result;
+		
+		// TheSuperHackers @feature author 15/01/2025 Use separate string for healing description
+		UnicodeString transportDesc;
+		if (m_healthRegen > 0.0f)
+		{
+			transportDesc = TheGameText->fetch("MODULE:TRANSPORTCONTAIN_DESCRIPTION_WITH_HEAL");
+		}
+		else
+		{
+			transportDesc = TheGameText->fetch("MODULE:TRANSPORTCONTAIN_DESCRIPTION");
+		}
+		
+		UnicodeString formattedTransport;
+		formattedTransport.format(transportDesc.str(), m_slotCapacity);
+		result = formattedTransport;
+		
+		// Add passenger firing capability information
+		if (m_passengersAllowedToFire)
+		{
+			UnicodeString firingDesc = TheGameText->fetch("MODULE:TRANSPORTCONTAIN_FIRING_DESCRIPTION");
+			UnicodeString formattedFiring;
+			formattedFiring.format(firingDesc.str(), m_slotCapacity);
+			result += L"\n";
+			result += formattedFiring;
+		}
+		
+		// Add initial payload information
+		if (!m_initialPayload.empty())
+		{
+			UnicodeString payloadDesc = TheGameText->fetch("MODULE:TRANSPORTCONTAIN_PAYLOAD_DESCRIPTION");
+			result += L"\n";
+			result += payloadDesc;
+			
+			// List each payload type and count
+			for (size_t i = 0; i < m_initialPayload.size(); i++)
+			{
+				const TransportContainModuleData::InitialPayload& payload = m_initialPayload[i];
+				UnicodeString payloadItem;
+				if (payload.count > 1)
+				{
+					payloadItem.format(L"  %d x %s", payload.count, payload.name.str());
+				}
+				else
+				{
+					payloadItem.format(L"  %s", payload.name.str());
+				}
+				result += L"\n";
+				result += payloadItem;
+			}
+		}
+		
+		m_description = new UnicodeString(result);
+	}
+	return *m_description;
 }

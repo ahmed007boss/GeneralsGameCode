@@ -43,6 +43,8 @@
 #include "GameClient/InGameUI.h"
 #include "GameLogic/ExperienceTracker.h"
 #include "GameLogic/Object.h"
+#include "GameLogic/PartitionManager.h"
+#include "GameLogic/Module/BodyModule.h"
 
 //-------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------
@@ -72,46 +74,212 @@ Bool SalvageCrateCollide::isValidToExecute( const Object *other ) const
 }
 
 //-------------------------------------------------------------------------------------------------
+std::vector<Object*> SalvageCrateCollide::getObjectsInRange( Object *other, Real radius )
+{
+	std::vector<Object*> result;
+	
+	if( other == NULL || radius <= 0.0f )
+		return result;
+
+	// Get the controlling player for team filtering
+	Player* controllingPlayer = other->getControllingPlayer();
+	if( !controllingPlayer )
+		return result;
+
+	// Check nearby units within radius
+	Coord3D centerPos = *getObject()->getPosition();
+	ObjectIterator *iter = ThePartitionManager->iterateObjectsInRange( &centerPos, radius, FROM_CENTER_2D );
+	MemoryPoolObjectHolder hold(iter);
+	
+	if( iter )
+	{
+		for( Object *nearbyObj = iter->first(); nearbyObj; nearbyObj = iter->next() )
+		{
+			// Filter out the original object
+			if( nearbyObj == other )
+				continue;
+				
+			// Filter by team - must be same controlling player
+			if( nearbyObj->getControllingPlayer() != controllingPlayer )
+				continue;
+				
+			// Filter by KINDOF_SALVAGER - must be able to pick up salvage crates
+			if( !nearbyObj->getTemplate()->isKindOf( KINDOF_SALVAGER ) )
+				continue;
+				
+			// Object passes all filters
+			result.push_back( nearbyObj );
+		}
+	}
+	
+	return result;
+}
+
+//-------------------------------------------------------------------------------------------------
+// Direct Full Restore 
+// Direct Armor Upgrade 
+// Direct Weapon Upgrade 
+// Direct Inventory Fill 
+// Shared Armor Upgrade 
+// Shared Weapon Upgrade 
+// Shared Full Repair 
+// Shared Full Restore
+// Direct Level Gain 
+// Shared Level Gain 
+// Shared Inventory Fill 
+// Money Reward 
 Bool SalvageCrateCollide::executeCrateBehavior( Object *other )
 {
-	if( eligibleForArmorSet(other) )// No percent chance on this one, if you can get it, you get it.
-	{
-		doArmorSet(other);
+	const SalvageCrateCollideModuleData *md = getSalvageCrateCollideModuleData();
+	Int crateValue = md->m_salvageCrateValue;
+	
+	// Ensure minimum value of 1
+	if( crateValue < 1 )
+		crateValue = 1;
 
-		//Play the salvage installation crate pickup sound.
-		AudioEventRTS soundToPlay = TheAudio->getMiscAudio()->m_crateSalvage;
-		soundToPlay.setObjectID( other->getID() );
-		TheAudio->addAudioEvent( &soundToPlay );
-	}
-	else if( eligibleForWeaponSet( other ) && testWeaponChance() )
+	// Execute the crate behavior multiple times based on SalvageCrateValue
+	for( Int i = 0; i < crateValue; i++ )
 	{
-		doWeaponSet( other );
+		if( eligibleForFullRepair( other ) && testFullRepairChance() )
+		{
+			doFullRepair( other );
 
-		//Play the salvage installation crate pickup sound.
-		AudioEventRTS soundToPlay = TheAudio->getMiscAudio()->m_crateSalvage;
-		soundToPlay.setObjectID( other->getID() );
-		TheAudio->addAudioEvent( &soundToPlay );
+			//Play the salvage installation crate pickup sound.
+			AudioEventRTS soundToPlay = TheAudio->getMiscAudio()->m_crateSalvage;
+			soundToPlay.setObjectID( other->getID() );
+			TheAudio->addAudioEvent( &soundToPlay );
+		}
+		else if( eligibleForFullRestore( other ) && testFullRestoreChance() )
+		{
+			doFullRestore( other );
 
-		//Play the unit voice acknowledgement for upgrading weapons.
-		//Already handled by the "move order"
-		//const AudioEventRTS *soundToPlayPtr = other->getTemplate()->getPerUnitSound( "VoiceSalvage" );
-		//soundToPlay = *soundToPlayPtr;
-		//soundToPlay.setObjectID( other->getID() );
-		//TheAudio->addAudioEvent( &soundToPlay );
-	}
-	else if( eligibleForLevel( other ) && testLevelChance() )
-	{
-		doLevelGain( other );
+			//Play the salvage installation crate pickup sound.
+			AudioEventRTS soundToPlay = TheAudio->getMiscAudio()->m_crateSalvage;
+			soundToPlay.setObjectID( other->getID() );
+			TheAudio->addAudioEvent( &soundToPlay );
+		}
+		else if( eligibleForArmorSet(other) )// No percent chance on this one, if you can get it, you get it.
+		{
+			doArmorSet(other);
 
-		//Sound will play in
-		//soundToPlay = TheAudio->getMiscAudio()->m_unitPromoted;
-	}
-	else // just assume the testMoneyChance
-	{
-		doMoney( other );
-		AudioEventRTS soundToPlay = TheAudio->getMiscAudio()->m_crateMoney;
-		soundToPlay.setObjectID( other->getID() );
-		TheAudio->addAudioEvent(&soundToPlay);
+			//Play the salvage installation crate pickup sound.
+			AudioEventRTS soundToPlay = TheAudio->getMiscAudio()->m_crateSalvage;
+			soundToPlay.setObjectID( other->getID() );
+			TheAudio->addAudioEvent( &soundToPlay );
+		}
+		else if( eligibleForWeaponSet( other ) && testWeaponChance() )
+		{
+			doWeaponSet( other );
+
+			//Play the salvage installation crate pickup sound.
+			AudioEventRTS soundToPlay = TheAudio->getMiscAudio()->m_crateSalvage;
+			soundToPlay.setObjectID( other->getID() );
+			TheAudio->addAudioEvent( &soundToPlay );
+
+			//Play the unit voice acknowledgement for upgrading weapons.
+			//Already handled by the "move order"
+			//const AudioEventRTS *soundToPlayPtr = other->getTemplate()->getPerUnitSound( "VoiceSalvage" );
+			//soundToPlay = *soundToPlayPtr;
+			//soundToPlay.setObjectID( other->getID() );
+			//TheAudio->addAudioEvent( &soundToPlay );
+		}
+		else if( eligibleForFillInventory( other ) && testFillInventoryChance() )
+		{
+			doFillInventory( other );
+
+			//Play the salvage installation crate pickup sound.
+			AudioEventRTS soundToPlay = TheAudio->getMiscAudio()->m_crateSalvage;
+			soundToPlay.setObjectID( other->getID() );
+			TheAudio->addAudioEvent( &soundToPlay );
+		}
+		else if( Object *eligibleForArmor = eligibleForArmorSetShare( other ) )// No percent chance on this one, if you can get it, you get it.
+		{
+			doArmorSet(eligibleForArmor);
+
+			//Play the salvage installation crate pickup sound.
+			AudioEventRTS soundToPlay = TheAudio->getMiscAudio()->m_crateSalvage;
+			soundToPlay.setObjectID( other->getID() );
+			TheAudio->addAudioEvent( &soundToPlay );
+		}
+		else if( Object *eligibleForWeapon = eligibleForWeaponSetShare( other ) )
+		{
+			if( testWeaponChance() )
+			{
+				doWeaponSet( eligibleForWeapon );
+
+				//Play the salvage installation crate pickup sound.
+				AudioEventRTS soundToPlay = TheAudio->getMiscAudio()->m_crateSalvage;
+				soundToPlay.setObjectID( other->getID() );
+				TheAudio->addAudioEvent( &soundToPlay );
+
+				//Play the unit voice acknowledgement for upgrading weapons.
+				//Already handled by the "move order"
+				//const AudioEventRTS *soundToPlayPtr = other->getTemplate()->getPerUnitSound( "VoiceSalvage" );
+				//soundToPlay = *soundToPlayPtr;
+				//soundToPlay.setObjectID( other->getID() );
+				//TheAudio->addAudioEvent( &soundToPlay );
+			}
+		}
+		else if( Object *eligibleForFullRepair = eligibleForFullRepairShare( other ) )
+		{
+			if( testFullRepairChance() )
+			{
+				doFullRepair( eligibleForFullRepair );
+
+				//Play the salvage installation crate pickup sound.
+				AudioEventRTS soundToPlay = TheAudio->getMiscAudio()->m_crateSalvage;
+				soundToPlay.setObjectID( other->getID() );
+				TheAudio->addAudioEvent( &soundToPlay );
+			}
+		}
+		else if( Object *eligibleForFullRestore = eligibleForFullRestoreShare( other ) )
+		{
+			if( testFullRestoreChance() )
+			{
+				doFullRestore( eligibleForFullRestore );
+
+				//Play the salvage installation crate pickup sound.
+				AudioEventRTS soundToPlay = TheAudio->getMiscAudio()->m_crateSalvage;
+				soundToPlay.setObjectID( other->getID() );
+				TheAudio->addAudioEvent( &soundToPlay );
+			}
+		}
+		else if( eligibleForLevel( other ) && testLevelChance() )
+		{
+			doLevelGain( other );
+
+			//Sound will play in
+			//soundToPlay = TheAudio->getMiscAudio()->m_unitPromoted;
+		}
+		else if( Object *eligibleForLevel = eligibleForLevelShare( other ) )
+		{
+			if( testLevelChance() )
+			{
+				doLevelGain( eligibleForLevel );
+
+				//Sound will play in
+				//soundToPlay = TheAudio->getMiscAudio()->m_unitPromoted;
+			}
+		}
+		else if( Object *eligibleForFillInventory = eligibleForFillInventoryShare( other ) )
+		{
+			if( testFillInventoryChance() )
+			{
+				doFillInventory( eligibleForFillInventory );
+
+				//Play the salvage installation crate pickup sound.
+				AudioEventRTS soundToPlay = TheAudio->getMiscAudio()->m_crateSalvage;
+				soundToPlay.setObjectID( other->getID() );
+				TheAudio->addAudioEvent( &soundToPlay );
+			}
+		}
+		else // just assume the testMoneyChance
+		{
+			doMoney( other );
+			AudioEventRTS soundToPlay = TheAudio->getMiscAudio()->m_crateMoney;
+			soundToPlay.setObjectID( other->getID() );
+			TheAudio->addAudioEvent(&soundToPlay);
+		}
 	}
 
 	other->getControllingPlayer()->getAcademyStats()->recordSalvageCollected();
@@ -167,6 +335,228 @@ Bool SalvageCrateCollide::eligibleForLevel( Object *other )
 }
 
 // ------------------------------------------------------------------------------------------------
+Bool SalvageCrateCollide::eligibleForFullRestore( Object *other )
+{
+	if( other == NULL )
+		return FALSE;
+
+	// Get the body module to check for damaged components
+	BodyModuleInterface* body = other->getBodyModule();
+	if( !body )
+		return FALSE;
+
+	// Check if any components are damaged and can be restored
+	std::vector<Component> components = body->getComponents();
+	for( std::vector<Component>::const_iterator it = components.begin(); it != components.end(); ++it )
+	{
+		const Component& component = *it;
+		if( !component.name.isEmpty() )
+		{
+			Real currentHealth = body->getComponentHealth( component.name );
+			Real maxHealth = body->getComponentMaxHealth( component.name );
+			
+			// If component is damaged (health < max), it can be restored
+			if( currentHealth < maxHealth )
+				return TRUE;
+		}
+	}
+
+	return FALSE;
+}
+
+// ------------------------------------------------------------------------------------------------
+Bool SalvageCrateCollide::eligibleForFillInventory( Object *other )
+{
+	if( other == NULL )
+		return FALSE;
+
+	// Get the inventory behavior to check for items that can be replenished
+	InventoryBehavior* inventoryBehavior = other->getInventoryBehavior();
+	if( !inventoryBehavior )
+		return FALSE;
+
+	const InventoryBehaviorModuleData* moduleData = inventoryBehavior->getInventoryModuleData();
+	if( !moduleData )
+		return FALSE;
+
+	// Check if any inventory items need replenishment
+	for( std::map<AsciiString, InventoryItemConfig>::const_iterator it = moduleData->m_inventoryItems.begin();
+		 it != moduleData->m_inventoryItems.end(); ++it )
+	{
+		const AsciiString& itemKey = it->first;
+		
+		// Check if this item needs replenishment
+		Int currentAmount = inventoryBehavior->getItemCount( itemKey );
+		Int maxStorage = moduleData->getMaxStorageCount( itemKey );
+		
+		// If current amount is less than max storage, it can be filled
+		if( currentAmount < maxStorage )
+			return TRUE;
+	}
+
+	return FALSE;
+}
+
+// ------------------------------------------------------------------------------------------------
+Bool SalvageCrateCollide::eligibleForFullRepair( Object *other )
+{
+	if( other == NULL )
+		return FALSE;
+
+	// Check if unit is damaged and can be repaired
+	BodyModuleInterface *body = other->getBodyModule();
+	if( body == NULL )
+		return FALSE;
+
+	// Only eligible if the unit is damaged
+	return body->getHealth() < body->getMaxHealth();
+}
+
+// ------------------------------------------------------------------------------------------------
+Object* SalvageCrateCollide::eligibleForWeaponSetShare( Object *other )
+{
+	if( other == NULL )
+		return NULL;
+
+	const SalvageCrateCollideModuleData *md = getSalvageCrateCollideModuleData();
+	if( md->m_shareRadius <= 0.0f )
+		return NULL;
+
+	// Get filtered objects in range
+	std::vector<Object*> nearbyObjects = getObjectsInRange( other, md->m_shareRadius );
+	
+	// Check each nearby object for weapon upgrade eligibility
+	for( std::vector<Object*>::const_iterator it = nearbyObjects.begin(); it != nearbyObjects.end(); ++it )
+	{
+		Object *nearbyObj = *it;
+		if( eligibleForWeaponSet( nearbyObj ) )
+			return nearbyObj;
+	}
+
+	return NULL;
+}
+
+// ------------------------------------------------------------------------------------------------
+Object* SalvageCrateCollide::eligibleForArmorSetShare( Object *other )
+{
+	if( other == NULL )
+		return NULL;
+
+	const SalvageCrateCollideModuleData *md = getSalvageCrateCollideModuleData();
+	if( md->m_shareRadius <= 0.0f )
+		return NULL;
+
+	// Get filtered objects in range
+	std::vector<Object*> nearbyObjects = getObjectsInRange( other, md->m_shareRadius );
+	
+	// Check each nearby object for armor upgrade eligibility
+	for( std::vector<Object*>::const_iterator it = nearbyObjects.begin(); it != nearbyObjects.end(); ++it )
+	{
+		Object *nearbyObj = *it;
+		if( eligibleForArmorSet( nearbyObj ) )
+			return nearbyObj;
+	}
+
+	return NULL;
+}
+
+// ------------------------------------------------------------------------------------------------
+Object* SalvageCrateCollide::eligibleForLevelShare( Object *other )
+{
+	if( other == NULL )
+		return NULL;
+
+	const SalvageCrateCollideModuleData *md = getSalvageCrateCollideModuleData();
+	if( md->m_shareRadius <= 0.0f )
+		return NULL;
+
+	// Get filtered objects in range
+	std::vector<Object*> nearbyObjects = getObjectsInRange( other, md->m_shareRadius );
+	
+	// Check each nearby object for level gain eligibility
+	for( std::vector<Object*>::const_iterator it = nearbyObjects.begin(); it != nearbyObjects.end(); ++it )
+	{
+		Object *nearbyObj = *it;
+		if( eligibleForLevel( nearbyObj ) )
+			return nearbyObj;
+	}
+
+	return NULL;
+}
+
+// ------------------------------------------------------------------------------------------------
+Object* SalvageCrateCollide::eligibleForFullRestoreShare( Object *other )
+{
+	if( other == NULL )
+		return NULL;
+
+	const SalvageCrateCollideModuleData *md = getSalvageCrateCollideModuleData();
+	if( md->m_shareRadius <= 0.0f )
+		return NULL;
+
+	// Get filtered objects in range
+	std::vector<Object*> nearbyObjects = getObjectsInRange( other, md->m_shareRadius );
+	
+	// Check each nearby object for full restore eligibility
+	for( std::vector<Object*>::const_iterator it = nearbyObjects.begin(); it != nearbyObjects.end(); ++it )
+	{
+		Object *nearbyObj = *it;
+		if( eligibleForFullRestore( nearbyObj ) )
+			return nearbyObj;
+	}
+
+	return NULL;
+}
+
+// ------------------------------------------------------------------------------------------------
+Object* SalvageCrateCollide::eligibleForFillInventoryShare( Object *other )
+{
+	if( other == NULL )
+		return NULL;
+
+	const SalvageCrateCollideModuleData *md = getSalvageCrateCollideModuleData();
+	if( md->m_shareRadius <= 0.0f )
+		return NULL;
+
+	// Get filtered objects in range
+	std::vector<Object*> nearbyObjects = getObjectsInRange( other, md->m_shareRadius );
+	
+	// Check each nearby object for inventory fill eligibility
+	for( std::vector<Object*>::const_iterator it = nearbyObjects.begin(); it != nearbyObjects.end(); ++it )
+	{
+		Object *nearbyObj = *it;
+		if( eligibleForFillInventory( nearbyObj ) )
+			return nearbyObj;
+	}
+
+	return NULL;
+}
+
+// ------------------------------------------------------------------------------------------------
+Object* SalvageCrateCollide::eligibleForFullRepairShare( Object *other )
+{
+	if( other == NULL )
+		return NULL;
+
+	const SalvageCrateCollideModuleData *md = getSalvageCrateCollideModuleData();
+	if( md->m_shareRadius <= 0.0f )
+		return NULL;
+
+	// Get filtered objects in range
+	std::vector<Object*> nearbyObjects = getObjectsInRange( other, md->m_shareRadius );
+	
+	// Check each nearby object for full repair eligibility
+	for( std::vector<Object*>::const_iterator it = nearbyObjects.begin(); it != nearbyObjects.end(); ++it )
+	{
+		Object *nearbyObj = *it;
+		if( eligibleForFullRepair( nearbyObj ) )
+			return nearbyObj;
+	}
+
+	return NULL;
+}
+
+// ------------------------------------------------------------------------------------------------
 Bool SalvageCrateCollide::testWeaponChance()
 {
 	const SalvageCrateCollideModuleData *md = getSalvageCrateCollideModuleData();
@@ -189,6 +579,48 @@ Bool SalvageCrateCollide::testLevelChance()
 
 	Real randomNumber = GameLogicRandomValueReal( 0, 1 );
 	if( randomNumber < md->m_levelChance )
+		return TRUE;
+
+	return FALSE;
+}
+
+// ------------------------------------------------------------------------------------------------
+Bool SalvageCrateCollide::testFullRestoreChance()
+{
+	const SalvageCrateCollideModuleData *md = getSalvageCrateCollideModuleData();
+	if( md->m_fullRestoreChance == 1.0f )
+		return TRUE; // don't waste a random number for a 100%
+
+	Real randomNumber = GameLogicRandomValueReal( 0, 1 );
+	if( randomNumber < md->m_fullRestoreChance )
+		return TRUE;
+
+	return FALSE;
+}
+
+// ------------------------------------------------------------------------------------------------
+Bool SalvageCrateCollide::testFillInventoryChance()
+{
+	const SalvageCrateCollideModuleData *md = getSalvageCrateCollideModuleData();
+	if( md->m_fillInventoryChance == 1.0f )
+		return TRUE; // don't waste a random number for a 100%
+
+	Real randomNumber = GameLogicRandomValueReal( 0, 1 );
+	if( randomNumber < md->m_fillInventoryChance )
+		return TRUE;
+
+	return FALSE;
+}
+
+// ------------------------------------------------------------------------------------------------
+Bool SalvageCrateCollide::testFullRepairChance()
+{
+	const SalvageCrateCollideModuleData *md = getSalvageCrateCollideModuleData();
+	if( md->m_fullRepairChance == 1.0f )
+		return TRUE; // don't waste a random number for a 100%
+
+	Real randomNumber = GameLogicRandomValueReal( 0, 1 );
+	if( randomNumber < md->m_fullRepairChance )
 		return TRUE;
 
 	return FALSE;
@@ -230,6 +662,80 @@ void SalvageCrateCollide::doArmorSet( Object *other )
 void SalvageCrateCollide::doLevelGain( Object *other )
 {
 	other->getExperienceTracker()->gainExpForLevel( 1 );
+}
+
+// ------------------------------------------------------------------------------------------------
+void SalvageCrateCollide::doFullRestore( Object *other )
+{
+	if( other == NULL )
+		return;
+
+	// Get the body module to restore components
+	BodyModuleInterface* body = other->getBodyModule();
+	if( !body )
+		return;
+
+	// Restore all components to full health
+	std::vector<Component> components = body->getComponents();
+	for( std::vector<Component>::const_iterator it = components.begin(); it != components.end(); ++it )
+	{
+		const Component& component = *it;
+		if( !component.name.isEmpty() )
+		{
+			Real maxHealth = body->getComponentMaxHealth( component.name );
+			body->setComponentHealth( component.name, maxHealth );
+		}
+	}
+
+	// Update model state after component restoration
+	body->setCorrectDamageState();
+}
+
+// ------------------------------------------------------------------------------------------------
+void SalvageCrateCollide::doFillInventory( Object *other )
+{
+	if( other == NULL )
+		return;
+
+	// Get the inventory behavior to fill items
+	InventoryBehavior* inventoryBehavior = other->getInventoryBehavior();
+	if( !inventoryBehavior )
+		return;
+
+	const InventoryBehaviorModuleData* moduleData = inventoryBehavior->getInventoryModuleData();
+	if( !moduleData )
+		return;
+
+	// Fill all inventory items to maximum capacity (considering upgrades)
+	for( std::map<AsciiString, InventoryItemConfig>::const_iterator it = moduleData->m_inventoryItems.begin();
+		 it != moduleData->m_inventoryItems.end(); ++it )
+	{
+		const AsciiString& itemKey = it->first;
+		
+		// Get the current maximum storage capacity (which may be upgraded)
+		Int maxStorage = moduleData->getMaxStorageCount( itemKey );
+		
+		// Set item count to maximum storage capacity
+		inventoryBehavior->setItemCount( itemKey, maxStorage );
+	}
+}
+
+// ------------------------------------------------------------------------------------------------
+void SalvageCrateCollide::doFullRepair( Object *other )
+{
+	// Fully repair the unit
+	BodyModuleInterface *body = other->getBodyModule();
+	if( body )
+	{
+		// Restore to full health
+		Real currentHealth = body->getHealth();
+		Real maxHealth = body->getMaxHealth();
+		Real healthDelta = maxHealth - currentHealth;
+		if( healthDelta > 0.0f )
+		{
+			body->internalChangeHealth( healthDelta );
+		}
+	}
 }
 
 // ------------------------------------------------------------------------------------------------

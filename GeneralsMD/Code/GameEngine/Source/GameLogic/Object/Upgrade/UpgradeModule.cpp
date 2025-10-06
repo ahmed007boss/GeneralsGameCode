@@ -123,8 +123,22 @@ Bool UpgradeMux::attemptUpgrade( UpgradeMaskType keyMask )
 // ------------------------------------------------------------------------------------------------
 Bool UpgradeMux::wouldUpgrade( UpgradeMaskType keyMask ) const
 {
-	UpgradeMaskType activation, conflicting;
-	getUpgradeActivationMasks(activation, conflicting);
+	UpgradeMaskType activation, conflicting, requireAnyOf, requireAllOf;
+	getUpgradeActivationMasks(activation, conflicting,requireAnyOf,requireAllOf);
+
+	bool anyCond = true;
+
+	if (requireAnyOf.any())
+	{
+		/*int numberofinterSec = keyMask.countIntersection(requireAnyOf);
+		anyCond = numberofinterSec > 0 ;*/
+		anyCond = keyMask.testForAny(requireAnyOf);
+	}
+	bool allCond = true;
+	if (requireAllOf.any())
+	{
+		allCond = keyMask.testForAll(requireAllOf);
+	}
 
 	//Make sure we have activation conditions and we haven't performed the upgrade already.
 	if( activation.any() && keyMask.any() && !m_upgradeExecuted )
@@ -136,7 +150,7 @@ Bool UpgradeMux::wouldUpgrade( UpgradeMaskType keyMask ) const
 			if( requiresAllActivationUpgrades() )
 			{
 				//Make sure ALL triggers requirements are upgraded
-				if( keyMask.testForAll( activation ) )
+				if( keyMask.testForAll( activation ) && allCond && anyCond)
 				{
 					return TRUE;
 				}
@@ -144,7 +158,7 @@ Bool UpgradeMux::wouldUpgrade( UpgradeMaskType keyMask ) const
 			else
 			{
 				//Check if ANY trigger requirements are met.
-				if( keyMask.testForAny( activation ) )
+				if( keyMask.testForAny( activation ) && allCond && anyCond)
 				{
 					return TRUE;
 				}
@@ -168,8 +182,19 @@ void UpgradeMux::giveSelfUpgrade()
 //-------------------------------------------------------------------------------------------------
 Bool UpgradeMux::testUpgradeConditions( UpgradeMaskType keyMask ) const
 {
-	UpgradeMaskType activation, conflicting;
-	getUpgradeActivationMasks(activation, conflicting);
+	UpgradeMaskType activation, conflicting, requireAnyOf, requireAllOf;
+	getUpgradeActivationMasks(activation, conflicting,requireAnyOf,requireAllOf);
+
+	bool anyCond = true;
+	if (requireAnyOf.any())
+	{
+		anyCond = keyMask.testForAny(requireAnyOf);
+	}
+	bool allCond = true;
+	if (requireAllOf.any())
+	{
+		allCond = keyMask.testForAll(requireAllOf);
+	}
 
 	//Okay, make sure we don't have any conflicting upgrades
 	if( !keyMask.any() || !keyMask.testForAny( conflicting ) )
@@ -181,7 +206,7 @@ Bool UpgradeMux::testUpgradeConditions( UpgradeMaskType keyMask ) const
 			if( requiresAllActivationUpgrades() )
 			{
 				//Make sure ALL triggers requirements are upgraded
-				if( keyMask.testForAll( activation ) )
+				if( keyMask.testForAll( activation ) && allCond && anyCond)
 				{
 					return TRUE;
 				}
@@ -189,7 +214,7 @@ Bool UpgradeMux::testUpgradeConditions( UpgradeMaskType keyMask ) const
 			else
 			{
 				//Check if ANY trigger requirements are met.
-				if( keyMask.testForAny( activation ) )
+				if( keyMask.testForAny( activation ) && allCond && anyCond)
 				{
 					return TRUE;
 				}
@@ -209,9 +234,21 @@ Bool UpgradeMux::testUpgradeConditions( UpgradeMaskType keyMask ) const
 // ------------------------------------------------------------------------------------------------
 Bool UpgradeMux::resetUpgrade( UpgradeMaskType keyMask )
 {
-	UpgradeMaskType activation, conflicting;
-	getUpgradeActivationMasks(activation, conflicting);
-	if( keyMask.testForAny( activation ) && m_upgradeExecuted )
+	UpgradeMaskType activation, conflicting, requireAnyOf, requireAllOf;
+	getUpgradeActivationMasks(activation, conflicting,requireAnyOf,requireAllOf);
+
+	bool anyCond = true;
+	if (requireAnyOf.any())
+	{
+		anyCond = keyMask.testForAny(requireAnyOf);
+	}
+	bool allCond = true;
+	if (requireAllOf.any())
+	{
+		allCond = keyMask.testForAll(requireAllOf);
+	}
+
+	if( keyMask.testForAny( activation ) && anyCond  && allCond && m_upgradeExecuted )
 	{
 		m_upgradeExecuted = false;
 		return true;

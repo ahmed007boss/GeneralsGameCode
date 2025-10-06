@@ -97,8 +97,8 @@ FireOCLAfterWeaponCooldownUpdate::~FireOCLAfterWeaponCooldownUpdate( void )
 UpdateSleepTime FireOCLAfterWeaponCooldownUpdate::update( void )
 {
 	const FireOCLAfterWeaponCooldownUpdateModuleData* data = getFireOCLAfterWeaponCooldownUpdateModuleData();
-	UpgradeMaskType activation, conflicting;
-	getUpgradeActivationMasks( activation, conflicting );
+	UpgradeMaskType activation, conflicting, requireAllOf, requireAnyOf;
+	getUpgradeActivationMasks( activation, conflicting, requireAnyOf, requireAllOf);
 	Bool validThisFrame = true;
 	Bool validToFireOCL = true;
 	Object *obj = getObject();

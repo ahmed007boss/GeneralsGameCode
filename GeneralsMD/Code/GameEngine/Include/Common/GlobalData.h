@@ -538,6 +538,10 @@ public:
 	Int m_latencyNoise;						///< Max amplitude of jitter to throw in
 	Int m_packetLoss;							///< Percent of packets to drop
 	Bool m_extraLogging;					///< More expensive debug logging to catch crashes.
+	Bool m_disableTime;          ///< If true, forces all build/upgrade times to 1 second.
+	Bool m_disableCost;          ///< If true, forces all build/upgrade costs to 1.
+	Bool m_disablePrerequisite;  ///< If true, bypasses all prerequisite checks for builds/upgrades.
+
 #endif
 
 #ifdef DEBUG_CRASHING

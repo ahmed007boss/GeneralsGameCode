@@ -48,6 +48,9 @@
 #include "GameLogic/Module/AIUpdate.h"
 #include "GameLogic/Module/BodyModule.h"
 #include "GameLogic/Module/ContainModule.h"
+#include "GameLogic/PartitionManager.h"
+#include "GameLogic/Weapon.h"
+#include "GameLogic/Module/InventoryBehavior.h"
 #include "GameLogic/Module/OverchargeBehavior.h"
 #include "GameLogic/Module/ProductionUpdate.h"
 #include "GameLogic/Module/SpawnBehavior.h"
@@ -1588,11 +1591,33 @@ void clampWaypointPosition( Coord3D &position, Int margin )
 /**
  * Move to given position(s)
  */
-void AIGroup::groupMoveToPosition( const Coord3D *p_posIn, Bool addWaypoint, CommandSourceType cmdSource )
+void AIGroup::groupMoveToPosition( const Coord3D *p_posIn, Bool addWaypoint, CommandSourceType cmdSource, Bool isGroupMove )
 {
 
   Coord3D position = *p_posIn;
   Coord3D *pos = &position;
+
+	// TheSuperHackers @feature Ahmed Salah 27/06/2025 Clear speed limits on regular move commands
+	if (!isGroupMove && cmdSource == CMD_FROM_PLAYER)
+	{
+		// Clear any existing speed limits for all units
+		std::list<Object *>::iterator i;
+		for( i = m_memberList.begin(); i != m_memberList.end(); ++i )
+		{
+			Object *groupMember = (*i);
+			if (groupMember && groupMember->getAIUpdateInterface())
+			{
+				LocomotorSet& locomotorSet = const_cast<LocomotorSet&>(groupMember->getAIUpdateInterface()->getLocomotorSet());
+				// Clear speed limit for all locomotor surfaces
+				Locomotor* groundLoco = locomotorSet.findLocomotor(LOCOMOTORSURFACE_GROUND);
+				if (groundLoco) groundLoco->clearSpeedLimit();
+				Locomotor* waterLoco = locomotorSet.findLocomotor(LOCOMOTORSURFACE_WATER);
+				if (waterLoco) waterLoco->clearSpeedLimit();
+				Locomotor* airLoco = locomotorSet.findLocomotor(LOCOMOTORSURFACE_AIR);
+				if (airLoco) airLoco->clearSpeedLimit();
+			}
+		}
+	}
 
 	Bool didInfantry = false;
 	Bool didVehicles = false;
@@ -1655,8 +1680,97 @@ void AIGroup::groupMoveToPosition( const Coord3D *p_posIn, Bool addWaypoint, Com
   Int margin = STD_WAYPOINT_CLAMP_MARGIN + extraMargin;
   clampWaypointPosition( position, margin );
 
+	// TheSuperHackers @feature Ahmed Salah 27/06/2025 Implement group move with speed matching
+	if (isGroupMove && cmdSource == CMD_FROM_PLAYER)
+	{
+		// Find the slowest unit with healthy engine
+		Real slowestSpeed = 999999.0f;  // Large number instead of BIGNUM
+		Object* slowestUnit = NULL;
+		std::list<Object*> unitsToLimit; // Track which units should have speed limits applied
+		
+		for( i = m_memberList.begin(); i != m_memberList.end(); ++i )
+		{
+			Object *groupMember = (*i);
+			if (groupMember && groupMember->getAIUpdateInterface())
+			{
+				// TheSuperHackers @feature Ahmed Salah 30/09/2025 Skip units excluded from group move
+				const ThingTemplate* objTemplate = groupMember->getTemplate();
+				if (objTemplate && objTemplate->isExcludedFromGroupMove())
+					continue;
+				
+				// TheSuperHackers @feature Ahmed Salah 30/09/2025 Automatically exclude jets from group movement
+				if (groupMember->isJet())
+					continue;
 
+				// Check if unit has healthy engine (not destroyed)
+				BodyDamageType damageState = groupMember->getBodyModule()->getDamageState();
+				if (damageState != BODY_RUBBLE)
+				{
+					// Get the current locomotor and its speed
+					LocomotorSet& locomotorSet = const_cast<LocomotorSet&>(groupMember->getAIUpdateInterface()->getLocomotorSet());
+					Locomotor* currentLoco = locomotorSet.findLocomotor(LOCOMOTORSURFACE_GROUND);
+					if (!currentLoco) currentLoco = locomotorSet.findLocomotor(LOCOMOTORSURFACE_WATER);
+					if (!currentLoco) currentLoco = locomotorSet.findLocomotor(LOCOMOTORSURFACE_AIR);
+					
+					// TheSuperHackers @feature Ahmed Salah 30/09/2025 Skip locomotors excluded from group move
+					if (currentLoco && currentLoco->isExcludedFromGroupMove())
+						continue;
 
+					// Add this unit to the list of units that should have speed limits applied
+					unitsToLimit.push_back(groupMember);
+
+					Real unitSpeed = 0.0f;
+					if (currentLoco) {
+						unitSpeed = currentLoco->getMaxSpeedForCondition(damageState, groupMember);
+					}
+					if (unitSpeed < slowestSpeed)
+					{
+						slowestSpeed = unitSpeed;
+						slowestUnit = groupMember;
+					}
+				}
+			}
+		}
+		
+		// Set speed limit only for units that were considered in the speed calculation
+		if (slowestUnit && slowestSpeed < 999999.0f)
+		{
+			for( std::list<Object*>::iterator limitIt = unitsToLimit.begin(); limitIt != unitsToLimit.end(); ++limitIt )
+			{
+				Object *groupMember = (*limitIt);
+				if (groupMember && groupMember->getAIUpdateInterface())
+				{
+					LocomotorSet& locomotorSet = const_cast<LocomotorSet&>(groupMember->getAIUpdateInterface()->getLocomotorSet());
+					// Set speed limit for all locomotor surfaces
+					Locomotor* groundLoco = locomotorSet.findLocomotor(LOCOMOTORSURFACE_GROUND);
+					if (groundLoco) groundLoco->setSpeedLimit(slowestSpeed);
+					Locomotor* waterLoco = locomotorSet.findLocomotor(LOCOMOTORSURFACE_WATER);
+					if (waterLoco) waterLoco->setSpeedLimit(slowestSpeed);
+					Locomotor* airLoco = locomotorSet.findLocomotor(LOCOMOTORSURFACE_AIR);
+					if (airLoco) airLoco->setSpeedLimit(slowestSpeed);
+				}
+			}
+		}
+		else
+		{
+			// No healthy units found, clear any existing speed limits for all units
+			for( i = m_memberList.begin(); i != m_memberList.end(); ++i )
+			{
+				Object *groupMember = (*i);
+				if (groupMember && groupMember->getAIUpdateInterface())
+				{
+					LocomotorSet& locomotorSet = const_cast<LocomotorSet&>(groupMember->getAIUpdateInterface()->getLocomotorSet());
+					// Clear speed limit for all locomotor surfaces
+					Locomotor* groundLoco = locomotorSet.findLocomotor(LOCOMOTORSURFACE_GROUND);
+					if (groundLoco) groundLoco->clearSpeedLimit();
+					Locomotor* waterLoco = locomotorSet.findLocomotor(LOCOMOTORSURFACE_WATER);
+					if (waterLoco) waterLoco->clearSpeedLimit();
+					Locomotor* airLoco = locomotorSet.findLocomotor(LOCOMOTORSURFACE_AIR);
+					if (airLoco) airLoco->clearSpeedLimit();
+				}
+			}
+		}
+	}
 
 	if (tightenGroup)
 	{
@@ -2175,10 +2289,11 @@ void AIGroup::groupAttackObjectPrivate( Bool forced, Object *victim, Int maxShot
 	for( i = m_memberList.begin(); i != m_memberList.end(); ++i )	{
 		Real dx, dy;
 		Coord3D unitPos = *((*i)->getPosition());
-		if ((*i)->isDisabledByType( DISABLED_HELD ) )
-		{
-			continue; // don't bother telling the occupants to move.
-		}
+		// TheSuperHackers @fix Ahmed Salah 27/06/2025 Allow units holding position to attack objects
+		// if ((*i)->isDisabledByType( DISABLED_HELD ) )
+		// {
+		//     continue; // don't bother telling the occupants to move.
+		// }
 		dx = unitPos.x - victimPos.x;
 		dy = unitPos.y - victimPos.y;
 		iter->insert((*i), dx*dx+dy*dy);
@@ -2320,8 +2435,121 @@ void AIGroup::groupAttackPosition( const Coord3D *pos, Int maxShotsToFire, Comma
 /**
  * Attack move to a location
  */
-void AIGroup::groupAttackMoveToPosition( const Coord3D *pos, Int maxShotsToFire, CommandSourceType cmdSource )
+void AIGroup::groupAttackMoveToPosition( const Coord3D *pos, Int maxShotsToFire, CommandSourceType cmdSource, Bool isGroupMove )
 {
+	// TheSuperHackers @feature Ahmed Salah 27/06/2025 Implement group attack move with speed matching
+	if (isGroupMove && cmdSource == CMD_FROM_PLAYER)
+	{
+		// Find the slowest unit with healthy engine
+		Real slowestSpeed = 999999.0f;
+		Object* slowestUnit = NULL;
+		std::list<Object*> unitsToLimit; // Track which units should have speed limits applied
+
+		std::list<Object *>::iterator i;
+		for( i = m_memberList.begin(); i != m_memberList.end(); ++i )
+		{
+			Object *groupMember = (*i);
+			if (groupMember && groupMember->getAIUpdateInterface())
+			{
+				// TheSuperHackers @feature Ahmed Salah 30/09/2025 Skip units excluded from group move
+				const ThingTemplate* objTemplate = groupMember->getTemplate();
+				if (objTemplate && objTemplate->isExcludedFromGroupMove())
+					continue;
+				
+				// TheSuperHackers @feature Ahmed Salah 30/09/2025 Automatically exclude jets from group movement
+				if (groupMember->isJet())
+					continue;
+
+				// Check if unit has healthy engine (not destroyed)
+				BodyDamageType damageState = groupMember->getBodyModule()->getDamageState();
+				if (damageState != BODY_RUBBLE)
+				{
+					// Get the current locomotor and its speed
+					LocomotorSet& locomotorSet = const_cast<LocomotorSet&>(groupMember->getAIUpdateInterface()->getLocomotorSet());
+					Locomotor* currentLoco = locomotorSet.findLocomotor(LOCOMOTORSURFACE_GROUND);
+					if (!currentLoco) currentLoco = locomotorSet.findLocomotor(LOCOMOTORSURFACE_WATER);
+					if (!currentLoco) currentLoco = locomotorSet.findLocomotor(LOCOMOTORSURFACE_AIR);
+					
+					// TheSuperHackers @feature Ahmed Salah 30/09/2025 Skip locomotors excluded from group move
+					if (currentLoco && currentLoco->isExcludedFromGroupMove())
+						continue;
+
+					// Add this unit to the list of units that should have speed limits applied
+					unitsToLimit.push_back(groupMember);
+
+					Real unitSpeed = 0.0f;
+					if (currentLoco) {
+						unitSpeed = currentLoco->getMaxSpeedForCondition(damageState, groupMember);
+					}
+					if (unitSpeed < slowestSpeed)
+					{
+						slowestSpeed = unitSpeed;
+						slowestUnit = groupMember;
+					}
+				}
+			}
+		}
+
+		// Set speed limit only for units that were considered in the speed calculation
+		if (slowestUnit && slowestSpeed < 999999.0f)
+		{
+			for( std::list<Object*>::iterator limitIt = unitsToLimit.begin(); limitIt != unitsToLimit.end(); ++limitIt )
+			{
+				Object *groupMember = (*limitIt);
+				if (groupMember && groupMember->getAIUpdateInterface())
+				{
+					LocomotorSet& locomotorSet = const_cast<LocomotorSet&>(groupMember->getAIUpdateInterface()->getLocomotorSet());
+					// Set speed limit for all locomotor surfaces
+					Locomotor* groundLoco = locomotorSet.findLocomotor(LOCOMOTORSURFACE_GROUND);
+					if (groundLoco) groundLoco->setSpeedLimit(slowestSpeed);
+					Locomotor* waterLoco = locomotorSet.findLocomotor(LOCOMOTORSURFACE_WATER);
+					if (waterLoco) waterLoco->setSpeedLimit(slowestSpeed);
+					Locomotor* airLoco = locomotorSet.findLocomotor(LOCOMOTORSURFACE_AIR);
+					if (airLoco) airLoco->setSpeedLimit(slowestSpeed);
+				}
+			}
+		}
+		else
+		{
+			// No healthy units found, clear any existing speed limits for all units
+			for( i = m_memberList.begin(); i != m_memberList.end(); ++i )
+			{
+				Object *groupMember = (*i);
+				if (groupMember && groupMember->getAIUpdateInterface())
+				{
+					LocomotorSet& locomotorSet = const_cast<LocomotorSet&>(groupMember->getAIUpdateInterface()->getLocomotorSet());
+					// Clear speed limit for all locomotor surfaces
+					Locomotor* groundLoco = locomotorSet.findLocomotor(LOCOMOTORSURFACE_GROUND);
+					if (groundLoco) groundLoco->clearSpeedLimit();
+					Locomotor* waterLoco = locomotorSet.findLocomotor(LOCOMOTORSURFACE_WATER);
+					if (waterLoco) waterLoco->clearSpeedLimit();
+					Locomotor* airLoco = locomotorSet.findLocomotor(LOCOMOTORSURFACE_AIR);
+					if (airLoco) airLoco->clearSpeedLimit();
+				}
+			}
+		}
+	}
+	else if (!isGroupMove && cmdSource == CMD_FROM_PLAYER)
+	{
+		// Clear any existing speed limits for all units
+		std::list<Object *>::iterator i;
+		for( i = m_memberList.begin(); i != m_memberList.end(); ++i )
+		{
+			Object *groupMember = (*i);
+			if (groupMember && groupMember->getAIUpdateInterface())
+			{
+				LocomotorSet& locomotorSet = const_cast<LocomotorSet&>(groupMember->getAIUpdateInterface()->getLocomotorSet());
+				// Clear speed limit for all locomotor surfaces
+				Locomotor* groundLoco = locomotorSet.findLocomotor(LOCOMOTORSURFACE_GROUND);
+				if (groundLoco) groundLoco->clearSpeedLimit();
+				Locomotor* waterLoco = locomotorSet.findLocomotor(LOCOMOTORSURFACE_WATER);
+				if (waterLoco) waterLoco->clearSpeedLimit();
+				Locomotor* airLoco = locomotorSet.findLocomotor(LOCOMOTORSURFACE_AIR);
+				if (airLoco) airLoco->clearSpeedLimit();
+			}
+		}
+	}
+
 	std::list<Object *>::iterator i;
 	for( i = m_memberList.begin(); i != m_memberList.end(); ++i )
 	{
@@ -2698,15 +2926,34 @@ void AIGroup::groupDoSpecialPower( UnsignedInt specialPowerID, UnsignedInt comma
 			{
 				if( TheActionManager->canDoSpecialPower( object, spTemplate, CMD_FROM_PLAYER, commandOptions ) )
 				{
-					mod->doSpecialPower( commandOptions );
+					// Check if player can afford the special power and object has required inventory
+					Player *player = object->getControllingPlayer();
+					if( spTemplate->canAffordUsingPower( player, object ) )
+					{
+						Money *money = player->getMoney();
+						money->withdraw( spTemplate->getUsingCost() );
+						
+						// Consume inventory items if required
+						const AsciiString& consumeInventory = spTemplate->getConsumeInventory();
+						if( !consumeInventory.isEmpty() )
+						{
+							InventoryBehavior* inventoryBehavior = object->getInventoryBehavior();
+							if( inventoryBehavior )
+							{
+								inventoryBehavior->consumeItem( consumeInventory, 1 );
+							}
+						}
+						
+						mod->doSpecialPower( commandOptions );
 
-					object->friend_setUndetectedDefector( FALSE );// My secret is out
+						object->friend_setUndetectedDefector( FALSE );// My secret is out
+					}
 				}
 			}
 		}
 	}
 }
-
+ 
 /**
  * The unit(s)/structure will perform it's special power -- special powers triggered by buildings
  * don't use AIUpdateInterfaces!!! No special power uses an AIUpdateInterface immediately, but special
@@ -2746,9 +2993,28 @@ void AIGroup::groupDoSpecialPowerAtLocation( UnsignedInt specialPowerID, const C
 			{
 				if( TheActionManager->canDoSpecialPowerAtLocation( object, location, CMD_FROM_PLAYER, spTemplate, objectInWay, commandOptions ) )
 				{
-					mod->doSpecialPowerAtLocation( location, angle, commandOptions );
+					// Check if player can afford the special power and object has required inventory
+					Player *player = object->getControllingPlayer();
+					if( spTemplate->canAffordUsingPower( player, object ) )
+					{
+						Money *money = player->getMoney();
+						money->withdraw( spTemplate->getUsingCost() );
+						
+						// Consume inventory items if required
+						const AsciiString& consumeInventory = spTemplate->getConsumeInventory();
+						if( !consumeInventory.isEmpty() )
+						{
+							InventoryBehavior* inventoryBehavior = object->getInventoryBehavior();
+							if( inventoryBehavior )
+							{
+								inventoryBehavior->consumeItem( consumeInventory, 1 );
+							}
+						}
+						
+						mod->doSpecialPowerAtLocation( location, angle, commandOptions );
 
-					object->friend_setUndetectedDefector( FALSE );// My secret is out
+						object->friend_setUndetectedDefector( FALSE );// My secret is out
+					}
 				}
 			}
 		}
@@ -2786,9 +3052,28 @@ void AIGroup::groupDoSpecialPowerAtObject( UnsignedInt specialPowerID, Object *t
 			{
 				if( TheActionManager->canDoSpecialPowerAtObject( object, target, CMD_FROM_PLAYER, spTemplate, commandOptions ) )
 				{
-					mod->doSpecialPowerAtObject( target, commandOptions );
+					// Check if player can afford the special power and object has required inventory
+					Player *player = object->getControllingPlayer();
+					if( spTemplate->canAffordUsingPower( player, object ) )
+					{
+						Money *money = player->getMoney();
+						money->withdraw( spTemplate->getUsingCost() );
+						
+						// Consume inventory items if required
+						const AsciiString& consumeInventory = spTemplate->getConsumeInventory();
+						if( !consumeInventory.isEmpty() )
+						{
+							InventoryBehavior* inventoryBehavior = object->getInventoryBehavior();
+							if( inventoryBehavior )
+							{
+								inventoryBehavior->consumeItem( consumeInventory, 1 );
+							}
+						}
+						
+						mod->doSpecialPowerAtObject( target, commandOptions );
 
-					object->friend_setUndetectedDefector( FALSE );// My secret is out
+						object->friend_setUndetectedDefector( FALSE );// My secret is out
+					}
 				}
 			}
 		}
@@ -2878,6 +3163,291 @@ void AIGroup::groupToggleOvercharge( CommandSourceType cmdSource )
 
 	}
 
+}
+
+/**
+	* Tell all things in the group to toggle hold position (disabled status HELD)
+	*/
+void AIGroup::groupToggleHoldPosition( CommandSourceType cmdSource )
+{
+	std::list<Object *>::iterator i;
+	Object *obj;
+
+	for( i = m_memberList.begin(); i != m_memberList.end(); ++i )
+	{
+
+		// get object
+		obj = *i;
+
+		// Toggle hold position: if currently held, clear it; otherwise set it
+		if( obj->isDisabledByType( DISABLED_HELD ) )
+		{
+			obj->clearDisabled( DISABLED_HELD );
+		}
+		else
+		{
+			obj->setDisabled( DISABLED_HELD );
+		}
+
+	}
+
+}
+
+/**
+	* Tell all things in the group to enable hold position and guard from current position
+	*/
+void AIGroup::groupToggleHoldPositionAndGuard( CommandSourceType cmdSource )
+{
+	std::list<Object *>::iterator i;
+	Object *obj;
+
+	for( i = m_memberList.begin(); i != m_memberList.end(); ++i )
+	{
+
+		// get object
+		obj = *i;
+
+		// Enable hold position and guard: if not holding position, set it; always set guard
+		if( !obj->isDisabledByType( DISABLED_HELD ) )
+		{
+			obj->setDisabled( DISABLED_HELD );
+		}
+		
+		// Always set guard position at current location (whether already holding or not)
+		AIUpdateInterface *ai = obj->getAIUpdateInterface();
+		if (ai)
+		{
+			Coord3D currentPos = *obj->getPosition();
+			ai->aiGuardPosition( &currentPos, GUARDMODE_GUARD_WITHOUT_PURSUIT, cmdSource );
+		}
+
+	}
+
+}
+
+//-------------------------------------------------------------------------------------------------
+/**
+* TheSuperHackers @feature Ahmed Salah 15/01/2025 Guard at current location
+*/
+void AIGroup::groupGuardInPlace( CommandSourceType cmdSource )
+{
+	std::list<Object *>::iterator i;
+	Object *obj;
+
+	for( i = m_memberList.begin(); i != m_memberList.end(); ++i )
+	{
+		// get object
+		obj = *i;
+
+		// Set guard position at current location
+		AIUpdateInterface *ai = obj->getAIUpdateInterface();
+		if (ai)
+		{
+			Coord3D currentPos = *obj->getPosition();
+			ai->aiGuardPosition( &currentPos, GUARDMODE_NORMAL, cmdSource );
+		}
+	}
+}
+
+//-------------------------------------------------------------------------------------------------
+/**
+* TheSuperHackers @feature Ahmed Salah 15/01/2025 Guard at current location without pursuit
+*/
+void AIGroup::groupGuardInPlaceWithoutPursuit( CommandSourceType cmdSource )
+{
+	std::list<Object *>::iterator i;
+	Object *obj;
+
+	for( i = m_memberList.begin(); i != m_memberList.end(); ++i )
+	{
+		// get object
+		obj = *i;
+
+		// Set guard position at current location without pursuit
+		AIUpdateInterface *ai = obj->getAIUpdateInterface();
+		if (ai)
+		{
+			Coord3D currentPos = *obj->getPosition();
+			ai->aiGuardPosition( &currentPos, GUARDMODE_GUARD_WITHOUT_PURSUIT, cmdSource );
+		}
+	}
+}
+
+//-------------------------------------------------------------------------------------------------
+/**
+* TheSuperHackers @feature Ahmed Salah 15/01/2025 Guard at current location, flying units only
+*/
+void AIGroup::groupGuardInPlaceFlyingUnitsOnly( CommandSourceType cmdSource )
+{
+	std::list<Object *>::iterator i;
+	Object *obj;
+
+	for( i = m_memberList.begin(); i != m_memberList.end(); ++i )
+	{
+		// get object
+		obj = *i;
+
+		// Set guard position at current location, flying units only
+		AIUpdateInterface *ai = obj->getAIUpdateInterface();
+		if (ai)
+		{
+			Coord3D currentPos = *obj->getPosition();
+			ai->aiGuardPosition( &currentPos, GUARDMODE_GUARD_FLYING_UNITS_ONLY, cmdSource );
+		}
+	}
+}
+
+//-------------------------------------------------------------------------------------------------
+/**
+* TheSuperHackers @feature Ahmed Salah 15/01/2025 Raid command - each unit attacks one enemy in area
+*/
+void AIGroup::groupRaidArea( const Coord3D *pos, CommandSourceType cmdSource )
+{
+	if (!pos) {
+		return;
+	}
+
+	// Find all enemies in the area around the target position
+	Real raidRadius = 600.0f; // Default raid radius
+	std::vector<Object*> enemies;
+	
+	// Use the partition manager to find objects in range
+	ObjectIterator* iter = ThePartitionManager->iterateObjectsInRange(pos, raidRadius, FROM_CENTER_2D, NULL, ITER_SORTED_NEAR_TO_FAR);
+	MemoryPoolObjectHolder iterHolder(iter);
+	
+	// Get the first unit to determine the controlling player
+	Object* firstUnit = NULL;
+	if (!m_memberList.empty()) {
+		firstUnit = m_memberList.front();
+	}
+	
+	if (!firstUnit) {
+		return; // No units to assign
+	}
+	
+	Player* controllingPlayer = firstUnit->getControllingPlayer();
+	if (!controllingPlayer) {
+		return;
+	}
+	
+	// Collect all enemy objects in the area
+	for (Object* obj = iter->first(); obj; obj = iter->next()) {
+		if (obj->isDestroyed() || obj->isEffectivelyDead()) {
+			continue;
+		}
+		
+		// Check if this is an enemy using relationship
+		Relationship relationship = firstUnit->getRelationship(obj);
+		if (relationship == ENEMIES) {
+			// Check if the object can be attacked
+			if (obj->isAbleToAttack() || obj->isKindOf(KINDOF_CAN_ATTACK)) {
+				enemies.push_back(obj);
+			}
+		}
+	}
+	
+	// Track which enemies have been assigned
+	std::set<Object*> assignedEnemies;
+	
+	// First pass: Assign each unit to attack the nearest unassigned enemy
+	std::list<Object*>::iterator unitIter = m_memberList.begin();
+	
+	while (unitIter != m_memberList.end()) {
+		Object* unit = *unitIter;
+		
+		// Skip units that can't attack
+		if (unit->isAbleToAttack() && !unit->isDisabled() && unit->isDisabledByType(DISABLED_HELD)) {
+			++unitIter;
+			continue;
+		}
+		
+		// Find the nearest unassigned enemy to this unit
+		Object* nearestEnemy = NULL;
+		Real nearestDistance = 999999.0f;
+		
+		for (std::vector<Object*>::iterator enemyIter = enemies.begin(); enemyIter != enemies.end(); ++enemyIter) {
+			Object* enemy = *enemyIter;
+			
+			// Skip if enemy is already destroyed or already assigned
+			if (enemy->isDestroyed() || enemy->isEffectivelyDead() || assignedEnemies.find(enemy) != assignedEnemies.end()) {
+				continue;
+			}
+			if (!unit->canAttackTarget(enemy))
+			{
+				continue;
+			}
+
+			// Calculate distance to this enemy
+			Real distanceSquared = ThePartitionManager->getDistanceSquared(unit, enemy, FROM_CENTER_2D);
+			Real distance = sqrt(distanceSquared);
+			if (distance < nearestDistance) {
+				nearestDistance = distance;
+				nearestEnemy = enemy;
+			}
+		}
+		
+		// Attack the nearest unassigned enemy if found
+		if (nearestEnemy) {
+			// Mark this enemy as assigned
+			assignedEnemies.insert(nearestEnemy);
+			
+			AIUpdateInterface* ai = unit->getAIUpdateInterface();
+			if (ai) {
+				ai->aiAttackObject(nearestEnemy, NO_MAX_SHOTS_LIMIT, cmdSource);
+			}
+		}
+		
+		++unitIter;
+	}
+	
+	// Second pass: If we have more units than enemies, allow reassignment to remaining units
+	if (assignedEnemies.size() == enemies.size() && !enemies.empty()) {
+		// Reset assignment tracking to allow reassignment
+		assignedEnemies.clear();
+		
+		// Reassign remaining units to any available enemy
+		unitIter = m_memberList.begin();
+		while (unitIter != m_memberList.end()) {
+			Object* unit = *unitIter;
+			
+			// Skip units that can't attack
+			if (unit->isDisabledByType(DISABLED_HELD)) {
+				++unitIter;
+				continue;
+			}
+			
+			// Find the nearest enemy to this unit (any enemy now)
+			Object* nearestEnemy = NULL;
+			Real nearestDistance = 999999.0f;
+			
+			for (std::vector<Object*>::iterator enemyIter = enemies.begin(); enemyIter != enemies.end(); ++enemyIter) {
+				Object* enemy = *enemyIter;
+				
+				// Skip if enemy is already destroyed
+				if (enemy->isDestroyed() || enemy->isEffectivelyDead()) {
+					continue;
+				}
+				
+				// Calculate distance to this enemy
+				Real distanceSquared = ThePartitionManager->getDistanceSquared(unit, enemy, FROM_CENTER_2D);
+				Real distance = sqrt(distanceSquared);
+				if (distance < nearestDistance) {
+					nearestDistance = distance;
+					nearestEnemy = enemy;
+				}
+			}
+			
+			// Attack the nearest enemy if found
+			if (nearestEnemy) {
+				AIUpdateInterface* ai = unit->getAIUpdateInterface();
+				if (ai) {
+					ai->aiAttackObject(nearestEnemy, NO_MAX_SHOTS_LIMIT, cmdSource);
+				}
+			}
+			
+			++unitIter;
+		}
+	}
 }
 
 #ifdef ALLOW_SURRENDER

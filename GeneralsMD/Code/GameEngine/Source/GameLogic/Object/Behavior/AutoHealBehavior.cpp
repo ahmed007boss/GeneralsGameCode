@@ -40,6 +40,8 @@
 #include "GameClient/InGameUI.h"
 #include "GameLogic/Module/AutoHealBehavior.h"
 #include "GameLogic/Module/BodyModule.h"
+#include "GameLogic/Module/ActiveBody.h"
+#include "GameLogic/Component.h"
 #include "GameLogic/GameLogic.h"
 #include "GameLogic/Object.h"
 #include "GameLogic/PartitionManager.h"
@@ -298,11 +300,114 @@ void AutoHealBehavior::pulseHealObject( Object *obj )
 
 	const AutoHealBehaviorModuleData *data = getAutoHealBehaviorModuleData();
 
+		// TheSuperHackers @feature author 15/01/2025 Heal components first, respecting their healing types
+		BodyModuleInterface *body = obj->getBodyModule();
+		if (body && data->m_componentHealingAmount != 0.0f)
+		{
+			// Get components using the new Object method
+			std::vector<Component> components = obj->getComponents();
+			
+			// Calculate component healing amount
+			Real componentHealingAmount = data->m_componentHealingAmount;
+			if (componentHealingAmount < 0.0f) // -1.0f means proportional healing
+			{
+				// Proportional healing: calculate based on main health ratio
+				Real mainMaxHealth = body->getMaxHealth();
+				Real mainCurrentHealth = body->getHealth();
+				Real mainHealingAmount = static_cast<Real>(data->m_healingAmount);
+				
+				if (mainMaxHealth > 0.0f && mainCurrentHealth < mainMaxHealth)
+				{
+					// Calculate healing ratio (how much of main health is being healed)
+					Real mainHealingRatio = mainHealingAmount / mainMaxHealth;
+					componentHealingAmount = mainHealingRatio;
+				}
+			}
+			
+			// Heal components based on their healing types
+			for (std::vector<Component>::const_iterator it = components.begin();
+				 it != components.end(); ++it)
+			{
+				const AsciiString& componentName = it->name;
+				Real maxHealth = body->getComponentMaxHealth(componentName);
+				Real currentHealth = body->getComponentHealth(componentName);
+				
+				if (maxHealth > 0.0f) // Component exists
+				{
+					Real healingNeeded = maxHealth - currentHealth;
+					if (healingNeeded > 0.0f) // Component needs healing
+					{
+						Real finalHealingAmount = healingNeeded * componentHealingAmount;
+						
+						// Apply healing based on component healing type
+						switch (it->healingType)
+						{
+							case COMPONENT_HEALING_NORMAL:
+								// Can be healed from destroyed to max normally
+								body->healComponent(componentName, finalHealingAmount);
+								break;
+								
+							case COMPONENT_HEALING_PARTIAL_ONLY:
+								// Can be healed if not destroyed to max normally
+								if (currentHealth > 0.0f)
+								{
+									body->healComponent(componentName, finalHealingAmount);
+								}
+								break;
+								
+							case COMPONENT_HEALING_PARTIAL_DESTROYED:
+								// Can be healed from destroyed to partially working (16%) normally
+								if (currentHealth <= 0.0f)
+								{
+									// Heal to 16% of max health
+									Real targetHealth = maxHealth * 0.16f;
+									Real healToTarget = targetHealth - currentHealth;
+									if (healToTarget > 0.0f)
+									{
+										Real actualHeal = healToTarget * componentHealingAmount;
+										body->healComponent(componentName, actualHeal);
+									}
+								}
+								else
+								{
+									// Normal healing if not destroyed
+									body->healComponent(componentName, finalHealingAmount);
+								}
+								break;
+								
+							case COMPONENT_HEALING_PARTIAL_LIMITED:
+								// Can be healed if not destroyed to partially working (16%) normally
+								if (currentHealth > 0.0f)
+								{
+									// Heal to 16% of max health
+									Real targetHealth = maxHealth * 0.16f;
+									Real healToTarget = targetHealth - currentHealth;
+									if (healToTarget > 0.0f)
+									{
+										Real actualHeal = healToTarget * componentHealingAmount;
+										body->healComponent(componentName, actualHeal);
+									}
+								}
+								break;
+								
+							case COMPONENT_HEALING_REPLACEMENT_ONLY:
+								// Cannot be healed normally, needs replacement
+								// Skip healing for this component
+								break;
+						}
+					}
+				}
+			}
+		}
 
-	if ( data->m_radius == 0.0f )
-		obj->attemptHealing(data->m_healingAmount, getObject());
-	else
-		obj->attemptHealingFromSoleBenefactor( data->m_healingAmount, getObject(), data->m_healingDelay );
+		// Heal main HP only if HealingAmount > 0
+		if (data->m_healingAmount > 0)
+		{
+			if ( data->m_radius == 0.0f )
+				obj->attemptHealing(data->m_healingAmount, getObject());
+			else
+				obj->attemptHealingFromSoleBenefactor( data->m_healingAmount, getObject(), data->m_healingDelay );
+		}
 
 
 	if( data->m_unitHealPulseParticleSystemTmpl )

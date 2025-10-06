@@ -37,6 +37,7 @@
 #include "GameLogic/Module/AIUpdate.h"
 #include "GameLogic/Module/DozerAIUpdate.h"
 #include "GameLogic/Module/SupplyTruckAIUpdate.h"
+#include "Common/UnicodeString.h"
 
 // FORWARD REFERENCES /////////////////////////////////////////////////////////////////////////////
 
@@ -110,6 +111,12 @@ public:
 		};
     p.add(dataFieldParse);
 	}
+
+	// TheSuperHackers @feature author 01/01/2025 Override getModuleDescription for UI display
+	virtual UnicodeString getModuleDescription() const;
+
+	// TheSuperHackers @feature author 01/01/2025 Override getModuleOrder for display ordering
+	virtual Int getModuleOrder() const { return 800; } // Eighth priority
 };
 
 class WorkerAIInterface

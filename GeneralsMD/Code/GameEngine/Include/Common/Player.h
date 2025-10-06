@@ -486,7 +486,12 @@ public:
 	/**
 		simply returns the number of objects owned by this player with a specific KindOfMaskType
 	*/
-	Int countObjects(KindOfMaskType setMask, KindOfMaskType clearMask);
+	Int countObjects(KindOfMaskType setMask, KindOfMaskType clearMask, VeterancyLevel minVeterancyLevel);
+	
+	/**
+		simply returns the number of objects owned by this player with a specific KindOfMaskType (backward compatibility)
+	*/
+	Int countObjects(KindOfMaskType setMask, KindOfMaskType clearMask) { return countObjects(setMask, clearMask, LEVEL_REGULAR); }
 
 	/// Returns the closest of a given type to the given object
 	Object *findClosestByKindOf( Object *queryObject, KindOfMaskType setMask, KindOfMaskType clearMask );

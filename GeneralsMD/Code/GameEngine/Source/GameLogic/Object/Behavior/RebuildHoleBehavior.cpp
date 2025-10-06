@@ -34,6 +34,7 @@
 #include "Common/ThingTemplate.h"
 #include "Common/Xfer.h"
 #include "GameClient/Drawable.h"
+#include "GameClient/GameText.h"
 #include "GameLogic/GameLogic.h"
 #include "GameLogic/Object.h"
 #include "GameLogic/ScriptEngine.h"
@@ -483,4 +484,17 @@ void RebuildHoleBehavior::loadPostProcess( void )
 	// extend base class
 	UpdateModule::loadPostProcess();
 
+}
+
+//-------------------------------------------------------------------------------------------------
+// TheSuperHackers @feature author 01/01/2025 Override getModuleDescription for UI display
+//-------------------------------------------------------------------------------------------------
+UnicodeString RebuildHoleBehaviorModuleData::getModuleDescription() const
+{
+	if (!m_description)
+	{
+		m_description = new UnicodeString(TheGameText->fetch("MODULE:REBUILDHOLE_DESCRIPTION"));
+	}
+
+	return *m_description;
 }

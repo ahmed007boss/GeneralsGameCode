@@ -49,6 +49,7 @@
 #include "Common/ThingFactory.h"
 #include "Common/Upgrade.h"
 #include "Common/Recorder.h"
+#include "Common/ProductionPrerequisite.h"
 
 #include "GameLogic/GameLogic.h"
 #include "GameLogic/Object.h"
@@ -58,7 +59,11 @@
 #include "GameLogic/Module/SpecialPowerModule.h"
 #include "GameLogic/Module/StealthUpdate.h"
 #include "GameLogic/Module/RebuildHoleBehavior.h"
+#include "GameLogic/Module/InventoryBehavior.h"
+#include "GameLogic/Module/ActiveBody.h"
+#include "GameLogic/Component.h"
 #include "GameLogic/ScriptEngine.h"
+#include "GameLogic/Weapon.h"
 
 #include "GameClient/AnimateWindowManager.h"
 #include "GameClient/ControlBar.h"
@@ -113,15 +118,88 @@ const FieldParse CommandButton::s_commandButtonFieldParseTable[] =
 	{ "PurchasedLabel",				INI::parseAsciiString,			 NULL, offsetof( CommandButton, m_purchasedLabel ) },
 	{ "ConflictingLabel",			INI::parseAsciiString,			 NULL, offsetof( CommandButton, m_conflictingLabel ) },
 	{ "ButtonImage",					INI::parseAsciiString,			 NULL, offsetof( CommandButton, m_buttonImageName ) },
+	{ "OverlayImage",					INI::parseAsciiString,			 NULL, offsetof( CommandButton, m_overlayImageName ) },
+	{ "OverlayImage2",					INI::parseAsciiString,			 NULL, offsetof( CommandButton, m_overlayImage2Name ) },
+	{ "ItemToReplenish",				INI::parseAsciiString,			 NULL, offsetof( CommandButton, m_itemToReplenish ) },
+	{ "ComponentName",					INI::parseAsciiString,			 NULL, offsetof( CommandButton, m_componentName ) },
+	{ "Amount",							INI::parseInt,							 NULL, offsetof( CommandButton, m_amount ) },
+	{ "EnableMassProduction",			INI::parseBool,							 NULL, offsetof( CommandButton, m_enableMassProduction ) },
 	{ "CursorName",						INI::parseAsciiString,			 NULL, offsetof( CommandButton, m_cursorName ) },
 	{ "InvalidCursorName",		INI::parseAsciiString,       NULL, offsetof( CommandButton, m_invalidCursorName ) },
 	{ "ButtonBorderType",			INI::parseLookupList,				 CommandButtonMappedBorderTypeNames, offsetof( CommandButton, m_commandButtonBorder ) },
 	{ "RadiusCursorType",			INI::parseIndexList,				 TheRadiusCursorNames, offsetof( CommandButton, m_radiusCursor ) },
 	{ "UnitSpecificSound",		INI::parseAudioEventRTS,		 NULL, offsetof( CommandButton, m_unitSpecificSound ) },
+	{ "RequireElectronics",		INI::parseBool,							 NULL, offsetof( CommandButton, m_isRequireElectronics) },
+	{ "EnablePrerequisites",				CommandButton::parseEnablePrerequisites,	0, 0 },
+	{ "VisiblePrerequisites",				CommandButton::parseVisiblePrerequisites,	0, 0 },
+	{ "EnableCallerPrerequisites",				CommandButton::parseEnableCallerUnitPrerequisites,	0, 0 },
+	{ "VisibleCallerPrerequisites",				CommandButton::parseVisibleCallerUnitPrerequisites,	0, 0 },
 
-	{ NULL,						NULL,												 NULL, 0 }
+	// Modifier key and click type button name strings
+	{ "ClickCtrlButton",					INI::parseAsciiString, NULL, offsetof( CommandButton, m_leftClickCtrlButtonName ) },
+	{ "ClickAltButton",						INI::parseAsciiString, NULL, offsetof( CommandButton, m_leftClickAltButtonName ) },
+	{ "ClickShiftButton",					INI::parseAsciiString, NULL, offsetof( CommandButton, m_leftClickShiftButtonName ) },
+	{ "ClickCtrlAltButton",				INI::parseAsciiString, NULL, offsetof( CommandButton, m_leftClickCtrlAltButtonName ) },
+	{ "ClickCtrlShiftButton",			INI::parseAsciiString, NULL, offsetof( CommandButton, m_leftClickCtrlShiftButtonName ) },
+	{ "ClickAltShiftButton",			INI::parseAsciiString, NULL, offsetof( CommandButton, m_leftClickAltShiftButtonName ) },
+	{ "ClickCtrlAltShiftButton",	INI::parseAsciiString, NULL, offsetof( CommandButton, m_leftClickCtrlAltShiftButtonName ) },
+
+	{ "RightClickButton",							INI::parseAsciiString, NULL, offsetof( CommandButton, m_rightClickButtonName ) },
+	{ "RightClickCtrlButton",					INI::parseAsciiString, NULL, offsetof( CommandButton, m_rightClickCtrlButtonName ) },
+	{ "RightClickAltButton",					INI::parseAsciiString, NULL, offsetof( CommandButton, m_rightClickAltButtonName ) },
+	{ "RightClickShiftButton",				INI::parseAsciiString, NULL, offsetof( CommandButton, m_rightClickShiftButtonName ) },
+	{ "RightClickCtrlAltButton",			INI::parseAsciiString, NULL, offsetof( CommandButton, m_rightClickCtrlAltButtonName ) },
+	{ "RightClickCtrlShiftButton",		INI::parseAsciiString, NULL, offsetof( CommandButton, m_rightClickCtrlShiftButtonName ) },
+	{ "RightClickAltShiftButton",			INI::parseAsciiString, NULL, offsetof( CommandButton, m_rightClickAltShiftButtonName ) },
+	{ "RightClickCtrlAltShiftButton",	INI::parseAsciiString, NULL, offsetof( CommandButton, m_rightClickCtrlAltShiftButtonName ) },
+
+	// Alternative command buttons (completely replace original button when prerequisites are satisfied)
+	{ "AlternativeButton1",				INI::parseAsciiString, NULL, offsetof( CommandButton, m_alternativeButton1Name ) },
+	{ "AlternativeButton2",				INI::parseAsciiString, NULL, offsetof( CommandButton, m_alternativeButton2Name ) },
+	{ "AlternativeButton3",				INI::parseAsciiString, NULL, offsetof( CommandButton, m_alternativeButton3Name ) },
+	{ "AlternativeButton4",				INI::parseAsciiString, NULL, offsetof( CommandButton, m_alternativeButton4Name ) },
+	{ "AlternativeButton1Prerequisites",	CommandButton::parseAlternativeButton1Prerequisites,	0, 0 },
+	{ "AlternativeButton2Prerequisites",	CommandButton::parseAlternativeButton2Prerequisites,	0, 0 },
+	{ "AlternativeButton3Prerequisites",	CommandButton::parseAlternativeButton3Prerequisites,	0, 0 },
+	{ "AlternativeButton4Prerequisites",	CommandButton::parseAlternativeButton4Prerequisites,	0, 0 },
+	{ "AlternativeButton1ObjectPrerequisites",	CommandButton::parseAlternativeButton1ObjectPrerequisites,	0, 0 },
+	{ "AlternativeButton2ObjectPrerequisites",	CommandButton::parseAlternativeButton2ObjectPrerequisites,	0, 0 },
+	{ "AlternativeButton3ObjectPrerequisites",	CommandButton::parseAlternativeButton3ObjectPrerequisites,	0, 0 },
+	{ "AlternativeButton4ObjectPrerequisites",	CommandButton::parseAlternativeButton4ObjectPrerequisites,	0, 0 },
+
+	{ NULL,						NULL,												 NULL, 0 }  // keep this last
 
 };
+
+//-------------------------------------------------------------------------------------------------
+// TheSuperHackers @alternative Ahmed Salah 27/06/2025 Helper function to get alternative button by index
+//-------------------------------------------------------------------------------------------------
+const CommandButton* CommandButton::getAlternativeButtonByIndex(Int index) const
+{
+	switch(index)
+	{
+		case 0:  return getAlternativeButton1();
+		case 1:  return getAlternativeButton2();
+		case 2:  return getAlternativeButton3();
+		case 3:  return getAlternativeButton4();
+		case 4:  return getRightClickCtrlAltShiftButton();
+		case 5:  return getRightClickCtrlAltButton();
+		case 6:  return getRightClickCtrlShiftButton();
+		case 7:  return getRightClickCtrlButton();
+		case 8:  return getRightClickAltShiftButton();
+		case 9:  return getRightClickAltButton();
+		case 10: return getRightClickShiftButton();
+		case 11: return getRightClickButton();
+		case 12: return getLeftClickCtrlAltShiftButton();
+		case 13: return getLeftClickCtrlAltButton();
+		case 14: return getLeftClickCtrlShiftButton();
+		case 15: return getLeftClickCtrlButton();
+		case 16: return getLeftClickAltShiftButton();
+		case 17: return getLeftClickAltButton();
+		case 18: return getLeftClickShiftButton();
+		default: return NULL;
+	}
+}
 static void commandButtonTooltip(GameWindow *window,
 													WinInstanceData *instData,
 													UnsignedInt mouse)
@@ -471,6 +549,107 @@ void ControlBar::populatePurchaseScience( Player* player )
 
 }
 
+
+
+
+//-------------------------------------------------------------------------------------------------
+/** Alternative button prerequisite parsing functions */
+//-------------------------------------------------------------------------------------------------
+void CommandButton::parseAlternativeButton1Prerequisites(INI* ini, void* instance, void* store, const void* userData)
+{
+	// TheSuperHackers @refactor author 15/01/2025 Wrapper function for generic parsePrerequisites with resolveNames=TRUE
+	CommandButton* self = (CommandButton*)instance;
+	PlayerPrerequisite::parsePrerequisites(ini, &self->m_alternativeButton1Prereq, store, userData);
+}
+
+void CommandButton::parseAlternativeButton2Prerequisites(INI* ini, void* instance, void* store, const void* userData)
+{
+	// TheSuperHackers @refactor author 15/01/2025 Wrapper function for generic parsePrerequisites with resolveNames=TRUE
+	CommandButton* self = (CommandButton*)instance;
+	PlayerPrerequisite::parsePrerequisites(ini, &self->m_alternativeButton2Prereq, store, userData);
+}
+
+void CommandButton::parseAlternativeButton3Prerequisites(INI* ini, void* instance, void* store, const void* userData)
+{
+	// TheSuperHackers @refactor author 15/01/2025 Wrapper function for generic parsePrerequisites with resolveNames=TRUE
+	CommandButton* self = (CommandButton*)instance;
+	PlayerPrerequisite::parsePrerequisites(ini, &self->m_alternativeButton3Prereq, store, userData);
+}
+
+void CommandButton::parseAlternativeButton4Prerequisites(INI* ini, void* instance, void* store, const void* userData)
+{
+	// TheSuperHackers @alternative Ahmed Salah 27/06/2025 Parse prerequisites for alternative button 4
+	CommandButton* self = (CommandButton*)instance;
+	PlayerPrerequisite::parsePrerequisites(ini, &self->m_alternativeButton4Prereq, store, userData);
+}
+
+//-------------------------------------------------------------------------------------------------
+/** Alternative button object prerequisite parsing functions */
+//-------------------------------------------------------------------------------------------------
+void CommandButton::parseAlternativeButton1ObjectPrerequisites(INI* ini, void* instance, void* store, const void* userData)
+{
+	// TheSuperHackers @feature author 15/01/2025 Wrapper function for generic parseObjectPrerequisites
+	CommandButton* self = (CommandButton*)instance;
+	ObjectPrerequisite::parseObjectPrerequisites(ini, &self->m_alternativeButton1ObjectPrereq, store, userData);
+}
+
+void CommandButton::parseAlternativeButton2ObjectPrerequisites(INI* ini, void* instance, void* store, const void* userData)
+{
+	// TheSuperHackers @feature author 15/01/2025 Wrapper function for generic parseObjectPrerequisites
+	CommandButton* self = (CommandButton*)instance;
+	ObjectPrerequisite::parseObjectPrerequisites(ini, &self->m_alternativeButton2ObjectPrereq, store, userData);
+}
+
+void CommandButton::parseAlternativeButton3ObjectPrerequisites(INI* ini, void* instance, void* store, const void* userData)
+{
+	// TheSuperHackers @feature author 15/01/2025 Wrapper function for generic parseObjectPrerequisites
+	CommandButton* self = (CommandButton*)instance;
+	ObjectPrerequisite::parseObjectPrerequisites(ini, &self->m_alternativeButton3ObjectPrereq, store, userData);
+}
+
+void CommandButton::parseAlternativeButton4ObjectPrerequisites(INI* ini, void* instance, void* store, const void* userData)
+{
+	// TheSuperHackers @feature author 15/01/2025 Wrapper function for generic parseObjectPrerequisites
+	CommandButton* self = (CommandButton*)instance;
+	ObjectPrerequisite::parseObjectPrerequisites(ini, &self->m_alternativeButton4ObjectPrereq, store, userData);
+}
+
+//-------------------------------------------------------------------------------------------------
+// TheSuperHackers @refactor author 15/01/2025 Implement missing prerequisite parsing methods
+void CommandButton::parseEnablePrerequisites(INI* ini, void* instance, void* /*store*/, const void* /*userData*/)
+{
+	CommandButton* button = (CommandButton*)instance;
+	PlayerPrerequisite::parsePrerequisites(ini, &button->m_enablePrereqInfo, NULL, NULL);
+}
+
+//-------------------------------------------------------------------------------------------------
+void CommandButton::parseVisiblePrerequisites(INI* ini, void* instance, void* /*store*/, const void* /*userData*/)
+{
+	CommandButton* button = (CommandButton*)instance;
+	PlayerPrerequisite::parsePrerequisites(ini, &button->m_visiblePrereqInfo, NULL, NULL);
+}
+
+//-------------------------------------------------------------------------------------------------
+void CommandButton::parseEnableCallerUnitPrerequisites(INI* ini, void* instance, void* /*store*/, const void* /*userData*/)
+{
+	CommandButton* button = (CommandButton*)instance;
+	ObjectPrerequisite::parseObjectPrerequisites(ini, &button->m_enableCallerUnitPrereqInfo, NULL, NULL);
+}
+
+//-------------------------------------------------------------------------------------------------
+void CommandButton::parseVisibleCallerUnitPrerequisites(INI* ini, void* instance, void* /*store*/, const void* /*userData*/)
+{
+	CommandButton* button = (CommandButton*)instance;
+	ObjectPrerequisite::parseObjectPrerequisites(ini, &button->m_visibleCallerUnitPrereqInfo, NULL, NULL);
+}
+
+
+//---------------------------------------------
+//       Prerequisite
+//---------------------------------------------
+
+
+
 //-------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------
 void ControlBar::updateContextPurchaseScience( void )
@@ -561,12 +740,12 @@ CommandButton::CommandButton( void )
 	m_command = GUI_COMMAND_NONE;
 	m_thingTemplate = NULL;
 	m_upgradeTemplate = NULL;
-	m_weaponSlot = PRIMARY_WEAPON;
+	m_weaponSlot = NONE_WEAPON;
 	m_maxShotsToFire = 0x7fffffff;	// huge number
 	m_science.clear();
 	m_specialPower = NULL;
 	m_buttonImage = NULL;
-
+	m_prereqInfoResloved = false;
 	//Code renderer handles these states now.
 	//m_disabledImage = NULL;
 	//m_hiliteImage = NULL;
@@ -585,7 +764,12 @@ CommandButton::CommandButton( void )
 	m_options = 0;
 	m_purchasedLabel.clear();
 	m_textLabel.clear();
-
+	m_overlayImageName.clear();
+	m_overlayImage2Name.clear();
+	m_itemToReplenish.clear();
+	m_amount = 1;  // Default amount is 1
+	m_enableMassProduction = true;  // Default mass production is enabled
+	m_isRequireElectronics = false;
 	// End Add
 
 	m_window = NULL;
@@ -594,6 +778,674 @@ CommandButton::CommandButton( void )
 	m_next = NULL;
 	m_radiusCursor = RADIUSCURSOR_NONE;
 
+	// Initialize modifier key button name strings
+	m_leftClickCtrlButtonName.clear();
+	m_leftClickAltButtonName.clear();
+	m_leftClickShiftButtonName.clear();
+	m_leftClickCtrlAltButtonName.clear();
+	m_leftClickCtrlShiftButtonName.clear();
+	m_leftClickAltShiftButtonName.clear();
+	m_leftClickCtrlAltShiftButtonName.clear();
+
+	m_rightClickButtonName.clear();
+	m_rightClickCtrlButtonName.clear();
+	m_rightClickAltButtonName.clear();
+	m_rightClickShiftButtonName.clear();
+	m_rightClickCtrlAltButtonName.clear();
+	m_rightClickCtrlShiftButtonName.clear();
+	m_rightClickAltShiftButtonName.clear();
+	m_rightClickCtrlAltShiftButtonName.clear();
+
+	// Initialize alternative button name strings
+	m_alternativeButton1Name.clear();
+	m_alternativeButton2Name.clear();
+	m_alternativeButton3Name.clear();
+	m_alternativeButton4Name.clear();
+
+	// Initialize alternative button object prerequisite vectors
+	m_alternativeButton1ObjectPrereq.clear();
+	m_alternativeButton2ObjectPrereq.clear();
+	m_alternativeButton3ObjectPrereq.clear();
+	m_alternativeButton4ObjectPrereq.clear();
+
+	// Initialize cached button references to NULL
+	m_leftClickCtrlButton = NULL;
+	m_leftClickAltButton = NULL;
+	m_leftClickShiftButton = NULL;
+	m_leftClickCtrlAltButton = NULL;
+	m_leftClickCtrlShiftButton = NULL;
+	m_leftClickAltShiftButton = NULL;
+	m_leftClickCtrlAltShiftButton = NULL;
+
+	m_rightClickButton = NULL;
+	m_rightClickCtrlButton = NULL;
+	m_rightClickAltButton = NULL;
+	m_rightClickShiftButton = NULL;
+	m_rightClickCtrlAltButton = NULL;
+	m_rightClickCtrlShiftButton = NULL;
+	m_rightClickAltShiftButton = NULL;
+	m_rightClickCtrlAltShiftButton = NULL;
+
+	// Initialize cached alternative button references to NULL
+	m_alternativeButton1 = NULL;
+	m_alternativeButton2 = NULL;
+	m_alternativeButton3 = NULL;
+	m_alternativeButton4 = NULL;
+
+}
+
+//-------------------------------------------------------------------------------------------------
+/** Getter functions with caching mechanism for modifier button combinations */
+//-------------------------------------------------------------------------------------------------
+const CommandButton* CommandButton::getLeftClickCtrlButton() const
+{
+	if (!m_leftClickCtrlButton && !m_leftClickCtrlButtonName.isEmpty())
+	{
+		m_leftClickCtrlButton = TheControlBar->findCommandButton(m_leftClickCtrlButtonName);
+	}
+	return m_leftClickCtrlButton;
+}
+
+const CommandButton* CommandButton::getLeftClickAltButton() const
+{
+	if (!m_leftClickAltButton && !m_leftClickAltButtonName.isEmpty())
+	{
+		m_leftClickAltButton = TheControlBar->findCommandButton(m_leftClickAltButtonName);
+	}
+	return m_leftClickAltButton;
+}
+
+const CommandButton* CommandButton::getLeftClickShiftButton() const
+{
+	if (!m_leftClickShiftButton && !m_leftClickShiftButtonName.isEmpty())
+	{
+		m_leftClickShiftButton = TheControlBar->findCommandButton(m_leftClickShiftButtonName);
+	}
+	return m_leftClickShiftButton;
+}
+
+const CommandButton* CommandButton::getLeftClickCtrlAltButton() const
+{
+	if (!m_leftClickCtrlAltButton && !m_leftClickCtrlAltButtonName.isEmpty())
+	{
+		m_leftClickCtrlAltButton = TheControlBar->findCommandButton(m_leftClickCtrlAltButtonName);
+	}
+	return m_leftClickCtrlAltButton;
+}
+
+const CommandButton* CommandButton::getLeftClickCtrlShiftButton() const
+{
+	if (!m_leftClickCtrlShiftButton && !m_leftClickCtrlShiftButtonName.isEmpty())
+	{
+		m_leftClickCtrlShiftButton = TheControlBar->findCommandButton(m_leftClickCtrlShiftButtonName);
+	}
+	return m_leftClickCtrlShiftButton;
+}
+
+const CommandButton* CommandButton::getLeftClickAltShiftButton() const
+{
+	if (!m_leftClickAltShiftButton && !m_leftClickAltShiftButtonName.isEmpty())
+	{
+		m_leftClickAltShiftButton = TheControlBar->findCommandButton(m_leftClickAltShiftButtonName);
+	}
+	return m_leftClickAltShiftButton;
+}
+
+const CommandButton* CommandButton::getLeftClickCtrlAltShiftButton() const
+{
+	if (!m_leftClickCtrlAltShiftButton && !m_leftClickCtrlAltShiftButtonName.isEmpty())
+	{
+		m_leftClickCtrlAltShiftButton = TheControlBar->findCommandButton(m_leftClickCtrlAltShiftButtonName);
+	}
+	return m_leftClickCtrlAltShiftButton;
+}
+
+const CommandButton* CommandButton::getRightClickButton() const
+{
+	if (!m_rightClickButton && !m_rightClickButtonName.isEmpty())
+	{
+		m_rightClickButton = TheControlBar->findCommandButton(m_rightClickButtonName);
+	}
+	return m_rightClickButton;
+}
+
+const CommandButton* CommandButton::getRightClickCtrlButton() const
+{
+	if (!m_rightClickCtrlButton && !m_rightClickCtrlButtonName.isEmpty())
+	{
+		m_rightClickCtrlButton = TheControlBar->findCommandButton(m_rightClickCtrlButtonName);
+	}
+	return m_rightClickCtrlButton;
+}
+
+const CommandButton* CommandButton::getRightClickAltButton() const
+{
+	if (!m_rightClickAltButton && !m_rightClickAltButtonName.isEmpty())
+	{
+		m_rightClickAltButton = TheControlBar->findCommandButton(m_rightClickAltButtonName);
+	}
+	return m_rightClickAltButton;
+}
+
+const CommandButton* CommandButton::getRightClickShiftButton() const
+{
+	if (!m_rightClickShiftButton && !m_rightClickShiftButtonName.isEmpty())
+	{
+		m_rightClickShiftButton = TheControlBar->findCommandButton(m_rightClickShiftButtonName);
+	}
+	return m_rightClickShiftButton;
+}
+
+const CommandButton* CommandButton::getRightClickCtrlAltButton() const
+{
+	if (!m_rightClickCtrlAltButton && !m_rightClickCtrlAltButtonName.isEmpty())
+	{
+		m_rightClickCtrlAltButton = TheControlBar->findCommandButton(m_rightClickCtrlAltButtonName);
+	}
+	return m_rightClickCtrlAltButton;
+}
+
+const CommandButton* CommandButton::getRightClickCtrlShiftButton() const
+{
+	if (!m_rightClickCtrlShiftButton && !m_rightClickCtrlShiftButtonName.isEmpty())
+	{
+		m_rightClickCtrlShiftButton = TheControlBar->findCommandButton(m_rightClickCtrlShiftButtonName);
+	}
+	return m_rightClickCtrlShiftButton;
+}
+
+const CommandButton* CommandButton::getRightClickAltShiftButton() const
+{
+	if (!m_rightClickAltShiftButton && !m_rightClickAltShiftButtonName.isEmpty())
+	{
+		m_rightClickAltShiftButton = TheControlBar->findCommandButton(m_rightClickAltShiftButtonName);
+	}
+	return m_rightClickAltShiftButton;
+}
+
+const CommandButton* CommandButton::getRightClickCtrlAltShiftButton() const
+{
+	if (!m_rightClickCtrlAltShiftButton && !m_rightClickCtrlAltShiftButtonName.isEmpty())
+	{
+		m_rightClickCtrlAltShiftButton = TheControlBar->findCommandButton(m_rightClickCtrlAltShiftButtonName);
+	}
+	return m_rightClickCtrlAltShiftButton;
+}
+
+//-------------------------------------------------------------------------------------------------
+/** Alternative button getters (completely replace original button when prerequisites are satisfied) */
+//-------------------------------------------------------------------------------------------------
+const CommandButton* CommandButton::getAlternativeButton1() const
+{
+	if (!m_alternativeButton1 && !m_alternativeButton1Name.isEmpty())
+	{
+		m_alternativeButton1 = TheControlBar->findCommandButton(m_alternativeButton1Name);
+	}
+	return m_alternativeButton1;
+}
+
+const CommandButton* CommandButton::getAlternativeButton2() const
+{
+	if (!m_alternativeButton2 && !m_alternativeButton2Name.isEmpty())
+	{
+		m_alternativeButton2 = TheControlBar->findCommandButton(m_alternativeButton2Name);
+	}
+	return m_alternativeButton2;
+}
+
+const CommandButton* CommandButton::getAlternativeButton3() const
+{
+	if (!m_alternativeButton3 && !m_alternativeButton3Name.isEmpty())
+	{
+		m_alternativeButton3 = TheControlBar->findCommandButton(m_alternativeButton3Name);
+	}
+	return m_alternativeButton3;
+}
+
+const CommandButton* CommandButton::getAlternativeButton4() const
+{
+	if (!m_alternativeButton4 && !m_alternativeButton4Name.isEmpty())
+	{
+		m_alternativeButton4 = TheControlBar->findCommandButton(m_alternativeButton4Name);
+	}
+	return m_alternativeButton4;
+}
+
+//-------------------------------------------------------------------------------------------------
+/** Get the appropriate alternative button based on prerequisites (replaces original button completely) */
+//-------------------------------------------------------------------------------------------------
+const CommandButton* CommandButton::getAlternativeButtonForPrerequisites(const Player* player, const Object* object) const
+{
+	// TheSuperHackers @alternative Ahmed Salah 27/06/2025 Check alternative buttons in order of priority (1-4) and return first one with satisfied prerequisites
+	
+	// Check alternative button 1
+	if (!m_alternativeButton1Name.isEmpty())
+	{
+		const CommandButton* altButton1 = getAlternativeButton1();
+		if (altButton1)
+		{
+			Bool allPrereqsSatisfied = true;
+			
+			// Check player prerequisites
+			for (size_t i = 0; i < m_alternativeButton1Prereq.size(); ++i)
+			{
+				if (!m_alternativeButton1Prereq[i].isSatisfied(player))
+				{
+					allPrereqsSatisfied = false;
+					break;
+				}
+			}
+			
+			// Check object prerequisites (OR logic - if player prereqs are empty, check object prereqs)
+			if (allPrereqsSatisfied || m_alternativeButton1Prereq.empty())
+			{
+				if (!m_alternativeButton1ObjectPrereq.empty())
+				{
+					Bool objectPrereqsSatisfied = true;
+					for (size_t i = 0; i < m_alternativeButton1ObjectPrereq.size(); ++i)
+					{
+						if (!m_alternativeButton1ObjectPrereq[i].isSatisfied(object))
+						{
+							objectPrereqsSatisfied = false;
+							break;
+						}
+					}
+					allPrereqsSatisfied = objectPrereqsSatisfied;
+				}
+			}
+			
+			if (allPrereqsSatisfied)
+			{
+				// TheSuperHackers @alternative Ahmed Salah 15/01/2025 Recursively check if this alternative button has its own alternatives
+				const CommandButton* recursiveAlt = altButton1->getAlternativeButtonForPrerequisites(player, object);
+				return recursiveAlt ? recursiveAlt : altButton1;
+			}
+		}
+	}
+
+	// Check alternative button 2
+	if (!m_alternativeButton2Name.isEmpty())
+	{
+		const CommandButton* altButton2 = getAlternativeButton2();
+		if (altButton2)
+		{
+			Bool allPrereqsSatisfied = true;
+			
+			// Check player prerequisites
+			for (size_t i = 0; i < m_alternativeButton2Prereq.size(); ++i)
+			{
+				if (!m_alternativeButton2Prereq[i].isSatisfied(player))
+				{
+					allPrereqsSatisfied = false;
+					break;
+				}
+			}
+			
+			// Check object prerequisites (OR logic - if player prereqs are empty, check object prereqs)
+			if (allPrereqsSatisfied || m_alternativeButton2Prereq.empty())
+			{
+				if (!m_alternativeButton2ObjectPrereq.empty())
+				{
+					Bool objectPrereqsSatisfied = true;
+					for (size_t i = 0; i < m_alternativeButton2ObjectPrereq.size(); ++i)
+					{
+						if (!m_alternativeButton2ObjectPrereq[i].isSatisfied(object))
+						{
+							objectPrereqsSatisfied = false;
+							break;
+						}
+					}
+					allPrereqsSatisfied = objectPrereqsSatisfied;
+				}
+			}
+			
+			if (allPrereqsSatisfied)
+			{
+				// TheSuperHackers @alternative Ahmed Salah 15/01/2025 Recursively check if this alternative button has its own alternatives
+				const CommandButton* recursiveAlt = altButton2->getAlternativeButtonForPrerequisites(player, object);
+				return recursiveAlt ? recursiveAlt : altButton2;
+			}
+		}
+	}
+
+	// Check alternative button 3
+	if (!m_alternativeButton3Name.isEmpty())
+	{
+		const CommandButton* altButton3 = getAlternativeButton3();
+		if (altButton3)
+		{
+			Bool allPrereqsSatisfied = true;
+			
+			// Check player prerequisites
+			for (size_t i = 0; i < m_alternativeButton3Prereq.size(); ++i)
+			{
+				if (!m_alternativeButton3Prereq[i].isSatisfied(player))
+				{
+					allPrereqsSatisfied = false;
+					break;
+				}
+			}
+			
+			// Check object prerequisites (OR logic - if player prereqs are empty, check object prereqs)
+			if (allPrereqsSatisfied || m_alternativeButton3Prereq.empty())
+			{
+				if (!m_alternativeButton3ObjectPrereq.empty())
+				{
+					Bool objectPrereqsSatisfied = true;
+					for (size_t i = 0; i < m_alternativeButton3ObjectPrereq.size(); ++i)
+					{
+						if (!m_alternativeButton3ObjectPrereq[i].isSatisfied(object))
+						{
+							objectPrereqsSatisfied = false;
+							break;
+						}
+					}
+					allPrereqsSatisfied = objectPrereqsSatisfied;
+				}
+			}
+			
+			if (allPrereqsSatisfied)
+			{
+				// TheSuperHackers @alternative Ahmed Salah 15/01/2025 Recursively check if this alternative button has its own alternatives
+				const CommandButton* recursiveAlt = altButton3->getAlternativeButtonForPrerequisites(player, object);
+				return recursiveAlt ? recursiveAlt : altButton3;
+			}
+		}
+	}
+
+	// Check alternative button 4
+	if (!m_alternativeButton4Name.isEmpty())
+	{
+		const CommandButton* altButton4 = getAlternativeButton4();
+		if (altButton4)
+		{
+			Bool allPrereqsSatisfied = true;
+			
+			// Check player prerequisites
+			for (size_t i = 0; i < m_alternativeButton4Prereq.size(); ++i)
+			{
+				if (!m_alternativeButton4Prereq[i].isSatisfied(player))
+				{
+					allPrereqsSatisfied = false;
+					break;
+				}
+			}
+			
+			// Check object prerequisites (OR logic - if player prereqs are empty, check object prereqs)
+			if (allPrereqsSatisfied || m_alternativeButton4Prereq.empty())
+			{
+				if (!m_alternativeButton4ObjectPrereq.empty())
+				{
+					Bool objectPrereqsSatisfied = true;
+					for (size_t i = 0; i < m_alternativeButton4ObjectPrereq.size(); ++i)
+					{
+						if (!m_alternativeButton4ObjectPrereq[i].isSatisfied(object))
+						{
+							objectPrereqsSatisfied = false;
+							break;
+						}
+					}
+					allPrereqsSatisfied = objectPrereqsSatisfied;
+				}
+			}
+			
+			if (allPrereqsSatisfied)
+			{
+				// TheSuperHackers @alternative Ahmed Salah 15/01/2025 Recursively check if this alternative button has its own alternatives
+				const CommandButton* recursiveAlt = altButton4->getAlternativeButtonForPrerequisites(player, object);
+				return recursiveAlt ? recursiveAlt : altButton4;
+			}
+		}
+	}
+
+	// No alternative button prerequisites satisfied, return NULL (use original button)
+	return NULL;
+}
+
+//-------------------------------------------------------------------------------------------------
+// TheSuperHackers @feature author 15/01/2025 Get the cost of executing this command button
+//-------------------------------------------------------------------------------------------------
+UnsignedInt CommandButton::getCostOfExecution(const Player* player, const Object* object) const
+{
+	if (!player || !object)
+		return 0;
+
+	switch (m_command)
+	{
+		case GUI_COMMAND_UNIT_BUILD:
+		{
+			const ThingTemplate* thingTemplate = getThingTemplate();
+			if (thingTemplate)
+			{
+				// TheSuperHackers @feature author 15/01/2025 Multiply cost by amount for multiple units
+				Int amount = getAmount();
+				
+				// Check for mass production with modifier keys (if enabled)
+				if (getEnableMassProduction()) {
+					// Note: We can't detect modifier keys here, so we use the base amount
+					// The actual mass production logic is handled in ControlBarCommandProcessing.cpp
+				}
+				
+				return thingTemplate->friend_getBuildCost() * amount;
+			}
+			break;
+		}
+
+		case GUI_COMMAND_DOZER_CONSTRUCT:
+		{
+			const ThingTemplate* thingTemplate = getThingTemplate();
+			if (thingTemplate)
+			{
+				// TheSuperHackers @feature author 15/01/2025 Multiply cost by amount for multiple units
+				return thingTemplate->friend_getBuildCost() * getAmount();
+			}
+			break;
+		}
+
+		case GUI_COMMAND_PLAYER_UPGRADE:
+		{
+			const UpgradeTemplate* upgradeTemplate = getUpgradeTemplate();
+			if (upgradeTemplate)
+			{
+				return upgradeTemplate->calcCostToBuild(const_cast<Player*>(player));
+			}
+			break;
+		}
+
+		case GUI_COMMAND_OBJECT_UPGRADE:
+		{
+			const UpgradeTemplate* upgradeTemplate = getUpgradeTemplate();
+			if (upgradeTemplate)
+			{
+				return upgradeTemplate->calcCostToBuild(const_cast<Player*>(player));
+			}
+			break;
+		}
+
+		case GUI_COMMAND_SPECIAL_POWER:
+		case GUI_COMMAND_SPECIAL_POWER_FROM_SHORTCUT:
+		case GUI_COMMAND_SPECIAL_POWER_CONSTRUCT:
+		case GUI_COMMAND_SPECIAL_POWER_CONSTRUCT_FROM_SHORTCUT:
+		{
+			const SpecialPowerTemplate* specialPowerTemplate = getSpecialPowerTemplate();
+			if (specialPowerTemplate)
+			{
+				return specialPowerTemplate->getUsingCost();
+			}
+			break;
+		}
+
+		case GUI_COMMAND_REPLENISH_INVENTORY_ITEM:
+		{
+			// TheSuperHackers @feature author 15/01/2025 Calculate cost for inventory replenishment
+			InventoryBehavior* inventoryBehavior = object->getInventoryBehavior();
+			if (!inventoryBehavior)
+				return 0;
+
+			const InventoryBehaviorModuleData* moduleData = inventoryBehavior->getInventoryModuleData();
+			if (!moduleData)
+				return 0;
+
+			const AsciiString& itemToReplenish = getItemToReplenish();
+			UnsignedInt totalCost = 0;
+
+			if (itemToReplenish.isEmpty())
+			{
+				// Calculate cost for all items
+				for (std::map<AsciiString, InventoryItemConfig>::const_iterator it = moduleData->m_inventoryItems.begin();
+					 it != moduleData->m_inventoryItems.end(); ++it)
+				{
+					const AsciiString& itemKey = it->first;
+					const InventoryItemConfig& config = it->second;
+					
+					Int neededAmount = object->getInventoryReplenishAmount(itemKey);
+					
+					if (neededAmount > 0)
+					{
+						totalCost += neededAmount * config.costPerItem;
+					}
+				}
+			}
+			else
+			{
+				// Calculate cost for specific item
+				Int neededAmount = object->getInventoryReplenishAmount(itemToReplenish);
+				
+				if (neededAmount > 0)
+				{
+					Int costPerItem = moduleData->getCostPerItem(itemToReplenish);
+					totalCost = neededAmount * costPerItem;
+				}
+			}
+
+			return totalCost;
+		}
+
+		case GUI_COMMAND_PURCHASE_SCIENCE:
+		{
+			// Calculate cost for science purchase
+			ScienceType st = SCIENCE_INVALID;
+			for (size_t i = 0; i < getScienceVec().size(); ++i)
+			{
+				st = getScienceVec()[i];
+				if (!player->hasScience(st) && TheScienceStore->playerHasPrereqsForScience(player, st))
+				{
+					return TheScienceStore->getSciencePurchaseCost(st);
+				}
+			}
+			break;
+		}
+
+		case GUI_COMMAND_REPLACE_COMPONENT:
+		{
+			// TheSuperHackers @feature author 15/01/2025 Calculate cost for component replacement
+			BodyModuleInterface* body = object->getBodyModule();
+			if (!body)
+				return 0;
+
+			const AsciiString& componentName = getComponentName();
+			UnsignedInt totalCost = 0;
+
+			if (componentName.isEmpty())
+			{
+				// Calculate cost for all damaged components
+				std::vector<Component> components = body->getComponents();
+				for (std::vector<Component>::const_iterator it = components.begin();
+					 it != components.end(); ++it)
+				{
+					const Component& component = *it;
+					if (component.replacementCost > 0)
+					{
+						Real currentHealth = body->getComponentHealth(component.name);
+						Real maxHealth = body->getComponentMaxHealth(component.name);
+						
+						// Only include cost if component is damaged
+						if (currentHealth < maxHealth)
+						{
+							totalCost += component.replacementCost;
+						}
+					}
+				}
+			}
+			else
+			{
+				// Calculate cost for specific component
+				Real currentHealth = body->getComponentHealth(componentName);
+				Real maxHealth = body->getComponentMaxHealth(componentName);
+				
+				// Only include cost if component is damaged
+				if (currentHealth < maxHealth)
+				{
+					// Find the component to get its replacement cost
+					std::vector<Component> components = object->getComponents();
+					for (std::vector<Component>::const_iterator it = components.begin();
+						 it != components.end(); ++it)
+					{
+						if (it->name == componentName)
+						{
+							totalCost = it->replacementCost;
+							break;
+						}
+					}
+				}
+			}
+
+			return totalCost;
+		}
+
+		default:
+			// Most commands don't have a cost
+			return 0;
+	}
+
+	return 0;
+}
+
+//-------------------------------------------------------------------------------------------------
+/** Get the appropriate button based on modifier keys and click type */
+//-------------------------------------------------------------------------------------------------
+const CommandButton* CommandButton::getButtonForModifiers(Bool ctrlPressed, Bool altPressed, Bool shiftPressed, Bool isRightClick) const
+{
+	if (isRightClick)
+	{
+		// Right-click combinations
+		if (ctrlPressed && altPressed && shiftPressed)
+			return getRightClickCtrlAltShiftButton();
+		else if (ctrlPressed && altPressed)
+			return getRightClickCtrlAltButton();
+		else if (ctrlPressed && shiftPressed)
+			return getRightClickCtrlShiftButton();
+		else if (altPressed && shiftPressed)
+			return getRightClickAltShiftButton();
+		else if (ctrlPressed)
+			return getRightClickCtrlButton();
+		else if (altPressed)
+			return getRightClickAltButton();
+		else if (shiftPressed)
+			return getRightClickShiftButton();
+		else
+			return getRightClickButton(); 
+	}
+	else
+	{
+		// Left-click combinations
+		if (ctrlPressed && altPressed && shiftPressed)
+			return getLeftClickCtrlAltShiftButton();
+		else if (ctrlPressed && altPressed)
+			return getLeftClickCtrlAltButton();
+		else if (ctrlPressed && shiftPressed)
+			return getLeftClickCtrlShiftButton();
+		else if (altPressed && shiftPressed)
+			return getLeftClickAltShiftButton();
+		else if (ctrlPressed)
+			return getLeftClickCtrlButton();
+		else if (altPressed)
+			return getLeftClickAltButton();
+		else if (shiftPressed)
+			return getLeftClickShiftButton();
+		else
+			return NULL; // No modifier-specific left-click button, use the button itself
+	}
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -740,7 +1592,19 @@ const FieldParse CommandSet::m_commandSetFieldParseTable[] =
 	{ "16",			CommandSet::parseCommandButton, (void *)15,		offsetof( CommandSet, m_command ) },
 	{ "17",			CommandSet::parseCommandButton, (void *)16,		offsetof( CommandSet, m_command ) },
 	{ "18",			CommandSet::parseCommandButton, (void *)17,		offsetof( CommandSet, m_command ) },
-	{ NULL,			NULL,														 NULL,				0	}
+	{ "19",			CommandSet::parseCommandButton, (void *)18,		offsetof( CommandSet, m_command ) },
+	{ "20",			CommandSet::parseCommandButton, (void *)19,		offsetof( CommandSet, m_command ) },
+	{ "21",			CommandSet::parseCommandButton, (void *)20,		offsetof( CommandSet, m_command ) },
+	{ "22",			CommandSet::parseCommandButton, (void *)21,		offsetof( CommandSet, m_command ) },
+	{ "23",			CommandSet::parseCommandButton, (void *)22,		offsetof( CommandSet, m_command ) },
+	{ "24",			CommandSet::parseCommandButton, (void *)23,		offsetof( CommandSet, m_command ) },
+	{ "25",			CommandSet::parseCommandButton, (void *)24,		offsetof( CommandSet, m_command ) },
+	{ "26",			CommandSet::parseCommandButton, (void *)25,		offsetof( CommandSet, m_command ) },
+	{ "27",			CommandSet::parseCommandButton, (void *)26,		offsetof( CommandSet, m_command ) },
+	{ "28",			CommandSet::parseCommandButton, (void *)27,		offsetof( CommandSet, m_command ) },
+	{ "29",			CommandSet::parseCommandButton, (void *)28,		offsetof( CommandSet, m_command ) },
+	{ "30",			CommandSet::parseCommandButton, (void *)29,		offsetof( CommandSet, m_command ) },
+	{ NULL,			NULL,														 NULL,				0	}  // keep this last
 
 };
 
@@ -1078,6 +1942,8 @@ void ControlBar::init( void )
 	// post process step after loading the command buttons and command sets
 	postProcessCommands();
 
+	// Programmatic command buttons would be created here if needed
+
 	// Init the scheme manager, this will call it's won INI init funciton.
 	m_controlBarSchemeManager = NEW ControlBarSchemeManager;
 	m_controlBarSchemeManager->init();
@@ -1140,6 +2006,13 @@ void ControlBar::init( void )
 				m_commandWindows[ i ]->winGetPosition(&commandPos.x, &commandPos.y);
 				m_commandWindows[ i ]->winGetSize(&commandSize.x, &commandSize.y);
 				m_commandWindows[ i ]->winSetStatus( WIN_STATUS_USE_OVERLAY_STATES );
+				// Enable right-click support for command buttons
+				// TheSuperHackers @rightclick Ahmed Salah 27/06/2025 Enable right-click support for command buttons by setting WIN_STATUS_RIGHT_CLICK on both window and instance data
+				m_commandWindows[ i ]->winSetStatus( WIN_STATUS_RIGHT_CLICK );
+				// Also set it on the instance data since that's what the input handler checks
+				WinInstanceData *instData = m_commandWindows[ i ]->winGetInstanceData();
+				if (instData)
+					instData->m_status |= WIN_STATUS_RIGHT_CLICK;
 			}
 
 	// removed from multiplayer branch
@@ -1666,6 +2539,19 @@ void ControlBar::onDrawableDeselected( Drawable *draw )
 }
 
 //-------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------
+Bool ControlBar::isObjectSelected( const Object *obj ) const
+{
+	// TheSuperHackers @feature author 15/01/2025 Check if object is currently selected
+	if (!obj || !m_currentSelectedDrawable)
+		return FALSE;
+	
+	// Check if the currently selected drawable's object matches the given object
+	const Object *selectedObj = m_currentSelectedDrawable->getObject();
+	return (selectedObj == obj);
+}
+
+//-------------------------------------------------------------------------------------------------
 
 const Image *ControlBar::getStarImage(void )
 {
@@ -2118,11 +3004,15 @@ CommandSet *ControlBar::newCommandSetOverride( CommandSet *setToOverride )
 /** Process a button click for the context sensitive GUI */
 //-------------------------------------------------------------------------------------------------
 CBCommandStatus ControlBar::processContextSensitiveButtonClick( GameWindow *button,
-																																GadgetGameMessage gadgetMessage )
+																																GadgetGameMessage gadgetMessage,
+																																Bool ctrlPressed,
+																																Bool altPressed,
+																																Bool shiftPressed,
+																																Bool isRightClick )
 {
 
 	// call command processing method
-	return processCommandUI( button, gadgetMessage );
+	return processCommandUI( button, gadgetMessage, ctrlPressed, altPressed, shiftPressed, isRightClick );
 
 }
 
@@ -2470,6 +3360,9 @@ void ControlBar::setControlCommand( GameWindow *button, const CommandButton *com
 
 	}
 
+	// TheSuperHackers @feature author 15/01/2025 Clear button text before setting new command
+	GadgetButtonSetText( button, UnicodeString( L"" ) );
+
 	//
 	// set the button gadget control to be a normal button or a check like button if
 	// the command says it needs one
@@ -2511,6 +3404,106 @@ void ControlBar::setControlCommand( GameWindow *button, const CommandButton *com
 	}
 	else
 		GadgetButtonSetText( button, UnicodeString( L"" ) );
+
+	// TheSuperHackers @feature author 15/01/2025 Add inventory count to button text for weapon commands
+	if (commandButton->getCommandType() == GUI_COMMAND_FIRE_WEAPON || commandButton->getCommandType() == GUI_COMMAND_SWITCH_WEAPON)
+	{
+		// Get the current selected object to check its inventory
+		Object* currentObj = NULL;
+		if (m_currentSelectedDrawable)
+			currentObj = m_currentSelectedDrawable->getObject();
+		if (currentObj)
+		{
+			const Weapon* weapon = NULL;
+			
+			// Get the appropriate weapon based on command type
+			if (commandButton->getCommandType() == GUI_COMMAND_FIRE_WEAPON) {
+				weapon = currentObj->getCurrentWeapon();
+			}
+			else if (commandButton->getCommandType() == GUI_COMMAND_SWITCH_WEAPON) {
+				weapon = currentObj->getWeaponInWeaponSlot(commandButton->getWeaponSlot());
+			}
+			
+			if (weapon && weapon->getTemplate() && !weapon->getTemplate()->getConsumeInventory().isEmpty())
+			{
+				// Get inventory behavior using cached method
+				InventoryBehavior* inventoryBehavior = currentObj->getInventoryBehavior();
+				
+				if (inventoryBehavior)
+				{
+					const AsciiString& consumeInventory = weapon->getTemplate()->getConsumeInventory();
+					Int itemCount = inventoryBehavior->getItemCount(consumeInventory);					
+					itemCount += weapon->getRemainingAmmoIncludingReload();
+													
+					// Get display name and max storage count from module data
+					const InventoryBehaviorModuleData* moduleData = inventoryBehavior->getInventoryModuleData();
+					if (moduleData) {
+						const UnicodeString& displayName = moduleData->getDisplayName(consumeInventory);
+						Int maxStorageCount = moduleData->getMaxStorageCount(consumeInventory);
+						
+						// Format text with display name and count (current/max)
+						UnicodeString newText;
+						newText.format(L"%s (%d/%d)", displayName.str(), itemCount, maxStorageCount);
+						
+						// Set the modified text
+						GadgetButtonSetText(button, newText);
+					}
+				}
+			}
+			else
+			{
+				// TheSuperHackers @feature author 15/01/2025 Reset to original text if weapon doesn't consume inventory
+				GadgetButtonSetText(button, L"");
+			}
+		}
+	}
+
+	// TheSuperHackers @feature author 15/01/2025 Add inventory count to button text for special power commands
+	if (commandButton->getCommandType() == GUI_COMMAND_SPECIAL_POWER || 
+		commandButton->getCommandType() == GUI_COMMAND_SPECIAL_POWER_FROM_SHORTCUT ||
+		commandButton->getCommandType() == GUI_COMMAND_SPECIAL_POWER_CONSTRUCT ||
+		commandButton->getCommandType() == GUI_COMMAND_SPECIAL_POWER_CONSTRUCT_FROM_SHORTCUT)
+	{
+		// Get the current selected object to check its inventory
+		Object* currentObj = NULL;
+		if (m_currentSelectedDrawable)
+			currentObj = m_currentSelectedDrawable->getObject();
+		if (currentObj)
+		{
+			const SpecialPowerTemplate* specialPowerTemplate = commandButton->getSpecialPowerTemplate();
+			
+			if (specialPowerTemplate && !specialPowerTemplate->getConsumeInventory().isEmpty())
+			{
+				// Get inventory behavior using cached method
+				InventoryBehavior* inventoryBehavior = currentObj->getInventoryBehavior();
+				
+				if (inventoryBehavior)
+				{
+					const AsciiString& consumeInventory = specialPowerTemplate->getConsumeInventory();
+					Int itemCount = currentObj->getTotalInventoryItemCount(consumeInventory);
+					
+					// Get display name and max storage count from module data
+					const InventoryBehaviorModuleData* moduleData = inventoryBehavior->getInventoryModuleData();
+					if (moduleData) {
+						const UnicodeString& displayName = moduleData->getDisplayName(consumeInventory);
+						Int maxStorageCount = moduleData->getMaxStorageCount(consumeInventory);
+						
+						// Format text with display name and count (current/max)
+						UnicodeString newText;
+						newText.format(L"%s (%d/%d)", displayName.str(), itemCount, maxStorageCount);
+						
+						// Set the modified text
+						GadgetButtonSetText(button, newText);
+					}
+				}
+			}
+			else
+			{
+				// TheSuperHackers @feature author 15/01/2025 Reset to original text if special power doesn't consume inventory
+				GadgetButtonSetText(button, L"");
+			}
+		}
+	}
 
 	// save the command in the user data of the window
 	GadgetButtonSetData(button, (void*)commandButton);
@@ -2707,6 +3700,9 @@ void ControlBar::setPortraitByObject( Object *obj )
 
 		//Clear any overlay the portrait had on it.
 		GadgetButtonDrawOverlayImage( m_rightHUDCameoWindow, NULL );
+		//TheSuperHackers @overlay Ahmed Salah 27/06/2025 Clear all overlay images when clearing portrait overlay
+		GadgetButtonDrawOverlayImage2( m_rightHUDCameoWindow, NULL );
+		GadgetButtonDrawOverlayImage3( m_rightHUDCameoWindow, NULL );
 	}
 
 }
@@ -3629,25 +4625,56 @@ void ControlBar::updateSpecialPowerShortcut( void )
 
 				UnsignedInt mostReadyPercentage;
 				obj = ThePlayerList->getLocalPlayer()->findMostReadyShortcutSpecialPowerForThing( command->getThingTemplate(), mostReadyPercentage );
-				if( obj )
+				// TheSuperHackers @feature Ahmed Salah 27/06/2025 Check if select-all button should be enabled when special powers are available
+				Bool enableButtonIfAnyPowerAvailable = BitIsSet(command->getOptions(), ENABLE_SELECT_ALL_BUTTON_IF_ANY_POWER_AVAILABLE) == false;
+				if( obj  )
 				{
-					//Ugh... hacky.
-					//Look for a command button for a special power and if so, then get the command availability for it.
-					const CommandSet *commandSet = TheControlBar->findCommandSet( obj->getCommandSetString() );
-					if( commandSet )
+					if (enableButtonIfAnyPowerAvailable)
 					{
-						for( Int commandIndex = 0; commandIndex < MAX_COMMANDS_PER_SET; commandIndex++ )
+						availability = COMMAND_RESTRICTED;
+						const CommandSet* commandSet = TheControlBar->findCommandSet(obj->getCommandSetString());
+						if (commandSet)
 						{
-							const CommandButton *evalButton = commandSet->getCommandButton( commandIndex );
-							GameWindow *evalButtonWin = m_commandWindows[ commandIndex ];
-							if( evalButton && evalButton->getCommandType() == GUI_COMMAND_SPECIAL_POWER )
+
+							for (Int commandIndex = 0; commandIndex < MAX_COMMANDS_PER_SET; commandIndex++)
 							{
-								//We want to evaluate the special powerbutton... but apply the clock overlay to our button!
-								availability = getCommandAvailability( evalButton, obj, evalButtonWin, win );
-								break;
+								const CommandButton* evalButton = commandSet->getCommandButton(commandIndex);
+								GameWindow* evalButtonWin = m_commandWindows[commandIndex];
+								if (evalButton && evalButton->getCommandType() == GUI_COMMAND_SPECIAL_POWER)
+								{
+									//We want to evaluate the special powerbutton... but apply the clock overlay to our button!
+									availability = getCommandAvailability(evalButton, obj, evalButtonWin, win);
+									if (availability == COMMAND_AVAILABLE)
+									{
+										break;
+									}
+									
+								}
 							}
 						}
 					}
+					else
+					{
+						//Ugh... hacky.
+					//Look for a command button for a special power and if so, then get the command availability for it.
+						const CommandSet* commandSet = TheControlBar->findCommandSet(obj->getCommandSetString());
+						if (commandSet)
+						{
+
+							for (Int commandIndex = 0; commandIndex < MAX_COMMANDS_PER_SET; commandIndex++)
+							{
+								const CommandButton* evalButton = commandSet->getCommandButton(commandIndex);
+								GameWindow* evalButtonWin = m_commandWindows[commandIndex];
+								if (evalButton && evalButton->getCommandType() == GUI_COMMAND_SPECIAL_POWER)
+								{
+									//We want to evaluate the special powerbutton... but apply the clock overlay to our button!
+									availability = getCommandAvailability(evalButton, obj, evalButtonWin, win);
+									break;
+								}
+							}
+						}
+					}
+					
 				}
 			}
 		}
@@ -3797,3 +4824,4 @@ void ControlBar::setScaledViewportHeight()
 {
 	TheTacticalView->setHeight(TheDisplay->getHeight() * TheGlobalData->m_viewportHeightScale);
 }
+

@@ -122,7 +122,7 @@ void PointDefenseLaserUpdate::onObjectCreated()
 //-------------------------------------------------------------------------------------------------
 UpdateSleepTime PointDefenseLaserUpdate::update()
 {
-/// @todo srj use SLEEPY_UPDATE here
+	/// @todo srj use SLEEPY_UPDATE here
 	//*** HERE'S THE UPDATE PHILOSOPHY ***
 	//The point defense laser typically has short range, high rate of fire, and shoots at incoming projectiles
 	//that move fast. This amounts to a potentially very expensive system. Instead of frantically scanning for

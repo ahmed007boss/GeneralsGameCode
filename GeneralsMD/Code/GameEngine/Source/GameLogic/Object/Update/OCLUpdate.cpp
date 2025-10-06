@@ -124,7 +124,7 @@ OCLUpdate::~OCLUpdate( void )
 UpdateSleepTime OCLUpdate::update( void )
 {
 #if RETAIL_COMPATIBLE_CRC
-	if( getObject()->isDisabled() )
+	if( getObject()->isDisabled() && !getObject()->isDisabledByType( DISABLED_HELD ))
 	{
 		m_nextCreationFrame++;
 		return UPDATE_SLEEP_NONE;
@@ -132,7 +132,7 @@ UpdateSleepTime OCLUpdate::update( void )
 #else
 	// TheSuperHackers @bugfix dizzyj/Caball009/Mauller 14/07/2025 prevent triggering supply drop when subdued while under construction
 	// When the construction is finished, we allow the timer to be initialized and then start shifting the timer while subdued
-	if ( m_timerStartedFrame > 0 && getObject()->isDisabled() )
+	if ( m_timerStartedFrame > 0 && getObject()->isDisabled() && !getObject()->isDisabledByType( DISABLED_HELD ))
 	{
 		m_nextCreationFrame++;
 		m_timerStartedFrame++;

@@ -91,7 +91,7 @@ public:
 	Bool isSDEnabled() const { return m_enabled; }
 	void setSDEnabled( Bool enabled );
 	virtual UpdateSleepTime update();
-	virtual DisabledMaskType getDisabledTypesToProcess() const { return MAKE_DISABLED_MASK( DISABLED_HELD ); }
+	virtual DisabledMaskType getDisabledTypesToProcess() const { return MAKE_DISABLED_MASK2( DISABLED_HELD, DISABLED_EW); }
 
 private:
 	Bool m_enabled;

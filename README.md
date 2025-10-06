@@ -1,82 +1,137 @@
-[![GitHub Release](https://img.shields.io/github/v/release/TheSuperHackers/GeneralsGameCode?include_prereleases&sort=date&display_name=tag&style=flat&label=Release)](https://github.com/TheSuperHackers/GeneralsGameCode/releases)
-![GitHub milestone details](https://img.shields.io/github/milestones/progress-percent/TheSuperHackers/GeneralsGameCode/3)
-![GitHub milestone details](https://img.shields.io/github/milestones/progress-percent/TheSuperHackers/GeneralsGameCode/1)
-![GitHub milestone details](https://img.shields.io/github/milestones/progress-percent/TheSuperHackers/GeneralsGameCode/4)
-![GitHub milestone details](https://img.shields.io/github/milestones/progress-percent/TheSuperHackers/GeneralsGameCode/5)
-![GitHub milestone details](https://img.shields.io/github/milestones/progress-percent/TheSuperHackers/GeneralsGameCode/6)
+[![GitHub Release](https://img.shields.io/github/v/release/YOURNAME/GMX?include_prereleases&sort=date&display_name=tag&style=flat&label=Release)](https://github.com/ahmed007boss/GeneralsGameCode/releases)
+![GitHub milestone details](https://img.shields.io/github/milestones/progress-percent/YOURNAME/GMX/1)
+![GitHub milestone details](https://img.shields.io/github/milestones/progress-percent/YOURNAME/GMX/2)
 
-[![GitHub issues by-label](https://img.shields.io/github/issues/TheSuperHackers/GeneralsGameCode/bug?style=flat&label=Bug%20Issues&labelColor=%23c4c4c4&color=%23424242)](https://github.com/TheSuperHackers/GeneralsGameCode/issues?q=label%3ABug)
-[![GitHub issues by-label](https://img.shields.io/github/issues/TheSuperHackers/GeneralsGameCode/enhancement?style=flat&label=Enhancement%20Issues&labelColor=%23c4c4c4&color=%23424242)](https://github.com/TheSuperHackers/GeneralsGameCode/issues?q=label%3AEnhancement)
-[![GitHub issues by-label](https://img.shields.io/github/issues/TheSuperHackers/GeneralsGameCode/major?style=flat&label=Major%20Issues&labelColor=%23c4c4c4&color=%23424242)](https://github.com/TheSuperHackers/GeneralsGameCode/issues?q=label%3AMajor)
-[![GitHub issues by-label](https://img.shields.io/github/issues/TheSuperHackers/GeneralsGameCode/critical?style=flat&label=Critical%20Issues&labelColor=%23c4c4c4&color=%23424242)](https://github.com/TheSuperHackers/GeneralsGameCode/issues?q=label%3ACritical)
-[![GitHub issues by-label](https://img.shields.io/github/issues/TheSuperHackers/GeneralsGameCode/blocker?style=flat&label=Blocker%20Issues&labelColor=%23c4c4c4&color=%23424242)](https://github.com/TheSuperHackers/GeneralsGameCode/issues?q=label%3ABlocker)
+[![GitHub issues by-label](https://img.shields.io/github/issues/YOURNAME/GMX/bug?style=flat&label=Bug%20Issues&labelColor=%23c4c4c4&color=%23424242)](https://github.com/ahmed007boss/GeneralsGameCode/issues?q=label%3ABug)
+[![GitHub issues by-label](https://img.shields.io/github/issues/YOURNAME/GMX/enhancement?style=flat&label=Enhancement%20Issues&labelColor=%23c4c4c4&color=%23424242)](https://github.com/ahmed007boss/GeneralsGameCode/issues?q=label%3AEnhancement)
 
-# Welcome to the Generals Game Code Project
+---
 
-GeneralsGameCode is a community-driven project aimed at fixing and improving the classic RTS game, *Command &
-Conquer: Generals* and its expansion *Zero Hour*. This repository contains the source code for both games, with a
-primary focus on *Zero Hour*.
+# Welcome to the GMX Project  
 
-Additionally, there is a complementary project repository for fixing and improving game data and assets such as
-INI scripts, GUI, AI, maps, models, textures, audio, localization. You can find it
-[here](https://github.com/TheSuperHackers/GeneralsGamePatch/) and contribute to it as well.
+**GMX (Generals Modding eXtended)** is a community-driven extension of the open-source *Command & Conquer: Generals – Zero Hour* codebase.  
 
-## Project Overview
+GMX is built directly on top of [GeneralsGameCode](https://github.com/TheSuperHackers/GeneralsGameCode), maintained by *TheSuperHackers* and community contributors.  
 
-The game was originally developed using Visual Studio 6 and C++98. We've updated the code to be compatible with Visual
-Studio 2022 and C++20.
+This project will:  
+- ✅ **Inherit all bug fixes and enhancements** from the community project.  
+- ✅ **Extend modding support** beyond INI editing, providing APIs and frameworks for advanced mods.  
+- ✅ **Remain compatible** with *Generals: Zero Hour* while enabling brand-new gameplay systems.  
 
-The initial goal of this project is to fix critical bugs and implement improvements while maintaining compatibility with
-the original *Generals* version 1.08 and *Zero Hour* version 1.04. Once we can break retail compatibility, more fixes
-and features will be possible to implement.
+⚡ GMX is not a fork that drifts away—it is an **expansion layer** that tracks upstream fixes and improvements.  
 
-## Current Focus and Future Plans
+---
 
-Here's an overview of our current focus and future plans
+## Project Overview  
 
-- **Modernizing the Codebase**: Transitioning to modern C++ standards and refactoring old code.
-- **Critical Bug Fixes**: Fixing game-breaking issues (e.g., fullscreen crash).
-- **Minor Bug Fixes**: Addressing minor bugs (e.g., UI issues, graphical glitches).
-- **Cross-Platform Support**: Adding support for more platforms (e.g., Linux, macOS).
-- **Engine Improvements**: Enhancing the game engine to improve performance and stability.
-- **Client-Side Features**: Enhancing the game's client with features such as an improved replay viewer and UI updates.
-- **Multiplayer Improvements**: Implementing a new game server and an upgraded matchmaking lobby.
-- **Tooling Improvements**: Developing new or improving existing tools for modding and game development.
-- **Community-Driven Improvements**: Once the community grows, we plan to incorporate more features, updates, and
-  changes based on player feedback.
+The community project focuses on **stability, modernization, and bug fixing**.  
+GMX builds on that foundation by adding a **new layer for modding and content creation**.  
 
-## Running the Game
+### Key Features  
+- **Custom Gameplay Systems** → damage types, weather effects, advanced AI, special effects.  
+- **Improved Tooling** → better error reporting, debugging tools, hot-reload for modders.  
+- **Asset Expansion** → support for new particle effects, shaders, audio, and UI integration.  
+- **Upstream Sync** → every release includes the latest GeneralsGameCode fixes.  
 
-To run *Generals* or *Zero Hour* using this project, you need to have the original *Command & Conquer: Generals and Zero Hour* game
-installed. The easiest way to get it is through *Command & Conquer The Ultimate Collection*
-on [Steam](https://store.steampowered.com/bundle/39394). Once the game is ready, download the latest version of the
-project from [GitHub Releases](https://github.com/TheSuperHackers/GeneralsGameCode/releases), extract the necessary 
-files, and follow the instructions in the [Wiki](https://github.com/TheSuperHackers/GeneralsGameCode/wiki).
+---
 
+## Versioning  
 
-## Joining the Community
+GMX follows **semantic versioning** (`MAJOR.MINOR.PATCH`):  
 
-You can chat and discuss the development of the project on our [Discord channel](https://www.community-outpost.com/discord) to get the latest updates,
-report bugs, and contribute to the project!
+- **Patch releases** (`1.04.1`) → Upstream fixes only, no breaking changes.  
+- **Minor releases** (`1.3.0`) → New modding features, backwards compatible.  
+- **Major releases** (`2.0.0`) → Breaking changes or when retail compatibility is dropped.  
 
-## Building the Game Yourself
+Each GMX release notes the **upstream sync point** (e.g., “Includes GeneralsGameCode v0.9.4”).  
 
-We provide support for building the project using Visual Studio 6 (VS6) and Visual Studio 2022. For detailed build
-instructions, check the [Wiki](https://github.com/TheSuperHackers/GeneralsGameCode/wiki/build_guides), which also
-includes guides for building with Docker, CLion, and links to forks supporting additional versions.
+---
 
-## Contributing
+## Reporting Bugs  
 
-We welcome contributions to the project! If you’re interested in contributing, you need to have knowledge of C++. Join
-the developer chat on Discord for more information on how to get started. Please make sure to read our
-[Contributing Guidelines](CONTRIBUTING.md) before submitting a pull request. You can also check out 
-the [Wiki](https://github.com/TheSuperHackers/GeneralsGameCode/wiki) for more detailed documentation.
+GMX only tracks **bugs related to modding features, APIs, and tools**.  
 
+- 🐞 **Game Bugs / Engine Issues** → Report to [GeneralsGameCode Issues](https://github.com/TheSuperHackers/GeneralsGameCode/issues).  
+- 🛠️ **GMX-Specific Bugs** (extended APIs, modding tools, new systems) → Report in [GMX Issues](https://github.com/ahmed007boss/GeneralsGameCode/issues).  
 
-## License & Legal Disclaimer
+When reporting, please include:  
+- GMX version (from release tag).  
+- Steps to reproduce.  
+- Logs, crash dumps, or mod files if relevant.  
 
-EA has not endorsed and does not support this product. All trademarks are the property of their respective owners.
+---
 
-This project is licensed under the [GPL-3.0 License](https://www.gnu.org/licenses/gpl-3.0.html), which allows you to
-freely modify and distribute the source code under the terms of this license. Please see [LICENSE.md](LICENSE.md) 
-for details.
+## Feature Requests  
+
+GMX’s mission is to **extend modding support**.  
+Feature requests must be **focused on modder use-cases**.  
+
+### ✅ Examples of Accepted Requests  
+- APIs for unit logic, projectiles, damage, or effects.  
+- Extensions to INI (new fields, parameters, object properties).  
+- Modder tools (logging, debugging, hot-reload).  
+- Asset pipeline improvements (particles, shaders, audio hooks).  
+- Exporters and editors for modding workflows.  
+
+### ❌ Out of Scope  
+- Engine stability or vanilla bug fixes (→ report upstream).  
+- Gameplay balance or campaign changes.  
+- Requests involving copyrighted EA/third-party assets.  
+
+👉 Submit requests using the [Feature Request Template](.github/ISSUE_TEMPLATE/feature_request.md).  
+
+---
+
+## Contributing  
+
+Ways you can contribute:  
+- **Bug Reports** → Only for GMX-specific modding issues.  
+- **Feature Requests** → Must be modding-focused (see above).  
+- **Code Contributions** → PRs adding APIs, tools, or modding features.  
+- **Docs & Wiki** → Help document new APIs and modding workflows.  
+- **Testing & Feedback** → Try new features, provide modder feedback.  
+
+Before contributing:  
+- Ask: *Does this belong in GMX (modding) or GeneralsGameCode (engine fix)?*  
+- Keep GMX extensions modular and documented.  
+- Follow upstream coding style and standards.  
+
+---
+
+## Running the Game  
+
+You need the original *Command & Conquer: Generals and Zero Hour*.  
+- Available in [Command & Conquer The Ultimate Collection](https://store.steampowered.com/bundle/39394).  
+- Download the latest GMX build from [Releases](https://github.com/ahmed007boss/GeneralsGameCode/releases).  
+- Setup instructions are in the [Wiki](https://github.com/ahmed007boss/GeneralsGameCode/wiki).  
+
+---
+
+## Building GMX  
+
+GMX uses the same toolchain as GeneralsGameCode.  
+
+- **Supported:** Visual Studio 2022, Docker, CLion.  
+- **Legacy:** Visual Studio 6 (for compatibility).  
+
+Full instructions in the [Build Wiki](https://github.com/ahmed007boss/GeneralsGameCode/wiki/build_guides).  
+
+---
+
+## Credits  
+
+- **Upstream Project:** [GeneralsGameCode](https://github.com/TheSuperHackers/GeneralsGameCode), maintained by *TheSuperHackers* and contributors.  
+- **GMX Development:** Extends their work to build a stronger modding framework for the community.  
+
+🙏 Thanks to the entire community keeping *Generals & Zero Hour* alive!  
+
+---
+
+## License & Disclaimer  
+
+This project is licensed under the **GPL-3.0 License**, the same as GeneralsGameCode.  
+- You may freely use, modify, and distribute under this license.  
+- See [LICENSE.md](LICENSE.md) for details.  
+
+⚠️ EA has not endorsed and does not support this product.  
+All trademarks are property of their respective owners.  

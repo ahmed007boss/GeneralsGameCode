@@ -197,7 +197,7 @@ UpdateSleepTime PropagandaTowerBehavior::update( void )
 	{
 		// We need to let go of everyone if we are EMPd or underpowered or yadda, but not if we are only held
 
-		DisabledMaskType allButHeld = MAKE_DISABLED_MASK( DISABLED_HELD );
+		DisabledMaskType allButHeld = MAKE_DISABLED_MASK2( DISABLED_HELD, DISABLED_EW);
 		FLIP_DISABLEDMASK(allButHeld);
 
 		if( TEST_DISABLEDMASK_ANY(self->getDisabledFlags(), allButHeld) )

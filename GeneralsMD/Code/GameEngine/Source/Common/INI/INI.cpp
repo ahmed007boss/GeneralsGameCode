@@ -110,13 +110,14 @@ static const BlockParse theTypeTable[] =
 	{ "Mouse",							INI::parseMouseDefinition },
 	{ "MouseCursor",				INI::parseMouseCursorDefinition },
 	{ "MultiplayerColor",		INI::parseMultiplayerColorDefinition },
-  { "MultiplayerStartingMoneyChoice",		INI::parseMultiplayerStartingMoneyChoiceDefinition },
+  	{ "MultiplayerStartingMoneyChoice",		INI::parseMultiplayerStartingMoneyChoiceDefinition },
 	{ "OnlineChatColors",		INI::parseOnlineChatColorDefinition },
 	{ "MultiplayerSettings",INI::parseMultiplayerSettingsDefinition },
 	{ "MusicTrack",					INI::parseMusicTrackDefinition },
 	{ "Object",							INI::parseObjectDefinition },
 	{ "ObjectCreationList",	INI::parseObjectCreationListDefinition },
 	{ "ObjectReskin",				INI::parseObjectReskinDefinition },
+	{ "ObjectExtend",				INI::parseObjectExtendDefinition },
 	{ "ParticleSystem",			INI::parseParticleSystemDefinition },
 	{ "PlayerTemplate",			INI::parsePlayerTemplateDefinition },
 	{ "Road",								INI::parseTerrainRoadDefinition },
@@ -135,11 +136,11 @@ static const BlockParse theTypeTable[] =
 	{ "HeaderTemplate",			INI::parseHeaderTemplateDefinition },
 	{ "StaticGameLOD",			INI::parseStaticGameLODDefinition },
 	{ "DynamicGameLOD",			INI::parseDynamicGameLODDefinition },
-	{ "LODPreset",					INI::parseLODPreset },
-	{	"BenchProfile",				INI::parseBenchProfile },
-	{	"ReallyLowMHz",				parseReallyLowMHz },
-	{	"ScriptAction",				ScriptEngine::parseScriptAction },
-	{	"ScriptCondition",		ScriptEngine::parseScriptCondition },
+	{ "LODPreset",				INI::parseLODPreset },
+	{ "BenchProfile",			INI::parseBenchProfile },
+	{ "ReallyLowMHz",			parseReallyLowMHz },
+	{ "ScriptAction",			ScriptEngine::parseScriptAction },
+	{ "ScriptCondition",		ScriptEngine::parseScriptCondition },
 
 	{ NULL,									NULL },
 };
@@ -267,6 +268,13 @@ UnsignedInt INI::loadDirectory( AsciiString dirName, INILoadType loadType, Xfer 
 			AsciiString tempname;
 			tempname = (*it).str() + dirName.getLength();
 
+			// TheSuperHackers @feature Ahmed Salah 15/01/2025 Exclude .Include.ini files from automatic loading
+			// These files should only be loaded when explicitly included via Include directive
+			if (tempname.endsWithNoCase(".Include.ini")) {
+				++it;
+				continue;
+			}
+
 			if ((tempname.find('\\') == NULL) && (tempname.find('/') == NULL)) {
 				// this file doesn't reside in a subdirectory, load it first.
 				filesRead += load( *it, loadType, pXfer );
@@ -279,6 +287,13 @@ UnsignedInt INI::loadDirectory( AsciiString dirName, INILoadType loadType, Xfer 
 		{
 			AsciiString tempname;
 			tempname = (*it).str() + dirName.getLength();
+
+			// TheSuperHackers @feature Ahmed Salah 15/01/2025 Exclude .Include.ini files from automatic loading
+			// These files should only be loaded when explicitly included via Include directive
+			if (tempname.endsWithNoCase(".Include.ini")) {
+				++it;
+				continue;
+			}
 
 			if ((tempname.find('\\') != NULL) || (tempname.find('/') != NULL)) {
 				filesRead += load( *it, loadType, pXfer );
@@ -393,6 +408,10 @@ UnsignedInt INI::load( AsciiString filename, INILoadType loadType, Xfer *pXfer )
 
 	try
 	{
+		if( loadType == INI_LOAD_INCLUDE )
+		{
+			return 1;
+		}
 
 		// read all lines in the file
 		DEBUG_ASSERTCRASH( m_endOfFile == FALSE, ("INI::load, EOF at the beginning!") );
@@ -410,8 +429,11 @@ UnsignedInt INI::load( AsciiString filename, INILoadType loadType, Xfer *pXfer )
 				INIBlockParse parse = findBlockParse(token);
 				if (parse)
 				{
+					// TheSuperHackers @feature Ahmed Salah 15/01/2025 Add P:BLOCK parameter with block value if not empty
+					extractBlockParameters(token, currentLine);
+					
 					#ifdef DEBUG_CRASHING
-					strcpy(m_curBlockStart, m_buffer);
+						strcpy(m_curBlockStart, m_buffer);
 					#endif
 					try {
 						(*parse)( this );
@@ -502,6 +524,21 @@ void INI::readLine( void )
       p++;
     }
     *p=0;
+
+    // Treat StartRegion and EndRegion as comment markers (like ';')
+    {
+      char *sr = strstr(m_buffer, "StartRegion");
+      char *er = strstr(m_buffer, "EndRegion");
+      char *cut = NULL;
+      if (sr && er)
+        cut = (sr < er) ? sr : er;
+      else if (sr)
+        cut = sr;
+      else if (er)
+        cut = er;
+      if (cut)
+        *cut = 0;
+    }
 
 		// increase our line count
 		m_lineNum++;
@@ -1524,6 +1561,9 @@ void INI::initFromINIMulti( void *what, const MultiIniFieldParse& parseTableList
 		// read next line
 		readLine();
 
+		// TheSuperHackers @feature Ahmed Salah 15/01/2025 Apply parameter substitution to all parsing methods
+		applyParameterSubstitution(m_buffer);
+
 		// check for end token
 		const char* field = strtok( m_buffer, INI::getSeps() );
 		if( field )
@@ -1590,6 +1630,76 @@ void INI::initFromINIMulti( void *what, const MultiIniFieldParse& parseTableList
 }
 
 //-------------------------------------------------------------------------------------------------
+void INI::continueParsing( void *what, const FieldParse* parseTable, const std::vector<AsciiString>& parameters )
+{
+	Bool done = FALSE;
+
+	if( what == NULL )
+	{
+		DEBUG_ASSERTCRASH( 0, ("INI::continueParsing - Invalid parameters supplied!") );
+		throw INI_INVALID_PARAMS;
+	}
+
+	// TheSuperHackers @feature Ahmed Salah 15/01/2025 Add parameters for cascading to nested parsing operations
+	addParameters(parameters);
+
+	while( !done )
+	{
+		// read next line
+		readLine();
+
+		// Apply parameter substitution to the current line on-the-fly
+		applyParameterSubstitution(m_buffer);
+
+		// check for end token
+		const char* field = strtok( m_buffer, INI::getSeps() );
+		if( field )
+		{
+			if( stricmp( field, m_blockEndToken ) == 0 )
+			{
+				done = TRUE;
+			}
+			else
+			{
+				Bool found = false;
+				const FieldParse* currentParse = parseTable;
+				
+				while( currentParse->token != NULL )
+				{
+					if( stricmp( currentParse->token, field ) == 0 )
+					{
+						try {
+							(*currentParse->parse)( this, what, (char *)what + currentParse->offset, currentParse->userData );
+						} catch (...) {
+							DEBUG_CRASH( ("[LINE: %d - FILE: '%s'] Error reading field '%s'",
+																 INI::getLineNum(), INI::getFilename().str(), field) );
+							char buff[1024];
+							sprintf(buff, "[LINE: %d - FILE: '%s'] Error reading field '%s'\n", INI::getLineNum(), INI::getFilename().str(), field);
+							throw INIException(buff);
+						}
+						
+						found = true;
+						break;
+					}
+					currentParse++;
+				}
+
+				if (!found)
+				{
+					DEBUG_ASSERTCRASH( 0, ("[LINE: %d - FILE: '%s'] Unknown field '%s'",
+													 INI::getLineNum(), INI::getFilename().str(), field) );
+				}
+			}
+		}
+
+		if( done == FALSE && INI::isEOF() == TRUE )
+		{
+			done = TRUE;
+		}
+	}
+}
+
+//-------------------------------------------------------------------------------------------------
 /*static*/ const char* INI::getNextToken(const char* seps)
 {
 	if (!seps) seps = getSeps();
@@ -1611,6 +1721,119 @@ void INI::initFromINIMulti( void *what, const MultiIniFieldParse& parseTableList
 /*static*/ ScienceType INI::scanScience(const char* token)
 {
 	return TheScienceStore->friend_lookupScience( token );
+}
+
+//-------------------------------------------------------------------------------------------------
+// TheSuperHackers @feature Ahmed Salah 15/01/2025 Parameter management for cascading to nested parsing operations
+//-------------------------------------------------------------------------------------------------
+void INI::addParameters( const std::vector<AsciiString>& parameters )
+{
+	// Add parameters as P:0, P:1, P:2, etc.
+	for (size_t i = 0; i < parameters.size(); i++)
+	{
+		char key[32];
+		sprintf(key, "P:%d", (Int)i);
+		m_parameters[AsciiString(key)] = parameters[i];
+	}
+}
+
+//-------------------------------------------------------------------------------------------------
+void INI::addParameter( const AsciiString& key, const AsciiString& value )
+{
+	m_parameters[key] = value;
+}
+
+//-------------------------------------------------------------------------------------------------
+const std::map<AsciiString, AsciiString>& INI::getParameters() const
+{
+	return m_parameters;
+}
+
+//-------------------------------------------------------------------------------------------------
+void INI::applyParameterSubstitution( char* buffer )
+{
+	if( m_parameters.empty() )
+	{
+		return;
+	}
+	
+	// Apply parameter substitution to the buffer using key-value pairs
+	for (std::map<AsciiString, AsciiString>::const_iterator it = m_parameters.begin(); it != m_parameters.end(); ++it)
+	{
+		char placeholder[64];
+		sprintf(placeholder, "[%s]", it->first.str());
+		
+		// Replace all occurrences of the placeholder using a more robust approach
+		char* searchStart = buffer;
+		char* pos = strstr(searchStart, placeholder);
+		
+		while (pos != NULL)
+		{
+			// Calculate lengths
+			Int placeholderLen = strlen(placeholder);
+			Int beforeLen = pos - buffer;
+			
+			// Create new string with replacement
+			char newLine[INI_MAX_CHARS_PER_LINE+1];
+			
+			// Copy part before placeholder
+			strncpy(newLine, buffer, beforeLen);
+			newLine[beforeLen] = '\0';
+			
+			// Copy parameter value
+			strcat(newLine, it->second.str());
+			
+			// Copy part after placeholder
+			strcat(newLine, pos + placeholderLen);
+			
+			// Update buffer
+			strcpy(buffer, newLine);
+			
+			// Find next occurrence from the current position
+			searchStart = newLine + beforeLen + strlen(it->second.str());
+			pos = strstr(searchStart, placeholder);
+		}
+	}
+}
+
+//-------------------------------------------------------------------------------------------------
+// TheSuperHackers @feature Ahmed Salah 15/01/2025 Extract block parameters for all block types
+void INI::extractBlockParameters( const char* blockType, const AsciiString& currentLine )
+{
+	// Find the block type in the line
+	const char* lineStart = currentLine.str();
+	const char* blockStart = strstr(lineStart, blockType);
+	if (blockStart)
+	{
+		// Move past the block type to find the next token
+		blockStart += strlen(blockType);
+		
+		// Skip whitespace
+		while (*blockStart == ' ' || *blockStart == '\t')
+			blockStart++;
+		
+		// Check if there's a value
+		if (*blockStart != '\0' && *blockStart != '\r' && *blockStart != '\n')
+		{
+			// Find the end of the first value (next space, equals sign, or end of line)
+			const char* valueEnd = blockStart;
+			while (*valueEnd != '\0' && *valueEnd != ' ' && *valueEnd != '\t' && *valueEnd != '=' && *valueEnd != '\r' && *valueEnd != '\n')
+				valueEnd++;
+			
+			// Extract the first value
+			Int valueLen = valueEnd - blockStart;
+			if (valueLen > 0)
+			{
+				char blockValue[256];
+				strncpy(blockValue, blockStart, valueLen);
+				blockValue[valueLen] = '\0';
+				
+				char blockKey[64];
+				sprintf(blockKey, "P:%s", blockType);
+				addParameter(AsciiString(blockKey), AsciiString(blockValue));
+			}
+		}
+	}
 }
 
 //-------------------------------------------------------------------------------------------------

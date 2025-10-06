@@ -46,6 +46,7 @@
 #include "Common/KindOf.h"
 #include "Common/GameMemory.h"
 #include "Common/ModelState.h"
+#include "Common/UnicodeString.h"
 
 // ------------------------------------------------------------------------------------------------
 enum { CONTAIN_MAX_UNKNOWN = -1 };  // means we don't care, infinite, unassigned, whatever
@@ -75,6 +76,12 @@ public:
 
 	OpenContainModuleData( void );
 	static void buildFieldParse(MultiIniFieldParse& p);
+
+	// TheSuperHackers @feature author 01/01/2025 Override getModuleDescription for UI display
+	virtual UnicodeString getModuleDescription() const;
+
+	// TheSuperHackers @feature author 01/01/2025 Override getModuleOrder for display ordering
+	virtual Int getModuleOrder() const { return 600; } // Sixth priority
 };
 
 //-------------------------------------------------------------------------------------------------

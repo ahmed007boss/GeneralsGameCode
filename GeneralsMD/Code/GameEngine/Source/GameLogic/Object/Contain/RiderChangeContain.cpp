@@ -224,7 +224,7 @@ void RiderChangeContain::onContaining( Object *rider, Bool wasSelected )
 			obj->setStatus( MAKE_OBJECT_STATUS_MASK( data->m_riders[ i ].m_objectStatusType ) );
 
 			//Set the new commandset override
-			obj->setCommandSetStringOverride( data->m_riders[ i ].m_commandSet );
+			obj->setCommandSetStringOverride(data->m_riders[i].m_commandSet, "", "", "");
 			TheControlBar->markUIDirty();	// Refresh the UI in case we are selected
 
 			//Change the locomotor.

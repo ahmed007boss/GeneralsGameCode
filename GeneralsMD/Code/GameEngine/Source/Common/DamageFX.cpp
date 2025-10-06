@@ -96,7 +96,19 @@ void DamageFX::doDamageFX(DamageType t, Real damageAmount, const Object* source,
 	// useful in some cases.
 	FXList::doFXObj(fx, victim, source);
 }
+inline Bool IsDisableEffectDamageType(DamageType type)
+{
+	switch (type)
+	{
+	case DAMAGE_EW_MISSILE:
+	case DAMAGE_EW_VEHICLE:
+	case DAMAGE_EW_BUILDING:
+	case DAMAGE_EW_UNRESISTABLE:
+		return TRUE;
+	}
 
+	return FALSE;
+}
 //-------------------------------------------------------------------------------------------------
 ConstFXListPtr DamageFX::getDamageFXList(DamageType t, Real damageAmount, const Object* source) const
 {
@@ -105,7 +117,7 @@ ConstFXListPtr DamageFX::getDamageFXList(DamageType t, Real damageAmount, const 
 		with some special weapons, like the battleship, which is a "faux" weapon that never does damage.
 		if you really need to change this for some reason, consider carefully... (srj)
 	*/
-	if (damageAmount == 0.0f)
+	if (damageAmount == 0.0f || IsDisableEffectDamageType(t))
 		return NULL;
 
 	const DFX& dfx = m_dfx[t][source ? source->getVeterancyLevel() : LEVEL_REGULAR];
@@ -155,7 +167,7 @@ static void parseCommonStuff(
 		vetFirst = LEVEL_FIRST;
 		vetLast = LEVEL_LAST;
 	}
-
+	 
 	const char* damageName = ini->getNextToken();
 	if (stricmp(damageName, "Default") == 0)
 	{

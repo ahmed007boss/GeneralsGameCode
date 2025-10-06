@@ -1046,7 +1046,6 @@ void Mouse::initCapture()
 {
 	OptionPreferences prefs;
 	m_cursorCaptureMode = prefs.getCursorCaptureMode();
-
 	unblockCapture(CursorCaptureBlockReason_NoInit);
 }
 
@@ -1054,7 +1053,9 @@ void Mouse::initCapture()
 Bool Mouse::canCapture() const
 {
 	if (m_captureBlockReasonBits != 0)
+	{
 		return false;
+	}
 
 	DEBUG_ASSERTCRASH(TheDisplay != NULL, ("The Display is NULL"));
 	const Bool inInteractiveGame = TheGameLogic && TheGameLogic->isInInteractiveGame();
@@ -1064,12 +1065,16 @@ Bool Mouse::canCapture() const
 		if (inInteractiveGame)
 		{
 			if ((m_cursorCaptureMode & CursorCaptureMode_EnabledInWindowedGame) == 0)
+			{
 				return false;
+			}
 		}
 		else
 		{
 			if ((m_cursorCaptureMode & CursorCaptureMode_EnabledInWindowedMenu) == 0)
+			{
 				return false;
+			}
 		}
 	}
 	else
@@ -1077,12 +1082,16 @@ Bool Mouse::canCapture() const
 		if (inInteractiveGame)
 		{
 			if ((m_cursorCaptureMode & CursorCaptureMode_EnabledInFullscreenGame) == 0)
+			{
 				return false;
+			}
 		}
 		else
 		{
 			if ((m_cursorCaptureMode & CursorCaptureMode_EnabledInFullscreenMenu) == 0)
+			{
 				return false;
+			}
 		}
 	}
 
@@ -1109,6 +1118,12 @@ void Mouse::unblockCapture(CursorCaptureBlockReason reason)
 // ------------------------------------------------------------------------------------------------
 void Mouse::blockCapture(CursorCaptureBlockReason reason)
 {
+	// TheSuperHackers @bugfix author 15/01/2025 Prevent NoInit blocking after initialization
+	if (reason == CursorCaptureBlockReason_NoInit && m_captureBlockReasonBits == 0)
+	{
+		return;
+	}
+	
 	Bool canCaptureBefore = canCapture();
 	m_captureBlockReasonBits |= (1 << reason);
 	Bool canCaptureNow = canCapture();

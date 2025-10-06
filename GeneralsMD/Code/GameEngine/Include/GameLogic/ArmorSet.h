@@ -29,10 +29,8 @@
 #ifndef _ArmorSet_H_
 #define _ArmorSet_H_
 
-#include "Lib/BaseType.h"
 #include "Common/GameType.h"
-#include "Common/SparseMatchFinder.h"
-#include "Common/SparseMatchFinder.h"
+#include "GameLogic/Damage.h"
 
 //-------------------------------------------------------------------------------------------------
 class ArmorTemplate;
@@ -54,6 +52,9 @@ enum ArmorSetType CPP_11(: Int)
 	ARMORSET_SECOND_LIFE = 5,	///< Body Module has marked us as on our second life
 	ARMORSET_CRATE_UPGRADE_ONE, ///< Just like weaponset type from salvage.
 	ARMORSET_CRATE_UPGRADE_TWO,
+	ARMORSET_PLAYER_UPGRADE2,
+	ARMORSET_PLAYER_UPGRADE3,
+	ARMORSET_PLAYER_UPGRADE4,
 
 	ARMORSET_COUNT
 };
@@ -67,7 +68,9 @@ class ArmorTemplateSet
 private:
 	ArmorSetFlags m_types;
 	const ArmorTemplate* m_template;
+	const ArmorTemplate* m_sideTemplates[HIT_SIDE_COUNT];	///< Side-specific armor templates
 	const DamageFX* m_fx;
+	mutable UnicodeString* m_description;	///< Cached description for UI display
 
 public:
 	inline ArmorTemplateSet()
@@ -79,10 +82,21 @@ public:
 	{
 		m_types.clear();
 		m_template = NULL;
+		for (int i = 0; i < HIT_SIDE_COUNT; i++)
+		{
+			m_sideTemplates[i] = NULL;
+		}
 		m_fx = NULL;
+		m_description = NULL;
 	}
 
 	inline const ArmorTemplate* getArmorTemplate() const { return m_template; }
+	inline const ArmorTemplate* getSideArmorTemplate(HitSide side) const 
+	{ 
+		if (side >= 0 && side < HIT_SIDE_COUNT && m_sideTemplates[side] != NULL)
+			return m_sideTemplates[side];
+		return m_template; // Fallback to default armor
+	}
 	inline const DamageFX* getDamageFX() const { return m_fx; }
 
 	inline Int getConditionsYesCount() const { return 1; }
@@ -92,6 +106,10 @@ public:
 #endif
 
 	void parseArmorTemplateSet( INI* ini );
+	void setSideArmorTemplate(HitSide side, const ArmorTemplate* armorTemplate);
+	UnicodeString getModuleDescription() const;
+	UnicodeString buildSideSpecificDescription() const;
+	static void parseDescription(INI* ini, void* instance, void* store, const void* userData);
 };
 
 //-------------------------------------------------------------------------------------------------

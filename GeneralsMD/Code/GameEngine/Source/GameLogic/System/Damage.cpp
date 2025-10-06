@@ -80,13 +80,17 @@ const char* const DamageTypeFlags::s_bitNameList[] =
 	"MICROWAVE",
 	"KILL_GARRISONED",
 	"STATUS",
-
+	"EW_MISSILE",
+	"EW_VEHICLE",
+	"EW_BUILDING",
+	"EW_UNRESISTABLE",
 	NULL
 };
 static_assert(ARRAY_SIZE(DamageTypeFlags::s_bitNameList) == DamageTypeFlags::NumBits + 1, "Incorrect array size");
 
 DamageTypeFlags DAMAGE_TYPE_FLAGS_NONE; 	// inits to all zeroes
 DamageTypeFlags DAMAGE_TYPE_FLAGS_ALL;
+DamageTypeFlags DAMAGE_TYPE_FLAGS_EW;
 
 void initDamageTypeFlags()
 {
@@ -125,7 +129,7 @@ void DamageInfoInput::xfer( Xfer *xfer )
 {
 
 	// version
-	XferVersion currentVersion = 3;
+	XferVersion currentVersion = 4;
 	XferVersion version = currentVersion;
 	xfer->xferVersion( &version, currentVersion );
 
@@ -168,6 +172,37 @@ void DamageInfoInput::xfer( Xfer *xfer )
 		if( xfer->getXferMode() == XFER_LOAD )
 		{
 			m_sourceTemplate = TheThingFactory->findTemplate( thingString );
+		}
+	}
+
+	// TheSuperHackers @feature author 15/01/2025 Component damage system
+	if( version >= 4 )
+	{
+		Int componentCount = (Int)m_componentDamage.size();
+		xfer->xferInt( &componentCount );
+		
+		if( xfer->getXferMode() == XFER_LOAD )
+		{
+			m_componentDamage.clear();
+			for( Int i = 0; i < componentCount; i++ )
+			{
+				AsciiString componentName;
+				Real damage;
+				xfer->xferAsciiString( &componentName );
+				xfer->xferReal( &damage );
+				m_componentDamage[componentName] = damage;
+			}
+		}
+		else
+		{
+			for( std::map<AsciiString, Real>::const_iterator it = m_componentDamage.begin(); 
+				 it != m_componentDamage.end(); ++it )
+			{
+				AsciiString componentName = it->first;
+				Real damage = it->second;
+				xfer->xferAsciiString( &componentName );
+				xfer->xferReal( &damage );
+			}
 		}
 	}
 

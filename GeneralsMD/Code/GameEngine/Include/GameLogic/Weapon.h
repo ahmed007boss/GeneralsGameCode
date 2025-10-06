@@ -35,10 +35,13 @@
 // INCLUDES ///////////////////////////////////////////////////////////////////////////////////////
 #include "Common/AudioEventRTS.h"
 #include "Common/GameCommon.h"
+#include "Common/ObjectPrerequisite.h"
 
 #include "GameLogic/Damage.h"
 
 #include "WWMath/matrix3d.h"
+#include <map>
+#include <vector>
 
 // FORWARD REFERENCES /////////////////////////////////////////////////////////////////////////////
 struct FieldParse;
@@ -50,11 +53,10 @@ class Weapon;
 class WeaponTemplate;
 class INI;
 class ParticleSystemTemplate;
+class SimpleObjectIterator;
 enum NameKeyType CPP_11(: Int);
-
 //-------------------------------------------------------------------------------------------------
 const Int NO_MAX_SHOTS_LIMIT = 0x7fffffff;
-
 //-------------------------------------------------------------------------------------------------
 enum WeaponReloadType CPP_11(: Int)
 {
@@ -75,6 +77,22 @@ static const char *const TheWeaponReloadNames[] =
 };
 static_assert(ARRAY_SIZE(TheWeaponReloadNames) == WEAPON_RELOAD_COUNT + 1, "Incorrect array size");
 #endif
+
+//-------------------------------------------------------------------------------------------------
+// TheSuperHackers @feature author 02/10/2025 Weapon validation result enum
+enum WeaponValidationResult CPP_11(: Int)
+{
+	WEAPON_VALIDATION_NOT_EXIST = -1,				///< Weapon does not exist
+	WEAPON_VALIDATION_VALID = 0,					///< Weapon can be used
+	WEAPON_VALIDATION_NO_TEMPLATE,				///< Weapon has no template
+	WEAPON_VALIDATION_SHOOTER_PREREQ_FAILED,	///< Shooter prerequisites not satisfied
+	WEAPON_VALIDATION_INSUFFICIENT_INVENTORY,	///< Not enough inventory items to fire
+	WEAPON_VALIDATION_TARGET_PREREQ_FAILED,	///< Target prerequisites not satisfied
+	WEAPON_VALIDATION_NO_TARGET_REQUIRED,		///< Weapon requires a target but none provided
+	WEAPON_VALIDATION_CANNOT_ATTACK_WITHOUT_TARGET, ///< Weapon cannot attack without a target
+
+	WEAPON_VALIDATION_COUNT
+};
 
 //-------------------------------------------------------------------------------------------------
 enum WeaponPrefireType CPP_11(: Int)
@@ -415,6 +433,8 @@ public:
 
 	inline Real getRequestAssistRange() const {return m_requestAssistRange;}
 	inline AsciiString getName() const { return m_name; }
+	inline const UnicodeString& getDisplayName() const { return m_displayName; }
+	inline void setDisplayName(const UnicodeString& newName) { m_displayName = newName; }
 	inline AsciiString getProjectileStreamName() const { return m_projectileStreamName; }
 	inline AsciiString getLaserName() const { return m_laserName; }
 	inline const AsciiString& getLaserBoneName() const { return m_laserBoneName; }
@@ -428,6 +448,21 @@ public:
 	inline Real getRadiusDamageAngle() const { return m_radiusDamageAngle; }
 	inline DamageType getDamageType() const { return m_damageType; }
 	inline ObjectStatusTypes getDamageStatusType() const { return m_damageStatusType; }
+	inline HitSide getPrimaryHitSideOverride() const { return m_primaryHitSideOverride; }
+	inline HitSide getSecondaryHitSideOverride() const { return m_secondaryHitSideOverride; }
+	inline HitSide getDirectHitSideOverride() const { return m_directHitSideOverride; }
+	
+	// TheSuperHackers @feature author 15/01/2025 Component damage getters
+	Real getPrimaryComponentDamage(const AsciiString& componentName) const;
+	Real getSecondaryComponentDamage(const AsciiString& componentName) const;
+	
+	// TheSuperHackers @feature author 15/01/2025 Component dependency system
+	inline const std::vector<AsciiString>& getAffectedByComponents() const { return m_affectedByComponents; }
+	Bool areRequiredComponentsFunctional(const Object* source) const;
+
+	// TheSuperHackers @feature author 15/01/2025 Component dependency system
+	std::vector<AsciiString> m_affectedByComponents;			///< List of component names that affect this weapon's functionality
+
 	inline DeathType getDeathType() const { return m_deathType; }
 	inline Real getContinueAttackRange() const { return m_continueAttackRange; }
 	inline Real getInfantryInaccuracyDist() const { return m_infantryInaccuracyDist; }
@@ -460,6 +495,12 @@ public:
 	inline const WeaponBonusSet* getExtraBonus() const { return m_extraBonus; }
 	inline Int getShotsPerBarrel() const { return m_shotsPerBarrel; }
 	inline Int getAntiMask() const { return m_antiMask; }
+	inline const std::vector<ObjectPrerequisite>& getTargetPrerequisites() const { return m_targetPrerequisites; }
+	inline const std::vector<ObjectPrerequisite>& getShooterPrerequisites() const { return m_shooterPrerequisites; }
+	inline const std::vector<ObjectPrerequisite>& getRadiusDamageAffectsPrerequisites() const { return m_radiusDamageAffectsPrerequisites; }
+	inline BOOL canAttackWithoutTarget() const { return m_canAttackWithoutTarget; }
+	inline const AsciiString& getConsumeInventory() const { return m_consumeInventory; }
+	inline Int getRadiusDamageAffectsMaxSimultaneous() const { return m_radiusDamageAffectsMaxSimultaneous; }
 	inline Bool isLeechRangeWeapon() const { return m_leechRangeWeapon; }
 	inline Bool isCapableOfFollowingWaypoint() const { return m_capableOfFollowingWaypoint; }
 	inline Bool isShowsAmmoPips() const { return m_isShowsAmmoPips; }
@@ -475,9 +516,22 @@ public:
 
 	void postProcessLoad();
 
+	// TheSuperHackers @feature author 15/01/2025 Component damage properties
+	std::map<AsciiString, Real> m_primaryComponentDamage;		///< Primary damage to specific components
+	std::map<AsciiString, Real> m_secondaryComponentDamage;	///< Secondary damage to specific components
+
 protected:
 
 	// actually deal out the damage.
+	// TheSuperHackers @feature author 02/10/2025 Prepare list of applicable affected victims
+	std::vector<Object*> getApplicableAffectedVictims(
+		SimpleObjectIterator* iter,
+		Object* curVictim,
+		const Object* source,
+		const Object* primaryVictim,
+		Int affects
+	) const;
+	
 	void dealDamageInternal(ObjectID sourceID, ObjectID victimID, const Coord3D *pos, const WeaponBonus& bonus, Bool isProjectileDetonation) const;
 	void trimOldHistoricDamage() const;
 
@@ -489,10 +543,14 @@ private:
 	static void parseWeaponBonusSet( INI* ini, void *instance, void * /*store*/, const void* /*userData*/ );
 	static void parseScatterTarget( INI* ini, void *instance, void * /*store*/, const void* /*userData*/ );
 	static void parseShotDelay( INI* ini, void *instance, void * /*store*/, const void* /*userData*/ );
+	static void parseTargetPrerequisites( INI* ini, void *instance, void * /*store*/, const void* /*userData*/ );
+	static void parseShooterPrerequisites( INI* ini, void *instance, void * /*store*/, const void* /*userData*/ );
+	static void parseRadiusDamageAffectsPrerequisites( INI* ini, void *instance, void * /*store*/, const void* /*userData*/ );
 
 	static const FieldParse TheWeaponTemplateFieldParseTable[];		///< the parse table for INI definition
 
 	AsciiString m_name;											///< name for this weapon
+	UnicodeString m_displayName;					///< Display Name
 	NameKeyType m_nameKey;									///< unique name key for this weapon template
 	AsciiString m_projectileStreamName;			///< Name of object that tracks are stream, if we have one
 	AsciiString m_laserName;								///< Name of the laser object that persists.
@@ -543,6 +601,10 @@ private:
 	Int m_shotsPerBarrel;										///< If non zero, don't cycle through your launch points every shot, mod the shot by this to get even chucks of firing
 	Int m_antiMask;													///< what we can target
 	Int m_affectsMask;											///< what we can affect
+	std::vector<ObjectPrerequisite> m_targetPrerequisites;		///< object prerequisites that must be satisfied for targeting
+	std::vector<ObjectPrerequisite> m_shooterPrerequisites;		///< object prerequisites that must be satisfied by the shooting object
+	std::vector<ObjectPrerequisite> m_radiusDamageAffectsPrerequisites;		///< object prerequisites that must be satisfied for radius damage to affect objects
+	Bool m_canAttackWithoutTarget;					///< Cat force Attack on ground or not
 	Int m_collideMask;											///< what we can collide with (projectiles only)
 	Bool m_damageDealtAtSelfPosition;				///< if T, weapon damage is done at source's position, not victim's pos. (useful for suicide weapons.)
 	WeaponReloadType m_reloadType;					///< does the weapon auto-reload a clip when empty?
@@ -562,6 +624,11 @@ private:
 	ObjectStatusTypes m_damageStatusType;		///< If our damage is Status damage, the status we apply
 	UnsignedInt m_suspendFXDelay;						///< The fx can be suspended for any delay, in frames, then they will execute as normal
 	Bool m_dieOnDetonate;
+	AsciiString m_consumeInventory;
+	Int m_radiusDamageAffectsMaxSimultaneous;		///< Maximum number of objects that can be affected by radius damage simultaneously
+	HitSide m_primaryHitSideOverride;							///< Override hit side for primary damage (jets, mines, etc.)
+	HitSide m_secondaryHitSideOverride;						///< Override hit side for secondary damage (jets, mines, etc.)
+	HitSide m_directHitSideOverride;							///< Override hit side for direct hits when distance > 2.0f
 
 	mutable HistoricWeaponDamageList m_historicDamage;
 };
@@ -592,7 +659,9 @@ public:
 
 //~Weapon();
 
-	// return true if we auto-reloaded our clip after firing.
+	// TheSuperHackers @feature author 02/10/2025 Validate weapon use and return detailed result
+	WeaponValidationResult validateWeaponUse( const Object* source, const Object* victim);
+	Bool hasEnoughInventoryToFire(const Object* source) const;
 	Bool fireWeapon(const Object *source, Object *target, ObjectID* projectileID = NULL);
 
 	// return true if we auto-reloaded our clip after firing.
@@ -691,9 +760,11 @@ public:
 	inline const WeaponTemplate* getTemplate() const { return m_template; }
 	inline WeaponSlotType getWeaponSlot() const { return m_wslot; }
 	inline AsciiString getName() const { return m_template->getName(); }
+	inline const UnicodeString& getDisplayName() const { return m_template->getDisplayName(); }
 	inline UnsignedInt getLastShotFrame() const { return m_lastFireFrame; }						///< frame a shot was last fired on
 	// If we are "reloading", then m_ammoInClip is a lie.  It will say full.
 	inline UnsignedInt getRemainingAmmo() const { return (getStatus() == RELOADING_CLIP) ? 0 : m_ammoInClip; }
+	inline UnsignedInt getRemainingAmmoIncludingReload() const { return (getStatus() == RELOADING_CLIP) ? getClipSize() : m_ammoInClip; }
 	inline WeaponReloadType getReloadType() const { return m_template->getReloadType(); }
 	inline Bool getAutoReloadsClip() const { return m_template->getAutoReloadsClip(); }
 	inline Real getAimDelta() const { return m_template->getAimDelta(); }
@@ -714,6 +785,9 @@ public:
 	inline Int getClipSize() const { return m_template->getClipSize(); }
 	// Contact weapons (like car bombs) need to basically collide with their target.
 	inline Bool isContactWeapon() const { return m_template->isContactWeapon(); }
+	
+	// TheSuperHackers @feature author 15/01/2025 Weapon component functionality check
+	Bool isWeaponSlotFunctional(const Object* source) const;
 
 	Int getClipReloadTime(const Object *source) const;
 

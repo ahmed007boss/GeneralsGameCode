@@ -39,6 +39,8 @@
 #include "Common/GameMemory.h"
 #include "Common/NameKeyGenerator.h"
 #include "Common/Snapshot.h"
+#include "Common/UnicodeString.h"
+#include "GameClient/GameText.h"
 
 // FORWARD REFERENCES /////////////////////////////////////////////////////////////////////////////
 enum TimeOfDay CPP_11(: Int);
@@ -103,8 +105,8 @@ enum ModuleInterfaceType CPP_11(: Int)
 class ModuleData : public Snapshot
 {
 public:
-	ModuleData() { }
-	virtual ~ModuleData() { }
+	ModuleData() : m_description(NULL) { }
+	virtual ~ModuleData() { delete m_description; }
 
 	void setModuleTagNameKey( NameKeyType key ) { m_moduleTagNameKey = key; }
 	NameKeyType getModuleTagNameKey() const { return m_moduleTagNameKey; }
@@ -117,9 +119,46 @@ public:
 	virtual const W3DTreeDrawModuleData* getAsW3DTreeDrawModuleData() const { return NULL; }
 	virtual StaticGameLODLevel getMinimumRequiredGameLOD() const { return (StaticGameLODLevel)0;}
 
+	// TheSuperHackers @feature author 01/01/2025 Get module description for UI display
+	virtual UnicodeString getModuleDescription() const 
+	{ 
+		if (!m_description)
+		{
+			m_description = new UnicodeString();
+		}
+		return *m_description;
+	}
+
+	// TheSuperHackers @feature author 01/01/2025 Get module display order for sorting descriptions
+	virtual Int getModuleOrder() const { return 1000; } // Default order for modules without specific ordering
+
 	static void buildFieldParse(MultiIniFieldParse& p)
 	{
-		// nothing
+		static const FieldParse dataFieldParse[] =
+		{
+			{ "Description", parseDescription, NULL, offsetof(ModuleData, m_description) },
+			{ 0, 0, 0, 0 }
+		};
+		p.add(dataFieldParse);
+	}
+
+private:
+	static void parseDescription(INI* ini, void* instance, void* store, const void* userData)
+	{
+		ModuleData* moduleData = static_cast<ModuleData*>(instance);
+		if (!moduleData->m_description)
+		{
+			moduleData->m_description = new UnicodeString();
+		}
+		
+		// Parse the string from INI
+		const char* token = ini->getNextToken();
+		if (token)
+		{
+			// Translate the label
+			UnicodeString translated = TheGameText->fetch(token);
+			moduleData->m_description->set(translated.str());
+		}
 	}
 
 public:
@@ -129,6 +168,9 @@ public:
 
 private:
 	NameKeyType m_moduleTagNameKey;		///< module tag key, unique among all modules for an object instance
+
+protected:
+	mutable UnicodeString* m_description;		///< module description for UI display
 };
 
 //-------------------------------------------------------------------------------------------------

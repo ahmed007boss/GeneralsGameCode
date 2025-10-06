@@ -66,6 +66,7 @@
 // USER INCLUDES //////////////////////////////////////////////////////////////
 #include "GameClient/GameWindow.h"
 // FORWARD REFERENCES /////////////////////////////////////////////////////////
+class DisplayString;
 // TYPE DEFINES ///////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -80,6 +81,9 @@ void GadgetButtonSetText( GameWindow *g, UnicodeString text );
 void GadgetButtonDrawClock( GameWindow *g, Int percent, Color color ); //Darkens the progress
 void GadgetButtonDrawInverseClock( GameWindow *g, Int percent, Color color ); //Darkens the remaining portion.
 void GadgetButtonDrawOverlayImage( GameWindow *g, const Image *image );
+void GadgetButtonDrawOverlayImage2( GameWindow *g, const Image *image );
+void GadgetButtonDrawOverlayImage3( GameWindow *g, const Image *image );
+void GadgetButtonDrawOverlayText( GameWindow *g, DisplayString *textString ); // TheSuperHackers @feature author 15/01/2025 Text overlay for inventory counts
 void GadgetButtonSetBorder( GameWindow *g, Color color, Bool drawBorder = TRUE );
 void GadgetButtonSetData(GameWindow *g, void *data);
 void *GadgetButtonGetData(GameWindow *g);

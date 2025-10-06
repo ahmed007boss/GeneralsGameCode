@@ -69,24 +69,32 @@ class UpgradeMuxData	// does NOT inherit from ModuleData.
 public:
 	mutable std::vector<AsciiString>	m_triggerUpgradeNames;
 	mutable std::vector<AsciiString>	m_activationUpgradeNames;
+	mutable std::vector<AsciiString>	m_requireAnyOfUpgradeNames;
+	mutable std::vector<AsciiString>	m_requireAllOfUpgradeNames;
 	mutable std::vector<AsciiString>	m_conflictingUpgradeNames;
 	mutable std::vector<AsciiString>	m_removalUpgradeNames;
 
 	mutable const FXList*							m_fxListUpgrade;
 	mutable UpgradeMaskType						m_activationMask;				///< Activation only supports a single name currently
 	mutable UpgradeMaskType						m_conflictingMask;			///< Conflicts support multiple listings, and they are an OR
+	mutable UpgradeMaskType						m_requireAllOfMask;			///< Conflicts support multiple listings, and they are an OR
+	mutable UpgradeMaskType						m_requireAnyOfMask;			///< Conflicts support multiple listings, and they are an OR
 	mutable Bool											m_requiresAllTriggers;
 
 	UpgradeMuxData()
 	{
 		m_triggerUpgradeNames.clear();
 		m_activationUpgradeNames.clear();
+		m_requireAllOfUpgradeNames.clear();
+		m_requireAnyOfUpgradeNames.clear();
 		m_conflictingUpgradeNames.clear();
 		m_removalUpgradeNames.clear();
 
 		m_fxListUpgrade = NULL;
 		m_activationMask.clear();
 		m_conflictingMask.clear();
+		m_requireAllOfMask.clear();
+		m_requireAnyOfMask.clear();
 		m_requiresAllTriggers = false;
 	}
 
@@ -95,6 +103,8 @@ public:
 		static const FieldParse dataFieldParse[] =
 		{
 			{ "TriggeredBy",		INI::parseAsciiStringVector, NULL, offsetof( UpgradeMuxData, m_activationUpgradeNames ) },
+			{ "RequiredAnyUpgradeOf",		INI::parseAsciiStringVector, NULL, offsetof( UpgradeMuxData, m_requireAnyOfUpgradeNames) },
+			{ "RequiredAllUpgradesOf",		INI::parseAsciiStringVector, NULL, offsetof( UpgradeMuxData, m_requireAllOfUpgradeNames) },
 			{ "ConflictsWith",	INI::parseAsciiStringVector, NULL, offsetof( UpgradeMuxData, m_conflictingUpgradeNames ) },
 			{ "RemovesUpgrades",INI::parseAsciiStringVector, NULL, offsetof( UpgradeMuxData, m_removalUpgradeNames ) },
 			{ "FXListUpgrade",	INI::parseFXList, NULL, offsetof( UpgradeMuxData, m_fxListUpgrade ) },
@@ -104,7 +114,7 @@ public:
 		return dataFieldParse;
 	}
 	Bool requiresAllActivationUpgrades() const;
-	void getUpgradeActivationMasks(UpgradeMaskType& activation, UpgradeMaskType& conflicting) const;	///< The first time someone looks at my mask, I'll figure it out.
+	void getUpgradeActivationMasks(UpgradeMaskType& activation, UpgradeMaskType& conflicting, UpgradeMaskType& requireAnyOf, UpgradeMaskType& requireAllOf) const;	///< The first time someone looks at my mask, I'll figure it out.
 	void performUpgradeFX(Object* obj) const;
 	void muxDataProcessUpgradeRemoval(Object* obj) const;
 	Bool isTriggeredBy(const std::string &upgrade) const;
@@ -131,7 +141,7 @@ protected:
 
 	void setUpgradeExecuted(Bool e) { m_upgradeExecuted = e; }
 	virtual void upgradeImplementation( ) = 0; ///< Here's the actual work of Upgrading
-	virtual void getUpgradeActivationMasks(UpgradeMaskType& activation, UpgradeMaskType& conflicting) const = 0; ///< Here's the actual work of Upgrading
+	virtual void getUpgradeActivationMasks(UpgradeMaskType& activation, UpgradeMaskType& conflicting, UpgradeMaskType& requireAnyOf, UpgradeMaskType& requireAllOf) const = 0; ///< Here's the actual work of Upgrading
 	virtual void performUpgradeFX() = 0;	///< perform the associated fx list
 	virtual Bool requiresAllActivationUpgrades() const = 0;
 	virtual Bool isSubObjectsUpgrade() = 0;
@@ -200,9 +210,9 @@ protected:
 		return getUpgradeModuleData()->m_upgradeMuxData.m_requiresAllTriggers;
 	}
 
-	virtual void getUpgradeActivationMasks(UpgradeMaskType& activation, UpgradeMaskType& conflicting) const
+	virtual void getUpgradeActivationMasks(UpgradeMaskType& activation, UpgradeMaskType& conflicting, UpgradeMaskType& requireAnyOf, UpgradeMaskType& requireAllOf) const
 	{
-		getUpgradeModuleData()->m_upgradeMuxData.getUpgradeActivationMasks(activation, conflicting);
+		getUpgradeModuleData()->m_upgradeMuxData.getUpgradeActivationMasks(activation, conflicting, requireAnyOf, requireAllOf);
 	}
 
 	virtual void performUpgradeFX()

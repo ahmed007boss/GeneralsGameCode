@@ -173,9 +173,15 @@ enum Scorches CPP_11(: Int)
 //-------------------------------------------------------------------------------------------------
 enum WeaponSlotType CPP_11(: Int)
 {
+	NONE_WEAPON = -1,
 	PRIMARY_WEAPON = 0,
 	SECONDARY_WEAPON,
 	TERTIARY_WEAPON,
+	WEAPON_FOUR,
+	WEAPON_FIVE,
+	WEAPON_SIX,
+	WEAPON_SEVEN,
+	WEAPON_EIGHT,
 
 	WEAPONSLOT_COUNT
 };
@@ -190,6 +196,22 @@ enum WeaponSlotType CPP_11(: Int)
 // Note that the bridges just index in the pathfinder, so you don't actually
 // have a LAYER_BRIDGE_1 enum value.
 enum PathfindLayerEnum CPP_11(: Int) {LAYER_INVALID = 0, LAYER_GROUND = 1, LAYER_WALL = 15, LAYER_LAST=15};
+
+//-------------------------------------------------------------------------------------------------
+// Value type enumeration for upgrades and modifications
+//-------------------------------------------------------------------------------------------------
+enum ValueType CPP_11(: Int)
+{
+	VALUE_TYPE_ABSOLUTE,		///< Absolute value (add/subtract directly)
+	VALUE_TYPE_PERCENTAGE,		///< Percentage value (multiply by percentage)
+	
+	VALUE_TYPE_COUNT
+};
+
+//-------------------------------------------------------------------------------------------------
+// Value type names for INI parsing
+//-------------------------------------------------------------------------------------------------
+extern const char *const TheValueTypeNames[];
 
 //-------------------------------------------------------------------------------------------------
 

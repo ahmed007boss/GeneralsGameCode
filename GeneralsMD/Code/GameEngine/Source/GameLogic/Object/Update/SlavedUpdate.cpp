@@ -88,12 +88,42 @@ void SlavedUpdate::onObjectCreated()
 void SlavedUpdate::onEnslave( const Object *slaver )
 {
 	startSlavedEffects( slaver );
+	
+	// Register this slaved object with its master for efficient lookup
+	if (slaver)
+	{
+		// Cast away const to add to master's slaved list
+		Object* master = const_cast<Object*>(slaver);
+		master->addSlavedObject(getObject());
+	}
 }
 
 //-------------------------------------------------------------------------------------------------
 void SlavedUpdate::onSlaverDie( const DamageInfo *info )
 {
+	const SlavedUpdateModuleData* data = getSlavedUpdateModuleData();
+	
 	stopSlavedEffects();
+	
+	// Remove this slaved object from its master's list
+	if (m_slaver != INVALID_ID)
+	{
+		Object* master = TheGameLogic->findObjectByID(m_slaver);
+		if (master)
+		{
+			master->removeSlavedObject(getObject());
+		}
+	}
+	
+	// TheSuperHackers @feature Ahmed Salah 15/01/2025 Kill slave if configured to die when slaver dies
+	if (data->m_dieWhenSlaverDies)
+	{
+		Object* me = getObject();
+		if (me)
+		{
+			me->kill();
+		}
+	}
 }
 
 //-------------------------------------------------------------------------------------------------

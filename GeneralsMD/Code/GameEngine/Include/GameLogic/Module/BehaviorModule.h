@@ -34,6 +34,7 @@
 
 #include "Common/GameType.h"
 #include "Common/Module.h"
+#include "Common/UnicodeString.h"
 
 //-------------------------------------------------------------------------------------------------
 class Team;
@@ -95,13 +96,14 @@ public:
 	{
     ModuleData::buildFieldParse(p);
 	}
+
 };
 
 //-------------------------------------------------------------------------------------------------
 class BehaviorModuleInterface
 {
 public:
-
+	
 	virtual BodyModuleInterface* getBody() = 0;
 	virtual CollideModuleInterface* getCollide() = 0;
 	virtual ContainModuleInterface* getContain() = 0;
@@ -148,7 +150,7 @@ class BehaviorModule : public ObjectModule, public BehaviorModuleInterface
 
 	MEMORY_POOL_GLUE_ABC( BehaviorModule )
 
-public:
+	public:
 
 	BehaviorModule( Thing *thing, const ModuleData* moduleData );
 	// virtual destructor prototype defined by MemoryPoolObject
@@ -166,7 +168,7 @@ public:
 	virtual SpecialPowerModuleInterface* getSpecialPower() { return NULL; }
 	virtual UpdateModuleInterface* getUpdate() { return NULL; }
 	virtual UpgradeModuleInterface* getUpgrade() { return NULL; }
-  virtual StealthUpdate* getStealth() { return NULL; }
+  	virtual StealthUpdate* getStealth() { return NULL; }
 	virtual SpyVisionUpdate* getSpyVisionUpdate() { return NULL; }
 
 	virtual ParkingPlaceBehaviorInterface* getParkingPlaceBehaviorInterface() { return NULL; }
@@ -195,7 +197,7 @@ public:
 	virtual CountermeasuresBehaviorInterface* getCountermeasuresBehaviorInterface() { return NULL; }
 	virtual const CountermeasuresBehaviorInterface* getCountermeasuresBehaviorInterface() const { return NULL; }
 
-protected:
+	protected:
 
 	// snapshot methods
 	virtual void crc( Xfer *xfer );

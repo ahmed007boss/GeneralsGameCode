@@ -55,6 +55,9 @@
 #include "GameLogic/GameLogic.h"
 #include "GameLogic/Object.h"
 #include "GameLogic/Module/ProductionUpdate.h"
+#include "GameLogic/Module/WeaponRangeDecalBehavior.h"
+#include "GameLogic/Module/InventoryBehavior.h"
+#include "GameLogic/Module/BodyModule.h"
 
 
 
@@ -119,26 +122,37 @@ CBCommandStatus ControlBar::processCommandTransitionUI( GameWindow *control, Gad
 
 //-------------------------------------------------------------------------------------------------
 /** Process a button selected message from the window system that should be for one of
-	* our GUI commands */
+	* our GUI commands */ 
 //-------------------------------------------------------------------------------------------------
 CBCommandStatus ControlBar::processCommandUI( GameWindow *control,
-																							GadgetGameMessage gadgetMessage )
+																							GadgetGameMessage gadgetMessage,
+																							Bool ctrlPressed,
+																							Bool altPressed,
+																							Bool shiftPressed,
+																							Bool isRightClick )
 {
 	// get the command pointer from the control user data we put in the button
-	const CommandButton *commandButton = (const CommandButton *)GadgetButtonGetData(control);
-	if( !commandButton )
+	const CommandButton *orgCommandButton = (const CommandButton *)GadgetButtonGetData(control);
+	if( !orgCommandButton)
 	{
 		DEBUG_CRASH( ("ControlBar::processCommandUI() -- Button activated has no data. Ignoring...") );
 		return CBC_COMMAND_NOT_USED;
 	}
 
+	// Check if there's a specific button for this modifier combination
+	// TheSuperHackers @modifier Ahmed Salah 27/06/2025 Use temporary variable to handle const reassignment for modifier-based command buttons
+	const CommandButton* actualCommandButton = orgCommandButton;
+	if (ctrlPressed || altPressed || shiftPressed || isRightClick)
+	{
+	
+	
 	// sanity, we won't process messages if we have no source object,
 	// unless we're CB_CONTEXT_PURCHASE_SCIENCE or GUI_COMMAND_SPECIAL_POWER_FROM_SHORTCUT
 	if( m_currContext != CB_CONTEXT_MULTI_SELECT &&
-			commandButton->getCommandType() != GUI_COMMAND_PURCHASE_SCIENCE &&
-			commandButton->getCommandType() != GUI_COMMAND_SPECIAL_POWER_FROM_SHORTCUT &&
-			commandButton->getCommandType() != GUI_COMMAND_SPECIAL_POWER_CONSTRUCT_FROM_SHORTCUT &&
-			commandButton->getCommandType() != GUI_COMMAND_SELECT_ALL_UNITS_OF_TYPE &&
+			actualCommandButton->getCommandType() != GUI_COMMAND_PURCHASE_SCIENCE &&
+			actualCommandButton->getCommandType() != GUI_COMMAND_SPECIAL_POWER_FROM_SHORTCUT &&
+			actualCommandButton->getCommandType() != GUI_COMMAND_SPECIAL_POWER_CONSTRUCT_FROM_SHORTCUT &&
+			actualCommandButton->getCommandType() != GUI_COMMAND_SELECT_ALL_UNITS_OF_TYPE &&
 			(m_currentSelectedDrawable == NULL || m_currentSelectedDrawable->getObject() == NULL) )
 	{
 
@@ -146,6 +160,49 @@ CBCommandStatus ControlBar::processCommandUI( GameWindow *control,
 			switchToContext( CB_CONTEXT_NONE, NULL );
 		return CBC_COMMAND_NOT_USED;
 
+	}
+
+	const CommandButton* modifierButton = actualCommandButton->getButtonForModifiers(ctrlPressed, altPressed, shiftPressed, isRightClick);
+	if (modifierButton)
+	{
+		// TheSuperHackers @fix Ahmed Salah 27/06/2025 Handle null m_currentSelectedDrawable when multiple objects are selected
+		Object* obj = NULL;
+		if (m_currentSelectedDrawable)
+		{
+			obj = m_currentSelectedDrawable->getObject();
+		}
+		else
+		{
+			// When multiple objects are selected, get the first selected object for command availability checking
+			// TheSuperHackers @restriction Ahmed Salah 27/06/2025 Check if any selected unit is holding position
+			// this should be redone work on all units that has the ability to hold position
+			const DrawableList *selectedDrawables = TheInGameUI->getAllSelectedDrawables();
+			if (!selectedDrawables->empty())
+			{
+				Drawable *firstDrawable = selectedDrawables->front();
+				if (firstDrawable)
+				{
+					obj = firstDrawable->getObject();
+				}
+			}
+		}
+		
+		CommandAvailability availability = getCommandAvailability(modifierButton, obj, control);
+		if (availability == COMMAND_AVAILABLE)
+		{
+			// Use the modifier-specific button instead of the original button
+			actualCommandButton = modifierButton;
+		}
+		else
+		{
+			return CBC_COMMAND_NOT_USED;
+		}
+	}
+	else
+		if (isRightClick)
+		{
+			return CBC_COMMAND_NOT_USED;
+		}
 	}
 
 	// sanity
@@ -157,16 +214,17 @@ CBCommandStatus ControlBar::processCommandUI( GameWindow *control,
 		return CBC_COMMAND_NOT_USED;
 
 
-	if( commandButton == NULL )
+	if( actualCommandButton == NULL )
 		return CBC_COMMAND_NOT_USED;
 
 	// if the button is flashing, tell it to stop flashing
-	commandButton->setFlashCount(0);
+	actualCommandButton->setFlashCount(0);
 	TheControlBar->setFlash( FALSE );
 
-	if( commandButton->getCommandType() != GUI_COMMAND_EXIT_CONTAINER )
+	if( actualCommandButton->getCommandType() != GUI_COMMAND_EXIT_CONTAINER )
 	{
-		GadgetButtonSetEnabledImage( control, commandButton->getButtonImage() );
+		// TheSuperHackers @ui Ahmed Salah 27/06/2025 Use original button image for UI display while processing modifier-based command
+		GadgetButtonSetEnabledImage( control, orgCommandButton->getButtonImage() );
 	}
 
 	//
@@ -175,15 +233,15 @@ CBCommandStatus ControlBar::processCommandUI( GameWindow *control,
 	//
 	Object *obj = NULL;
 	if( m_currContext != CB_CONTEXT_MULTI_SELECT &&
-			commandButton->getCommandType() != GUI_COMMAND_PURCHASE_SCIENCE &&
-			commandButton->getCommandType() != GUI_COMMAND_SPECIAL_POWER_FROM_SHORTCUT &&
-			commandButton->getCommandType() != GUI_COMMAND_SPECIAL_POWER_CONSTRUCT_FROM_SHORTCUT &&
-			commandButton->getCommandType() != GUI_COMMAND_SELECT_ALL_UNITS_OF_TYPE )
+			actualCommandButton->getCommandType() != GUI_COMMAND_PURCHASE_SCIENCE &&
+			actualCommandButton->getCommandType() != GUI_COMMAND_SPECIAL_POWER_FROM_SHORTCUT &&
+			actualCommandButton->getCommandType() != GUI_COMMAND_SPECIAL_POWER_CONSTRUCT_FROM_SHORTCUT &&
+			actualCommandButton->getCommandType() != GUI_COMMAND_SELECT_ALL_UNITS_OF_TYPE )
 		obj = m_currentSelectedDrawable->getObject();
 
 	//@todo Kris -- Special case code so convoy trucks can detonate nuke trucks -- if other things need this,
 	//rethink it.
-	if( obj && BitIsSet( commandButton->getOptions(), SINGLE_USE_COMMAND ) )
+	if( obj && BitIsSet( actualCommandButton->getOptions(), SINGLE_USE_COMMAND ) )
 	{
 		/** @todo Added obj check because Single Use and Multi Select crash when used together, but with this check
 			* they just won't work.  When the "rethinking" occurs, this can get fixed.  Right now it is unused.
@@ -203,14 +261,29 @@ CBCommandStatus ControlBar::processCommandUI( GameWindow *control,
 	Player *player = ThePlayerList->getLocalPlayer();
 	if( player )
 	{
-		AudioEventRTS sound = *commandButton->getUnitSpecificSound();
+		AudioEventRTS sound = *actualCommandButton->getUnitSpecificSound();
 		sound.setPlayerIndex( player->getPlayerIndex() );
 		TheAudio->addAudioEvent( &sound );
 	}
 
-	if( BitIsSet( commandButton->getOptions(), COMMAND_OPTION_NEED_TARGET ) )
+	if( BitIsSet( actualCommandButton->getOptions(), COMMAND_OPTION_NEED_TARGET ) )
 	{
-		if (commandButton->getOptions() & USES_MINE_CLEARING_WEAPONSET)
+		// TheSuperHackers @restriction Ahmed Salah 27/06/2025 Check if guard commands should guard in position when units are holding position
+		if( actualCommandButton->getCommandType() == GUI_COMMAND_GUARD ||
+			actualCommandButton->getCommandType() == GUI_COMMAND_GUARD_WITHOUT_PURSUIT ||
+			actualCommandButton->getCommandType() == GUI_COMMAND_GUARD_FLYING_UNITS_ONLY ||
+			actualCommandButton->getCommandType() == GUI_COMMAND_RAID)
+		{
+			// Check if the current object is holding position
+			if( obj && obj->isDisabledByType( DISABLED_HELD ) )
+			{
+				// Guard in position instead of requiring target selection
+				TheMessageStream->appendMessage( GameMessage::MSG_ENABLE_HOLD_POSITION_AND_GUARD );
+				return CBC_COMMAND_USED;
+			}
+		}
+		
+		if (actualCommandButton->getOptions() & USES_MINE_CLEARING_WEAPONSET)
 		{
 			TheMessageStream->appendMessage( GameMessage::MSG_SET_MINE_CLEARING_DETAIL );
 		}
@@ -225,11 +298,10 @@ CBCommandStatus ControlBar::processCommandUI( GameWindow *control,
 		//with. For example, the terrorist can jack a car and convert it into a carbomb, but he has to
 		//click on a valid car. In this case the doCommandOrHint code will determine if the mode is valid
 		//or not and the cursor modes will be set appropriately.
-		TheInGameUI->setGUICommand( commandButton );
+		TheInGameUI->setGUICommand( actualCommandButton );
 	}
-	else switch( commandButton->getCommandType() )
+	else switch( actualCommandButton->getCommandType() )
 	{
-
 		//---------------------------------------------------------------------------------------------
 		case GUI_COMMAND_DOZER_CONSTRUCT:
 		{
@@ -241,9 +313,16 @@ CBCommandStatus ControlBar::processCommandUI( GameWindow *control,
 			//Kris: September 27, 2002
 			//Make sure we have enough CASH to build it WHEN we click the button to build it,
 			//before actually previewing the purchase, otherwise, cancel altogether.
-			const ThingTemplate *whatToBuild = commandButton->getThingTemplate();
+			const ThingTemplate *whatToBuild = actualCommandButton->getThingTemplate();
 			CanMakeType cmt = TheBuildAssistant->canMakeUnit( obj, whatToBuild );
 			if (cmt == CANMAKE_NO_MONEY)
+			{
+				TheEva->setShouldPlay(EVA_InsufficientFunds);
+				TheInGameUI->message( "GUI:NotEnoughMoneyToBuild" );
+				break;
+			}
+			// TheSuperHackers @feature author 15/01/2025 Additional cost check using centralized method
+			else if (actualCommandButton->getCostOfExecution(ThePlayerList->getLocalPlayer(), obj) > ThePlayerList->getLocalPlayer()->getMoney()->countMoney())
 			{
 				TheEva->setShouldPlay(EVA_InsufficientFunds);
 				TheInGameUI->message( "GUI:NotEnoughMoneyToBuild" );
@@ -266,7 +345,7 @@ CBCommandStatus ControlBar::processCommandUI( GameWindow *control,
 			}
 
 			// tell the UI that we want to build something so we get a building at the cursor
-			TheInGameUI->placeBuildAvailable( commandButton->getThingTemplate(), m_currentSelectedDrawable );
+			TheInGameUI->placeBuildAvailable( actualCommandButton->getThingTemplate(), m_currentSelectedDrawable );
 
 			break;
 
@@ -276,17 +355,24 @@ CBCommandStatus ControlBar::processCommandUI( GameWindow *control,
 		case GUI_COMMAND_SPECIAL_POWER_CONSTRUCT_FROM_SHORTCUT:
 		{
 			//Determine the object that would construct it.
-			const SpecialPowerTemplate *spTemplate = commandButton->getSpecialPowerTemplate();
+			const SpecialPowerTemplate *spTemplate = actualCommandButton->getSpecialPowerTemplate();
 			SpecialPowerType spType = spTemplate->getSpecialPowerType();
 			Object* obj = ThePlayerList->getLocalPlayer()->findMostReadyShortcutSpecialPowerOfType( spType );
 			if( !obj )
 				break;
 			Drawable *draw = obj->getDrawable();
 
-			const ThingTemplate *whatToBuild = commandButton->getThingTemplate();
+			const ThingTemplate *whatToBuild = actualCommandButton->getThingTemplate();
 
 			CanMakeType cmt = TheBuildAssistant->canMakeUnit( obj, whatToBuild );
 			if (cmt == CANMAKE_NO_MONEY)
+			{
+				TheEva->setShouldPlay(EVA_InsufficientFunds);
+				TheInGameUI->message( "GUI:NotEnoughMoneyToBuild" );
+				break;
+			}
+			// TheSuperHackers @feature author 15/01/2025 Additional cost check using centralized method
+			else if (actualCommandButton->getCostOfExecution(ThePlayerList->getLocalPlayer(), obj) > ThePlayerList->getLocalPlayer()->getMoney()->countMoney())
 			{
 				TheEva->setShouldPlay(EVA_InsufficientFunds);
 				TheInGameUI->message( "GUI:NotEnoughMoneyToBuild" );
@@ -309,12 +395,12 @@ CBCommandStatus ControlBar::processCommandUI( GameWindow *control,
 			}
 
 			// tell the UI that we want to build something so we get a building at the cursor
-			TheInGameUI->placeBuildAvailable( commandButton->getThingTemplate(), draw );
+			TheInGameUI->placeBuildAvailable( actualCommandButton->getThingTemplate(), draw );
 
 			ProductionUpdateInterface* pu = obj->getProductionUpdateInterface();
 			if( pu )
 			{
-				pu->setSpecialPowerConstructionCommandButton( commandButton );
+				pu->setSpecialPowerConstructionCommandButton( actualCommandButton );
 			}
 
 			break;
@@ -325,10 +411,17 @@ CBCommandStatus ControlBar::processCommandUI( GameWindow *control,
 			if( m_currentSelectedDrawable == NULL )
 				break;
 
-			const ThingTemplate *whatToBuild = commandButton->getThingTemplate();
+			const ThingTemplate *whatToBuild = actualCommandButton->getThingTemplate();
 
 			CanMakeType cmt = TheBuildAssistant->canMakeUnit( obj, whatToBuild );
 			if (cmt == CANMAKE_NO_MONEY)
+			{
+				TheEva->setShouldPlay(EVA_InsufficientFunds);
+				TheInGameUI->message( "GUI:NotEnoughMoneyToBuild" );
+				break;
+			}
+			// TheSuperHackers @feature author 15/01/2025 Additional cost check using centralized method
+			else if (actualCommandButton->getCostOfExecution(ThePlayerList->getLocalPlayer(), obj) > ThePlayerList->getLocalPlayer()->getMoney()->countMoney())
 			{
 				TheEva->setShouldPlay(EVA_InsufficientFunds);
 				TheInGameUI->message( "GUI:NotEnoughMoneyToBuild" );
@@ -351,12 +444,12 @@ CBCommandStatus ControlBar::processCommandUI( GameWindow *control,
 			}
 
 			// tell the UI that we want to build something so we get a building at the cursor
-			TheInGameUI->placeBuildAvailable( commandButton->getThingTemplate(), m_currentSelectedDrawable );
+			TheInGameUI->placeBuildAvailable( actualCommandButton->getThingTemplate(), m_currentSelectedDrawable );
 
 			ProductionUpdateInterface* pu = obj->getProductionUpdateInterface();
 			if( pu )
 			{
-				pu->setSpecialPowerConstructionCommandButton( commandButton );
+				pu->setSpecialPowerConstructionCommandButton( actualCommandButton );
 			}
 
 			break;
@@ -389,7 +482,7 @@ CBCommandStatus ControlBar::processCommandUI( GameWindow *control,
 		case GUI_COMMAND_UNIT_BUILD:
 		{
 			//
-			const ThingTemplate *whatToBuild = commandButton->getThingTemplate();
+			const ThingTemplate *whatToBuild = actualCommandButton->getThingTemplate();
 
 			// get the "factory" object that is going to make the thing
 			Object *factory = obj;
@@ -398,11 +491,18 @@ CBCommandStatus ControlBar::processCommandUI( GameWindow *control,
 
 			// sanity, we must have something to build
 			DEBUG_ASSERTCRASH( whatToBuild, ("Undefined BUILD command for object '%s'",
-												 commandButton->getThingTemplate()->getName().str()) );
+												 actualCommandButton->getThingTemplate()->getName().str()) );
 
 			CanMakeType cmt = TheBuildAssistant->canMakeUnit(factory, whatToBuild);
 
 			if (cmt == CANMAKE_NO_MONEY)
+			{
+				TheEva->setShouldPlay(EVA_InsufficientFunds);
+				TheInGameUI->message( "GUI:NotEnoughMoneyToBuild" );
+				break;
+			}
+			// TheSuperHackers @feature author 15/01/2025 Additional cost check using centralized method
+			else if (actualCommandButton->getCostOfExecution(ThePlayerList->getLocalPlayer(), factory) > ThePlayerList->getLocalPlayer()->getMoney()->countMoney())
 			{
 				TheEva->setShouldPlay(EVA_InsufficientFunds);
 				TheInGameUI->message( "GUI:NotEnoughMoneyToBuild" );
@@ -445,14 +545,46 @@ CBCommandStatus ControlBar::processCommandUI( GameWindow *control,
 
 			}
 
-			// get a new production id to assign to this
-			ProductionID productionID = pu->requestUniqueUnitID();
+			// TheSuperHackers @feature author 15/01/2025 Queue multiple units based on Amount property and mass production
+			Int amount = actualCommandButton->getAmount();
+			
+			// Check for mass production with modifier keys
+			if (actualCommandButton->getEnableMassProduction() && 
+				actualCommandButton->getCommandType() == GUI_COMMAND_UNIT_BUILD) {
+				
+				// Get MaxSimultaneousOfType to limit mass production options
+				Int maxSimultaneous = 0;
+				if (whatToBuild) {
+					maxSimultaneous = whatToBuild->getMaxSimultaneousOfType();
+				}
+				
+				// Check if modifier buttons are not assigned and modifier keys are pressed
+				// Also check MaxSimultaneousOfType limits (ignore if maxSimultaneous < 1, meaning unlimited)
+				if (shiftPressed && !actualCommandButton->getLeftClickShiftButton() && (maxSimultaneous < 1 || maxSimultaneous >= 3)) {
+					amount = 3;  // Shift+Click = 3x
+				} else if (ctrlPressed && !actualCommandButton->getLeftClickCtrlButton() && (maxSimultaneous < 1 || maxSimultaneous >= 6)) {
+					amount = 6;  // Ctrl+Click = 6x
+				} else if (altPressed && !actualCommandButton->getLeftClickAltButton() && (maxSimultaneous < 1 || maxSimultaneous >= 9)) {
+					amount = 9;  // Alt+Click = 9x
+				}
+			}
+			
+			for (Int i = 0; i < amount; i++) {
+				// Check eligibility before each unit is queued
+				CanMakeType canMake = TheBuildAssistant->canMakeUnit(factory, whatToBuild);
+				if (canMake == CANMAKE_OK) {
+					// get a new production id to assign to this
+					ProductionID productionID = pu->requestUniqueUnitID();
 
-			// create a message to build this thing
-
-			GameMessage *msg = TheMessageStream->appendMessage( GameMessage::MSG_QUEUE_UNIT_CREATE );
-			msg->appendIntegerArgument( whatToBuild->getTemplateID() );
-			msg->appendIntegerArgument( productionID );
+					// create a message to build this thing
+					GameMessage *msg = TheMessageStream->appendMessage( GameMessage::MSG_QUEUE_UNIT_CREATE );
+					msg->appendIntegerArgument( whatToBuild->getTemplateID() );
+					msg->appendIntegerArgument( productionID );
+				} else {
+					// Stop queuing if we can't queue more units
+					break;
+				}
+			}
 
 			break;
 
@@ -504,7 +636,7 @@ CBCommandStatus ControlBar::processCommandUI( GameWindow *control,
 		//---------------------------------------------------------------------------------------------
 		case GUI_COMMAND_PLAYER_UPGRADE:
 		{
-			const UpgradeTemplate *upgradeT = commandButton->getUpgradeTemplate();
+			const UpgradeTemplate *upgradeT = actualCommandButton->getUpgradeTemplate();
 			DEBUG_ASSERTCRASH( upgradeT, ("Undefined upgrade '%s' in player upgrade command", "UNKNOWN") );
 
 			// sanity
@@ -540,7 +672,7 @@ CBCommandStatus ControlBar::processCommandUI( GameWindow *control,
 		//---------------------------------------------------------------------------------------------
 		case GUI_COMMAND_OBJECT_UPGRADE:
 		{
-			const UpgradeTemplate *upgradeT = commandButton->getUpgradeTemplate();
+			const UpgradeTemplate *upgradeT = actualCommandButton->getUpgradeTemplate();
 			DEBUG_ASSERTCRASH( upgradeT, ("Undefined upgrade '%s' in object upgrade command", "UNKNOWN") );
 			// sanity
 			if( upgradeT == NULL )
@@ -629,6 +761,14 @@ CBCommandStatus ControlBar::processCommandUI( GameWindow *control,
 			break;
 
 		//---------------------------------------------------------------------------------------------
+		case GUI_COMMAND_GROUP_MOVE:
+			TheMessageStream->appendMessage(GameMessage::MSG_META_TOGGLE_GROUPMOVE);
+			break;
+		case GUI_COMMAND_GROUP_ATTACK_MOVE:
+			TheMessageStream->appendMessage(GameMessage::MSG_META_TOGGLE_GROUPMOVE);
+			break;
+
+		//---------------------------------------------------------------------------------------------
 		case GUI_COMMAND_STOP:
 		{
 			// This message always works on the currently selected team
@@ -644,7 +784,7 @@ CBCommandStatus ControlBar::processCommandUI( GameWindow *control,
 				break;
 			}
 
-			const ThingTemplate *thing = commandButton->getThingTemplate();
+			const ThingTemplate *thing = actualCommandButton->getThingTemplate();
 			if( !thing )
 			{
 				break;
@@ -713,14 +853,12 @@ CBCommandStatus ControlBar::processCommandUI( GameWindow *control,
 
 			}
 
-      //what if container is subdued... assert a logic failure, perhaps?
-
+      		//what if container is subdued... assert a logic failure, perhaps?
 			// send message to exit
 			GameMessage *exitMsg = TheMessageStream->appendMessage( GameMessage::MSG_EXIT );
 			exitMsg->appendObjectIDArgument( objWantingExit->getID() ); // 0 is the thing inside coming out
 
 			break;
-
 		}
 
 		//---------------------------------------------------------------------------------------------
@@ -729,7 +867,7 @@ CBCommandStatus ControlBar::processCommandUI( GameWindow *control,
 			// Cancel GUI command mode.
 			TheInGameUI->setGUICommand( NULL );
 
-			if (BitIsSet(commandButton->getOptions(), NEED_TARGET_POS) == FALSE) {
+			if (BitIsSet(actualCommandButton->getOptions(), NEED_TARGET_POS) == FALSE) {
 				pickAndPlayUnitVoiceResponse( TheInGameUI->getAllSelectedDrawables(), GameMessage::MSG_EVACUATE );
 				TheMessageStream->appendMessage( GameMessage::MSG_EVACUATE );
 			}
@@ -756,17 +894,14 @@ CBCommandStatus ControlBar::processCommandUI( GameWindow *control,
 		case GUI_COMMAND_SET_RALLY_POINT:
 		{
 			break;
-
 		}
 
 		//---------------------------------------------------------------------------------------------
 		case GUI_COMMAND_SELL:
 		{
-
 			// command needs no additional data, send the message
 			TheMessageStream->appendMessage( GameMessage::MSG_SELL );
 			break;
-
 		}
 
 		// --------------------------------------------------------------------------------------------
@@ -776,6 +911,73 @@ CBCommandStatus ControlBar::processCommandUI( GameWindow *control,
 			TheMessageStream->appendMessage( GameMessage::MSG_TOGGLE_OVERCHARGE );
 			break;
 
+		}
+
+		case GUI_COMMAND_TOGGLE_RANGE_DECAL:
+		{					
+			// Toggle range decals for selected objects
+			if (obj)
+			{	// Get the weapon slot from the command button
+				WeaponSlotType commandWeaponSlot = actualCommandButton->getWeaponSlot();
+				if (commandWeaponSlot == NONE_WEAPON)
+				{
+					commandWeaponSlot = obj->getCurWeaponSlot();				
+				}
+
+				WeaponSlotType currentSlot = obj->getRangeDecalShownForSlot();
+				// Toggle: if currently showing this slot, turn off (set to -1), otherwise turn on
+				WeaponSlotType newSlot = (currentSlot == commandWeaponSlot) ? (WeaponSlotType)-2 : commandWeaponSlot;
+				obj->setRangeDecalShownForSlot(newSlot);				
+				// Notify WeaponRangeDecalBehavior modules to refresh their state
+				if (!obj->refreshWeaponRangeDecalState())
+				{
+					DEBUG_ASSERTCRASH(0, ("No WeaponRangeDecalBehavior found on object '%s' when toggling range decal", obj->getTemplate()->getName().str()));
+				}
+			}	
+			break;
+		}
+
+		case GUI_COMMAND_TOGGLE_HOLD_POSITION:
+		{
+			// Toggle hold position (disabled status HELD) for selected objects
+			TheMessageStream->appendMessage( GameMessage::MSG_TOGGLE_HOLD_POSITION );
+			break;
+		}
+
+		case GUI_COMMAND_ENABLE_HOLD_POSITION_AND_GUARD:
+		{
+			// Toggle hold position and guard from current position for selected objects
+			TheMessageStream->appendMessage( GameMessage::MSG_ENABLE_HOLD_POSITION_AND_GUARD );
+			break;
+		}
+
+		//---------------------------------------------------------------------------------------------
+		case GUI_COMMAND_GUARD_IN_PLACE:
+		{
+			// TheSuperHackers @feature Ahmed Salah 15/01/2025 Guard at current location
+			TheMessageStream->appendMessage( GameMessage::MSG_GUARD_IN_PLACE );
+			break;
+		}
+
+		case GUI_COMMAND_GUARD_IN_PLACE_WITHOUT_PURSUIT:
+		{
+			// TheSuperHackers @feature Ahmed Salah 15/01/2025 Guard at current location without pursuit
+			TheMessageStream->appendMessage( GameMessage::MSG_GUARD_IN_PLACE_WITHOUT_PURSUIT );
+			break;
+		}
+
+		case GUI_COMMAND_GUARD_IN_PLACE_FLYING_UNITS_ONLY:
+		{
+			// TheSuperHackers @feature Ahmed Salah 15/01/2025 Guard at current location, flying units only
+			TheMessageStream->appendMessage( GameMessage::MSG_GUARD_IN_PLACE_FLYING_UNITS_ONLY );
+			break;
+		}
+
+		case GUI_COMMAND_RAID:
+		{
+			// TheSuperHackers @feature Ahmed Salah 15/01/2025 Raid command - each unit attacks one enemy in area
+			TheMessageStream->appendMessage( GameMessage::MSG_DO_RAID );
+			break;
 		}
 
 #ifdef ALLOW_SURRENDER
@@ -815,11 +1017,30 @@ CBCommandStatus ControlBar::processCommandUI( GameWindow *control,
 
 				//Play mode change acknowledgement
 				PickAndPlayInfo info;
-				WeaponSlotType slot = commandButton->getWeaponSlot();
+				WeaponSlotType slot = actualCommandButton->getWeaponSlot();
 				info.m_weaponSlot = &slot;
 				pickAndPlayUnitVoiceResponse( TheInGameUI->getAllSelectedDrawables(), GameMessage::MSG_SWITCH_WEAPONS, &info );
 
-				msg->appendIntegerArgument( commandButton->getWeaponSlot() );
+				msg->appendIntegerArgument( actualCommandButton->getWeaponSlot() );										
+				
+				// Turn off range decals when switching weapons
+				if (obj)
+				{
+					// Turn off range decals for the current weapon slot
+					obj->setRangeDecalShownForSlot((WeaponSlotType)-2);
+					
+					// Notify WeaponRangeDecalBehavior modules to refresh their state
+					for (BehaviorModule** i = obj->getBehaviorModules(); *i; ++i)
+					{
+						WeaponRangeDecalBehavior* behavior = dynamic_cast<WeaponRangeDecalBehavior*>(*i);
+						if (behavior)
+						{
+							behavior->refreshDecalState();
+						}
+					}
+				}
+				// TheSuperHackers @feature author 15/01/2025 Mark UI dirty after weapon switching
+				markUIDirty();
 				break;
 		}
 
@@ -828,17 +1049,69 @@ CBCommandStatus ControlBar::processCommandUI( GameWindow *control,
 		{
 			// command needs no additional data, send the message
 			GameMessage *msg = TheMessageStream->appendMessage( GameMessage::MSG_DO_WEAPON );
-			msg->appendIntegerArgument( commandButton->getWeaponSlot() );
-			msg->appendIntegerArgument( commandButton->getMaxShotsToFire() );
+			msg->appendIntegerArgument( actualCommandButton->getWeaponSlot() );
+			msg->appendIntegerArgument( actualCommandButton->getMaxShotsToFire() );
 
 			break;
 
 		}
 
 		//---------------------------------------------------------------------------------------------
+		case GUI_COMMAND_REPLENISH_INVENTORY_ITEM:
+		{
+			// TheSuperHackers @feature author 15/01/2025 Replenish inventory items via message stream
+			const AsciiString& itemToReplenish = actualCommandButton->getItemToReplenish();
+			
+			// Send message with item key length (0 means replenish all items)
+			GameMessage *msg = TheMessageStream->appendMessage( GameMessage::MSG_REPLENISH_INVENTORY_ITEM );
+			Int itemLength = itemToReplenish.isEmpty() ? 0 : itemToReplenish.getLength();
+			msg->appendIntegerArgument( itemLength );
+			
+			markUIDirty();
+			break;
+		}
+
+		//---------------------------------------------------------------------------------------------
+		case GUI_COMMAND_REPLACE_COMPONENT:
+		{
+			// TheSuperHackers @feature author 15/01/2025 Replace damaged components via message stream
+			const AsciiString& componentName = actualCommandButton->getComponentName();
+			
+			// Send message with component name length (0 means replace all damaged components)
+			GameMessage *msg = TheMessageStream->appendMessage( GameMessage::MSG_REPLACE_COMPONENT );
+			Int componentLength = componentName.isEmpty() ? 0 : componentName.getLength();
+			msg->appendIntegerArgument( componentLength );
+			
+			markUIDirty();
+			break;
+		}
+
+		//---------------------------------------------------------------------------------------------
+		case GUI_COMMAND_TOGGLE_COMPONENT_DISABLED:
+		{
+			// TheSuperHackers @feature Ahmed Salah 15/01/2025 Toggle component disabled status
+			if (obj)
+			{
+				const AsciiString& componentName = actualCommandButton->getComponentName();
+				
+				// Get the body module interface to toggle component status
+				BodyModuleInterface* bodyModule = obj->getBodyModule();
+				if (bodyModule && !componentName.isEmpty())
+				{
+					// Toggle the component disabled status
+					bodyModule->toggleComponentDisabled(componentName);
+					
+					// Mark UI dirty to refresh component status display
+					markUIDirty();
+				}
+			}
+			break;
+		}
+
+		//---------------------------------------------------------------------------------------------
 		case GUI_COMMAND_SPECIAL_POWER_FROM_SHORTCUT:
 		{
-			const SpecialPowerTemplate *spTemplate = commandButton->getSpecialPowerTemplate();
+			const SpecialPowerTemplate *spTemplate = actualCommandButton->getSpecialPowerTemplate();
 			SpecialPowerType spType = spTemplate->getSpecialPowerType();
 
 			Object* obj = ThePlayerList->getLocalPlayer()->findMostReadyShortcutSpecialPowerOfType( spType );
@@ -848,8 +1121,23 @@ CBCommandStatus ControlBar::processCommandUI( GameWindow *control,
 			// command needs no additional data, send the message
 			GameMessage *msg = TheMessageStream->appendMessage( GameMessage::MSG_DO_SPECIAL_POWER );
 			msg->appendIntegerArgument( spTemplate->getID() );
-			msg->appendIntegerArgument( commandButton->getOptions() );
+			msg->appendIntegerArgument( actualCommandButton->getOptions() );
 			msg->appendObjectIDArgument( obj->getID() );
+			
+			// Turn off range decals when using special powers from shortcut
+			// Turn off range decals for all weapon slots
+			obj->setRangeDecalShownForSlot((WeaponSlotType)-2);
+			
+			// Notify WeaponRangeDecalBehavior modules to refresh their state
+			for (BehaviorModule** i = obj->getBehaviorModules(); *i; ++i)
+			{
+				WeaponRangeDecalBehavior* behavior = dynamic_cast<WeaponRangeDecalBehavior*>(*i);
+				if (behavior)
+				{
+					behavior->refreshDecalState();
+				}
+			}
+			
 			break;
 
 		}
@@ -858,9 +1146,27 @@ CBCommandStatus ControlBar::processCommandUI( GameWindow *control,
 		{
 			// command needs no additional data, send the message
 			GameMessage *msg = TheMessageStream->appendMessage( GameMessage::MSG_DO_SPECIAL_POWER );
-			msg->appendIntegerArgument( commandButton->getSpecialPowerTemplate()->getID() );
-			msg->appendIntegerArgument( commandButton->getOptions() );
+			msg->appendIntegerArgument( actualCommandButton->getSpecialPowerTemplate()->getID() );
+			msg->appendIntegerArgument( actualCommandButton->getOptions() );
 			msg->appendObjectIDArgument( INVALID_ID );	// no specific source
+			
+			// Turn off range decals when using special powers
+			if (obj)
+			{
+				// Turn off range decals for all weapon slots
+				obj->setRangeDecalShownForSlot((WeaponSlotType)-2);
+				
+				// Notify WeaponRangeDecalBehavior modules to refresh their state
+				for (BehaviorModule** i = obj->getBehaviorModules(); *i; ++i)
+				{
+					WeaponRangeDecalBehavior* behavior = dynamic_cast<WeaponRangeDecalBehavior*>(*i);
+					if (behavior)
+					{
+						behavior->refreshDecalState();
+					}
+				}
+			}
+			
 			break;
 
 		}
@@ -870,12 +1176,11 @@ CBCommandStatus ControlBar::processCommandUI( GameWindow *control,
 		{
 
 			// loop through all the sciences on the button and select the one we don't have
-
 			ScienceType	st = SCIENCE_INVALID;
 			Player *player = ThePlayerList->getLocalPlayer();
-			for(size_t i = 0; i < commandButton->getScienceVec().size(); ++i)
+			for(size_t i = 0; i < actualCommandButton->getScienceVec().size(); ++i)
 			{
-				st = commandButton->getScienceVec()[ i ];
+				st = actualCommandButton->getScienceVec()[ i ];
 				if(!player->hasScience(st) && TheScienceStore->playerHasPrereqsForScience(player, st) && TheScienceStore->getSciencePurchaseCost(st) <= player->getSciencePurchasePoints())
 				{
 					break;
@@ -896,12 +1201,36 @@ CBCommandStatus ControlBar::processCommandUI( GameWindow *control,
 
 			break;
 
+		}  // end pick specialized science
+		//---------------------------------------------------------------------------------------------
+		case GUI_COMMAND_SWITCH_COMMAND_SET:
+		{
+			obj->setCommandSetIndex(0);
+			markUIDirty();
+			break;
 		}
-
+		case GUI_COMMAND_SWITCH_COMMAND_SET2:
+		{
+			obj->setCommandSetIndex(1);
+			markUIDirty();
+			break;
+		}
+		case GUI_COMMAND_SWITCH_COMMAND_SET3:
+		{
+			obj->setCommandSetIndex(2);
+			markUIDirty();
+			break;
+		}
+		case GUI_COMMAND_SWITCH_COMMAND_SET4:
+		{
+			obj->setCommandSetIndex(3);
+			markUIDirty();
+			break;
+		}
 		//---------------------------------------------------------------------------------------------
 		default:
 
-			DEBUG_ASSERTCRASH( 0, ("Unknown command '%d'", commandButton->getCommandType()) );
+			DEBUG_ASSERTCRASH( 0, ("Unknown command '%d'", actualCommandButton->getCommandType()) );
 			return CBC_COMMAND_NOT_USED;
 
 	}

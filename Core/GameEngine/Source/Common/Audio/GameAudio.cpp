@@ -232,6 +232,7 @@ void AudioManager::init()
 	if (!TheGlobalData->m_headless && !isMusicAlreadyLoaded())
 	{
 		m_musicPlayingFromCD = TRUE;
+#if !defined( RTS_DEBUG )
 		while (TRUE)
 		{
 			// @todo Unload any files from CD first. - jkmcd
@@ -242,7 +243,6 @@ void AudioManager::init()
 				break;
 			}
 			// We loop infinitely on the splash screen if we don't allow breaking out of this loop.
-//#if !defined( RTS_DEBUG )
 			else
 			{
 				// Display the warning.
@@ -252,8 +252,8 @@ void AudioManager::init()
 					break;
 				}
 			}
-//#endif
 		}
+		#endif
 	}
 
 	m_music = NEW MusicManager;

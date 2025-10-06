@@ -427,7 +427,7 @@ void ScriptActions::doMoveToWaypoint(const AsciiString& team, const AsciiString&
 		if (way) {
 			Coord3D destination = *way->getLocation();
 			//DEBUG_LOG(("Moving team to waypoint %f, %f, %f", destination.x, destination.y, destination.z));
- 			theGroup->groupMoveToPosition( &destination, false, CMD_FROM_SCRIPT );
+ 			theGroup->groupMoveToPosition( &destination, false, CMD_FROM_SCRIPT, FALSE );
 		}
 	}
 }
@@ -791,7 +791,7 @@ void ScriptActions::doCreateReinforcements(const AsciiString& team, const AsciiS
 #else
 				theTeam->getTeamAsAIGroup(theGroup.Peek());
 #endif
-				theGroup->groupMoveToPosition( &destination, false, CMD_FROM_SCRIPT );
+				theGroup->groupMoveToPosition( &destination, false, CMD_FROM_SCRIPT, FALSE );
 			}
 		}
 	}
@@ -1816,7 +1816,7 @@ void ScriptActions::doTeamMoveToSkirmishApproachPath(const AsciiString& teamName
 		return;
 	}
 	DEBUG_ASSERTLOG(TheTerrainLogic->isPurposeOfPath(way, pathLabel), ("***Wrong waypoint purpose. Make jba fix this."));
-	theGroup->groupMoveToPosition(way->getLocation(), false, CMD_FROM_SCRIPT);
+	theGroup->groupMoveToPosition(way->getLocation(), false, CMD_FROM_SCRIPT, FALSE);
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -2131,6 +2131,7 @@ void ScriptActions::doTeamHuntWithCommandButton(const AsciiString& teamName, con
 			case GUI_COMMAND_CANCEL_UNIT_BUILD:
 			case GUI_COMMAND_CANCEL_UPGRADE:
 			case GUI_COMMAND_ATTACK_MOVE:
+			case GUI_COMMAND_GROUP_ATTACK_MOVE:
 			case GUI_COMMAND_GUARD:
 			case GUI_COMMAND_GUARD_WITHOUT_PURSUIT:
 			case GUI_COMMAND_GUARD_FLYING_UNITS_ONLY:

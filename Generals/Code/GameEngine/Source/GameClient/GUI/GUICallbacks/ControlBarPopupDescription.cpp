@@ -407,7 +407,7 @@ void ControlBar::populateBuildTooltipLayout( const CommandButton *commandButton,
 				UnicodeString requireFormat = TheGameText->fetch("CONTROLBAR:Requirements");
 				requiresFormat.format(requireFormat.str(), requiresFormat.str());
 				if(!descrip.isEmpty())
-					descrip.concat(L"\n");
+					descrip.concat(L"\n\n");
 				descrip.concat(requiresFormat);
 
 			}

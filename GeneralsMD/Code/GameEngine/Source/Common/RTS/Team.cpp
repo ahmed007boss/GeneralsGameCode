@@ -963,11 +963,11 @@ Int TeamPrototype::countBuildings(void)
 }
 
 // ------------------------------------------------------------------------
-Int TeamPrototype::countObjects(KindOfMaskType setMask, KindOfMaskType clearMask)
+Int TeamPrototype::countObjects(KindOfMaskType setMask, KindOfMaskType clearMask, VeterancyLevel minVeterancyLevel)
 {
 	int retVal = 0;
 	for (DLINK_ITERATOR<Team> iter = iterate_TeamInstanceList(); !iter.done(); iter.advance()) {
-		retVal += iter.cur()->countObjects(setMask, clearMask);
+		retVal += iter.cur()->countObjects(setMask, clearMask, minVeterancyLevel);
 	}
 	return retVal;
 }
@@ -1650,7 +1650,7 @@ Int Team::countBuildings(void)
 }
 
 // ------------------------------------------------------------------------
-Int Team::countObjects(KindOfMaskType setMask, KindOfMaskType clearMask)
+Int Team::countObjects(KindOfMaskType setMask, KindOfMaskType clearMask, VeterancyLevel minVeterancyLevel)
 {
 	int retVal = 0;
 	for (DLINK_ITERATOR<Object> iter = iterate_TeamMemberList(); !iter.done(); iter.advance()) {
@@ -1659,7 +1659,10 @@ Int Team::countObjects(KindOfMaskType setMask, KindOfMaskType clearMask)
 			continue;
 		}
 		if (objtmpl->isKindOfMulti(setMask, clearMask)) {
-			++retVal;
+			// Check veterancy level if not LEVEL_REGULAR (which counts all)
+			if (minVeterancyLevel == LEVEL_REGULAR || iter.cur()->getVeterancyLevel() >= minVeterancyLevel) {
+				++retVal;
+			}
 		}
 	}
 	return retVal;

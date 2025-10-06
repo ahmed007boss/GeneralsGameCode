@@ -62,6 +62,9 @@
 #include "GameLogic/Module/OpenContain.h"
 #include "GameLogic/Module/ProductionUpdate.h"
 #include "GameLogic/Module/SpecialPowerModule.h"
+#include "GameLogic/Module/InventoryBehavior.h"
+#include "GameLogic/Module/ActiveBody.h"
+#include "GameLogic/Component.h"
 #include "GameLogic/ScriptActions.h"
 #include "GameLogic/ScriptEngine.h"
 #include "GameLogic/VictoryConditions.h"
@@ -538,6 +541,207 @@ void GameLogic::logicMessageDispatcher( GameMessage *msg, void *userData )
 		}
 
 		//---------------------------------------------------------------------------------------------
+		case GameMessage::MSG_REPLENISH_INVENTORY_ITEM:
+		{
+			// TheSuperHackers @feature author 15/01/2025 Handle inventory replenishment message
+			Int itemLength = msg->getArgument( 0 )->integer;
+			AsciiString itemToReplenish;
+			
+			// Convert length back to string (0 means replenish all items)
+			if (itemLength != 0)
+			{
+				// Find the item key by length from the first selected object's inventory
+				if (currentlySelectedGroup && !currentlySelectedGroup->isEmpty())
+				{
+					const VecObjectID& selectedObjects = currentlySelectedGroup->getAllIDs();
+					if (!selectedObjects.empty())
+					{
+						Object* firstObj = TheGameLogic->findObjectByID(selectedObjects[0]);
+						if (firstObj)
+						{
+						InventoryBehavior* inventoryBehavior = firstObj->getInventoryBehavior();
+							
+							if (inventoryBehavior)
+							{
+								const InventoryBehaviorModuleData* moduleData = inventoryBehavior->getInventoryModuleData();
+								if (moduleData)
+								{
+									// Find the item key that matches the length
+									for (std::map<AsciiString, InventoryItemConfig>::const_iterator it = moduleData->m_inventoryItems.begin();
+										 it != moduleData->m_inventoryItems.end(); ++it)
+									{
+										if (it->first.getLength() == itemLength)
+										{
+											itemToReplenish = it->first;
+											break;
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+
+			// Process replenishment for all selected objects
+			if (currentlySelectedGroup)
+			{
+				const VecObjectID& selectedObjects = currentlySelectedGroup->getAllIDs();
+				for (VecObjectID::const_iterator it = selectedObjects.begin(); it != selectedObjects.end(); ++it)
+				{
+					Object* obj = TheGameLogic->findObjectByID(*it);
+					if (!obj)
+						continue;
+
+					// Get inventory behavior using cached method
+					InventoryBehavior* inventoryBehavior = obj->getInventoryBehavior();
+
+					if (!inventoryBehavior)
+						continue;
+
+					const InventoryBehaviorModuleData* moduleData = inventoryBehavior->getInventoryModuleData();
+					if (!moduleData)
+						continue;
+
+					Player* player = obj->getControllingPlayer();
+					if (!player)
+						continue;
+
+					UnsignedInt totalCost = 0;
+
+					if (itemToReplenish.isEmpty())
+					{
+						// Replenish all items
+						for (std::map<AsciiString, InventoryItemConfig>::const_iterator it = moduleData->m_inventoryItems.begin();
+							 it != moduleData->m_inventoryItems.end(); ++it)
+						{
+							const AsciiString& itemKey = it->first;
+							const InventoryItemConfig& config = it->second;
+							
+							Int neededAmount = obj->getInventoryReplenishAmount(itemKey);
+							
+							if (neededAmount > 0)
+							{
+								totalCost += neededAmount * config.costPerItem;
+							}
+						}
+					}
+					else
+					{
+						// Replenish specific item
+						Int neededAmount = obj->getInventoryReplenishAmount(itemToReplenish);
+						
+						if (neededAmount > 0)
+						{
+							Int costPerItem = moduleData->getCostPerItem(itemToReplenish);
+							totalCost = neededAmount * costPerItem;
+						}
+					}
+
+					// Check if player can afford the replenishment
+					if (player->getMoney()->countMoney() < totalCost)
+					{
+						TheEva->setShouldPlay(EVA_InsufficientFunds);
+						TheInGameUI->message("GUI:NotEnoughMoneyToBuild");
+						continue;
+					}
+
+					// Deduct cost and replenish items
+					player->getMoney()->withdraw(totalCost);
+
+					if (itemToReplenish.isEmpty())
+					{
+						// Replenish all items
+						for (std::map<AsciiString, InventoryItemConfig>::const_iterator it = moduleData->m_inventoryItems.begin();
+							 it != moduleData->m_inventoryItems.end(); ++it)
+						{
+							const AsciiString& itemKey = it->first;
+							const InventoryItemConfig& config = it->second;
+							
+							// TheSuperHackers @feature author 15/01/2025 Replenish with clip-first strategy
+							Int currentAmount = inventoryBehavior->getItemCount(itemKey);
+							Int maxStorage = config.maxStorageCount;
+							
+							// Find weapons that consume this item and need reloading
+							for (Int i = PRIMARY_WEAPON; i < WEAPONSLOT_COUNT; ++i)
+							{
+								Weapon* weapon = obj->getWeaponInWeaponSlot((WeaponSlotType)i);
+								if (weapon && weapon->getTemplate() && weapon->getTemplate()->getConsumeInventory() == itemKey)
+								{
+									// Check if weapon needs reloading
+									if (weapon->getRemainingAmmo() == 0)
+									{
+										Int clipSize = weapon->getTemplate()->getClipSize();
+										Int neededForClip = clipSize - currentAmount;
+										
+										if (neededForClip > 0)
+										{
+											// Add enough to fill one clip
+											inventoryBehavior->addItem(itemKey, neededForClip);
+											currentAmount += neededForClip;
+											
+											// Reload the weapon
+											weapon->reloadAmmo(obj);
+										}
+									}
+								}
+							}
+							
+							// Fill the rest of inventory to max capacity
+							Int remainingNeeded = maxStorage - currentAmount;
+							if (remainingNeeded > 0)
+							{
+								inventoryBehavior->addItem(itemKey, remainingNeeded);
+							}
+						}
+					}
+					else
+					{
+						// Replenish specific item
+						Int currentAmount = inventoryBehavior->getItemCount(itemToReplenish);
+						Int maxStorage = moduleData->getMaxStorageCount(itemToReplenish);
+						
+						// TheSuperHackers @feature author 15/01/2025 Replenish with clip-first strategy
+						// Find weapons that consume this item and need reloading
+						for (Int i = PRIMARY_WEAPON; i < WEAPONSLOT_COUNT; ++i)
+						{
+							Weapon* weapon = obj->getWeaponInWeaponSlot((WeaponSlotType)i);
+							if (weapon && weapon->getTemplate() && weapon->getTemplate()->getConsumeInventory() == itemToReplenish)
+							{
+								// Check if weapon needs reloading
+								if (weapon->getRemainingAmmo() == 0)
+								{
+									Int clipSize = weapon->getTemplate()->getClipSize();
+									Int neededForClip = clipSize - currentAmount;
+									
+									if (neededForClip > 0)
+									{
+										// Add enough to fill one clip
+										inventoryBehavior->addItem(itemToReplenish, neededForClip);
+										currentAmount += neededForClip;
+										
+										// Reload the weapon
+										weapon->reloadAmmo(obj);
+									}
+								}
+							}
+						}
+						
+						// Fill the rest of inventory to max capacity
+						Int remainingNeeded = maxStorage - currentAmount;
+						if (remainingNeeded > 0)
+						{
+							inventoryBehavior->addItem(itemToReplenish, remainingNeeded);
+						}
+					}
+
+				}
+			}
+
+			break;
+		}
+
+		//---------------------------------------------------------------------------------------------
 		case GameMessage::MSG_COMBATDROP_AT_OBJECT:
 		{
 			Object *targetObject = TheGameLogic->findObjectByID( msg->getArgument( 0 )->objectID );
@@ -659,12 +863,164 @@ void GameLogic::logicMessageDispatcher( GameMessage *msg, void *userData )
 					// lock it just till the weapon is empty or the attack is "done"
 				if (currentlySelectedGroup->setWeaponLockForGroup( weaponSlot, LOCKED_TEMPORARILY ))
  					currentlySelectedGroup->groupAttackPosition( &targetLoc, maxShotsToFire, CMD_FROM_PLAYER );
-
-
 			}
 
 			break;
 
+		}
+
+		//---------------------------------------------------------------------------------------------
+		case GameMessage::MSG_REPLACE_COMPONENT:
+		{
+			// TheSuperHackers @feature author 15/01/2025 Handle component replacement message
+			Int componentLength = msg->getArgument( 0 )->integer;
+			AsciiString componentName;
+			
+			// Convert length back to string (0 means replace all damaged components)
+			if (componentLength != 0)
+			{
+				// Find the component name by length from the first selected object's components
+				if (currentlySelectedGroup && !currentlySelectedGroup->isEmpty())
+				{
+					const VecObjectID& selectedObjects = currentlySelectedGroup->getAllIDs();
+					if (!selectedObjects.empty())
+					{
+						Object* firstObj = TheGameLogic->findObjectByID(selectedObjects[0]);
+						if (firstObj)
+						{
+							BodyModuleInterface* body = firstObj->getBodyModule();
+							if (body)
+							{
+								std::vector<Component> components = firstObj->getComponents();
+								for (std::vector<Component>::const_iterator it = components.begin();
+									 it != components.end(); ++it)
+								{
+									if (it->name.getLength() == componentLength)
+									{
+										componentName = it->name;
+										break;
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+
+			// Process component replacement for all selected objects
+			if (currentlySelectedGroup)
+			{
+				const VecObjectID& selectedObjects = currentlySelectedGroup->getAllIDs();
+				for (VecObjectID::const_iterator it = selectedObjects.begin(); it != selectedObjects.end(); ++it)
+				{
+					Object* obj = TheGameLogic->findObjectByID(*it);
+					if (!obj)
+						continue;
+
+					// Get body module
+					BodyModuleInterface* body = obj->getBodyModule();
+					if (!body)
+						continue;
+
+					Player* player = obj->getControllingPlayer();
+					if (!player)
+						continue;
+
+					UnsignedInt totalCost = 0;
+
+					if (componentName.isEmpty())
+					{
+						// Replace all damaged components
+						std::vector<Component> components = obj->getComponents();
+						for (std::vector<Component>::const_iterator compIt = components.begin();
+							 compIt != components.end(); ++compIt)
+						{
+							const Component& component = *compIt;
+							if (component.replacementCost > 0)
+							{
+								Real currentHealth = body->getComponentHealth(component.name);
+								Real maxHealth = body->getComponentMaxHealth(component.name);
+								
+								// Only include cost if component is damaged
+								if (currentHealth < maxHealth)
+								{
+									totalCost += component.replacementCost;
+								}
+							}
+						}
+					}
+					else
+					{
+						// Replace specific component
+						Real currentHealth = body->getComponentHealth(componentName);
+						Real maxHealth = body->getComponentMaxHealth(componentName);
+						
+						// Only include cost if component is damaged
+						if (currentHealth < maxHealth)
+						{
+							// Find the component to get its replacement cost
+							std::vector<Component> components = obj->getComponents();
+							for (std::vector<Component>::const_iterator compIt = components.begin();
+								 compIt != components.end(); ++compIt)
+							{
+								if (compIt->name == componentName)
+								{
+									totalCost = compIt->replacementCost;
+									break;
+								}
+							}
+						}
+					}
+
+					// Check if player has enough money
+					if (totalCost > 0 && player->getMoney()->countMoney() >= totalCost)
+					{
+						// Deduct cost
+						player->getMoney()->withdraw(static_cast<UnsignedInt>(totalCost));
+
+						// Replace components
+						if (componentName.isEmpty())
+						{
+							// Replace all damaged components
+							std::vector<Component> components = obj->getComponents();
+							for (std::vector<Component>::const_iterator compIt = components.begin();
+								 compIt != components.end(); ++compIt)
+							{
+								const Component& component = *compIt;
+								if (component.replacementCost > 0)
+								{
+									Real currentHealth = body->getComponentHealth(component.name);
+									Real maxHealth = body->getComponentMaxHealth(component.name);
+									
+									// Only replace if component is damaged
+									if (currentHealth < maxHealth)
+									{
+										body->setComponentHealth(component.name, maxHealth);
+										// TheSuperHackers @feature author 15/01/2025 Update model state after component replacement
+										body->setCorrectDamageState();
+									}
+								}
+							}
+						}
+						else
+						{
+							// Replace specific component
+							Real currentHealth = body->getComponentHealth(componentName);
+							Real maxHealth = body->getComponentMaxHealth(componentName);
+							
+							// Only replace if component is damaged
+							if (currentHealth < maxHealth)
+							{
+								body->setComponentHealth(componentName, maxHealth);
+								// TheSuperHackers @feature author 15/01/2025 Update model state after component replacement
+								body->setCorrectDamageState();
+							}
+						}
+					}
+				}
+			}
+
+			break;
 		}
 
 		//---------------------------------------------------------------------------------------------
@@ -812,7 +1168,35 @@ void GameLogic::logicMessageDispatcher( GameMessage *msg, void *userData )
 			if (currentlySelectedGroup)
 			{
 				currentlySelectedGroup->releaseWeaponLockForGroup(LOCKED_TEMPORARILY);	// release any temporary locks.
-				currentlySelectedGroup->groupMoveToPosition( &dest, false, CMD_FROM_PLAYER );
+				currentlySelectedGroup->groupMoveToPosition( &dest, false, CMD_FROM_PLAYER, FALSE );
+			}
+
+			break;
+		}
+
+		//---------------------------------------------------------------------------------------------
+		case GameMessage::MSG_DO_GROUPMOVETO:
+		{
+			Coord3D dest = msg->getArgument( 0 )->location;
+
+			if (currentlySelectedGroup)
+			{
+				currentlySelectedGroup->releaseWeaponLockForGroup(LOCKED_TEMPORARILY);	// release any temporary locks.
+				currentlySelectedGroup->groupMoveToPosition( &dest, false, CMD_FROM_PLAYER, TRUE );
+			}
+
+			break;
+		}
+
+		//---------------------------------------------------------------------------------------------
+		case GameMessage::MSG_DO_GROUPATTACKMOVETO:
+		{
+			Coord3D dest = msg->getArgument( 0 )->location;
+
+			if (currentlySelectedGroup)
+			{
+				currentlySelectedGroup->releaseWeaponLockForGroup(LOCKED_TEMPORARILY);	// release any temporary locks.
+				currentlySelectedGroup->groupAttackMoveToPosition( &dest, NO_MAX_SHOTS_LIMIT, CMD_FROM_PLAYER, TRUE );
 			}
 
 			break;
@@ -829,7 +1213,7 @@ void GameLogic::logicMessageDispatcher( GameMessage *msg, void *userData )
 			{
 				//DEBUG_LOG(("GameLogicDispatch - got a MSG_DO_MOVETO command"));
 				currentlySelectedGroup->releaseWeaponLockForGroup(LOCKED_TEMPORARILY);	// release any temporary locks.
-				currentlySelectedGroup->groupMoveToPosition( &dest, false, CMD_FROM_PLAYER );
+				currentlySelectedGroup->groupMoveToPosition( &dest, false, CMD_FROM_PLAYER, FALSE );
 			}
 
 			break;
@@ -844,7 +1228,7 @@ void GameLogic::logicMessageDispatcher( GameMessage *msg, void *userData )
 			{
 				//DEBUG_LOG(("GameLogicDispatch - got a MSG_DO_MOVETO command"));
 				currentlySelectedGroup->releaseWeaponLockForGroup(LOCKED_TEMPORARILY);	// release any temporary locks.
-				currentlySelectedGroup->groupMoveToPosition( &dest, true, CMD_FROM_PLAYER );
+				currentlySelectedGroup->groupMoveToPosition( &dest, true, CMD_FROM_PLAYER, FALSE );
 			}
 
 			break;
@@ -1543,6 +1927,68 @@ void GameLogic::logicMessageDispatcher( GameMessage *msg, void *userData )
 
 			break;
 
+		}
+
+		// --------------------------------------------------------------------------------------------
+		case GameMessage::MSG_TOGGLE_HOLD_POSITION:
+		{
+
+			// use the selected group
+			if( currentlySelectedGroup )
+				currentlySelectedGroup->groupToggleHoldPosition( CMD_FROM_PLAYER );
+
+			break;
+
+		}
+
+		// --------------------------------------------------------------------------------------------
+		case GameMessage::MSG_ENABLE_HOLD_POSITION_AND_GUARD:
+		{
+
+			// use the selected group
+			if( currentlySelectedGroup )
+				currentlySelectedGroup->groupToggleHoldPositionAndGuard( CMD_FROM_PLAYER );
+
+			break;
+
+		}
+
+		// --------------------------------------------------------------------------------------------
+		case GameMessage::MSG_GUARD_IN_PLACE:
+		{
+			// TheSuperHackers @feature Ahmed Salah 15/01/2025 Guard at current location
+			if( currentlySelectedGroup )
+				currentlySelectedGroup->groupGuardInPlace( CMD_FROM_PLAYER );
+
+			break;
+		}
+
+		case GameMessage::MSG_GUARD_IN_PLACE_WITHOUT_PURSUIT:
+		{
+			// TheSuperHackers @feature Ahmed Salah 15/01/2025 Guard at current location without pursuit
+			if( currentlySelectedGroup )
+				currentlySelectedGroup->groupGuardInPlaceWithoutPursuit( CMD_FROM_PLAYER );
+
+			break;
+		}
+
+		case GameMessage::MSG_GUARD_IN_PLACE_FLYING_UNITS_ONLY:
+		{
+			// TheSuperHackers @feature Ahmed Salah 15/01/2025 Guard at current location, flying units only
+			if( currentlySelectedGroup )
+				currentlySelectedGroup->groupGuardInPlaceFlyingUnitsOnly( CMD_FROM_PLAYER );
+
+			break;
+		}
+
+		case GameMessage::MSG_DO_RAID:
+		{
+			// TheSuperHackers @feature Ahmed Salah 15/01/2025 Raid command - each unit attacks one enemy in area
+			Coord3D loc = msg->getArgument( 0 )->location;
+			if( currentlySelectedGroup )
+				currentlySelectedGroup->groupRaidArea( &loc, CMD_FROM_PLAYER );
+
+			break;
 		}
 
 #ifdef ALLOW_SURRENDER

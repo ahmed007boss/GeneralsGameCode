@@ -38,6 +38,7 @@
 // FORWARD REFERENCES /////////////////////////////////////////////////////////////////////////////
 class Thing;
 enum MaxHealthChangeType CPP_11(: Int);
+enum ValueType CPP_11(: Int);
 
 // ------------------------------------------------------------------------------------------------
 // ------------------------------------------------------------------------------------------------
@@ -52,6 +53,7 @@ public:
 
 	Real								m_addMaxHealth;
 	MaxHealthChangeType m_maxHealthChangeType;
+	ValueType							m_valueType;
 
 };
 

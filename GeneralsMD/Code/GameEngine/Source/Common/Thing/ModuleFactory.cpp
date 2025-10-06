@@ -78,6 +78,7 @@
 #include "GameLogic/Module/BunkerBusterBehavior.h"
 #include "GameLogic/Module/FireWeaponWhenDamagedBehavior.h"
 #include "GameLogic/Module/FireWeaponWhenDeadBehavior.h"
+#include "GameLogic/Module/DelayedUpgradeBehavior.h"
 #include "GameLogic/Module/GenerateMinefieldBehavior.h"
 #include "GameLogic/Module/ParkingPlaceBehavior.h"
 #include "GameLogic/Module/FlightDeckBehavior.h"
@@ -88,6 +89,7 @@
 #include "GameLogic/Module/MinefieldBehavior.h"
 #include "GameLogic/Module/BattleBusSlowDeathBehavior.h"
 #include "GameLogic/Module/JetSlowDeathBehavior.h"
+#include "GameLogic/Module/InventoryBehavior.h"
 
 // die includes
 #include "GameLogic/Module/CreateCrateDie.h"
@@ -143,6 +145,8 @@
 #include "GameLogic/Module/BattlePlanUpdate.h"
 #include "GameLogic/Module/LifetimeUpdate.h"
 #include "GameLogic/Module/RadiusDecalUpdate.h"
+#include "GameLogic/Module/RadiusDecalBehavior.h"
+#include "GameLogic/Module/WeaponRangeDecalBehavior.h"
 #include "GameLogic/Module/AutoDepositUpdate.h"
 #include "GameLogic/Module/MissileAIUpdate.h"
 #include "GameLogic/Module/NeutronMissileUpdate.h"
@@ -200,6 +204,7 @@
 #include "GameLogic/Module/LocomotorSetUpgrade.h"
 #include "GameLogic/Module/ObjectCreationUpgrade.h"
 #include "GameLogic/Module/RadarUpgrade.h"
+#include "GameLogic/Module/InventoryUpgrade.h"
 #include "GameLogic/Module/PowerPlantUpgrade.h"
 #include "GameLogic/Module/ReplaceObjectUpgrade.h"
 #include "GameLogic/Module/ModelConditionUpgrade.h"
@@ -211,6 +216,7 @@
 #include "GameLogic/Module/WeaponSetUpgrade.h"
 #include "GameLogic/Module/WeaponBonusUpgrade.h"
 #include "GameLogic/Module/CostModifierUpgrade.h"
+#include "GameLogic/Module/DisplayNameUpgrade.h"
 #include "GameLogic/Module/ExperienceScalarUpgrade.h"
 #include "GameLogic/Module/MaxHealthUpgrade.h"
 
@@ -229,6 +235,7 @@
 
 // collide includes
 #include "GameLogic/Module/FireWeaponCollide.h"
+#include "GameLogic/Module/AdvancedCollide.h"
 #include "GameLogic/Module/SquishCollide.h"
 
 #include "GameLogic/Module/ConvertToCarBombCrateCollide.h"
@@ -356,6 +363,7 @@ void ModuleFactory::init( void )
 	addModule( BunkerBusterBehavior );
 	addModule( FireWeaponWhenDamagedBehavior );
 	addModule( FireWeaponWhenDeadBehavior );
+	addModule( DelayedUpgradeBehavior );
 	addModule( GenerateMinefieldBehavior );
 	addModule( ParkingPlaceBehavior );
 	addModule( FlightDeckBehavior );
@@ -368,7 +376,8 @@ void ModuleFactory::init( void )
 	addModule( JetSlowDeathBehavior );
 	addModule( RailroadBehavior );
 	addModule( SpawnBehavior );
-
+	// TheSuperHackers @feature author 15/01/2025 Add Inventory module
+	addModule( InventoryBehavior );
 	// die modules
 	addModule( DestroyDie );
 	addModule( FXListDie );
@@ -398,8 +407,10 @@ void ModuleFactory::init( void )
 	addModule( EnemyNearUpdate );
 	addModule( LifetimeUpdate );
 	addModule( RadiusDecalUpdate );
+	addModule( RadiusDecalBehavior );
+	addModule( WeaponRangeDecalBehavior );
 	addModule( EMPUpdate );
-  addModule( LeafletDropBehavior );
+  	addModule( LeafletDropBehavior );
 	addModule( AutoDepositUpdate );
 	addModule( WeaponBonusUpdate );
 	addModule( MissileAIUpdate );
@@ -471,6 +482,7 @@ void ModuleFactory::init( void )
 
 	// upgrade modules
 	addModule( CostModifierUpgrade );
+	addModule( DisplayNameUpgrade);
 	addModule( ActiveShroudUpgrade );
 	addModule( ArmorUpgrade );
 	addModule( CommandSetUpgrade );
@@ -480,6 +492,7 @@ void ModuleFactory::init( void )
 	addModule( SubObjectsUpgrade );
 	addModule( StealthUpgrade );
 	addModule( RadarUpgrade );
+	addModule( InventoryUpgrade );
 	addModule( PowerPlantUpgrade );
 	addModule( LocomotorSetUpgrade );
 	addModule( ObjectCreationUpgrade );
@@ -507,6 +520,7 @@ void ModuleFactory::init( void )
 
 	// collide modules
 	addModule( FireWeaponCollide );
+	addModule( AdvancedCollide );
 	addModule( SquishCollide );
 
 	addModule( HealCrateCollide );

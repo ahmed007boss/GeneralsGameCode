@@ -344,7 +344,18 @@ static const char *const TheCommandSourceMaskNames[] =
 	"FROM_AI",
 	"FROM_DOZER", //don't use this
 	"DEFAULT_SWITCH_WEAPON", //unit will pick this weapon when normal logic fails.
-
+	"SYNC_TO_PRIMARY",  //This weapon will be fired whenever PRIMARY is fired
+	"SYNC_TO_SECONDARY",  //This weapon will be fired whenever SECONDARY is fired
+	"SYNC_TO_TERTIARY",  //This weapon will be fired whenever TERTIARY is fired
+	"SYNC_TO_WEAPON_FOUR",  //This weapon will be fired whenever WEAPON_FOUR is fired
+	"SYNC_TO_WEAPON_FIVE",  //...
+	"SYNC_TO_WEAPON_SIX",  //...
+	"SYNC_TO_WEAPON_SEVEN",  //...
+	"SYNC_TO_WEAPON_EIGHT",  //...
+	"SWITCH_ON_INSUFFICIENT_INVENTORY",	//Auto-switch when locked weapon has insufficient inventory
+	"SWITCH_ON_TARGET_REQUIRED",					//Auto-switch when locked weapon requires target but none provided
+	"SWITCH_ON_TARGET_PREREQ_FAILED",		//Auto-switch when locked weapon target prerequisites fail
+	"SWITCH_ON_SHOOTER_PREREQ_FAILED",		//Auto-switch when locked weapon shooter prerequisites fail
 	NULL
 };
 static_assert(ARRAY_SIZE(TheCommandSourceMaskNames) == COMMAND_SOURCE_TYPE_COUNT + 1, "Incorrect array size");
@@ -905,7 +916,7 @@ public:
 	UnsignedShort Num_Refs() const { return m_refCount.Num_Refs(); }
 #endif
 
-	void groupMoveToPosition( const Coord3D *pos, Bool addWaypoint, CommandSourceType cmdSource );
+	void groupMoveToPosition( const Coord3D *pos, Bool addWaypoint, CommandSourceType cmdSource, Bool isGroupMove = FALSE );
 	void groupMoveToAndEvacuate( const Coord3D *pos, CommandSourceType cmdSource );			///< move to given position(s)
 	void groupMoveToAndEvacuateAndExit( const Coord3D *pos, CommandSourceType cmdSource );			///< move to given position & unload transport.
 	void groupIdle(CommandSourceType cmdSource);						///< Enter idle state.
@@ -927,7 +938,7 @@ public:
 	}
 	void groupAttackTeam( const Team *team, Int maxShotsToFire, CommandSourceType cmdSource );							///< attack the given team
 	void groupAttackPosition( const Coord3D *pos, Int maxShotsToFire, CommandSourceType cmdSource );						///< attack given spot
-	void groupAttackMoveToPosition( const Coord3D *pos, Int maxShotsToFire, CommandSourceType cmdSource );	///< Attack move to the location
+	void groupAttackMoveToPosition( const Coord3D *pos, Int maxShotsToFire, CommandSourceType cmdSource, Bool isGroupMove = FALSE );	///< Attack move to the location
 	void groupHunt( CommandSourceType cmdSource );														///< begin "seek and destroy"
 	void groupRepair( Object *obj, CommandSourceType cmdSource );						///< repair the given object
 	void groupResumeConstruction( Object *obj, CommandSourceType cmdSource );	///< resume construction on the object
@@ -953,6 +964,12 @@ public:
 	void groupCheer( CommandSourceType cmdSource );
 	void groupSell( CommandSourceType cmdSource );
 	void groupToggleOvercharge( CommandSourceType cmdSource );
+	void groupToggleHoldPosition( CommandSourceType cmdSource );
+	void groupToggleHoldPositionAndGuard( CommandSourceType cmdSource );
+	void groupGuardInPlace( CommandSourceType cmdSource );									///< TheSuperHackers @feature Ahmed Salah 15/01/2025 Guard at current location
+	void groupGuardInPlaceWithoutPursuit( CommandSourceType cmdSource );		///< TheSuperHackers @feature Ahmed Salah 15/01/2025 Guard at current location without pursuit
+	void groupGuardInPlaceFlyingUnitsOnly( CommandSourceType cmdSource );		///< TheSuperHackers @feature Ahmed Salah 15/01/2025 Guard at current location, flying units only
+	void groupRaidArea( const Coord3D *pos, CommandSourceType cmdSource );		///< TheSuperHackers @feature Ahmed Salah 15/01/2025 Raid command - each unit attacks one enemy in area
 #ifdef ALLOW_SURRENDER
 	void groupPickUpPrisoner( Object *prisoner, CommandSourceType cmdSource );	///< pick up prisoner
 	void groupReturnToPrison( Object *prison, CommandSourceType cmdSource );		///< return to prison

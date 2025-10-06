@@ -43,8 +43,48 @@
 #include "GameLogic/Object.h"
 #include "GameLogic/TerrainLogic.h"
 #include "Common/Team.h"
+#include "GameClient/GameText.h"
+#include "GameLogic/Module/InventoryBehavior.h"
+#include "GameLogic/Module/ActiveBody.h"
+#include "GameLogic/Component.h"
 
+//-------------------------------------------------------------------------------------------------
+// TheSuperHackers @feature Ahmed Salah 30/09/2025 Parsing functions for restoration properties
+//-------------------------------------------------------------------------------------------------
+void ParkingPlaceBehaviorModuleData::parseReplenishItems(INI* ini, void* instance, void* /*store*/, const void* /*userData*/)
+{
+	ParkingPlaceBehaviorModuleData* data = static_cast<ParkingPlaceBehaviorModuleData*>(instance);
+	
+	// Parse each item separately (e.g., "Fuel", "Rocket", "Bombs")
+	const char* token = ini->getNextToken();
+	while (token && strlen(token) > 0)
+	{
+		AsciiString itemName(token);
+		if (!itemName.isEmpty())
+		{
+			data->m_replenishItems.push_back(itemName);
+		}
+		token = ini->getNextTokenOrNull();
+	}
+}
 
+//-------------------------------------------------------------------------------------------------
+void ParkingPlaceBehaviorModuleData::parseRestoreComponents(INI* ini, void* instance, void* /*store*/, const void* /*userData*/)
+{
+	ParkingPlaceBehaviorModuleData* data = static_cast<ParkingPlaceBehaviorModuleData*>(instance);
+	
+	// Parse each component separately (e.g., "ENGINE", "FUEL_TANK")
+	const char* token = ini->getNextToken();
+	while (token && strlen(token) > 0)
+	{
+		AsciiString componentName(token);
+		if (!componentName.isEmpty())
+		{
+			data->m_restoreComponents.push_back(componentName);
+		}
+		token = ini->getNextTokenOrNull();
+	}
+}
 
 //-------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------
@@ -704,6 +744,71 @@ void ParkingPlaceBehavior::onDie( const DamageInfo *damageInfo )
 }
 
 //-------------------------------------------------------------------------------------------------
+// TheSuperHackers @feature Ahmed Salah 30/09/2025 Restoration implementation
+//-------------------------------------------------------------------------------------------------
+void ParkingPlaceBehavior::restoreParkedVehicle(Object* vehicle, const ParkingPlaceBehaviorModuleData* data)
+{
+	if (!vehicle || !data)
+		return;
+	
+	// Restore inventory items
+	if (!data->m_replenishItems.empty())
+	{
+		InventoryBehavior* inventoryBehavior = vehicle->getInventoryBehavior();
+		if (inventoryBehavior)
+		{
+			for (std::vector<AsciiString>::const_iterator it = data->m_replenishItems.begin();
+				 it != data->m_replenishItems.end(); ++it)
+			{
+				const AsciiString& itemName = *it;
+				if (!itemName.isEmpty())
+				{
+					// Get current amount and max storage
+					Int currentAmount = inventoryBehavior->getItemCount(itemName);
+					Int maxStorage = inventoryBehavior->getInventoryModuleData() ? 
+						inventoryBehavior->getInventoryModuleData()->getMaxStorageCount(itemName) : 0;
+					
+					// Replenish to max capacity if needed
+					if (currentAmount < maxStorage)
+					{
+						Int neededAmount = maxStorage - currentAmount;
+						inventoryBehavior->addItem(itemName, neededAmount);
+					}
+				}
+			}
+		}
+	}
+	
+	// Restore components
+	if (!data->m_restoreComponents.empty())
+	{
+		BodyModuleInterface* body = vehicle->getBodyModule();
+		if (body)
+		{
+			for (std::vector<AsciiString>::const_iterator it = data->m_restoreComponents.begin();
+				 it != data->m_restoreComponents.end(); ++it)
+			{
+				const AsciiString& componentName = *it;
+				if (!componentName.isEmpty())
+				{
+					// Get current and max health for this component
+					Real currentHealth = body->getComponentHealth(componentName);
+					Real maxHealth = body->getComponentMaxHealth(componentName);
+					
+					// Restore to max health if damaged
+					if (currentHealth < maxHealth)
+					{
+						body->setComponentHealth(componentName, maxHealth);
+						// Update model state after component restoration
+						body->setCorrectDamageState();
+					}
+				}
+			}
+		}
+	}
+}
+
+//-------------------------------------------------------------------------------------------------
 UpdateSleepTime ParkingPlaceBehavior::update()
 {
 	// alas, we need to keep the buildInfo and dead-purged stuff pretty much up to date, for
@@ -740,6 +845,10 @@ UpdateSleepTime ParkingPlaceBehavior::update()
 
 					BodyModuleInterface *body = objToHeal->getBodyModule();
 					body->attemptHealing( &healInfo );
+					
+					// TheSuperHackers @feature Ahmed Salah 30/09/2025 Restore inventory items and components
+					restoreParkedVehicle(objToHeal, d);
+					
 					++it;
 				}
 			}
@@ -1132,4 +1241,19 @@ void ParkingPlaceBehavior::loadPostProcess( void )
 	// make sure we are awake... old save games let us sleep
 	//setWakeFrame(getObject(), UPDATE_SLEEP_NONE);
 
+}
+
+//-------------------------------------------------------------------------------------------------
+// TheSuperHackers @feature author 01/01/2025 Override getModuleDescription for UI display
+//-------------------------------------------------------------------------------------------------
+UnicodeString ParkingPlaceBehaviorModuleData::getModuleDescription() const
+{
+	if (!m_description)
+	{
+		UnicodeString formatString = TheGameText->fetch("MODULE:PARKINGPLACE_DESCRIPTION");
+		UnicodeString result;
+		result.format(formatString.str(), m_numRows * m_numCols);
+		m_description = new UnicodeString(result);
+	}
+	return *m_description;
 }

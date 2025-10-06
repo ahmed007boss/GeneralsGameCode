@@ -1267,23 +1267,49 @@ Bool BuildAssistant::isPossibleToMakeUnit( Object *builder, const ThingTemplate 
 
 	}
 
+
 	//
 	// scan the command set, we must find whatToBuild as one of the "build" commands available
 	// in the command set.  We want to have all players run this logic on all their machines
 	// so that nobody can hack one game and cheat to make stuff that they can't usually make
+	// Also check alternative modifier-based command buttons and prerequisite-based alternative buttons
+	// TheSuperHackers @build Ahmed Salah 27/06/2025 Include alternative modifier-based command buttons and prerequisite-based alternative buttons in build validation
 	//
 	const CommandButton *commandButton;
 	const CommandButton *foundCommand = NULL;
 	Int i;
 	for( i = 0; i < MAX_COMMANDS_PER_SET; i++ )
 	{
-
+		 
 		// get this button
 		commandButton = commandSet->getCommandButton(i);
 		if( commandButton &&
 				(commandButton->getCommandType() == GUI_COMMAND_UNIT_BUILD || commandButton->getCommandType() == GUI_COMMAND_DOZER_CONSTRUCT) &&
 				commandButton->getThingTemplate() && commandButton->getThingTemplate()->isEquivalentTo(whatToBuild) )
+		{
 			foundCommand = commandButton;
+			break; // Found a match, no need to check alternatives
+		}
+
+		// TheSuperHackers @alternative Ahmed Salah 27/06/2025 Check all alternative buttons using simple index-based approach
+		if( commandButton )
+		{
+			// Check all 19 alternative buttons using the simple index-based function
+			for( Int j = 0; j < 19; ++j )
+			{
+				const CommandButton* altButton = commandButton->getAlternativeButtonByIndex(j);
+				if( altButton && 
+					(altButton->getCommandType() == GUI_COMMAND_UNIT_BUILD || altButton->getCommandType() == GUI_COMMAND_DOZER_CONSTRUCT) &&
+					altButton->getThingTemplate() && altButton->getThingTemplate()->isEquivalentTo(whatToBuild) )
+				{
+					foundCommand = altButton;
+					break;
+				}
+			}
+			
+			if( foundCommand )
+				break;
+		}
 
 	}
 	if( foundCommand == NULL )

@@ -47,13 +47,16 @@
 #include "GameLogic/WeaponBonusConditionFlags.h"
 #include "GameLogic/WeaponSet.h"
 #include "GameLogic/WeaponSetFlags.h"
+#include "Component.h"
 #include "GameLogic/Module/StealthUpdate.h"
+#include "GameLogic/Module/InventoryBehavior.h"
 
 //-----------------------------------------------------------------------------
 //           Forward References
 //-----------------------------------------------------------------------------
 
 class AIGroup;
+class ActiveBodyModuleData;
 class AIUpdateInterface;
 class Anim2DTemplate;
 class BehaviorModule;
@@ -106,6 +109,7 @@ class ObjectSMCHelper;
 class ObjectRepulsorHelper;
 class StatusDamageHelper;
 class SubdualDamageHelper;
+class EWDamageHelper;
 class TempWeaponBonusHelper;
 class ObjectWeaponStatusHelper;
 class ObjectDefectionHelper;
@@ -198,6 +202,15 @@ public:
 	// physical properties
 	Bool isMobile() const;																	///< returns true if object is currently able to move
 	Bool isAbleToAttack() const;														///< returns true if object currently has some kind of attack capability
+	Bool canAttackTarget(const Object* target) const;									///< TheSuperHackers @feature Ahmed Salah 15/01/2025 returns true if object can attack specific target using weapon validation
+	Bool canAttackAir() const;															///< TheSuperHackers @feature Ahmed Salah 15/01/2025 returns true if object can attack air units
+	Bool isJet() const;																			///< returns true if object is a jet (has JetAIUpdate module)
+	Bool canMove() const;																		///< returns true if object can move (not out of fuel, not held, etc.)
+	Bool hasFuelToMove() const;																	///< returns true if object has fuel to move (checks all locomotor surfaces)
+	
+	// TheSuperHackers @feature Ahmed Salah 30/09/2025 Inventory management methods
+	Bool hasInventoryItem(const AsciiString& itemName, Real requiredCount = 1.0f) const;	///< returns true if object has enough of the specified inventory item
+	Bool consumeInventoryItem(const AsciiString& itemName, Real count = 1.0f) const;		///< consumes the specified amount of inventory item, returns true if successful
 
 	void maskObject( Bool mask );				///< mask/unmask object
 
@@ -229,6 +242,9 @@ public:
 	void kill( DamageType damageType = DAMAGE_UNRESISTABLE, DeathType deathType = DEATH_NORMAL );	///< kill the object with an optional type of damage and death.
 	void healCompletely();														///< Restore max health to this Object
 	void notifySubdualDamage( Real amount );///< At this level, we just pass this on to our helper and do a special tint
+	void notifyEWDamage( Real amount );///< At this level, we just pass this on to our helper and do a special tint
+	EWDamageHelper* getEWDamageHelper() { return m_ewDamageHelper; }///< Get the EW damage helper
+	const EWDamageHelper* getEWDamageHelper() const { return m_ewDamageHelper; }///< Get the EW damage helper (const)
 	void doStatusDamage( ObjectStatusTypes status, Real duration );///< At this level, we just pass this on to our helper
 	void doTempWeaponBonus( WeaponBonusConditionType status, UnsignedInt duration );///< At this level, we just pass this on to our helper
 
@@ -239,7 +255,11 @@ public:
 	VeterancyLevel getVeterancyLevel() const;
 
 	inline const AsciiString& getName() const { return m_name; }
+	inline const UnicodeString& getDisplayNameOverride() const {
+		return m_displayNameOverride;
+	}
 	inline void setName( const AsciiString& newName ) { m_name = newName; }
+	inline void setDisplayName( const UnicodeString& newName ) { m_displayNameOverride = newName; }
 
 	inline Team* getTeam() { return m_team; }
 	inline const Team *getTeam() const { return m_team; }
@@ -286,7 +306,14 @@ public:
 
 	BehaviorModule** getBehaviorModules() const { return m_behaviors; }
 
+	// TheSuperHackers @feature author 01/01/2025 Get extended description from actual module instances
+	UnicodeString getExtendedDescription() const;
+
 	BodyModuleInterface* getBodyModule() const { return m_body; }
+	
+	// TheSuperHackers @feature author 15/01/2025 Get component information from ActiveBody
+	std::vector<Component> getComponents() const;
+	
 	ContainModuleInterface* getContain() const { return m_contain; }
   StealthUpdate*          getStealth() const { return m_stealth; }
 	SpawnBehaviorInterface* getSpawnBehaviorInterface() const;
@@ -447,6 +474,11 @@ public:
 	Int getTransportSlotCount() const;
 	void friend_setContainedBy( Object *containedBy ) { m_containedBy = containedBy; }
 
+	// slaved objects management
+	void addSlavedObject( Object *slavedObject );
+	void removeSlavedObject( Object *slavedObject );
+	const std::vector<Object*>& getSlavedObjects() const { return m_slavedObjects; }
+
 	// Special Powers -------------------------------------------------------------------------------
 	SpecialPowerModuleInterface *getSpecialPowerModule( const SpecialPowerTemplate *specialPowerTemplate ) const;
 	void doSpecialPower( const SpecialPowerTemplate *specialPowerTemplate, UnsignedInt commandOptions, Bool forced = false );	///< execute power
@@ -463,8 +495,16 @@ public:
 		 For Object specific dynamic command sets.  Different from the Science specific ones handled in ThingTemplate
 	*/
 	const AsciiString& getCommandSetString() const;
-	void setCommandSetStringOverride( AsciiString newCommandSetString ) { m_commandSetStringOverride = newCommandSetString; }
+	void setCommandSetStringOverride( AsciiString newCommandSetString , AsciiString newCommandSet2String, AsciiString newCommandSet3String, AsciiString newCommandSet4String) {
+		m_commandSetStringOverride = newCommandSetString;
+		m_commandSet2StringOverride = newCommandSet2String;
+		m_commandSet3StringOverride = newCommandSet3String;
+		m_commandSet4StringOverride = newCommandSet4String;
 
+	}
+	void setCommandSetIndex(int index) {
+		m_commandSetIndex = index;
+	}
 	/// People are faking their commandsets, and, Surprise!, they are authoritative.  Challenge everything.
 	Bool canProduceUpgrade( const UpgradeTemplate *upgrade );
 
@@ -480,6 +520,13 @@ public:
 
 	Weapon* getWeaponInWeaponSlot(WeaponSlotType wslot) const { return m_weaponSet.getWeaponInWeaponSlot(wslot); }
 	UnsignedInt getWeaponInWeaponSlotCommandSourceMask( WeaponSlotType wSlot ) const { return m_weaponSet.getNthCommandSourceMask( wSlot ); }
+	Bool getWeaponInWeaponSlotSyncedToSlot(WeaponSlotType thisSlot, WeaponSlotType otherSlot) const;
+	WeaponSlotType getCurWeaponSlot() const { return m_weaponSet.getCurWeaponSlot(); }
+	
+	// Range decal control
+	WeaponSlotType getRangeDecalShownForSlot() const { return m_rangeDecalShownForSlot; }
+	void setRangeDecalShownForSlot(WeaponSlotType slot) { m_rangeDecalShownForSlot = slot; }
+	Bool refreshWeaponRangeDecalState();
 
 	// see if this current weapon set's weapons has shared reload times
 	Bool isReloadTimeShared() const { return m_weaponSet.isSharedReloadTime(); }
@@ -543,9 +590,30 @@ public:
 	void clearWeaponSetFlag(WeaponSetType wst);
 	inline Bool testWeaponSetFlag(WeaponSetType wst) const { return m_curWeaponSetFlags.test(wst); }
 	inline const WeaponSetFlags& getWeaponSetFlags() const { return m_curWeaponSetFlags; }
-	Bool setWeaponLock( WeaponSlotType weaponSlot, WeaponLockType lockType ){ return m_weaponSet.setWeaponLock( weaponSlot, lockType ); }
+	Bool setWeaponLock( WeaponSlotType weaponSlot, WeaponLockType lockType ){ return m_weaponSet.setWeaponLock( weaponSlot, lockType, this ); }
 	void releaseWeaponLock(WeaponLockType lockType){ m_weaponSet.releaseWeaponLock(lockType); }
 	Bool isCurWeaponLocked() const { return m_weaponSet.isCurWeaponLocked(); }
+
+	// TheSuperHackers @feature author 15/01/2025 Get inventory behavior with caching
+	InventoryBehavior* getInventoryBehavior() const
+	{
+		if (!m_inventoryBehavior)
+		{
+			for (BehaviorModule** i = getBehaviorModules(); *i; ++i)
+			{
+				m_inventoryBehavior = InventoryBehavior::getInventoryBehavior(*i);
+				if (m_inventoryBehavior)
+					break;
+			}
+		}
+		return m_inventoryBehavior;
+	}
+
+	// TheSuperHackers @feature author 15/01/2025 Get amount needed to replenish inventory item
+	Int getInventoryReplenishAmount(const AsciiString& itemName) const;
+
+	// TheSuperHackers @feature author 15/01/2025 Get total count of inventory item including weapon clips
+	Int getTotalInventoryItemCount(const AsciiString& itemName) const;
 
 	void setArmorSetFlag(ArmorSetType ast);
 	void clearArmorSetFlag(ArmorSetType ast);
@@ -579,7 +647,38 @@ public:
 	ObjectShroudStatus getShroudedStatus(Int playerIndex) const;
 
 	DisabledMaskType getDisabledFlags() const { return m_disabledMask; }
-	Bool isDisabled() const { return m_disabledMask.any(); }
+	
+	/// Returns TRUE if object is disabled by non-EW means or by multiple disabled types (including EW).
+	/// Logic: DISABLED_EW alone does not disable the object, but when combined with other disabled
+	/// types (like DISABLED_SUBDUED), the object becomes disabled. This allows EW to jam specific
+	/// systems without completely disabling the vehicle.
+	Bool isDisabled() const {
+		// Check if any flags are set
+		if (!m_disabledMask.any()) {
+			return false;
+		}
+		
+		// If DISABLED_EW is not set, then any other flag means disabled
+		if (!m_disabledMask.test(DISABLED_EW)) {
+			return true;
+		}
+		
+		// DISABLED_EW is set, check if there are any other flags
+		for (Int i = 0; i < DISABLED_COUNT; ++i) {
+			if (i != DISABLED_EW && m_disabledMask.test(i)) {
+				return true; // Found a non-EW flag, object is disabled
+			}
+		}
+		
+		// Only DISABLED_EW is set, object is not disabled
+		return false;
+	};
+
+	/// Returns TRUE if object is disabled by electronic warfare (EMP or EW jamming).
+	/// This checks for electronic-based disabling effects that affect electronic systems.
+	Bool isElectronicallyDisabled() const {
+		return getDisabledFlags().test(DISABLED_EMP) ||  getDisabledFlags().test(DISABLED_EW);
+	};
 	Bool clearDisabled( DisabledType type );
 
 	void setDisabled( DisabledType type );
@@ -695,7 +794,8 @@ private:
 	ObjectID			m_producerID;								///< object that produced us, if any
 	ObjectID			m_builderID;								///< object that is building or has built us (dozers or workers are builders)
 	Drawable*			m_drawable;									///< drawable (if any) for this object
-	AsciiString		m_name;										///< internal name
+	AsciiString		m_name;										  ///< internal name
+	UnicodeString	m_displayNameOverride;			///< Display Name
 
 	Object *			m_next;
 	Object *			m_prev;
@@ -720,7 +820,9 @@ private:
 	SightingInfo	*m_partitionLastValue;	///< Where and for whom I last delt with value, so I can undo its effects when I stop
 
 	Real					m_visionRange;										///< looking range
+	Real					m_shroudClearingOriginalRange;						///< looking range for shroud ONLY
 	Real					m_shroudClearingRange;						///< looking range for shroud ONLY
+	Real					m_shroudClearingDisabledRange;						///< looking range for shroud ONLY when disabled
 	Real					m_shroudRange;										///< like looking range, this is how far I shroud others' looks
 
 	DisabledMaskType	m_disabledMask;
@@ -735,6 +837,7 @@ private:
 	ObjectDefectionHelper*				m_defectionHelper;
 	StatusDamageHelper*						m_statusDamageHelper;
 	SubdualDamageHelper*					m_subdualDamageHelper;
+	EWDamageHelper*								m_ewDamageHelper;
 	TempWeaponBonusHelper*				m_tempWeaponBonusHelper;
 	FiringTracker*								m_firingTracker;	///< Tracker is really a "helper" and is included NUM_SLEEP_HELPERS
 
@@ -748,6 +851,7 @@ private:
 
 	AIUpdateInterface*						m_ai;	///< ai interface (if any), cached for handy access. (duplicate of entry in the module array!)
 	PhysicsBehavior*							m_physics;	///< physics interface (if any), cached for handy access. (duplicate of entry in the module array!)
+	mutable InventoryBehavior*						m_inventoryBehavior;	///< TheSuperHackers @feature author 15/01/2025 inventory behavior cached for handy access
 
 	PartitionData*								m_partitionData;	///< our PartitionData
 	RadarObject*									m_radarData;				///< radar data
@@ -757,6 +861,9 @@ private:
 																	other object, this is that object (if present) */
 	ObjectID											m_xferContainedByID;	///< xfer uses IDs to store pointers and looks them up after
 	UnsignedInt										m_containedByFrame;	///< frame we were contained by m_containedBy
+
+	// Slaved objects management
+	std::vector<Object*>							m_slavedObjects;		///< List of objects that are slaved to this object
 
 	Real													m_constructionPercent;			///< for objects being built ... this is the amount completed (0.0 to 100.0)
 	UpgradeMaskType								m_objectUpgradesCompleted;	///< Bit field of upgrades locally completed.
@@ -773,6 +880,7 @@ private:
 	// Weapons & Damage -------------------------------------------------------------------------------------------------
 	WeaponSet											m_weaponSet;
 	WeaponSetFlags								m_curWeaponSetFlags;
+	WeaponSlotType								m_rangeDecalShownForSlot;	///< Which weapon slot should show range decals (-1 = no decals shown)
 	WeaponBonusConditionFlags			m_weaponBonusCondition;
 	Byte													m_lastWeaponCondition[WEAPONSLOT_COUNT];
 
@@ -796,7 +904,12 @@ private:
 	FormationID										m_formationID;
 	Coord2D												m_formationOffset;
 
+	Int														m_commandSetIndex;
+
 	AsciiString										m_commandSetStringOverride;///< To allow specific object to switch command sets
+	AsciiString										m_commandSet2StringOverride;///< To allow specific object to switch command sets
+	AsciiString										m_commandSet3StringOverride;///< To allow specific object to switch command sets
+	AsciiString										m_commandSet4StringOverride;///< To allow specific object to switch command sets
 
 	UnsignedInt										m_safeOcclusionFrame;	///<flag used by occlusion renderer so it knows when objects have exited their production building.
 

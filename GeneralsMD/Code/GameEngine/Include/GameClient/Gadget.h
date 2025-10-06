@@ -55,6 +55,7 @@
 #include "GameClient/Image.h"
 
 // FORWARD REFERENCES /////////////////////////////////////////////////////////
+class DisplayString;
 
 // TYPE DEFINES ///////////////////////////////////////////////////////////////
 
@@ -433,6 +434,9 @@ typedef struct _PushButtonData
 	Color colorBorder;			///< The color for the border around the button
 	void *userData;					///< random additional data we can set
 	const Image *overlayImage; ///< An overlay image (like a veterancy symbol)
+	const Image *overlayImage2; ///< A second overlay image for additional visual indicators
+	const Image *overlayImage3; ///< A third overlay image for additional visual indicators
+	DisplayString *overlayText; ///< TheSuperHackers @feature author 15/01/2025 Text overlay for inventory counts
 	AsciiString altSound;		///< use an alternitive sound if one is set
 } PushButtonData;
 
