@@ -4204,25 +4204,27 @@ Locomotor* Pathfinder::chooseBestLocomotorForPosition(PathfindLayerEnum layer, L
 
 /*static*/ LocomotorSurfaceTypeMask Pathfinder::validLocomotorSurfacesForCellType(PathfindCell::CellType t)
 {
-	if (t == PathfindCell::CELL_OBSTACLE) {
-		return LOCOMOTORSURFACE_AIR;
+	switch (t)
+	{
+		case PathfindCell::CELL_CLEAR:
+			return LOCOMOTORSURFACE_GROUND | LOCOMOTORSURFACE_AIR;
+
+		case PathfindCell::CELL_WATER:
+			return LOCOMOTORSURFACE_WATER | LOCOMOTORSURFACE_AIR;
+
+		case PathfindCell::CELL_CLIFF:
+			return LOCOMOTORSURFACE_CLIFF | LOCOMOTORSURFACE_AIR;
+
+		case PathfindCell::CELL_RUBBLE:
+			return LOCOMOTORSURFACE_RUBBLE | LOCOMOTORSURFACE_AIR;
+
+		case PathfindCell::CELL_OBSTACLE:
+		case PathfindCell::CELL_IMPASSABLE:
+			return LOCOMOTORSURFACE_AIR;
+
+		default:
+			return NO_SURFACES;
 	}
-	if (t == PathfindCell::CELL_IMPASSABLE) {
-		return LOCOMOTORSURFACE_AIR;
-	}
-	if (t==PathfindCell::CELL_CLEAR) {
-		return LOCOMOTORSURFACE_GROUND | LOCOMOTORSURFACE_AIR;
-	}
-	if (t == PathfindCell::CELL_WATER) {
-		return LOCOMOTORSURFACE_WATER | LOCOMOTORSURFACE_AIR;
-	}
-	if (t == PathfindCell::CELL_RUBBLE) {
-		return LOCOMOTORSURFACE_RUBBLE | LOCOMOTORSURFACE_AIR;
-	}
-	if ( t == PathfindCell::CELL_CLIFF ) {
-		return LOCOMOTORSURFACE_CLIFF | LOCOMOTORSURFACE_AIR;
-	}
-	return NO_SURFACES;
 }
 
 //
@@ -5829,30 +5831,14 @@ Path *Pathfinder::internalFindPath( Object *obj, const LocomotorSet& locomotorSe
 	// to ignore obstacle cells until it reaches a cell that is no longer
 	// classified as an obstacle.  At that point, the pathfind behaves normally.
 	//
-	if (parentCell->getType() == PathfindCell::CELL_OBSTACLE)	{
-		m_isTunneling = true;
-	}
-	else {
-		m_isTunneling = false;
-	}
+	m_isTunneling = parentCell->getType() == PathfindCell::CELL_OBSTACLE;
 
 	Int zone1, zone2;
 	Bool isCrusher = obj ? obj->getCrusherLevel() > 0 : false;
 	zone1 = m_zoneManager.getEffectiveZone(locomotorSet.getValidSurfaces(), isCrusher, parentCell->getZone());
 	zone2 =  m_zoneManager.getEffectiveZone(locomotorSet.getValidSurfaces(), isCrusher, goalCell->getZone());
 
-	if (layer==LAYER_WALL && zone1 == 0) {
-#if RETAIL_COMPATIBLE_PATHFINDING
-		if (s_useFixedPathfinding)
-#endif
-		{
-			goalCell->releaseInfo();
-			parentCell->releaseInfo();
-		}
-		return NULL;
-	}
-
-	if (destinationLayer==LAYER_WALL && zone2 == 0) {
+	if ( (layer==LAYER_WALL && zone1 == 0) || (destinationLayer==LAYER_WALL && zone2 == 0) ) {
 #if RETAIL_COMPATIBLE_PATHFINDING
 		if (s_useFixedPathfinding)
 #endif
@@ -5881,7 +5867,7 @@ Path *Pathfinder::internalFindPath( Object *obj, const LocomotorSet& locomotorSe
 	}
 
 	// sanity check - if destination is invalid, can't path there
-	if (validMovementPosition( isCrusher, destinationLayer, locomotorSet, to ) == false)	{
+	if (!validMovementPosition( isCrusher, destinationLayer, locomotorSet, to ))	{
 		m_isTunneling = false;
 		goalCell->releaseInfo();
 		parentCell->releaseInfo();
@@ -5889,7 +5875,7 @@ Path *Pathfinder::internalFindPath( Object *obj, const LocomotorSet& locomotorSe
 	}
 
 	// sanity check - if source is invalid, we have to cheat
-	if (validMovementPosition( isCrusher, layer, locomotorSet, from ) == false)	{
+	if (!validMovementPosition( isCrusher, layer, locomotorSet, from ))	{
 		// somehow we got to an impassable location.
 		m_isTunneling = true;
 	}
@@ -9610,7 +9596,9 @@ if (g_UT_startTiming) return false;
 Path *Pathfinder::getMoveAwayFromPath(Object* obj, Object *otherObj,
 											Path *pathToAvoid, Object *otherObj2, Path *pathToAvoid2)
 {
-	if (m_isMapReady == false) return NULL; // Should always be ok.
+	if (!m_isMapReady)
+		return NULL; // Should always be ok.
+
 #ifdef DEBUG_LOGGING
 	Int startTimeMS = ::GetTickCount();
 #endif
@@ -9641,11 +9629,12 @@ Path *Pathfinder::getMoveAwayFromPath(Object* obj, Object *otherObj,
 	}
 	worldToCell(&startPos, &startCellNdx);
 	PathfindCell *parentCell = getClippedCell( obj->getLayer(), obj->getPosition() );
-	if (parentCell == NULL)
+	if (!parentCell)
 		return NULL;
-	if (!obj->getAIUpdateInterface()) {
-		return NULL; // shouldn't happen, but can't move it without an ai.
-	}
+
+	if (!obj->getAIUpdateInterface()) // shouldn't happen, but can't move it without an ai.
+		return NULL; 
+
 	const LocomotorSet& locomotorSet = obj->getAIUpdateInterface()->getLocomotorSet();
 
 	m_isTunneling = false;
@@ -9700,12 +9689,7 @@ Path *Pathfinder::getMoveAwayFromPath(Object* obj, Object *otherObj,
 		bounds.hi.y = cellCenter.y+boxHalfWidth;
 		PathNode *node;
 		Bool overlap = false;
-		if (obj) {
-			if (bounds.lo.x<obj->getPosition()->x && bounds.hi.x>obj->getPosition()->x &&
-				bounds.lo.y<obj->getPosition()->y && bounds.hi.y>obj->getPosition()->y)	{
-					//overlap = true;
-				}
-		}
+
 		for( node = pathToAvoid->getFirstNode(); node && node->getNextOptimized(); node = node->getNextOptimized() )	{
 			Coord2D start, end;
 			start.x = node->getPosition()->x;
@@ -9717,12 +9701,7 @@ Path *Pathfinder::getMoveAwayFromPath(Object* obj, Object *otherObj,
 				break;
 			}
 		}
-		if (otherObj) {
-			if (bounds.lo.x<otherObj->getPosition()->x && bounds.hi.x>otherObj->getPosition()->x &&
-				bounds.lo.y<otherObj->getPosition()->y && bounds.hi.y>otherObj->getPosition()->y)	{
-					//overlap = true;
-				}
-		}
+
 		if (!overlap && pathToAvoid2) {
 			for( node = pathToAvoid2->getFirstNode(); node && node->getNextOptimized(); node = node->getNextOptimized() )	{
 				Coord2D start, end;
@@ -10021,7 +10000,8 @@ Path *Pathfinder::patchPath( const Object *obj, const LocomotorSet& locomotorSet
 Path *Pathfinder::findAttackPath( const Object *obj, const LocomotorSet& locomotorSet, const Coord3D *from,
 		const Object *victim, const Coord3D* victimPos, const Weapon *weapon )
 {
-	if (m_isMapReady == false) return NULL; // Should always be ok.
+	if (!m_isMapReady)
+		return NULL; // Should always be ok.
 
 	Bool isCrusher = obj ? obj->getCrusherLevel() > 0 : false;
 	Int radius;
@@ -10046,26 +10026,30 @@ Path *Pathfinder::findAttackPath( const Object *obj, const LocomotorSet& locomot
 			ICoord2D cellNdx;
 			worldToCell(&testPos, &cellNdx);
 			PathfindCell *aCell = getCell(obj->getLayer(), cellNdx.x, cellNdx.y);
-			if (aCell==NULL) break;
-			if (!validMovementPosition( isCrusher, locomotorSet.getValidSurfaces(), aCell )) {
+			if (!aCell)
 				break;
-			}
-			if (!checkDestination(obj, cellNdx.x, cellNdx.y, obj->getLayer(), radius, centerInCell)) {
+
+			if (!validMovementPosition(isCrusher, locomotorSet.getValidSurfaces(), aCell))
 				break;
+
+			if (!checkDestination(obj, cellNdx.x, cellNdx.y, obj->getLayer(), radius, centerInCell))
+				break;
+
+			if (!weapon->isGoalPosWithinAttackRange(obj, &testPos, victim, victimPos))
+				continue;
+
+			if (isAttackViewBlockedByObstacle(obj, testPos, victim, *victimPos))
+				continue;
+
+			// return path.
+			Path *path = newInstance(Path);
+			path->prependNode( &testPos, obj->getLayer() );
+			path->prependNode( &curPos, obj->getLayer() );
+			path->getFirstNode()->setNextOptimized(path->getFirstNode()->getNext());
+			if (TheGlobalData->m_debugAI==AI_DEBUG_PATHS) {
+				setDebugPath(path);
 			}
-			if (weapon->isGoalPosWithinAttackRange(obj, &testPos, victim, victimPos)) {
-				if (!isAttackViewBlockedByObstacle(obj, testPos, victim, *victimPos)) {
-					// return path.
-					Path *path = newInstance(Path);
-					path->prependNode( &testPos, obj->getLayer() );
-					path->prependNode( &curPos, obj->getLayer() );
-					path->getFirstNode()->setNextOptimized(path->getFirstNode()->getNext());
-					if (TheGlobalData->m_debugAI==AI_DEBUG_PATHS) {
-						setDebugPath(path);
-					}
-					return path;
-				}
-			}
+			return path;
 		}
 	}
 
@@ -10098,18 +10082,19 @@ Path *Pathfinder::findAttackPath( const Object *obj, const LocomotorSet& locomot
 		objPos.x += PATHFIND_CELL_SIZE_F/2.0f;
 		objPos.y += PATHFIND_CELL_SIZE_F/2.0f;
 	}
+
+	if (!obj->getAIUpdateInterface()) // shouldn't happen, but can't move without an ai.
+		return NULL;
+
 	worldToCell(&objPos, &startCellNdx);
 	PathfindCell *parentCell = getClippedCell( obj->getLayer(), &objPos );
-	if (parentCell == NULL)
+	if (!parentCell)
 		return NULL;
-	if (!obj->getAIUpdateInterface()) {
-		return NULL; // shouldn't happen, but can't move it without an ai.
-	}
-	const PathfindCell *startCell = parentCell;
 
-	if (!parentCell->allocateInfo(startCellNdx)) {
+	if (!parentCell->allocateInfo(startCellNdx))
 		return NULL;
-	}
+
+	const PathfindCell *startCell = parentCell;
 	parentCell->startPathfind(NULL);
 
 	// determine start cell
@@ -10118,7 +10103,7 @@ Path *Pathfinder::findAttackPath( const Object *obj, const LocomotorSet& locomot
 
 	// determine goal cell
 	PathfindCell *goalCell = getCell( LAYER_GROUND, victimCellNdx.x, victimCellNdx.y );
-	if (goalCell == NULL)
+	if (!goalCell)
 		return NULL;
 
  	if (!goalCell->allocateInfo(victimCellNdx)) {
@@ -10229,8 +10214,7 @@ Path *Pathfinder::findAttackPath( const Object *obj, const LocomotorSet& locomot
 				return path;
 			}
 		}
-		if (checkDestination(obj, parentCell->getXIndex(), parentCell->getYIndex(),
-																parentCell->getLayer(), radius, centerInCell)) {
+		if (checkDestination(obj, parentCell->getXIndex(), parentCell->getYIndex(), parentCell->getLayer(), radius, centerInCell)) {
 			if (validMovementPosition( isCrusher, locomotorSet.getValidSurfaces(), parentCell )) {
 				Real dx = IABS(victimCellNdx.x-parentCell->getXIndex());
 				Real dy = IABS(victimCellNdx.y-parentCell->getYIndex());
