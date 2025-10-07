@@ -39,6 +39,7 @@
 #include "GameLogic/PartitionManager.h"  // ThePartitionManager, FROM_CENTER_2D
 #include "GameLogic/GameLogic.h"     // TheGameLogic
 #include "GameClient/Drawable.h"     // Drawable class for visual effects
+#include "GameClient/InGameUI.h"     // TheInGameUI
 #include <map>                       // std::map for static data
 
 //-------------------------------------------------------------------------------------------------
@@ -85,8 +86,8 @@ void WarningBehavior::doWarning(GameMessage::Type commandType, const Coord3D* co
 	}
 
 	// if owner not the current player, then return
-	if (unitOwner != ThePlayerList->getLocalPlayer())
-		return;
+	/*if (unitOwner != ThePlayerList->getLocalPlayer())
+		return;*/
 
 	// Check if this player is ready for a warning sound (cooldown system)
 	if (!isWarningSoundCooldownReady(unitOwner))
@@ -161,12 +162,23 @@ void WarningBehavior::doWarning(GameMessage::Type commandType, const Coord3D* co
 		return;
 	}
 
-	AudioEventRTS warningSound(soundName);
-	warningSound.setIsLogicalAudio(true);
-	warningSound.setPosition(thisObject->getPosition());
-	warningSound.setPlayerIndex(unitOwner->getPlayerIndex());
+	
 
-	TheAudio->addAudioEvent(&warningSound);
+	if (unitOwner == ThePlayerList->getLocalPlayer())
+	{
+		AudioEventRTS warningSound(soundName, thisObject->getID());
+		TheAudio->addAudioEvent(&warningSound);
+
+		if (isAircraft)
+		{
+			TheInGameUI->message("WARNING:IncomingAirAttack");
+		}
+		else
+		{
+			TheInGameUI->message("WARNING:IncomingAttack");
+		}
+	}
+
 
 	// Update cooldown for this specific player
 	UnsignedInt currentFrame = TheGameLogic->getFrame();

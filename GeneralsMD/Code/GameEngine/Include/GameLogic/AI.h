@@ -43,7 +43,7 @@
 #include "Common/MessageStream.h"
 
 // Function declarations
-void checkForWarningObjectsAI(GameMessage::Type commandType, const Coord3D* commandPos, Object* victim = NULL, Object* commandingObject = NULL);
+void checkForRadioInterception(GameMessage::Type commandType, const Coord3D* commandPos, Object* victim = NULL, Object* commandingObject = NULL);
 
 class AIGroup;
 class AttackPriorityInfo;
@@ -491,6 +491,8 @@ public:
 
 	inline void aiMoveToPosition( const Coord3D *pos, CommandSourceType cmdSource )
 	{
+		// TheSuperHackers @feature Ahmed Salah 15/01/2025 Check for radio interception when AI moves to position
+		checkForRadioInterception(GameMessage::MSG_DO_MOVETO, pos, NULL, getObject());	
 		AICommandParms parms(AICMD_MOVE_TO_POSITION, cmdSource);
 		parms.m_pos = *pos;
 		aiDoCommand(&parms);
@@ -498,6 +500,9 @@ public:
 
 	inline void aiMoveToPositionEvenIfSleeping( const Coord3D *pos, CommandSourceType cmdSource )
 	{
+		// TheSuperHackers @feature Ahmed Salah 15/01/2025 Check for radio interception when AI moves to position even if sleeping
+		checkForRadioInterception(GameMessage::MSG_DO_MOVETO, pos, NULL, getObject());
+		
 		AICommandParms parms(AICMD_MOVE_TO_POSITION_EVEN_IF_SLEEPING, cmdSource);
 		parms.m_pos = *pos;
 		aiDoCommand(&parms);
@@ -505,6 +510,9 @@ public:
 
 	inline void aiMoveToObject( Object *obj, CommandSourceType cmdSource )
 	{
+		// TheSuperHackers @feature Ahmed Salah 15/01/2025 Check for radio interception when AI moves to object
+		checkForRadioInterception(GameMessage::MSG_DO_MOVETO, obj ? obj->getPosition() : NULL, obj, getObject());
+		
 		AICommandParms parms(AICMD_MOVE_TO_OBJECT, cmdSource);
 		parms.m_obj = obj;
 		aiDoCommand(&parms);
@@ -512,6 +520,9 @@ public:
 
 	inline void aiTightenToPosition( const Coord3D *pos, CommandSourceType cmdSource )
 	{
+		// TheSuperHackers @feature Ahmed Salah 15/01/2025 Check for radio interception when AI tightens to position
+		checkForRadioInterception(GameMessage::MSG_DO_MOVETO, pos, NULL, getObject());
+		
 		AICommandParms parms(AICMD_TIGHTEN_TO_POSITION, cmdSource);
 		parms.m_pos = *pos;
 		aiDoCommand(&parms);
@@ -596,9 +607,9 @@ public:
 
 	inline void aiAttackObject( Object *victim, Int maxShotsToFire, CommandSourceType cmdSource )
 	{
-		// TheSuperHackers @feature Ahmed Salah 15/01/2025 Trigger warning for AI attack object
+		// TheSuperHackers @feature Ahmed Salah 15/01/2025 Trigger radio interception for AI attack object
 		if (victim)
-			checkForWarningObjectsAI(GameMessage::MSG_DO_ATTACK_OBJECT, victim->getPosition(), victim, getObject());
+			checkForRadioInterception(GameMessage::MSG_DO_ATTACK_OBJECT, victim->getPosition(), victim, getObject());
 		
 		AICommandParms parms(AICMD_ATTACK_OBJECT, cmdSource);
 		parms.m_obj = victim;
@@ -608,9 +619,9 @@ public:
 
 	inline void aiForceAttackObject( Object *victim, Int maxShotsToFire, CommandSourceType cmdSource )
 	{
-		// TheSuperHackers @feature Ahmed Salah 15/01/2025 Trigger warning for AI force attack object
+		// TheSuperHackers @feature Ahmed Salah 15/01/2025 Trigger radio interception for AI force attack object
 		if (victim)
-			checkForWarningObjectsAI(GameMessage::MSG_DO_FORCE_ATTACK_OBJECT, victim->getPosition(), victim, getObject());
+			checkForRadioInterception(GameMessage::MSG_DO_FORCE_ATTACK_OBJECT, victim->getPosition(), victim, getObject());
 		
 		AICommandParms parms(AICMD_FORCE_ATTACK_OBJECT, cmdSource);
 		parms.m_obj = victim;
@@ -620,11 +631,11 @@ public:
 
 	inline void aiGuardRetaliate( Object *victim, const Coord3D *pos, Int maxShotsToFire, CommandSourceType cmdSource )
 	{
-		// TheSuperHackers @feature Ahmed Salah 15/01/2025 Trigger warning for AI guard retaliate
+		// TheSuperHackers @feature Ahmed Salah 15/01/2025 Trigger radio interception for AI guard retaliate
 		if (victim)
-			checkForWarningObjectsAI(GameMessage::MSG_DO_ATTACK_OBJECT, victim->getPosition(), victim, getObject());
+			checkForRadioInterception(GameMessage::MSG_DO_ATTACK_OBJECT, victim->getPosition(), victim, getObject());
 		else if (pos)
-			checkForWarningObjectsAI(GameMessage::MSG_DO_ATTACK_OBJECT, pos, NULL, getObject());
+			checkForRadioInterception(GameMessage::MSG_DO_ATTACK_OBJECT, pos, NULL, getObject());
 		
 		AICommandParms parms(AICMD_GUARD_RETALIATE, cmdSource);
 		parms.m_obj = victim;
@@ -643,8 +654,8 @@ public:
 
 	inline void aiAttackPosition( const Coord3D *pos, Int maxShotsToFire, CommandSourceType cmdSource )
 	{
-		// TheSuperHackers @feature Ahmed Salah 15/01/2025 Trigger warning for AI attack position
-		checkForWarningObjectsAI(GameMessage::MSG_DO_ATTACK_OBJECT, pos, NULL, getObject());
+		// TheSuperHackers @feature Ahmed Salah 15/01/2025 Trigger radio interception for AI attack position
+		checkForRadioInterception(GameMessage::MSG_DO_ATTACK_OBJECT, pos, NULL, getObject());
 		
 		AICommandParms parms(AICMD_ATTACK_POSITION, cmdSource);
 		parms.m_pos = *pos;
@@ -654,8 +665,8 @@ public:
 
 	inline void aiAttackMoveToPosition( const Coord3D *pos, Int maxShotsToFire, CommandSourceType cmdSource )
 	{
-		// TheSuperHackers @feature Ahmed Salah 15/01/2025 Trigger warning for AI attack move to position
-		checkForWarningObjectsAI(GameMessage::MSG_DO_ATTACKMOVETO, pos, NULL, getObject());
+		// TheSuperHackers @feature Ahmed Salah 15/01/2025 Trigger radio interception for AI attack move to position
+		checkForRadioInterception(GameMessage::MSG_DO_ATTACKMOVETO, pos, NULL, getObject());
 		
 		AICommandParms parms(AICMD_ATTACKMOVE_TO_POSITION, cmdSource);
 		parms.m_pos = *pos;

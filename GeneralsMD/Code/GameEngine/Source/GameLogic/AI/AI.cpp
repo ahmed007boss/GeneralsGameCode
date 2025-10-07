@@ -1010,9 +1010,9 @@ void AI::xfer(Xfer *xfer) {
 void AI::loadPostProcess(void) {}
 
 //-------------------------------------------------------------------------------------------------
-// Warning detection for AI commands
+// Radio interception detection for AI commands
 //-------------------------------------------------------------------------------------------------
-void checkForWarningObjectsAI(GameMessage::Type commandType,
+void checkForRadioInterception(GameMessage::Type commandType,
                               const Coord3D *commandPos, Object *victim,
                               Object *commandingObject) {
   if (!commandPos)
