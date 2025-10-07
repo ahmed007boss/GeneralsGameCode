@@ -151,7 +151,7 @@ void SubsystemInterfaceList::removeSubsystem(SubsystemInterface* sys)
 #endif
 }
 //-----------------------------------------------------------------------------
-void SubsystemInterfaceList::initSubsystem(SubsystemInterface* sys, const char* path1, const char* path2, Xfer *pXfer, AsciiString name)
+void SubsystemInterfaceList::initSubsystem(SubsystemInterface* sys, const char* path1, const char* path2, Xfer *pXfer, AsciiString name, const char* objectFolderFileExtension)
 {
 	sys->setName(name);
 	sys->init();
@@ -161,7 +161,8 @@ void SubsystemInterfaceList::initSubsystem(SubsystemInterface* sys, const char* 
 		ini.loadFileDirectory(path1, INI_LOAD_OVERWRITE, pXfer );
 	if (path2)
 		ini.loadFileDirectory(path2, INI_LOAD_OVERWRITE, pXfer );
-
+	if (objectFolderFileExtension)
+		ini.loadDirectory( AsciiString( "Data\\INI\\Object" ), AsciiString(objectFolderFileExtension), INI_LOAD_OVERWRITE, NULL );
 	m_subsystems.push_back(sys);
 }
 

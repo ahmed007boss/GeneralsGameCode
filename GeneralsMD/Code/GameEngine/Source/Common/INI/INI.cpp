@@ -243,6 +243,76 @@ UnsignedInt INI::loadFileDirectory( AsciiString fileDirName, INILoadType loadTyp
 }
 
 //-------------------------------------------------------------------------------------------------
+// TheSuperHackers @feature Ahmed Salah 15/01/2025 Load files with specific extension from directory
+//-------------------------------------------------------------------------------------------------
+UnsignedInt INI::loadDirectory( AsciiString dirName, AsciiString fileExtension, INILoadType loadType, Xfer *pXfer, Bool subdirs )
+{
+	UnsignedInt filesRead = 0;
+	if (fileExtension.isEmpty())
+	{
+		return 0;
+	}
+	fileExtension = "." +fileExtension ;
+	// TheSuperHackers @feature Ahmed Salah 15/01/2025 Create plural file extensions for .ini files
+	AsciiString pluralFileExtension;
+	AsciiString pluralFileExtension2;
+	
+	if (fileExtension.endsWithNoCase(".ini"))
+	{
+		// Extract base name without .ini
+		AsciiString baseExtension = fileExtension;
+		baseExtension.truncateBy(4); // Remove ".ini"
+		
+		// Create plural forms: xxxs.ini and xxxes.ini
+		pluralFileExtension = baseExtension;
+		pluralFileExtension.concat("s.ini");
+		pluralFileExtension2 = baseExtension;
+		pluralFileExtension2.concat("es.ini");
+	}
+
+	try
+	{
+
+
+		FilenameList filenameList;
+		dirName.concat('\\');
+		TheFileSystem->getFileListInDirectory(dirName, "*.ini", filenameList, subdirs);
+		
+		// Load the files in the dir now
+		FilenameList::const_iterator it = filenameList.begin();
+		while (it != filenameList.end())
+		{
+			AsciiString tempname;
+			tempname = (*it).str() + dirName.getLength();
+
+			// Check if file ends with the specified extension (case insensitive)
+			if (tempname.endsWithNoCase(fileExtension.str()))
+			{
+				filesRead += load( *it, loadType, pXfer );
+			}
+			// Check plural form 1 (xxxs.ini)
+			else if (!pluralFileExtension.isEmpty() && tempname.endsWithNoCase(pluralFileExtension.str()))
+			{
+				filesRead += load( *it, loadType, pXfer );
+			}
+			// Check plural form 2 (xxxes.ini)
+			else if (!pluralFileExtension2.isEmpty() && tempname.endsWithNoCase(pluralFileExtension2.str()))
+			{
+				filesRead += load( *it, loadType, pXfer );
+			}
+			++it;
+		}
+	}
+	catch (...)
+	{
+		// propagate the exception
+		throw;
+	}
+
+	return filesRead;
+}
+
+//-------------------------------------------------------------------------------------------------
 /** Load all INI files in the specified directory (and subdirectories if indicated).
 	* If we are to load subdirectories, we will load them *after* we load all the
 	* files in the current directory */
@@ -268,9 +338,21 @@ UnsignedInt INI::loadDirectory( AsciiString dirName, INILoadType loadType, Xfer 
 			AsciiString tempname;
 			tempname = (*it).str() + dirName.getLength();
 
-			// TheSuperHackers @feature Ahmed Salah 15/01/2025 Exclude .Include.ini files from automatic loading
+			// TheSuperHackers @feature Ahmed Salah 15/01/2025 Skip files with 2 dots (like .Include.ini, .commandset.ini, etc.)
 			// These files should only be loaded when explicitly included via Include directive
-			if (tempname.endsWithNoCase(".Include.ini")) {
+			const char* tempnameStr = tempname.str();
+			Int tempnameLen = tempname.getLength();
+			Int dotCount = 0;
+			
+			// Count dots in the filename
+			for (Int i = 0; i < tempnameLen; i++) {
+				if (tempnameStr[i] == '.') {
+					dotCount++;
+				}
+			}
+			
+			// Skip files with 2 or more dots
+			if (dotCount >= 2) {
 				++it;
 				continue;
 			}
@@ -288,9 +370,21 @@ UnsignedInt INI::loadDirectory( AsciiString dirName, INILoadType loadType, Xfer 
 			AsciiString tempname;
 			tempname = (*it).str() + dirName.getLength();
 
-			// TheSuperHackers @feature Ahmed Salah 15/01/2025 Exclude .Include.ini files from automatic loading
+			// TheSuperHackers @feature Ahmed Salah 15/01/2025 Skip files with 2 dots (like .Include.ini, .commandset.ini, etc.)
 			// These files should only be loaded when explicitly included via Include directive
-			if (tempname.endsWithNoCase(".Include.ini")) {
+			const char* tempnameStr = tempname.str();
+			Int tempnameLen = tempname.getLength();
+			Int dotCount = 0;
+			
+			// Count dots in the filename
+			for (Int i = 0; i < tempnameLen; i++) {
+				if (tempnameStr[i] == '.') {
+					dotCount++;
+				}
+			}
+			
+			// Skip files with 2 or more dots
+			if (dotCount >= 2) {
 				++it;
 				continue;
 			}
@@ -309,6 +403,7 @@ UnsignedInt INI::loadDirectory( AsciiString dirName, INILoadType loadType, Xfer 
 
 	return filesRead;
 }
+
 
 //-------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------
