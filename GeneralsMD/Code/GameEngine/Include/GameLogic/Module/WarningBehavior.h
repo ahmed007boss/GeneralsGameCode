@@ -114,10 +114,10 @@ public:
 	// virtual destructor prototype provided by memory pool declaration
 
 	/// Called when enemy commands are detected near this object
-	void doWarning( GameMessage::Type commandType, const Coord3D *commandPos, Object *commandingObject, Object *targetObject );
+	void doWarning( GameMessage::Type commandType, const Coord3D *commandPos, Object *attackerObject, Object *targetObject );
 
 	/// Check if an enemy command should trigger a warning for this object
-	Bool shouldTriggerWarning( const Coord3D *commandPos, Object *commandingObject ) const;
+	Bool shouldTriggerWarning( const Coord3D *commandPos, Object *attackerObject ) const;
 
 	/// Check if an object is an enemy of this object's controlling player
 	Bool isEnemy( Object *other ) const;
@@ -131,8 +131,8 @@ public:
 	/// Trigger visual warning effect (red flashing) on target object
 	void triggerVisualWarning( GameMessage::Type commandType, Object *targetObject );
 	
-	/// Check if the commanding object is an aircraft
-	Bool isCommandingObjectAircraft( Object *commandingObject ) const;
+	/// Check if the attacking object is an aircraft
+	Bool isAttackingObjectAircraft( Object *attackerObject ) const;
 
 private:
 	/// Minimum frames between warning sounds (10 seconds at 30 FPS = 300 frames)

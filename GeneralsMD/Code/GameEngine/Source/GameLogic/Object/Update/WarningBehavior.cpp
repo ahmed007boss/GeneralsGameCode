@@ -35,6 +35,7 @@
 #include "GameLogic/Object.h"        // Object class
 #include "GameLogic/Module/WarningBehavior.h"  // WarningBehavior class
 #include "Common/Player.h"           // Player class
+#include "Common/PlayerList.h"      // ThePlayerList
 #include "GameLogic/PartitionManager.h"  // ThePartitionManager, FROM_CENTER_2D
 #include "GameLogic/GameLogic.h"     // TheGameLogic
 #include "GameClient/Drawable.h"     // Drawable class for visual effects
@@ -64,7 +65,7 @@ WarningBehavior::~WarningBehavior(void)
 }
 
 //-------------------------------------------------------------------------------------------------
-void WarningBehavior::doWarning(GameMessage::Type commandType, const Coord3D* commandPos, Object* commandingObject, Object* targetObject)
+void WarningBehavior::doWarning(GameMessage::Type commandType, const Coord3D* commandPos, Object* attackerObject, Object* targetObject)
 {
 	// TheSuperHackers @feature Ahmed Salah 15/01/2025 Warning behavior only works for the player who owns this unit
 	const Object* thisObject = getObject();
@@ -75,6 +76,7 @@ void WarningBehavior::doWarning(GameMessage::Type commandType, const Coord3D* co
 	const Player* unitOwner = thisObject->getControllingPlayer();
 	if (!unitOwner)
 		return;
+	
 
 	if (targetObject)
 	{
@@ -82,6 +84,9 @@ void WarningBehavior::doWarning(GameMessage::Type commandType, const Coord3D* co
 		triggerVisualWarning(commandType, targetObject);
 	}
 
+	// if owner not the current player, then return
+	if (unitOwner != ThePlayerList->getLocalPlayer())
+		return;
 
 	// Check if this player is ready for a warning sound (cooldown system)
 	if (!isWarningSoundCooldownReady(unitOwner))
@@ -92,8 +97,8 @@ void WarningBehavior::doWarning(GameMessage::Type commandType, const Coord3D* co
 	if (!md)
 		return;
 
-	// TheSuperHackers @feature Ahmed Salah 15/01/2025 Check if the commanding object is an aircraft
-	Bool isAircraft = isCommandingObjectAircraft(commandingObject);
+	// TheSuperHackers @feature Ahmed Salah 15/01/2025 Check if the attacking object is an aircraft
+	Bool isAircraft = isAttackingObjectAircraft(attackerObject);
 
 	AsciiString soundName;
 
@@ -179,9 +184,9 @@ void WarningBehavior::doWarning(GameMessage::Type commandType, const Coord3D* co
 }
 
 //-------------------------------------------------------------------------------------------------
-Bool WarningBehavior::shouldTriggerWarning(const Coord3D* commandPos, Object* commandingObject) const
+Bool WarningBehavior::shouldTriggerWarning(const Coord3D* commandPos, Object* attackerObject) const
 {
-	if (!commandPos || !commandingObject)
+	if (!commandPos || !attackerObject)
 	{
 		return FALSE;
 	}
@@ -198,14 +203,14 @@ Bool WarningBehavior::shouldTriggerWarning(const Coord3D* commandPos, Object* co
 		return FALSE;
 	}
 
-	//Check if the commanding object can send radio messages
-	if (!commandingObject->shouldSendRadioMessage())
+	//Check if the attacking object can send radio messages
+	if (!attackerObject->shouldSendRadioMessage())
 	{
 		return FALSE;
 	}
 
-	//Check if the commanding object is an enemy of this object
-	if (!isEnemy(commandingObject))
+	//Check if the attacking object is an enemy of this object
+	if (!isEnemy(attackerObject))
 	{
 		return FALSE;
 	}
@@ -216,8 +221,8 @@ Bool WarningBehavior::shouldTriggerWarning(const Coord3D* commandPos, Object* co
 		return FALSE;
 	}
 
-	// Check if the commanding object is active (moving/attacking)
-	if (!isEnemyUnitActive(commandingObject))
+	// Check if the attacking object is active (moving/attacking)
+	if (!isEnemyUnitActive(attackerObject))
 	{
 		return FALSE;
 	}
@@ -361,7 +366,7 @@ void WarningBehavior::triggerVisualWarning(GameMessage::Type commandType, Object
 		redColor.blue = 0.0f;   // No blue
 
 		// Apply red color flash with duration and intensity
-		drawable->colorFlash(&redColor, md->m_visualWarningDuration);
+		drawable->colorFlash(&redColor, md->m_visualWarningDuration, 0, 0);
 		
 		// Set the second material pass opacity to create flashing effect
 		// This warns the player that THIS target object is in danger of being attacked
@@ -372,13 +377,13 @@ void WarningBehavior::triggerVisualWarning(GameMessage::Type commandType, Object
 }
 
 //-------------------------------------------------------------------------------------------------
-Bool WarningBehavior::isCommandingObjectAircraft(Object* commandingObject) const
+Bool WarningBehavior::isAttackingObjectAircraft(Object* attackerObject) const
 {
-	// TheSuperHackers @feature Ahmed Salah 15/01/2025 Check if the commanding object is an aircraft
-	if (!commandingObject)
+	// TheSuperHackers @feature Ahmed Salah 15/01/2025 Check if the attacking object is an aircraft
+	if (!attackerObject)
 		return FALSE;
 
 	// Check if the object is an aircraft using the KINDOF_AIRCRAFT flag
 	// This is the most reliable way to detect aircraft in the game engine
-	return commandingObject->isKindOf(KINDOF_AIRCRAFT);
+	return attackerObject->isKindOf(KINDOF_AIRCRAFT) || attackerObject->isJet();
 }
