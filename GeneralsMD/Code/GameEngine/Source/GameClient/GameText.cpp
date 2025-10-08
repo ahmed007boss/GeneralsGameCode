@@ -193,10 +193,15 @@ class GameTextManager : public GameTextInterface
 		Bool						getStringCount( const Char *filename, Int& textCount );
 		Bool						getCSFInfo ( const Char *filename );
 		Bool						parseCSF(  const Char *filename );
-		Bool						parseStringFile( const char *filename );
+		Bool						parseStringFile( const char *filename, Int listCount = 0 );
 		Bool						parseMapStringFile( const char *filename );
 		Bool						readLine( char *buffer, Int max, File *file );
 		Char						readChar( File *file );
+		
+		// Helper methods for refactored init()
+		void						countAdditionalStringFiles(const AsciiString& strFile, Int& textCount);
+		void						parseStringFiles(const AsciiString& strFile);
+		void						createStringLookupTable();
 };
 
 static int _cdecl			compareLUT ( const void *,  const void*);
@@ -291,23 +296,15 @@ extern const Char *g_csfFile;
 
 void GameTextManager::init( void )
 {
-	AsciiString csfFile;
-	csfFile.format(g_csfFile, GetRegistryLanguage().str());
-	
-	// TheSuperHackers @feature Ahmed Salah 15/01/2025 Apply language formatting to string file
-	AsciiString strFile;
-	strFile.format(g_strFile, GetRegistryLanguage().str());
-	
-	Int format;
-
+	// Early return if already initialized
 	if ( m_initialized )
 	{
 		return;
 	}
 
 	m_initialized = TRUE;
-
 	m_maxLabelLen = 0;
+
 #if defined(RTS_DEBUG)
 	if(TheGlobalData)
 	{
@@ -316,6 +313,15 @@ void GameTextManager::init( void )
 	}
 #endif
 
+	// Prepare file paths with language formatting
+	AsciiString csfFile;
+	csfFile.format(g_csfFile, GetRegistryLanguage().str());
+	
+	AsciiString strFile;
+	strFile.format(g_strFile, GetRegistryLanguage().str());
+	
+	// Determine file format and get initial text count
+	Int format;
 	if ( m_useStringFile && getStringCount( strFile.str(), m_textCount ) )
 	{
 		format = STRING_FILE;
@@ -329,57 +335,30 @@ void GameTextManager::init( void )
 		return;
 	}
 
+	// Count additional string files if using string file format
+	if ( format == STRING_FILE )
+	{
+		countAdditionalStringFiles(strFile, m_textCount);
+	}
+
+	// Validate we have strings to process
 	if( m_textCount == 0 )
 	{
 		return;
 	}
 
-	//Allocate StringInfo Array
-
+	// Allocate StringInfo Array
 	m_stringInfo = NEW StringInfo[m_textCount];
-
 	if( m_stringInfo == NULL )
 	{
 		deinit();
 		return;
 	}
 
+	// Parse files based on format
 	if ( format == STRING_FILE )
 	{
-		if( parseStringFile( strFile.str() ) == FALSE )
-		{
-			deinit();
-			return;
-		}
-		
-		// TheSuperHackers @feature Ahmed Salah 15/01/2025 Parse all .str files in directory
-		FilenameList strFileList;
-		AsciiString languageCode = GetRegistryLanguage();
-		AsciiString filePattern = "*.str";
-		
-		// Use language-specific pattern if language code is not empty
-		if (!languageCode.isEmpty() && languageCode != "english")
-		{
-			filePattern = "*.";
-			filePattern.concat(languageCode);
-			filePattern.concat(".str");
-		}
-		
-		TheFileSystem->getFileListInDirectory("Data\\INI\\", filePattern.str(), strFileList,TRUE);
-		
-		FilenameList::const_iterator it = strFileList.begin();
-		while (it != strFileList.end())
-		{
-			AsciiString tempname;
-			tempname = (*it).str();
-			
-			// Check if file ends with .str (case insensitive) and exclude strFile
-			if (tempname.endsWithNoCase(".str") && tempname != strFile)
-			{
-				parseStringFile(tempname.str());
-			}
-			++it;
-		}
+		parseStringFiles(strFile);
 	}
 	else
 	{
@@ -390,6 +369,99 @@ void GameTextManager::init( void )
 		}
 	}
 
+	// Create lookup table
+	createStringLookupTable();
+}
+
+//============================================================================
+// GameTextManager::countAdditionalStringFiles
+//============================================================================
+
+void GameTextManager::countAdditionalStringFiles(const AsciiString& strFile, Int& textCount)
+{
+	FilenameList strFileList;
+	AsciiString languageCode = GetRegistryLanguage();
+	AsciiString filePattern = "*.str";
+	
+	// Use language-specific pattern if language code is not empty
+	if (!languageCode.isEmpty() && languageCode != "english")
+	{
+		filePattern = "*.";
+		filePattern.concat(languageCode);
+		filePattern.concat(".str");
+	}
+	
+	TheFileSystem->getFileListInDirectory("Data\\INI\\", filePattern.str(), strFileList, TRUE);
+	
+	FilenameList::const_iterator it = strFileList.begin();
+	while (it != strFileList.end())
+	{
+		AsciiString tempname = (*it).str();
+		
+		// Check if file ends with .str (case insensitive) and exclude main strFile
+		if (tempname.endsWithNoCase(".str") && tempname != strFile)
+		{
+			Int tempCount = 0;
+			getStringCount(tempname.str(), tempCount);
+			textCount += tempCount;
+		}
+		++it;
+	}
+}
+
+//============================================================================
+// GameTextManager::parseStringFiles
+//============================================================================
+
+void GameTextManager::parseStringFiles(const AsciiString& strFile)
+{
+	// Parse main string file first
+	if( parseStringFile( strFile.str(), 0 ) == FALSE )
+	{
+		deinit();
+		return;
+	}
+
+	// Parse additional .str files in directory
+	FilenameList strFileList;
+	AsciiString languageCode = GetRegistryLanguage();
+	AsciiString filePattern = "*.str";
+	
+	// Use language-specific pattern if language code is not empty
+	if (!languageCode.isEmpty() && languageCode != "english")
+	{
+		filePattern = "*.";
+		filePattern.concat(languageCode);
+		filePattern.concat(".str");
+	}
+	
+	TheFileSystem->getFileListInDirectory("Data\\INI\\", filePattern.str(), strFileList, TRUE);
+	
+	Int currentListCount = 0;
+	FilenameList::const_iterator it = strFileList.begin();
+	while (it != strFileList.end())
+	{
+		AsciiString tempname = (*it).str();
+		
+		// Check if file ends with .str (case insensitive) and exclude main strFile
+		if (tempname.endsWithNoCase(".str") && tempname != strFile)
+		{
+			parseStringFile(tempname.str(), currentListCount);
+			// Update currentListCount for next file
+			Int tempCount = 0;
+			getStringCount(tempname.str(), tempCount);
+			currentListCount += tempCount;
+		}
+		++it;
+	}
+}
+
+//============================================================================
+// GameTextManager::createStringLookupTable
+//============================================================================
+
+void GameTextManager::createStringLookupTable()
+{
 	m_stringLUT = NEW StringLookUp[m_textCount];
 
 	StringLookUp *lut = m_stringLUT;
@@ -404,7 +476,6 @@ void GameTextManager::init( void )
 	}
 
 	qsort( m_stringLUT, m_textCount, sizeof(StringLookUp), compareLUT  );
-
 }
 
 //============================================================================
@@ -868,8 +939,10 @@ Bool GameTextManager::getStringCount( const char *filename, Int& textCount )
 			textCount++;
 		}
 	}
-
-	textCount += 500;
+	if( textCount > 100 )
+	{
+		textCount += 500;
+	}
 	file->close();
 	file = NULL;
 	return TRUE;
@@ -1045,9 +1118,8 @@ quit:
 // GameTextManager::parseStringFile
 //============================================================================
 
-Bool GameTextManager::parseStringFile( const char *filename )
+Bool GameTextManager::parseStringFile( const char *filename, Int listCount )
 {
-	Int listCount = 0;
 	Int ok = TRUE;
 
 	File *file = TheFileSystem->openFile(filename, File::READ | File::TEXT);
