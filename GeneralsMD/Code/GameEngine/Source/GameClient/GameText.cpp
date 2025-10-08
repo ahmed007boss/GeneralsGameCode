@@ -288,10 +288,16 @@ GameTextManager::~GameTextManager()
 extern const Char *g_strFile;
 extern const Char *g_csfFile;
 
+
 void GameTextManager::init( void )
 {
 	AsciiString csfFile;
 	csfFile.format(g_csfFile, GetRegistryLanguage().str());
+	
+	// TheSuperHackers @feature Ahmed Salah 15/01/2025 Apply language formatting to string file
+	AsciiString strFile;
+	strFile.format(g_strFile, GetRegistryLanguage().str());
+	
 	Int format;
 
 	if ( m_initialized )
@@ -310,7 +316,7 @@ void GameTextManager::init( void )
 	}
 #endif
 
-	if ( m_useStringFile && getStringCount( g_strFile, m_textCount ) )
+	if ( m_useStringFile && getStringCount( strFile.str(), m_textCount ) )
 	{
 		format = STRING_FILE;
 	}
@@ -340,10 +346,39 @@ void GameTextManager::init( void )
 
 	if ( format == STRING_FILE )
 	{
-		if( parseStringFile( g_strFile ) == FALSE )
+		if( parseStringFile( strFile.str() ) == FALSE )
 		{
 			deinit();
 			return;
+		}
+		
+		// TheSuperHackers @feature Ahmed Salah 15/01/2025 Parse all .str files in directory
+		FilenameList strFileList;
+		AsciiString languageCode = GetRegistryLanguage();
+		AsciiString filePattern = "*.str";
+		
+		// Use language-specific pattern if language code is not empty
+		if (!languageCode.isEmpty() && languageCode != "english")
+		{
+			filePattern = "*.";
+			filePattern.concat(languageCode);
+			filePattern.concat(".str");
+		}
+		
+		TheFileSystem->getFileListInDirectory("Data\\INI\\", filePattern.str(), strFileList,TRUE);
+		
+		FilenameList::const_iterator it = strFileList.begin();
+		while (it != strFileList.end())
+		{
+			AsciiString tempname;
+			tempname = (*it).str();
+			
+			// Check if file ends with .str (case insensitive) and exclude strFile
+			if (tempname.endsWithNoCase(".str") && tempname != strFile)
+			{
+				parseStringFile(tempname.str());
+			}
+			++it;
 		}
 	}
 	else
