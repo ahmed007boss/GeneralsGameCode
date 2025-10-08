@@ -254,6 +254,6 @@ void ImageCollection::load( Int textureSize )
 	ini.loadDirectory( AsciiString( buffer ), INI_LOAD_OVERWRITE, NULL );
 
 	ini.loadDirectory("Data\\INI\\MappedImages\\HandCreated", INI_LOAD_OVERWRITE, NULL );
-
+	ini.loadDirectory("Data\\INI\\Object", "MappedImage.ini", INI_LOAD_OVERWRITE, NULL );
 
 }

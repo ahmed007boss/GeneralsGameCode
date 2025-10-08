@@ -35,6 +35,9 @@
 #include "Common/INI.h"
 #include "Common/STLTypedefs.h"
 
+// Forward declaration for AsciiStringVec
+typedef std::vector<AsciiString> AsciiStringVec;
+
 class Xfer;
 
 //-------------------------------------------------------------------------------------------------
@@ -151,6 +154,10 @@ public:
 	~SubsystemInterfaceList();
 
 	void initSubsystem(SubsystemInterface* sys, const char* path1, const char* path2, Xfer *pXfer, AsciiString name="", const char* objectFolderFileExtension="");
+	void initSubsystem(SubsystemInterface* sys, const char* path1, const char* path2, Xfer *pXfer, AsciiString name, const AsciiStringVec& objectFolderFileExtensions);
+	
+	// Helper function to create extension list inline
+	static AsciiStringVec createExtensions(const char* ext1, const char* ext2 = NULL, const char* ext3 = NULL, const char* ext4 = NULL);
 	void addSubsystem(SubsystemInterface* sys);
 	void removeSubsystem(SubsystemInterface* sys);
 	void postProcessLoadAll();
