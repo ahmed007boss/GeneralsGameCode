@@ -499,10 +499,21 @@ public:
 	*/
 	const AsciiString& getCommandSetString() const;
 	void setCommandSetStringOverride( AsciiString newCommandSetString , AsciiString newCommandSet2String, AsciiString newCommandSet3String, AsciiString newCommandSet4String) {
-		m_commandSetStringOverride = newCommandSetString;
-		m_commandSet2StringOverride = newCommandSet2String;
-		m_commandSet3StringOverride = newCommandSet3String;
-		m_commandSet4StringOverride = newCommandSet4String;
+		if (newCommandSetString != "NotSet") {
+			m_commandSetStringOverride = newCommandSetString;
+		}
+
+		if (newCommandSet2String != "NotSet") {
+			m_commandSet2StringOverride = newCommandSet2String;
+		}
+
+		if (newCommandSet3String != "NotSet") {
+			m_commandSet3StringOverride = newCommandSet3String;
+		}
+
+		if (newCommandSet4String != "NotSet") {
+			m_commandSet4StringOverride = newCommandSet4String;
+		}
 
 	}
 	void setCommandSetIndex(int index) {

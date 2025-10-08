@@ -50,13 +50,13 @@ public:
 
 	CommandSetUpgradeModuleData()
 	{
-		m_newCommandSet			= AsciiString::TheEmptyString;
+		m_newCommandSet			= "NotSet";
 		m_newCommandSetAlt	= AsciiString::TheEmptyString;
-		m_newCommandSet2 = AsciiString::TheEmptyString;
+		m_newCommandSet2 = "NotSet";
 		m_newCommandSet2Alt = AsciiString::TheEmptyString;
-		m_newCommandSet3 = AsciiString::TheEmptyString;
+		m_newCommandSet3 = "NotSet";
 		m_newCommandSet3Alt = AsciiString::TheEmptyString;
-		m_newCommandSet4 = AsciiString::TheEmptyString;
+		m_newCommandSet4 = "NotSet";
 		m_newCommandSet4Alt = AsciiString::TheEmptyString;
 		m_triggerAlt				= "none";
 	}
