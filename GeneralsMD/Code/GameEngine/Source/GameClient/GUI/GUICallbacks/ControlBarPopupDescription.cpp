@@ -326,7 +326,7 @@ static UnicodeString getButtonAlternativesText(const CommandButton* commandButto
 			alternativesText = L"\n\n";
 			hasAlternatives = true;
 		}
-		alternativesText.concat(TheGameText->fetch("TOOLTIP:RightClickCtrlAltShiftTo"));
+		alternativesText.concat(TheGameText->fetch("ALTKEY:RightClickCtrlAltShiftTo"));
 		alternativesText.concat(L" ");
 		alternativesText.concat(removeHotkeyFromText(TheGameText->fetch(commandButton->getRightClickCtrlAltShiftButton()->getTextLabel().str())));
 		alternativesText.concat(getButtonCostText(commandButton->getRightClickCtrlAltShiftButton()));
@@ -339,7 +339,7 @@ static UnicodeString getButtonAlternativesText(const CommandButton* commandButto
 			alternativesText = L"\n\n";
 			hasAlternatives = true;
 		}
-		alternativesText.concat(TheGameText->fetch("TOOLTIP:RightClickCtrlAltTo"));
+		alternativesText.concat(TheGameText->fetch("ALTKEY:RightClickCtrlAltTo"));
 		alternativesText.concat(L" ");
 		alternativesText.concat(removeHotkeyFromText(TheGameText->fetch(commandButton->getRightClickCtrlAltButton()->getTextLabel().str())));
 		alternativesText.concat(getButtonCostText(commandButton->getRightClickCtrlAltButton()));
@@ -352,7 +352,7 @@ static UnicodeString getButtonAlternativesText(const CommandButton* commandButto
 			alternativesText = L"\n\n";
 			hasAlternatives = true;
 		}
-		alternativesText.concat(TheGameText->fetch("TOOLTIP:RightClickCtrlShiftTo"));
+		alternativesText.concat(TheGameText->fetch("ALTKEY:RightClickCtrlShiftTo"));
 		alternativesText.concat(L" ");
 		alternativesText.concat(removeHotkeyFromText(TheGameText->fetch(commandButton->getRightClickCtrlShiftButton()->getTextLabel().str())));
 		alternativesText.concat(getButtonCostText(commandButton->getRightClickCtrlShiftButton()));
@@ -365,7 +365,7 @@ static UnicodeString getButtonAlternativesText(const CommandButton* commandButto
 			alternativesText = L"\n\n";
 			hasAlternatives = true;
 		}
-		alternativesText.concat(TheGameText->fetch("TOOLTIP:RightClickAltShiftTo"));
+		alternativesText.concat(TheGameText->fetch("ALTKEY:RightClickAltShiftTo"));
 		alternativesText.concat(L" ");
 		alternativesText.concat(removeHotkeyFromText(TheGameText->fetch(commandButton->getRightClickAltShiftButton()->getTextLabel().str())));
 		alternativesText.concat(getButtonCostText(commandButton->getRightClickAltShiftButton()));
@@ -378,7 +378,7 @@ static UnicodeString getButtonAlternativesText(const CommandButton* commandButto
 			alternativesText = L"\n\n";
 			hasAlternatives = true;
 		}
-		alternativesText.concat(TheGameText->fetch("TOOLTIP:RightClickTo"));
+		alternativesText.concat(TheGameText->fetch("ALTKEY:RightClickTo"));
 		alternativesText.concat(L" ");
 		alternativesText.concat(removeHotkeyFromText(TheGameText->fetch(commandButton->getRightClickButton()->getTextLabel().str())));
 		alternativesText.concat(getButtonCostText(commandButton->getRightClickButton()));
@@ -391,7 +391,7 @@ static UnicodeString getButtonAlternativesText(const CommandButton* commandButto
 			alternativesText = L"\n\n";
 			hasAlternatives = true;
 		}
-		alternativesText.concat(TheGameText->fetch("TOOLTIP:RightClickCtrlTo"));
+		alternativesText.concat(TheGameText->fetch("ALTKEY:RightClickCtrlTo"));
 		alternativesText.concat(L" ");
 		alternativesText.concat(removeHotkeyFromText(TheGameText->fetch(commandButton->getRightClickCtrlButton()->getTextLabel().str())));
 		alternativesText.concat(getButtonCostText(commandButton->getRightClickCtrlButton()));
@@ -404,7 +404,7 @@ static UnicodeString getButtonAlternativesText(const CommandButton* commandButto
 			alternativesText = L"\n\n";
 			hasAlternatives = true;
 		}
-		alternativesText.concat(TheGameText->fetch("TOOLTIP:RightClickAltTo"));
+		alternativesText.concat(TheGameText->fetch("ALTKEY:RightClickAltTo"));
 		alternativesText.concat(L" ");
 		alternativesText.concat(removeHotkeyFromText(TheGameText->fetch(commandButton->getRightClickAltButton()->getTextLabel().str())));
 		alternativesText.concat(getButtonCostText(commandButton->getRightClickAltButton()));
@@ -417,7 +417,7 @@ static UnicodeString getButtonAlternativesText(const CommandButton* commandButto
 			alternativesText = L"\n\n";
 			hasAlternatives = true;
 		}
-		alternativesText.concat(TheGameText->fetch("TOOLTIP:RightClickShiftTo"));
+		alternativesText.concat(TheGameText->fetch("ALTKEY:RightClickShiftTo"));
 		alternativesText.concat(L" ");
 		alternativesText.concat(removeHotkeyFromText(TheGameText->fetch(commandButton->getRightClickShiftButton()->getTextLabel().str())));
 		alternativesText.concat(getButtonCostText(commandButton->getRightClickShiftButton()));
@@ -432,7 +432,7 @@ static UnicodeString getButtonAlternativesText(const CommandButton* commandButto
 			alternativesText = L"\n\n";
 			hasAlternatives = true;
 		}
-		alternativesText.concat(TheGameText->fetch("TOOLTIP:LeftClickCtrlAltShiftTo"));
+		alternativesText.concat(TheGameText->fetch("ALTKEY:LeftClickCtrlAltShiftTo"));
 		alternativesText.concat(L" ");
 		alternativesText.concat(removeHotkeyFromText(TheGameText->fetch(commandButton->getLeftClickCtrlAltShiftButton()->getTextLabel().str())));
 		alternativesText.concat(getButtonCostText(commandButton->getLeftClickCtrlAltShiftButton()));
@@ -445,7 +445,7 @@ static UnicodeString getButtonAlternativesText(const CommandButton* commandButto
 			alternativesText = L"\n\n";
 			hasAlternatives = true;
 		}
-		alternativesText.concat(TheGameText->fetch("TOOLTIP:LeftClickCtrlAltTo"));
+		alternativesText.concat(TheGameText->fetch("ALTKEY:LeftClickCtrlAltTo"));
 		alternativesText.concat(L" ");
 		alternativesText.concat(removeHotkeyFromText(TheGameText->fetch(commandButton->getLeftClickCtrlAltButton()->getTextLabel().str())));
 		alternativesText.concat(getButtonCostText(commandButton->getLeftClickCtrlAltButton()));
@@ -458,7 +458,7 @@ static UnicodeString getButtonAlternativesText(const CommandButton* commandButto
 			alternativesText = L"\n\n";
 			hasAlternatives = true;
 		}
-		alternativesText.concat(TheGameText->fetch("TOOLTIP:LeftClickCtrlShiftTo"));
+		alternativesText.concat(TheGameText->fetch("ALTKEY:LeftClickCtrlShiftTo"));
 		alternativesText.concat(L" ");
 		alternativesText.concat(removeHotkeyFromText(TheGameText->fetch(commandButton->getLeftClickCtrlShiftButton()->getTextLabel().str())));
 		alternativesText.concat(getButtonCostText(commandButton->getLeftClickCtrlShiftButton()));
@@ -471,7 +471,7 @@ static UnicodeString getButtonAlternativesText(const CommandButton* commandButto
 			alternativesText = L"\n\n";
 			hasAlternatives = true;
 		}
-		alternativesText.concat(TheGameText->fetch("TOOLTIP:LeftClickAltShiftTo"));
+		alternativesText.concat(TheGameText->fetch("ALTKEY:LeftClickAltShiftTo"));
 		alternativesText.concat(L" ");
 		alternativesText.concat(removeHotkeyFromText(TheGameText->fetch(commandButton->getLeftClickAltShiftButton()->getTextLabel().str())));
 		alternativesText.concat(getButtonCostText(commandButton->getLeftClickAltShiftButton()));
@@ -484,7 +484,7 @@ static UnicodeString getButtonAlternativesText(const CommandButton* commandButto
 			alternativesText = L"\n\n";
 			hasAlternatives = true;
 		}
-		alternativesText.concat(TheGameText->fetch("TOOLTIP:LeftClickCtrlTo"));
+		alternativesText.concat(TheGameText->fetch("ALTKEY:LeftClickCtrlTo"));
 		alternativesText.concat(L" ");
 		alternativesText.concat(removeHotkeyFromText(TheGameText->fetch(commandButton->getLeftClickCtrlButton()->getTextLabel().str())));
 		alternativesText.concat(getButtonCostText(commandButton->getLeftClickCtrlButton()));
@@ -497,7 +497,7 @@ static UnicodeString getButtonAlternativesText(const CommandButton* commandButto
 			alternativesText = L"\n\n";
 			hasAlternatives = true;
 		}
-		alternativesText.concat(TheGameText->fetch("TOOLTIP:LeftClickAltTo"));
+		alternativesText.concat(TheGameText->fetch("ALTKEY:LeftClickAltTo"));
 		alternativesText.concat(L" ");
 		alternativesText.concat(removeHotkeyFromText(TheGameText->fetch(commandButton->getLeftClickAltButton()->getTextLabel().str())));
 		alternativesText.concat(getButtonCostText(commandButton->getLeftClickAltButton()));
@@ -510,7 +510,7 @@ static UnicodeString getButtonAlternativesText(const CommandButton* commandButto
 			alternativesText = L"\n\n";
 			hasAlternatives = true;
 		}
-		alternativesText.concat(TheGameText->fetch("TOOLTIP:LeftClickShiftTo"));
+		alternativesText.concat(TheGameText->fetch("ALTKEY:LeftClickShiftTo"));
 		alternativesText.concat(L" ");
 		alternativesText.concat(removeHotkeyFromText(TheGameText->fetch(commandButton->getLeftClickShiftButton()->getTextLabel().str())));
 		alternativesText.concat(getButtonCostText(commandButton->getLeftClickShiftButton()));
@@ -612,7 +612,7 @@ static UnicodeString getButtonAlternativesText(const CommandButton* commandButto
 				alternativesText = L"\n\n";
 				hasAlternatives = true;
 			}
-			alternativesText.concat(TheGameText->fetch("TOOLTIP:LeftClickShiftTo"));
+			alternativesText.concat(TheGameText->fetch("ALTKEY:LeftClickShiftTo"));
 			alternativesText.concat(L" ");
 			UnicodeString originalText = removeHotkeyFromText(TheGameText->fetch(commandButton->getTextLabel().str()));
 			UnicodeString formattedText = formatMassProductionText(originalText, L"3x");
@@ -629,7 +629,7 @@ static UnicodeString getButtonAlternativesText(const CommandButton* commandButto
 				alternativesText = L"\n\n";
 				hasAlternatives = true;
 			}
-			alternativesText.concat(TheGameText->fetch("TOOLTIP:LeftClickCtrlTo"));
+			alternativesText.concat(TheGameText->fetch("ALTKEY:LeftClickCtrlTo"));
 			alternativesText.concat(L" ");
 			UnicodeString originalText = removeHotkeyFromText(TheGameText->fetch(commandButton->getTextLabel().str()));
 			UnicodeString formattedText = formatMassProductionText(originalText, L"6x");
@@ -646,7 +646,7 @@ static UnicodeString getButtonAlternativesText(const CommandButton* commandButto
 				alternativesText = L"\n\n";
 				hasAlternatives = true;
 			}
-			alternativesText.concat(TheGameText->fetch("TOOLTIP:LeftClickAltTo"));
+			alternativesText.concat(TheGameText->fetch("ALTKEY:LeftClickAltTo"));
 			alternativesText.concat(L" ");
 			UnicodeString originalText = removeHotkeyFromText(TheGameText->fetch(commandButton->getTextLabel().str()));
 			UnicodeString formattedText = formatMassProductionText(originalText, L"9x");
@@ -760,9 +760,9 @@ void ControlBar::populateBuildTooltipLayout(const CommandButton* commandButton, 
 							{
 								descrip.concat(L"\n\n");
 								if (obi->isOverchargeActive())
-									descrip.concat(TheGameText->fetch("TOOLTIP:TooltipNukeReactorOverChargeIsOn"));
+									descrip.concat(TheGameText->fetch("ALTKEY:TooltipNukeReactorOverChargeIsOn"));
 								else
-									descrip.concat(TheGameText->fetch("TOOLTIP:TooltipNukeReactorOverChargeIsOff"));
+									descrip.concat(TheGameText->fetch("ALTKEY:TooltipNukeReactorOverChargeIsOff"));
 							}
 						}
 					}
@@ -776,30 +776,30 @@ void ControlBar::populateBuildTooltipLayout(const CommandButton* commandButton, 
 					{
 					case CANMAKE_NO_MONEY:
 						descrip.concat(L"\n\n");
-						descrip.concat(TheGameText->fetch("TOOLTIP:TooltipNotEnoughMoneyToBuild"));
+						descrip.concat(TheGameText->fetch("ALTKEY:TooltipNotEnoughMoneyToBuild"));
 						break;
 					case CANMAKE_QUEUE_FULL:
 						descrip.concat(L"\n\n");
-						descrip.concat(TheGameText->fetch("TOOLTIP:TooltipCannotPurchaseBecauseQueueFull"));
+						descrip.concat(TheGameText->fetch("ALTKEY:TooltipCannotPurchaseBecauseQueueFull"));
 						break;
 					case CANMAKE_PARKING_PLACES_FULL:
 						descrip.concat(L"\n\n");
-						descrip.concat(TheGameText->fetch("TOOLTIP:TooltipCannotBuildUnitBecauseParkingFull"));
+						descrip.concat(TheGameText->fetch("ALTKEY:TooltipCannotBuildUnitBecauseParkingFull"));
 						break;
 					case CANMAKE_MAXED_OUT_FOR_PLAYER:
 						descrip.concat(L"\n\n");
 						if (thingTemplate->isKindOf(KINDOF_STRUCTURE))
 						{
-							descrip.concat(TheGameText->fetch("TOOLTIP:TooltipCannotBuildBuildingBecauseMaximumNumber"));
+							descrip.concat(TheGameText->fetch("ALTKEY:TooltipCannotBuildBuildingBecauseMaximumNumber"));
 						}
 						else
 						{
-							descrip.concat(TheGameText->fetch("TOOLTIP:TooltipCannotBuildUnitBecauseMaximumNumber"));
+							descrip.concat(TheGameText->fetch("ALTKEY:TooltipCannotBuildUnitBecauseMaximumNumber"));
 						}
 						break;
 						//case CANMAKE_NO_PREREQ:
 						//	descrip.concat( L"\n\n" );
-						//	descrip.concat( TheGameText->fetch( "TOOLTIP:TooltipCannotBuildDueToPrerequisites" ) );
+						//	descrip.concat( TheGameText->fetch( "ALTKEY:TooltipCannotBuildDueToPrerequisites" ) );
 						//	break;
 					}
 				}
@@ -814,12 +814,12 @@ void ControlBar::populateBuildTooltipLayout(const CommandButton* commandButton, 
 						if (pui && pui->getProductionCount() == MAX_BUILD_QUEUE_BUTTONS)
 						{
 							descrip.concat(L"\n\n");
-							descrip.concat(TheGameText->fetch("TOOLTIP:TooltipCannotPurchaseBecauseQueueFull"));
+							descrip.concat(TheGameText->fetch("ALTKEY:TooltipCannotPurchaseBecauseQueueFull"));
 						}
 						else if (!TheUpgradeCenter->canAffordUpgrade(ThePlayerList->getLocalPlayer(), upgradeTemplate, FALSE))
 						{
 							descrip.concat(L"\n\n");
-							descrip.concat(TheGameText->fetch("TOOLTIP:TooltipNotEnoughMoneyToBuild"));
+							descrip.concat(TheGameText->fetch("ALTKEY:TooltipNotEnoughMoneyToBuild"));
 						}
 					}
 				}
@@ -919,7 +919,7 @@ void ControlBar::populateBuildTooltipLayout(const CommandButton* commandButton, 
 			costToBuild = thingTemplate->calcCostToBuild(player);
 			if (costToBuild > 0)
 			{
-				cost.format(TheGameText->fetch("TOOLTIP:Cost"), costToBuild);
+				cost.format(TheGameText->fetch("ALTKEY:Cost"), costToBuild);
 			}
 
 			// ask each prerequisite to give us a list of the non satisfied prerequisites
@@ -985,7 +985,7 @@ void ControlBar::populateBuildTooltipLayout(const CommandButton* commandButton, 
 				}
 				else
 				{
-					descrip = TheGameText->fetch("TOOLTIP:HasConflictingUpgradeDefault");
+					descrip = TheGameText->fetch("ALTKEY:HasConflictingUpgradeDefault");
 				}
 			}
 			else if (hasUpgradeAlready && (playerUpgradeButton || objectUpgradeButton))
@@ -997,7 +997,7 @@ void ControlBar::populateBuildTooltipLayout(const CommandButton* commandButton, 
 				}
 				else
 				{
-					descrip = TheGameText->fetch("TOOLTIP:AlreadyUpgradedDefault");
+					descrip = TheGameText->fetch("ALTKEY:AlreadyUpgradedDefault");
 				}
 			}
 			else if (!hasUpgradeAlready)
@@ -1018,7 +1018,7 @@ void ControlBar::populateBuildTooltipLayout(const CommandButton* commandButton, 
 				costToBuild = upgradeTemplate->calcCostToBuild(player);
 				if (costToBuild > 0)
 				{
-					cost.format(TheGameText->fetch("TOOLTIP:Cost"), costToBuild);
+					cost.format(TheGameText->fetch("ALTKEY:Cost"), costToBuild);
 				}
 
 				if (missingScience)
@@ -1037,7 +1037,7 @@ void ControlBar::populateBuildTooltipLayout(const CommandButton* commandButton, 
 			costToBuild = TheScienceStore->getSciencePurchaseCost(st);
 			if (costToBuild > 0)
 			{
-				cost.format(TheGameText->fetch("TOOLTIP:ScienceCost"), costToBuild);
+				cost.format(TheGameText->fetch("ALTKEY:ScienceCost"), costToBuild);
 			}
 
 			// ask each prerequisite to give us a list of the non satisfied prerequisites
@@ -1077,13 +1077,13 @@ void ControlBar::populateBuildTooltipLayout(const CommandButton* commandButton, 
 			costToBuild = specialPowerTemplate->getUsingCost();
 			if (costToBuild > 0)
 			{
-				cost.format(TheGameText->fetch("TOOLTIP:Cost"), costToBuild);
+				cost.format(TheGameText->fetch("ALTKEY:Cost"), costToBuild);
 			}
 
 			if (!specialPowerTemplate->canAffordUsingPower(player, selectedObject))
 			{
 				descrip.concat(L"\n\n");
-				descrip.concat(TheGameText->fetch("TOOLTIP:TooltipNotEnoughMoneyToBuild"));
+				descrip.concat(TheGameText->fetch("ALTKEY:TooltipNotEnoughMoneyToBuild"));
 			}
 			
 		}
@@ -1101,13 +1101,13 @@ void ControlBar::populateBuildTooltipLayout(const CommandButton* commandButton, 
 				costToBuild = commandButton->getCostOfExecution(player, selectedObject);
 				if (costToBuild > 0)
 				{
-					cost.format(TheGameText->fetch("TOOLTIP:Cost"), costToBuild);
+					cost.format(TheGameText->fetch("ALTKEY:Cost"), costToBuild);
 				}
 
 				if (costToBuild > 0 && player->getMoney()->countMoney() < costToBuild)
 				{
 					descrip.concat(L"\n\n");
-					descrip.concat(TheGameText->fetch("TOOLTIP:TooltipNotEnoughMoneyToBuild"));
+					descrip.concat(TheGameText->fetch("ALTKEY:TooltipNotEnoughMoneyToBuild"));
 				}
 			}
 		}
@@ -1125,13 +1125,13 @@ void ControlBar::populateBuildTooltipLayout(const CommandButton* commandButton, 
 				costToBuild = commandButton->getCostOfExecution(player, selectedObject);
 				if (costToBuild > 0)
 				{
-					cost.format(TheGameText->fetch("TOOLTIP:Cost"), costToBuild);
+					cost.format(TheGameText->fetch("ALTKEY:Cost"), costToBuild);
 				}
 
 				if (costToBuild > 0 && player->getMoney()->countMoney() < costToBuild)
 				{
 					descrip.concat(L"\n\n");
-					descrip.concat(TheGameText->fetch("TOOLTIP:TooltipNotEnoughMoneyToBuild"));
+					descrip.concat(TheGameText->fetch("ALTKEY:TooltipNotEnoughMoneyToBuild"));
 				}
 			}
 		}
