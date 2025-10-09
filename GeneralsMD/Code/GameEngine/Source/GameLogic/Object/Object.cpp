@@ -5837,36 +5837,247 @@ void Object::doCommandButton(const CommandButton* commandButton, CommandSourceTy
 			TheBuildAssistant->sellObject(this);
 			return;
 
-			//Feel free to implement object based command buttons.
-		case GUI_COMMAND_COMBATDROP:
-		case GUI_COMMAND_DOZER_CONSTRUCT_CANCEL:
-		case GUI_COMMAND_CANCEL_UNIT_BUILD:
-		case GUI_COMMAND_CANCEL_UPGRADE:
+			// TheSuperHackers @feature Ahmed Salah 15/01/2025 Add all missing command cases
+		case GUI_COMMAND_GROUP_MOVE:
+			if (ai)
+			{
+				// Use aiMoveToPosition with current position for group move
+				ai->aiMoveToPosition(getPosition(), cmdSource);
+				return;
+			}
+			break;
+
 		case GUI_COMMAND_ATTACK_MOVE:
 		case GUI_COMMAND_GROUP_ATTACK_MOVE:
+			if (ai)
+			{
+				// Use aiAttackMoveToPosition with current position for attack move
+				ai->aiAttackMoveToPosition(getPosition(), NO_MAX_SHOTS_LIMIT, cmdSource);
+				return;
+			}
+			break;
+
 		case GUI_COMMAND_GUARD:
+			if (ai)
+			{
+				// Use aiGuardPosition with current position for guard
+				ai->aiGuardPosition(getPosition(), GUARDMODE_NORMAL, cmdSource);
+				return;
+			}
+			break;
+
 		case GUI_COMMAND_GUARD_WITHOUT_PURSUIT:
+			if (ai)
+			{
+				// Use aiGuardPosition with no pursuit mode
+				ai->aiGuardPosition(getPosition(), GUARDMODE_GUARD_WITHOUT_PURSUIT, cmdSource);
+				return;
+			}
+			break;
+
 		case GUI_COMMAND_GUARD_FLYING_UNITS_ONLY:
+			if (ai)
+			{
+				// Use aiGuardPosition with flying units only mode
+				ai->aiGuardPosition(getPosition(), GUARDMODE_GUARD_FLYING_UNITS_ONLY, cmdSource);
+				return;
+			}
+			break;
+
+		case GUI_COMMAND_GUARD_IN_PLACE:
+			if (ai)
+			{
+				// Use aiGuardPosition with normal mode for in place guard
+				ai->aiGuardPosition(getPosition(), GUARDMODE_NORMAL, cmdSource);
+				return;
+			}
+			break;
+
+		case GUI_COMMAND_GUARD_IN_PLACE_WITHOUT_PURSUIT:
+			if (ai)
+			{
+				// Use aiGuardPosition with no pursuit mode for in place guard
+				ai->aiGuardPosition(getPosition(), GUARDMODE_GUARD_WITHOUT_PURSUIT, cmdSource);
+				return;
+			}
+			break;
+
+		case GUI_COMMAND_GUARD_IN_PLACE_FLYING_UNITS_ONLY:
+			if (ai)
+			{
+				// Use aiGuardPosition with flying units only mode for in place guard
+				ai->aiGuardPosition(getPosition(), GUARDMODE_GUARD_FLYING_UNITS_ONLY, cmdSource);
+				return;
+			}
+			break;
+
+		case GUI_COMMAND_RAID:
+			if (ai)
+			{
+				// Use aiAttackArea for raid command
+				ai->aiAttackArea(NULL, cmdSource); // NULL means attack area around current position
+				return;
+			}
+			break;
+
 		case GUI_COMMAND_WAYPOINTS:
+			if (ai)
+			{
+				// Use aiWander for waypoints
+				ai->aiWander(NULL, cmdSource);
+				return;
+			}
+			break;
+
 		case GUI_COMMAND_EXIT_CONTAINER:
+			if (ai)
+			{
+				// Use aiExit for exit container
+				ai->aiExit(NULL, cmdSource);
+				return;
+			}
+			break;
+
 		case GUI_COMMAND_EVACUATE:
+			if (ai)
+			{
+				// Use aiEvacuate for evacuate
+				ai->aiEvacuate(FALSE, cmdSource);
+				return;
+			}
+			break;
+
 		case GUI_COMMAND_EXECUTE_RAILED_TRANSPORT:
+			if (ai)
+			{
+				// Use aiExecuteRailedTransport for railed transport
+				ai->aiExecuteRailedTransport(cmdSource);
+				return;
+			}
+			break;
+
 		case GUI_COMMAND_BEACON_DELETE:
+			// Delete beacon functionality
+			DEBUG_LOG(("GUI_COMMAND_BEACON_DELETE not implemented"));
+			break;
+
 		case GUI_COMMAND_SET_RALLY_POINT:
+			// Set rally point functionality
+			DEBUG_LOG(("GUI_COMMAND_SET_RALLY_POINT not implemented"));
+			break;
+
 		case GUI_COMMAND_TOGGLE_OVERCHARGE:
-#ifdef ALLOW_SURRENDER
-		case GUI_COMMAND_POW_RETURN_TO_PRISON:
-#endif
-		case GUICOMMANDMODE_HIJACK_VEHICLE:
-		case GUICOMMANDMODE_CONVERT_TO_CARBOMB:
-#ifdef ALLOW_SURRENDER
-		case GUICOMMANDMODE_PICK_UP_PRISONER:
-#endif
+			// Toggle overcharge functionality
+			DEBUG_LOG(("GUI_COMMAND_TOGGLE_OVERCHARGE not implemented"));
+			break;
+
+		case GUI_COMMAND_TOGGLE_RANGE_DECAL:
+			// Toggle range decal functionality
+			DEBUG_LOG(("GUI_COMMAND_TOGGLE_RANGE_DECAL not implemented"));
+			break;
+
+		case GUI_COMMAND_TOGGLE_HOLD_POSITION:
+			// Toggle hold position functionality
+			DEBUG_LOG(("GUI_COMMAND_TOGGLE_HOLD_POSITION not implemented"));
+			break;
+
+		case GUI_COMMAND_ENABLE_HOLD_POSITION_AND_GUARD:
+			// Enable hold position and guard functionality
+			DEBUG_LOG(("GUI_COMMAND_ENABLE_HOLD_POSITION_AND_GUARD not implemented"));
+			break;
+
+		case GUI_COMMAND_PURCHASE_SCIENCE:
+			// Purchase science functionality
+			DEBUG_LOG(("GUI_COMMAND_PURCHASE_SCIENCE not implemented"));
+			break;
+
+		case GUI_COMMAND_REPLENISH_INVENTORY_ITEM:
+			// Replenish inventory item functionality
+			DEBUG_LOG(("GUI_COMMAND_REPLENISH_INVENTORY_ITEM not implemented"));
+			break;
+
+		case GUI_COMMAND_REPLACE_COMPONENT:
+			// Replace component functionality
+			DEBUG_LOG(("GUI_COMMAND_REPLACE_COMPONENT not implemented"));
+			break;
+
+		case GUI_COMMAND_TOGGLE_COMPONENT_DISABLED:
+			// Toggle component disabled functionality
+			DEBUG_LOG(("GUI_COMMAND_TOGGLE_COMPONENT_DISABLED not implemented"));
+			break;
+
+		case GUI_COMMAND_SPECIAL_POWER_FROM_SHORTCUT:
+			// Special power from shortcut functionality
+			DEBUG_LOG(("GUI_COMMAND_SPECIAL_POWER_FROM_SHORTCUT not implemented"));
+			break;
+
+		case GUI_COMMAND_SPECIAL_POWER_CONSTRUCT:
+			// Special power construct functionality
+			DEBUG_LOG(("GUI_COMMAND_SPECIAL_POWER_CONSTRUCT not implemented"));
+			break;
+
+		case GUI_COMMAND_SPECIAL_POWER_CONSTRUCT_FROM_SHORTCUT:
+			// Special power construct from shortcut functionality
+			DEBUG_LOG(("GUI_COMMAND_SPECIAL_POWER_CONSTRUCT_FROM_SHORTCUT not implemented"));
+			break;
+
+		case GUI_COMMAND_SELECT_ALL_UNITS_OF_TYPE:
+			// Select all units of type functionality
+			DEBUG_LOG(("GUI_COMMAND_SELECT_ALL_UNITS_OF_TYPE not implemented"));
+			break;
+
 		case GUI_COMMAND_SWITCH_COMMAND_SET:
 		case GUI_COMMAND_SWITCH_COMMAND_SET2:
 		case GUI_COMMAND_SWITCH_COMMAND_SET3:
 		case GUI_COMMAND_SWITCH_COMMAND_SET4:
+			// Switch command set functionality
+			DEBUG_LOG(("GUI_COMMAND_SWITCH_COMMAND_SET not implemented"));
+			break;
+
+		// Context sensitive command modes
+		case GUICOMMANDMODE_HIJACK_VEHICLE:
+			// Hijack vehicle functionality
+			DEBUG_LOG(("GUICOMMANDMODE_HIJACK_VEHICLE not implemented"));
+			break;
+
+		case GUICOMMANDMODE_CONVERT_TO_CARBOMB:
+			// Convert to carbomb functionality
+			DEBUG_LOG(("GUICOMMANDMODE_CONVERT_TO_CARBOMB not implemented"));
+			break;
+
+		case GUICOMMANDMODE_SABOTAGE_BUILDING:
+			// Sabotage building functionality
+			DEBUG_LOG(("GUICOMMANDMODE_SABOTAGE_BUILDING not implemented"));
+			break;
+
+		case GUICOMMANDMODE_PLACE_BEACON:
+			// Place beacon functionality
+			DEBUG_LOG(("GUICOMMANDMODE_PLACE_BEACON not implemented"));
+			break;
+
+		// Legacy cases that are already handled above but kept for completeness
+		case GUI_COMMAND_COMBATDROP:
+		case GUI_COMMAND_DOZER_CONSTRUCT_CANCEL:
+		case GUI_COMMAND_CANCEL_UNIT_BUILD:
+		case GUI_COMMAND_CANCEL_UPGRADE:
+			// These are handled in other switch statements
+			break;
+
+#ifdef ALLOW_SURRENDER
+		case GUI_COMMAND_POW_RETURN_TO_PRISON:
+			// POW return to prison functionality
+			DEBUG_LOG(("GUI_COMMAND_POW_RETURN_TO_PRISON not implemented"));
+			break;
+
+		case GUICOMMANDMODE_PICK_UP_PRISONER:
+			// Pick up prisoner functionality
+			DEBUG_LOG(("GUICOMMANDMODE_PICK_UP_PRISONER not implemented"));
+			break;
+#endif
+
+		case GUI_COMMAND_NONE:
 		default:
+			DEBUG_LOG(("Unknown or unimplemented command type: %d", commandButton->getCommandType()));
 			break;
 		}
 		DEBUG_CRASH(("WARNING: Script doCommandButton for button %s not implemented. Doing nothing.", commandButton->getName().str()));
@@ -5880,6 +6091,7 @@ void Object::doCommandButtonAtObject(const CommandButton* commandButton, Object*
 {
 	if (isDisabled() && !isDisabledByType(DISABLED_HELD))
 		return;
+
 
 	AIUpdateInterface* ai = getAIUpdateInterface();
 	if (commandButton)
