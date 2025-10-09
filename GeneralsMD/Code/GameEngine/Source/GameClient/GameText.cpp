@@ -199,8 +199,8 @@ class GameTextManager : public GameTextInterface
 		Char						readChar( File *file );
 		
 		// Helper methods for refactored init()
-		void						countAdditionalStringFiles(const AsciiString& strFile, Int& textCount);
-		void						parseStringFiles(const AsciiString& strFile);
+		void						countStringFilesEntries(Int& textCount);
+		void						parseStringFiles();
 		void						createStringLookupTable();
 };
 
@@ -317,12 +317,11 @@ void GameTextManager::init( void )
 	AsciiString csfFile;
 	csfFile.format(g_csfFile, GetRegistryLanguage().str());
 	
-	AsciiString strFile;
-	strFile.format(g_strFile, GetRegistryLanguage().str());
+
 	
 	// Determine file format and get initial text count
 	Int format;
-	if ( m_useStringFile && getStringCount( strFile.str(), m_textCount ) )
+	if ( m_useStringFile)
 	{
 		format = STRING_FILE;
 	}
@@ -338,7 +337,7 @@ void GameTextManager::init( void )
 	// Count additional string files if using string file format
 	if ( format == STRING_FILE )
 	{
-		countAdditionalStringFiles(strFile, m_textCount);
+		countStringFilesEntries(m_textCount);
 	}
 
 	// Validate we have strings to process
@@ -358,7 +357,7 @@ void GameTextManager::init( void )
 	// Parse files based on format
 	if ( format == STRING_FILE )
 	{
-		parseStringFiles(strFile);
+		parseStringFiles();
 	}
 	else
 	{
@@ -377,7 +376,7 @@ void GameTextManager::init( void )
 // GameTextManager::countAdditionalStringFiles
 //============================================================================
 
-void GameTextManager::countAdditionalStringFiles(const AsciiString& strFile, Int& textCount)
+void GameTextManager::countStringFilesEntries(Int& textCount)
 {
 	FilenameList strFileList;
 	AsciiString languageCode = GetRegistryLanguage();
@@ -391,7 +390,7 @@ void GameTextManager::countAdditionalStringFiles(const AsciiString& strFile, Int
 		filePattern.concat(".str");
 	}
 	
-	TheFileSystem->getFileListInDirectory("Data\\INI\\", filePattern.str(), strFileList, TRUE);
+	TheFileSystem->getFileListInDirectory("Data\\", filePattern.str(), strFileList, TRUE);
 	
 	FilenameList::const_iterator it = strFileList.begin();
 	while (it != strFileList.end())
@@ -399,7 +398,7 @@ void GameTextManager::countAdditionalStringFiles(const AsciiString& strFile, Int
 		AsciiString tempname = (*it).str();
 		
 		// Check if file ends with .str (case insensitive) and exclude main strFile
-		if (tempname.endsWithNoCase(".str") && tempname != strFile)
+		if (tempname.endsWithNoCase(".str"))
 		{
 			Int tempCount = 0;
 			getStringCount(tempname.str(), tempCount);
@@ -413,14 +412,10 @@ void GameTextManager::countAdditionalStringFiles(const AsciiString& strFile, Int
 // GameTextManager::parseStringFiles
 //============================================================================
 
-void GameTextManager::parseStringFiles(const AsciiString& strFile)
+void GameTextManager::parseStringFiles()
 {
 	// Parse main string file first
-	if( parseStringFile( strFile.str(), 0 ) == FALSE )
-	{
-		deinit();
-		return;
-	}
+	
 
 	// Parse additional .str files in directory
 	FilenameList strFileList;
@@ -435,7 +430,7 @@ void GameTextManager::parseStringFiles(const AsciiString& strFile)
 		filePattern.concat(".str");
 	}
 	
-	TheFileSystem->getFileListInDirectory("Data\\INI\\", filePattern.str(), strFileList, TRUE);
+	TheFileSystem->getFileListInDirectory("Data\\", filePattern.str(), strFileList, TRUE);
 	
 	Int currentListCount = 0;
 	FilenameList::const_iterator it = strFileList.begin();
@@ -444,9 +439,14 @@ void GameTextManager::parseStringFiles(const AsciiString& strFile)
 		AsciiString tempname = (*it).str();
 		
 		// Check if file ends with .str (case insensitive) and exclude main strFile
-		if (tempname.endsWithNoCase(".str") && tempname != strFile)
+		if (tempname.endsWithNoCase(".str") )
 		{
-			parseStringFile(tempname.str(), currentListCount);
+			if (parseStringFile(tempname.str(), currentListCount)==FALSE)
+			{
+				deinit();
+				return;
+			};
+
 			// Update currentListCount for next file
 			Int tempCount = 0;
 			getStringCount(tempname.str(), tempCount);

@@ -760,9 +760,9 @@ void ControlBar::populateBuildTooltipLayout(const CommandButton* commandButton, 
 							{
 								descrip.concat(L"\n\n");
 								if (obi->isOverchargeActive())
-									descrip.concat(TheGameText->fetch("ALTKEY:TooltipNukeReactorOverChargeIsOn"));
+									descrip.concat(TheGameText->fetch("TOOLTIP:TooltipNukeReactorOverChargeIsOn"));
 								else
-									descrip.concat(TheGameText->fetch("ALTKEY:TooltipNukeReactorOverChargeIsOff"));
+									descrip.concat(TheGameText->fetch("TOOLTIP:TooltipNukeReactorOverChargeIsOff"));
 							}
 						}
 					}
@@ -776,30 +776,30 @@ void ControlBar::populateBuildTooltipLayout(const CommandButton* commandButton, 
 					{
 					case CANMAKE_NO_MONEY:
 						descrip.concat(L"\n\n");
-						descrip.concat(TheGameText->fetch("ALTKEY:TooltipNotEnoughMoneyToBuild"));
+						descrip.concat(TheGameText->fetch("TOOLTIP:TooltipNotEnoughMoneyToBuild"));
 						break;
 					case CANMAKE_QUEUE_FULL:
 						descrip.concat(L"\n\n");
-						descrip.concat(TheGameText->fetch("ALTKEY:TooltipCannotPurchaseBecauseQueueFull"));
+						descrip.concat(TheGameText->fetch("TOOLTIP:TooltipCannotPurchaseBecauseQueueFull"));
 						break;
 					case CANMAKE_PARKING_PLACES_FULL:
 						descrip.concat(L"\n\n");
-						descrip.concat(TheGameText->fetch("ALTKEY:TooltipCannotBuildUnitBecauseParkingFull"));
+						descrip.concat(TheGameText->fetch("TOOLTIP:TooltipCannotBuildUnitBecauseParkingFull"));
 						break;
 					case CANMAKE_MAXED_OUT_FOR_PLAYER:
 						descrip.concat(L"\n\n");
 						if (thingTemplate->isKindOf(KINDOF_STRUCTURE))
 						{
-							descrip.concat(TheGameText->fetch("ALTKEY:TooltipCannotBuildBuildingBecauseMaximumNumber"));
+							descrip.concat(TheGameText->fetch("TOOLTIP:TooltipCannotBuildBuildingBecauseMaximumNumber"));
 						}
 						else
 						{
-							descrip.concat(TheGameText->fetch("ALTKEY:TooltipCannotBuildUnitBecauseMaximumNumber"));
+							descrip.concat(TheGameText->fetch("TOOLTIP:TooltipCannotBuildUnitBecauseMaximumNumber"));
 						}
 						break;
 						//case CANMAKE_NO_PREREQ:
 						//	descrip.concat( L"\n\n" );
-						//	descrip.concat( TheGameText->fetch( "ALTKEY:TooltipCannotBuildDueToPrerequisites" ) );
+						//	descrip.concat( TheGameText->fetch( "TOOLTIP:TooltipCannotBuildDueToPrerequisites" ) );
 						//	break;
 					}
 				}
@@ -814,12 +814,12 @@ void ControlBar::populateBuildTooltipLayout(const CommandButton* commandButton, 
 						if (pui && pui->getProductionCount() == MAX_BUILD_QUEUE_BUTTONS)
 						{
 							descrip.concat(L"\n\n");
-							descrip.concat(TheGameText->fetch("ALTKEY:TooltipCannotPurchaseBecauseQueueFull"));
+							descrip.concat(TheGameText->fetch("TOOLTIP:TooltipCannotPurchaseBecauseQueueFull"));
 						}
 						else if (!TheUpgradeCenter->canAffordUpgrade(ThePlayerList->getLocalPlayer(), upgradeTemplate, FALSE))
 						{
 							descrip.concat(L"\n\n");
-							descrip.concat(TheGameText->fetch("ALTKEY:TooltipNotEnoughMoneyToBuild"));
+							descrip.concat(TheGameText->fetch("TOOLTIP:TooltipNotEnoughMoneyToBuild"));
 						}
 					}
 				}
@@ -919,7 +919,7 @@ void ControlBar::populateBuildTooltipLayout(const CommandButton* commandButton, 
 			costToBuild = thingTemplate->calcCostToBuild(player);
 			if (costToBuild > 0)
 			{
-				cost.format(TheGameText->fetch("ALTKEY:Cost"), costToBuild);
+				cost.format(TheGameText->fetch("TOOLTIP:Cost"), costToBuild);
 			}
 
 			// ask each prerequisite to give us a list of the non satisfied prerequisites
@@ -985,7 +985,7 @@ void ControlBar::populateBuildTooltipLayout(const CommandButton* commandButton, 
 				}
 				else
 				{
-					descrip = TheGameText->fetch("ALTKEY:HasConflictingUpgradeDefault");
+					descrip = TheGameText->fetch("TOOLTIP:HasConflictingUpgradeDefault");
 				}
 			}
 			else if (hasUpgradeAlready && (playerUpgradeButton || objectUpgradeButton))
@@ -997,7 +997,7 @@ void ControlBar::populateBuildTooltipLayout(const CommandButton* commandButton, 
 				}
 				else
 				{
-					descrip = TheGameText->fetch("ALTKEY:AlreadyUpgradedDefault");
+					descrip = TheGameText->fetch("TOOLTIP:AlreadyUpgradedDefault");
 				}
 			}
 			else if (!hasUpgradeAlready)
@@ -1018,7 +1018,7 @@ void ControlBar::populateBuildTooltipLayout(const CommandButton* commandButton, 
 				costToBuild = upgradeTemplate->calcCostToBuild(player);
 				if (costToBuild > 0)
 				{
-					cost.format(TheGameText->fetch("ALTKEY:Cost"), costToBuild);
+					cost.format(TheGameText->fetch("TOOLTIP:Cost"), costToBuild);
 				}
 
 				if (missingScience)
@@ -1037,7 +1037,7 @@ void ControlBar::populateBuildTooltipLayout(const CommandButton* commandButton, 
 			costToBuild = TheScienceStore->getSciencePurchaseCost(st);
 			if (costToBuild > 0)
 			{
-				cost.format(TheGameText->fetch("ALTKEY:ScienceCost"), costToBuild);
+				cost.format(TheGameText->fetch("TOOLTIP:ScienceCost"), costToBuild);
 			}
 
 			// ask each prerequisite to give us a list of the non satisfied prerequisites
@@ -1077,13 +1077,13 @@ void ControlBar::populateBuildTooltipLayout(const CommandButton* commandButton, 
 			costToBuild = specialPowerTemplate->getUsingCost();
 			if (costToBuild > 0)
 			{
-				cost.format(TheGameText->fetch("ALTKEY:Cost"), costToBuild);
+				cost.format(TheGameText->fetch("TOOLTIP:Cost"), costToBuild);
 			}
 
 			if (!specialPowerTemplate->canAffordUsingPower(player, selectedObject))
 			{
 				descrip.concat(L"\n\n");
-				descrip.concat(TheGameText->fetch("ALTKEY:TooltipNotEnoughMoneyToBuild"));
+				descrip.concat(TheGameText->fetch("TOOLTIP:TooltipNotEnoughMoneyToBuild"));
 			}
 			
 		}
@@ -1101,13 +1101,13 @@ void ControlBar::populateBuildTooltipLayout(const CommandButton* commandButton, 
 				costToBuild = commandButton->getCostOfExecution(player, selectedObject);
 				if (costToBuild > 0)
 				{
-					cost.format(TheGameText->fetch("ALTKEY:Cost"), costToBuild);
+					cost.format(TheGameText->fetch("TOOLTIP:Cost"), costToBuild);
 				}
 
 				if (costToBuild > 0 && player->getMoney()->countMoney() < costToBuild)
 				{
 					descrip.concat(L"\n\n");
-					descrip.concat(TheGameText->fetch("ALTKEY:TooltipNotEnoughMoneyToBuild"));
+					descrip.concat(TheGameText->fetch("TOOLTIP:TooltipNotEnoughMoneyToBuild"));
 				}
 			}
 		}
@@ -1125,13 +1125,13 @@ void ControlBar::populateBuildTooltipLayout(const CommandButton* commandButton, 
 				costToBuild = commandButton->getCostOfExecution(player, selectedObject);
 				if (costToBuild > 0)
 				{
-					cost.format(TheGameText->fetch("ALTKEY:Cost"), costToBuild);
+					cost.format(TheGameText->fetch("TOOLTIP:Cost"), costToBuild);
 				}
 
 				if (costToBuild > 0 && player->getMoney()->countMoney() < costToBuild)
 				{
 					descrip.concat(L"\n\n");
-					descrip.concat(TheGameText->fetch("ALTKEY:TooltipNotEnoughMoneyToBuild"));
+					descrip.concat(TheGameText->fetch("TOOLTIP:TooltipNotEnoughMoneyToBuild"));
 				}
 			}
 		}
