@@ -378,7 +378,7 @@ UnsignedInt INI::loadDirectory(AsciiString dirName, INILoadType loadType, Xfer* 
 				|| tempname.endsWithNoCase(".ocl.ini")
 				|| tempname.endsWithNoCase(".ocls.ini")
 				|| tempname.endsWithNoCase(".soundeffect.ini")
-				|| tempname.endsWithNoCase(".eoundeffects.ini")
+				|| tempname.endsWithNoCase(".soundeffects.ini")
 				|| tempname.endsWithNoCase(".upgrade.ini")
 				|| tempname.endsWithNoCase(".upgrades.ini")
 				|| tempname.endsWithNoCase(".weapon.ini")
