@@ -317,12 +317,12 @@ UnsignedInt INI::loadDirectory( AsciiString dirName, AsciiString fileExtension, 
 	* If we are to load subdirectories, we will load them *after* we load all the
 	* files in the current directory */
 //-------------------------------------------------------------------------------------------------
-UnsignedInt INI::loadDirectory( AsciiString dirName, INILoadType loadType, Xfer *pXfer, Bool subdirs )
+UnsignedInt INI::loadDirectory(AsciiString dirName, INILoadType loadType, Xfer* pXfer, Bool subdirs)
 {
 	UnsignedInt filesRead = 0;
 
 	// sanity
-	if( dirName.isEmpty() )
+	if (dirName.isEmpty())
 		throw INI_INVALID_DIRECTORY;
 
 	try
@@ -338,28 +338,16 @@ UnsignedInt INI::loadDirectory( AsciiString dirName, INILoadType loadType, Xfer 
 			AsciiString tempname;
 			tempname = (*it).str() + dirName.getLength();
 
-			// TheSuperHackers @feature Ahmed Salah 15/01/2025 Skip files with 2 dots (like .Include.ini, .commandset.ini, etc.)
+			// TheSuperHackers @feature Ahmed Salah 15/01/2025 Exclude .Include.ini files from automatic loading
 			// These files should only be loaded when explicitly included via Include directive
-			const char* tempnameStr = tempname.str();
-			Int tempnameLen = tempname.getLength();
-			Int dotCount = 0;
-			
-			// Count dots in the filename
-			for (Int i = 0; i < tempnameLen; i++) {
-				if (tempnameStr[i] == '.') {
-					dotCount++;
-				}
-			}
-			
-			// Skip files with 2 or more dots
-			if (dotCount >= 2) {
+			if (tempname.endsWithNoCase(".Include.ini")) {
 				++it;
 				continue;
 			}
 
 			if ((tempname.find('\\') == NULL) && (tempname.find('/') == NULL)) {
 				// this file doesn't reside in a subdirectory, load it first.
-				filesRead += load( *it, loadType, pXfer );
+				filesRead += load(*it, loadType, pXfer);
 			}
 			++it;
 		}
@@ -369,28 +357,39 @@ UnsignedInt INI::loadDirectory( AsciiString dirName, INILoadType loadType, Xfer 
 		{
 			AsciiString tempname;
 			tempname = (*it).str() + dirName.getLength();
-
-			// TheSuperHackers @feature Ahmed Salah 15/01/2025 Skip files with 2 dots (like .Include.ini, .commandset.ini, etc.)
+			tempname.toLower();	
+			// TheSuperHackers @feature Ahmed Salah 15/01/2025 Exclude .Include.ini files from automatic loading
 			// These files should only be loaded when explicitly included via Include directive
-			const char* tempnameStr = tempname.str();
-			Int tempnameLen = tempname.getLength();
-			Int dotCount = 0;
-			
-			// Count dots in the filename
-			for (Int i = 0; i < tempnameLen; i++) {
-				if (tempnameStr[i] == '.') {
-					dotCount++;
-				}
-			}
-			
-			// Skip files with 2 or more dots
-			if (dotCount >= 2) {
+			if (tempname.endsWithNoCase(".include.ini")
+				|| tempname.endsWithNoCase(".ammo.ini")
+				|| tempname.endsWithNoCase(".ammos.ini")
+				|| tempname.endsWithNoCase(".commandButton.ini")
+				|| tempname.endsWithNoCase(".commandButtons.ini")
+				|| tempname.endsWithNoCase(".commandSet.ini")
+				|| tempname.endsWithNoCase(".commandSets.ini")
+				|| tempname.endsWithNoCase(".fxlist.ini")
+				|| tempname.endsWithNoCase(".fxlists.ini")
+				|| tempname.endsWithNoCase(".locomotor.ini")
+				|| tempname.endsWithNoCase(".locomotors.ini")
+				|| tempname.endsWithNoCase(".mappedImage.ini")
+				|| tempname.endsWithNoCase(".mappedImages.ini")
+				|| tempname.endsWithNoCase(".object.ini")
+				|| tempname.endsWithNoCase(".objects.ini")
+				|| tempname.endsWithNoCase(".ocl.ini")
+				|| tempname.endsWithNoCase(".ocls.ini")
+				|| tempname.endsWithNoCase(".soundeffect.ini")
+				|| tempname.endsWithNoCase(".eoundeffects.ini")
+				|| tempname.endsWithNoCase(".upgrade.ini")
+				|| tempname.endsWithNoCase(".upgrades.ini")
+				|| tempname.endsWithNoCase(".weapon.ini")
+				|| tempname.endsWithNoCase(".weapons.ini")
+				) {
 				++it;
 				continue;
 			}
 
 			if ((tempname.find('\\') != NULL) || (tempname.find('/') != NULL)) {
-				filesRead += load( *it, loadType, pXfer );
+				filesRead += load(*it, loadType, pXfer);
 			}
 			++it;
 		}

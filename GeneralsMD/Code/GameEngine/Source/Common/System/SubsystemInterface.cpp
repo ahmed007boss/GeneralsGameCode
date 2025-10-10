@@ -162,7 +162,7 @@ void SubsystemInterfaceList::initSubsystem(SubsystemInterface* sys, const char* 
 	if (path2)
 		ini.loadFileDirectory(path2, INI_LOAD_OVERWRITE, pXfer );
 	if (objectFolderFileExtension)
-		ini.loadDirectory( AsciiString( "Data\\INI\\Object" ), AsciiString(objectFolderFileExtension), INI_LOAD_OVERWRITE, NULL );
+		ini.loadDirectory( AsciiString( "Data\\INI\\Object" ), AsciiString(objectFolderFileExtension), INI_LOAD_MULTIFILE, pXfer,true);
 	m_subsystems.push_back(sys);
 }
 
