@@ -203,13 +203,16 @@ const FieldParse ThingTemplate::s_objectFieldParseTable[] =
 				//{ "InventoryImageDisabled",	INI::parseAsciiString,	NULL,		offsetof( ThingTemplate, m_inventoryImage[ INV_IMAGE_DISABLED ] ) },
 				//{ "InventoryImageHilite",		INI::parseAsciiString,	NULL,		offsetof( ThingTemplate, m_inventoryImage[ INV_IMAGE_HILITE ] ) },
 				//{ "InventoryImagePushed",		INI::parseAsciiString,	NULL,		offsetof( ThingTemplate, m_inventoryImage[ INV_IMAGE_PUSHED ] ) },
-
-				{ "UpgradeCameo",		parseUpgradeCameo,		NULL,		0 },
-				{ "UpgradeCameo1",		INI::parseAsciiString,	NULL,		offsetof(ThingTemplate, m_upgradeCameoUpgradeNames[0]) },
-				{ "UpgradeCameo2",		INI::parseAsciiString,	NULL,		offsetof(ThingTemplate, m_upgradeCameoUpgradeNames[1]) },
-				{ "UpgradeCameo3",		INI::parseAsciiString,	NULL,		offsetof(ThingTemplate, m_upgradeCameoUpgradeNames[2]) },
-				{ "UpgradeCameo4",		INI::parseAsciiString,	NULL,		offsetof(ThingTemplate, m_upgradeCameoUpgradeNames[3]) },
-				{ "UpgradeCameo5",		INI::parseAsciiString,	NULL,		offsetof(ThingTemplate, m_upgradeCameoUpgradeNames[4]) },
+	{ "UpgradeCameo",		parseUpgradeCameo,		NULL,		0 },
+	{ "UpgradeCameo1",		INI::parseAsciiString,	NULL,		offsetof( ThingTemplate, m_upgradeCameoUpgradeNames[ 0 ] ) },
+	{ "UpgradeCameo2",		INI::parseAsciiString,	NULL,		offsetof( ThingTemplate, m_upgradeCameoUpgradeNames[ 1 ] ) },
+	{ "UpgradeCameo3",		INI::parseAsciiString,	NULL,		offsetof( ThingTemplate, m_upgradeCameoUpgradeNames[ 2 ] ) },
+	{ "UpgradeCameo4",		INI::parseAsciiString,	NULL,		offsetof( ThingTemplate, m_upgradeCameoUpgradeNames[ 3 ] ) },
+	{ "UpgradeCameo5",		INI::parseAsciiString,	NULL,		offsetof( ThingTemplate, m_upgradeCameoUpgradeNames[ 4 ] ) },
+	{ "UpgradeCameo6",		INI::parseAsciiString,	NULL,		offsetof( ThingTemplate, m_upgradeCameoUpgradeNames[ 5 ] ) },
+	{ "UpgradeCameo7",		INI::parseAsciiString,	NULL,		offsetof( ThingTemplate, m_upgradeCameoUpgradeNames[ 6 ] ) },
+	{ "UpgradeCameo8",		INI::parseAsciiString,	NULL,		offsetof( ThingTemplate, m_upgradeCameoUpgradeNames[ 7 ] ) },
+	{ "UpgradeCameo9",		INI::parseAsciiString,	NULL,		offsetof( ThingTemplate, m_upgradeCameoUpgradeNames[ 8 ] ) },
 
 				// NOTE NOTE NOTE -- s_objectFieldParseTable and s_objectReskinFieldParseTable must be updated in tandem -- see comment above
 
