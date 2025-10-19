@@ -71,6 +71,7 @@
 #include "Common/GameLOD.h"
 #include "Common/Registry.h"
 #include "Common/GameCommon.h"	// FOR THE ALLOW_DEBUG_CHEATS_IN_RELEASE #define
+#include "Common/StackDump.h"
 
 #include "GameLogic/Armor.h"
 #include "GameLogic/AI.h"
@@ -111,6 +112,100 @@
 
 
 //-------------------------------------------------------------------------------------------------
+
+// Helper function to analyze memory addresses and provide context
+static void AnalyzeAddress(void* addr, int frameNum)
+{
+    unsigned int addrVal = (unsigned int)(uintptr_t)addr;
+    
+    // Try to get function details first
+    char name[256] = {0};
+    char filename[256] = {0};
+    unsigned int linenumber = 0;
+    unsigned int address = 0;
+    
+    GetFunctionDetails(addr, name, filename, &linenumber, &address);
+    
+    if (strlen(name) > 0)
+    {
+        DEBUG_LOG(("  -> Function: %s", name));
+        if (strlen(filename) > 0)
+            DEBUG_LOG(("  -> File: %s:%d", filename, linenumber));
+    }
+    else
+    {
+        // Analyze address ranges to provide context
+        if (addrVal >= 0x00400000 && addrVal < 0x01000000)
+        {
+            DEBUG_LOG(("  -> Game Engine Code (0x00400000-0x01000000)"));
+            // Further analysis based on specific ranges
+            if (addrVal >= 0x00400000 && addrVal < 0x00500000)
+                DEBUG_LOG(("    -> Likely: Core Engine/GameEngine code"));
+            else if (addrVal >= 0x00500000 && addrVal < 0x00600000)
+                DEBUG_LOG(("    -> Likely: GameClient/Rendering code"));
+            else if (addrVal >= 0x00600000 && addrVal < 0x00700000)
+                DEBUG_LOG(("    -> Likely: Audio/Input systems"));
+            else if (addrVal >= 0x00700000 && addrVal < 0x00800000)
+                DEBUG_LOG(("    -> Likely: Network/Multiplayer code"));
+            else if (addrVal >= 0x00800000 && addrVal < 0x00900000)
+                DEBUG_LOG(("    -> Likely: File I/O/Serialization code"));
+            else if (addrVal >= 0x00900000 && addrVal < 0x00A00000)
+                DEBUG_LOG(("    -> Likely: Xfer/Serialization code"));
+        }
+        else if (addrVal >= 0x01000000 && addrVal < 0x02000000)
+        {
+            DEBUG_LOG(("  -> Game Logic/AI Code (0x01000000-0x02000000)"));
+            if (addrVal >= 0x01000000 && addrVal < 0x01100000)
+                DEBUG_LOG(("    -> Likely: GameLogic core"));
+            else if (addrVal >= 0x01100000 && addrVal < 0x01200000)
+                DEBUG_LOG(("    -> Likely: AI/Pathfinding"));
+            else if (addrVal >= 0x01200000 && addrVal < 0x01300000)
+                DEBUG_LOG(("    -> Likely: Object/Unit management"));
+            else if (addrVal >= 0x01300000 && addrVal < 0x01400000)
+                DEBUG_LOG(("    -> Likely: Weapon/Combat systems"));
+            else if (addrVal >= 0x01400000 && addrVal < 0x01500000)
+                DEBUG_LOG(("    -> Likely: Script engine"));
+        }
+        else if (addrVal >= 0x70000000 && addrVal < 0x80000000)
+        {
+            DEBUG_LOG(("  -> Windows System Code (0x70000000-0x80000000)"));
+            if (addrVal >= 0x77000000 && addrVal < 0x78000000)
+                DEBUG_LOG(("    -> Likely: ntdll.dll"));
+            else if (addrVal >= 0x75000000 && addrVal < 0x76000000)
+                DEBUG_LOG(("    -> Likely: kernel32.dll"));
+        }
+        else if (addrVal >= 0x00000000 && addrVal < 0x00400000)
+        {
+            DEBUG_LOG(("  -> System DLL Code (0x00000000-0x00400000)"));
+        }
+        else
+        {
+            DEBUG_LOG(("  -> Unknown Memory Region (0x%08X)", addrVal));
+        }
+    }
+}
+
+// Helper function to capture stack trace for exception logging
+static void LogStackTrace(const char* context)
+{
+#if defined(RTS_DEBUG) || defined(IG_DEBUG_STACKTRACE)
+    DEBUG_LOG(("=== STACK TRACE: %s ===", context));
+    
+    // Capture stack addresses
+    void* addresses[32];
+    FillStackAddresses(addresses, 32, 1); // Skip 1 frame (this function)
+    
+    // Enhanced stack trace with detailed address analysis
+    for (int i = 0; i < 32 && addresses[i] != nullptr; i++)
+    {
+        void* addr = addresses[i];
+        DEBUG_LOG(("STACK[%d]: 0x%08X", i, (unsigned int)(uintptr_t)addr));
+        AnalyzeAddress(addr, i);
+    }
+    
+    DEBUG_LOG(("=== END STACK TRACE ==="));
+#endif
+}
 
 #ifdef DEBUG_CRC
 class DeepCRCSanityCheck : public SubsystemInterface
@@ -166,6 +261,20 @@ void initSubsystem(
 {
 	sysref = sys;
 	TheSubsystemList->initSubsystem(sys, path1, path2, pXfer, name);
+}
+
+template<class SUBSYSTEM>
+void initSubsystem(
+	SUBSYSTEM*& sysref,
+	AsciiString name,
+	SUBSYSTEM* sys,
+	Xfer *pXfer,
+	const char* path1,
+	const char* path2,
+	const AsciiStringVec& objectFolderFileExtensions)
+{
+	sysref = sys;
+	TheSubsystemList->initSubsystem(sys, path1, path2, pXfer, name, objectFolderFileExtensions);
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -626,7 +735,7 @@ void GameEngine::init()
 	#endif/////////////////////////////////////////////////////////////////////////////////////////////
 
 
-		initSubsystem(TheScienceStore,"TheScienceStore", MSGNEW("GameEngineSubsystem") ScienceStore(), &xferCRC, "Data\\INI\\Default\\Science", "Data\\INI\\Science");
+		initSubsystem(TheScienceStore,"TheScienceStore", MSGNEW("GameEngineSubsystem") ScienceStore(), &xferCRC, "Data\\INI\\Default\\Science", "Data\\INI\\Science", SubsystemInterfaceList::createExtensions("Science.ini"));
 		initSubsystem(TheMultiplayerSettings,"TheMultiplayerSettings", MSGNEW("GameEngineSubsystem") MultiplayerSettings(), &xferCRC, "Data\\INI\\Default\\Multiplayer", "Data\\INI\\Multiplayer");
 		initSubsystem(TheTerrainTypes,"TheTerrainTypes", MSGNEW("GameEngineSubsystem") TerrainTypeCollection(), &xferCRC, "Data\\INI\\Default\\Terrain", "Data\\INI\\Terrain");
 		initSubsystem(TheTerrainRoads,"TheTerrainRoads", MSGNEW("GameEngineSubsystem") TerrainRoadCollection(), &xferCRC, "Data\\INI\\Default\\Roads", "Data\\INI\\Roads");
@@ -667,13 +776,13 @@ void GameEngine::init()
 	#endif/////////////////////////////////////////////////////////////////////////////////////////////
 
 
-		initSubsystem(TheFXListStore,"TheFXListStore", MSGNEW("GameEngineSubsystem") FXListStore(), &xferCRC, "Data\\INI\\Default\\FXList", "Data\\INI\\FXList");
-		initSubsystem(TheWeaponStore,"TheWeaponStore", MSGNEW("GameEngineSubsystem") WeaponStore(), &xferCRC, NULL, "Data\\INI\\Weapon");
-		initSubsystem(TheObjectCreationListStore,"TheObjectCreationListStore", MSGNEW("GameEngineSubsystem") ObjectCreationListStore(), &xferCRC, "Data\\INI\\Default\\ObjectCreationList", "Data\\INI\\ObjectCreationList");
-		initSubsystem(TheLocomotorStore,"TheLocomotorStore", MSGNEW("GameEngineSubsystem") LocomotorStore(), &xferCRC, NULL, "Data\\INI\\Locomotor");
-		initSubsystem(TheSpecialPowerStore,"TheSpecialPowerStore", MSGNEW("GameEngineSubsystem") SpecialPowerStore(), &xferCRC, "Data\\INI\\Default\\SpecialPower", "Data\\INI\\SpecialPower");
-		initSubsystem(TheDamageFXStore,"TheDamageFXStore", MSGNEW("GameEngineSubsystem") DamageFXStore(), &xferCRC, NULL, "Data\\INI\\DamageFX");
-		initSubsystem(TheArmorStore,"TheArmorStore", MSGNEW("GameEngineSubsystem") ArmorStore(), &xferCRC, NULL, "Data\\INI\\Armor");
+		initSubsystem(TheFXListStore,"TheFXListStore", MSGNEW("GameEngineSubsystem") FXListStore(), &xferCRC, "Data\\INI\\Default\\FXList", "Data\\INI\\FXList", SubsystemInterfaceList::createExtensions("FXList.ini"));
+		initSubsystem(TheWeaponStore,"TheWeaponStore", MSGNEW("GameEngineSubsystem") WeaponStore(), &xferCRC, NULL, "Data\\INI\\Weapon", SubsystemInterfaceList::createExtensions("Weapon.ini"));
+		initSubsystem(TheObjectCreationListStore,"TheObjectCreationListStore", MSGNEW("GameEngineSubsystem") ObjectCreationListStore(), &xferCRC, "Data\\INI\\Default\\ObjectCreationList", "Data\\INI\\ObjectCreationList", SubsystemInterfaceList::createExtensions("OCL.ini","ObjectCreationList.ini"));
+		initSubsystem(TheLocomotorStore,"TheLocomotorStore", MSGNEW("GameEngineSubsystem") LocomotorStore(), &xferCRC, NULL, "Data\\INI\\Locomotor", SubsystemInterfaceList::createExtensions("Locomotor.ini"));
+		initSubsystem(TheSpecialPowerStore,"TheSpecialPowerStore", MSGNEW("GameEngineSubsystem") SpecialPowerStore(), &xferCRC, "Data\\INI\\Default\\SpecialPower", "Data\\INI\\SpecialPower", SubsystemInterfaceList::createExtensions("SpecialPower.ini"));
+		initSubsystem(TheDamageFXStore,"TheDamageFXStore", MSGNEW("GameEngineSubsystem") DamageFXStore(), &xferCRC, NULL, "Data\\INI\\DamageFX", SubsystemInterfaceList::createExtensions("DamageFX.ini"));
+		initSubsystem(TheArmorStore,"TheArmorStore", MSGNEW("GameEngineSubsystem") ArmorStore(), &xferCRC, NULL, "Data\\INI\\Armor", SubsystemInterfaceList::createExtensions("Armor.ini"));
 		initSubsystem(TheBuildAssistant,"TheBuildAssistant", MSGNEW("GameEngineSubsystem") BuildAssistant, NULL);
 
 
@@ -686,7 +795,7 @@ void GameEngine::init()
 
 
 
-		initSubsystem(TheThingFactory,"TheThingFactory", createThingFactory(), &xferCRC, "Data\\INI\\Default\\Object", "Data\\INI\\Object");
+		initSubsystem(TheThingFactory,"TheThingFactory", createThingFactory(), &xferCRC, "Data\\INI\\Default\\Object", "Data\\INI\\Object", SubsystemInterfaceList::createExtensions("Object.ini","Ammo.ini","HelperObject.ini"));
 
 	#ifdef DUMP_PERF_STATS///////////////////////////////////////////////////////////////////////////
 	GetPrecisionTimer(&endTime64);//////////////////////////////////////////////////////////////////
@@ -696,7 +805,7 @@ void GameEngine::init()
 	#endif/////////////////////////////////////////////////////////////////////////////////////////////
 
 
-		initSubsystem(TheUpgradeCenter,"TheUpgradeCenter", MSGNEW("GameEngineSubsystem") UpgradeCenter, &xferCRC, "Data\\INI\\Default\\Upgrade", "Data\\INI\\Upgrade");
+		initSubsystem(TheUpgradeCenter,"TheUpgradeCenter", MSGNEW("GameEngineSubsystem") UpgradeCenter, &xferCRC, "Data\\INI\\Default\\Upgrade", "Data\\INI\\Upgrade", SubsystemInterfaceList::createExtensions("Upgrade.ini"));
 		initSubsystem(TheGameClient,"TheGameClient", createGameClient(), NULL);
 
 
@@ -711,7 +820,7 @@ void GameEngine::init()
 		initSubsystem(TheAI,"TheAI", MSGNEW("GameEngineSubsystem") AI(), &xferCRC,  "Data\\INI\\Default\\AIData", "Data\\INI\\AIData");
 		initSubsystem(TheGameLogic,"TheGameLogic", createGameLogic(), NULL);
 		initSubsystem(TheTeamFactory,"TheTeamFactory", MSGNEW("GameEngineSubsystem") TeamFactory(), NULL);
-		initSubsystem(TheCrateSystem,"TheCrateSystem", MSGNEW("GameEngineSubsystem") CrateSystem(), &xferCRC, "Data\\INI\\Default\\Crate", "Data\\INI\\Crate");
+		initSubsystem(TheCrateSystem,"TheCrateSystem", MSGNEW("GameEngineSubsystem") CrateSystem(), &xferCRC, "Data\\INI\\Default\\Crate", "Data\\INI\\Crate", SubsystemInterfaceList::createExtensions("Crate.ini"));
 		initSubsystem(ThePlayerList,"ThePlayerList", MSGNEW("GameEngineSubsystem") PlayerList(), NULL);
 		initSubsystem(TheRecorder,"TheRecorder", createRecorder(), NULL);
 		initSubsystem(TheRadar,"TheRadar", TheGlobalData->m_headless ? NEW RadarDummy : createRadar(), NULL);
@@ -852,22 +961,69 @@ void GameEngine::init()
 	}
 	catch (ErrorCode ec)
 	{
+		// TheSuperHackers @bugfix Ahmed Salah 15/01/2025 Enhanced exception information collection for ErrorCode during initialization
+		DEBUG_LOG(("GameEngine::init - ErrorCode exception caught during initialization: %d", ec));
+		DEBUG_LOG(("GameEngine::init - Subsystem initialization state: FileSystem=%d, GameText=%d, Audio=%d", 
+			TheFileSystem ? 1 : 0,
+			TheGameText ? 1 : 0,
+			TheAudio ? 1 : 0));
+		
+		// Log stack trace to identify where the exception was thrown
+		LogStackTrace("ErrorCode Exception in init()");
+		
 		if (ec == ERROR_INVALID_D3D)
 		{
 			RELEASE_CRASHLOCALIZED("ERROR:D3DFailurePrompt", "ERROR:D3DFailureMessage");
 		}
+		else
+		{
+			RELEASE_CRASH(("ErrorCode exception during initialization"));
+		}
 	}
 	catch (INIException e)
 	{
+		// TheSuperHackers @bugfix Ahmed Salah 15/01/2025 Enhanced exception information collection for INI exceptions during initialization
+		DEBUG_LOG(("GameEngine::init - INIException caught during initialization"));
+		DEBUG_LOG(("GameEngine::init - Subsystem initialization state: FileSystem=%d, GameText=%d, Audio=%d", 
+			TheFileSystem ? 1 : 0,
+			TheGameText ? 1 : 0,
+			TheAudio ? 1 : 0));
+		
+		// Log stack trace to identify where the exception was thrown
+		LogStackTrace("INIException in init()");
+		
 		if (e.mFailureMessage)
 			RELEASE_CRASH((e.mFailureMessage));
 		else
-			RELEASE_CRASH(("Uncaught Exception during initialization."));
-
+			RELEASE_CRASH(("Uncaught INIException during initialization."));
+	}
+	catch (std::exception& e)
+	{
+		// TheSuperHackers @bugfix Ahmed Salah 15/01/2025 Enhanced exception information collection for std::exception during initialization
+		DEBUG_LOG(("GameEngine::init - std::exception caught during initialization: %s", e.what()));
+		DEBUG_LOG(("GameEngine::init - Subsystem initialization state: FileSystem=%d, GameText=%d, Audio=%d", 
+			TheFileSystem ? 1 : 0,
+			TheGameText ? 1 : 0,
+			TheAudio ? 1 : 0));
+		
+		// Log stack trace to identify where the exception was thrown
+		LogStackTrace("std::exception in init()");
+		
+		RELEASE_CRASH(("std::exception during initialization"));
 	}
 	catch (...)
 	{
-		RELEASE_CRASH(("Uncaught Exception during initialization."));
+		// TheSuperHackers @bugfix Ahmed Salah 15/01/2025 Enhanced exception information collection for unknown exceptions during initialization
+		DEBUG_LOG(("GameEngine::init - Unknown exception caught during initialization"));
+		DEBUG_LOG(("GameEngine::init - Subsystem initialization state: FileSystem=%d, GameText=%d, Audio=%d", 
+			TheFileSystem ? 1 : 0,
+			TheGameText ? 1 : 0,
+			TheAudio ? 1 : 0));
+		
+		// Log stack trace to identify where the exception was thrown
+		LogStackTrace("Unknown Exception in init()");
+		
+		RELEASE_CRASH(("Unknown exception during initialization."));
 	}
 
 	if(!TheGlobalData->m_playIntro)
@@ -1097,24 +1253,111 @@ void GameEngine::execute( void )
 				}
 				catch (INIException e)
 				{
+					// TheSuperHackers @bugfix Ahmed Salah 15/01/2025 Enhanced exception information collection for INI exceptions
+					DEBUG_LOG(("GameEngine::execute - INIException caught in main loop"));
+					DEBUG_LOG(("GameEngine::execute - Game state: InGame=%d, InShell=%d, Paused=%d", 
+						TheGameLogic ? TheGameLogic->isInGame() : 0,
+						TheGameLogic ? TheGameLogic->isInShellGame() : 0,
+						TheGameLogic ? TheGameLogic->isGamePaused() : 0));
+					DEBUG_LOG(("GameEngine::execute - Network state: Connected=%d, Stalling=%d", 
+						TheNetwork ? 1 : 0,
+						TheNetwork ? TheNetwork->isStalling() : 0));
+					DEBUG_LOG(("GameEngine::execute - Frame: %d", TheGameLogic ? TheGameLogic->getFrame() : 0));
+					
+					// Log stack trace to identify where the exception was thrown
+					LogStackTrace("INIException");
+					
 					// Release CRASH doesn't return, so don't worry about executing additional code.
 					if (e.mFailureMessage)
 						RELEASE_CRASH((e.mFailureMessage));
 					else
-						RELEASE_CRASH(("Uncaught Exception in GameEngine::update"));
+						RELEASE_CRASH(("Uncaught INIException in GameEngine::update"));
 				}
-				catch (...)
+				catch (ErrorCode ec)
 				{
+					// TheSuperHackers @bugfix Ahmed Salah 15/01/2025 Enhanced exception information collection for ErrorCode exceptions
+					DEBUG_LOG(("GameEngine::execute - ErrorCode exception caught: %d", ec));
+					DEBUG_LOG(("GameEngine::execute - Game state: InGame=%d, InShell=%d, Paused=%d", 
+						TheGameLogic ? TheGameLogic->isInGame() : 0,
+						TheGameLogic ? TheGameLogic->isInShellGame() : 0,
+						TheGameLogic ? TheGameLogic->isGamePaused() : 0));
+					DEBUG_LOG(("GameEngine::execute - Network state: Connected=%d, Stalling=%d", 
+						TheNetwork ? 1 : 0,
+						TheNetwork ? TheNetwork->isStalling() : 0));
+					DEBUG_LOG(("GameEngine::execute - Frame: %d", TheGameLogic ? TheGameLogic->getFrame() : 0));
+					DEBUG_LOG(("GameEngine::execute - Time frozen: %d, Game halted: %d", m_isTimeFrozen, m_isGameHalted));
+					
+					// Log stack trace to identify where the exception was thrown
+					LogStackTrace("ErrorCode Exception");
+					
+					RELEASE_CRASH(("ErrorCode exception in GameEngine::update"));
+				}
+				catch (std::exception& e)
+				{
+					// TheSuperHackers @bugfix Ahmed Salah 15/01/2025 Enhanced exception information collection for std::exception
+					DEBUG_LOG(("GameEngine::execute - std::exception caught: %s", e.what()));
+					DEBUG_LOG(("GameEngine::execute - Game state: InGame=%d, InShell=%d, Paused=%d", 
+						TheGameLogic ? TheGameLogic->isInGame() : 0,
+						TheGameLogic ? TheGameLogic->isInShellGame() : 0,
+						TheGameLogic ? TheGameLogic->isGamePaused() : 0));
+					DEBUG_LOG(("GameEngine::execute - Network state: Connected=%d, Stalling=%d", 
+						TheNetwork ? 1 : 0,
+						TheNetwork ? TheNetwork->isStalling() : 0));
+					DEBUG_LOG(("GameEngine::execute - Frame: %d", TheGameLogic ? TheGameLogic->getFrame() : 0));
+					DEBUG_LOG(("GameEngine::execute - Time frozen: %d, Game halted: %d", m_isTimeFrozen, m_isGameHalted));
+					
+					// Log stack trace to identify where the exception was thrown
+					LogStackTrace("std::exception");
+					
 					// try to save info off
 					try
 					{
 						if (TheRecorder && TheRecorder->getMode() == RECORDERMODETYPE_RECORD && TheRecorder->isMultiplayer())
+						{
+							DEBUG_LOG(("GameEngine::execute - Attempting to clean up replay file"));
 							TheRecorder->cleanUpReplayFile();
+						}
 					}
 					catch (...)
 					{
+						DEBUG_LOG(("GameEngine::execute - Failed to clean up replay file"));
 					}
-					RELEASE_CRASH(("Uncaught Exception in GameEngine::update"));
+					
+					RELEASE_CRASH(("std::exception in GameEngine::update"));
+				}
+				catch (...)
+				{
+					// TheSuperHackers @bugfix Ahmed Salah 15/01/2025 Enhanced exception information collection for unknown exceptions
+					DEBUG_LOG(("GameEngine::execute - Unknown exception caught in main loop"));
+					DEBUG_LOG(("GameEngine::execute - Game state: InGame=%d, InShell=%d, Paused=%d", 
+						TheGameLogic ? TheGameLogic->isInGame() : 0,
+						TheGameLogic ? TheGameLogic->isInShellGame() : 0,
+						TheGameLogic ? TheGameLogic->isGamePaused() : 0));
+					DEBUG_LOG(("GameEngine::execute - Network state: Connected=%d, Stalling=%d", 
+						TheNetwork ? 1 : 0,
+						TheNetwork ? TheNetwork->isStalling() : 0));
+					DEBUG_LOG(("GameEngine::execute - Frame: %d", TheGameLogic ? TheGameLogic->getFrame() : 0));
+					DEBUG_LOG(("GameEngine::execute - Time frozen: %d, Game halted: %d", m_isTimeFrozen, m_isGameHalted));
+					DEBUG_LOG(("GameEngine::execute - Quitting: %d, Active: %d", m_quitting, m_isActive));
+					
+					// Log stack trace to identify where the exception was thrown
+					LogStackTrace("Unknown Exception");
+					
+					// try to save info off
+					try
+					{
+						if (TheRecorder && TheRecorder->getMode() == RECORDERMODETYPE_RECORD && TheRecorder->isMultiplayer())
+						{
+							DEBUG_LOG(("GameEngine::execute - Attempting to clean up replay file"));
+							TheRecorder->cleanUpReplayFile();
+						}
+					}
+					catch (...)
+					{
+						DEBUG_LOG(("GameEngine::execute - Failed to clean up replay file"));
+					}
+					
+					RELEASE_CRASH(("Unknown exception in GameEngine::update"));
 				}
 			}
 

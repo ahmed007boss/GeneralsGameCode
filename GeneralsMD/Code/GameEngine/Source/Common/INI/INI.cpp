@@ -243,16 +243,86 @@ UnsignedInt INI::loadFileDirectory( AsciiString fileDirName, INILoadType loadTyp
 }
 
 //-------------------------------------------------------------------------------------------------
+// TheSuperHackers @feature Ahmed Salah 15/01/2025 Load files with specific extension from directory
+//-------------------------------------------------------------------------------------------------
+UnsignedInt INI::loadDirectory( AsciiString dirName, AsciiString fileExtension, INILoadType loadType, Xfer *pXfer, Bool subdirs )
+{
+	UnsignedInt filesRead = 0;
+	if (fileExtension.isEmpty())
+	{
+		return 0;
+	}
+	fileExtension = "." +fileExtension ;
+	// TheSuperHackers @feature Ahmed Salah 15/01/2025 Create plural file extensions for .ini files
+	AsciiString pluralFileExtension;
+	AsciiString pluralFileExtension2;
+	
+	if (fileExtension.endsWithNoCase(".ini"))
+	{
+		// Extract base name without .ini
+		AsciiString baseExtension = fileExtension;
+		baseExtension.truncateBy(4); // Remove ".ini"
+		
+		// Create plural forms: xxxs.ini and xxxes.ini
+		pluralFileExtension = baseExtension;
+		pluralFileExtension.concat("s.ini");
+		pluralFileExtension2 = baseExtension;
+		pluralFileExtension2.concat("es.ini");
+	}
+
+	try
+	{
+
+
+		FilenameList filenameList;
+		dirName.concat('\\');
+		TheFileSystem->getFileListInDirectory(dirName, "*.ini", filenameList, subdirs);
+		
+		// Load the files in the dir now
+		FilenameList::const_iterator it = filenameList.begin();
+		while (it != filenameList.end())
+		{
+			AsciiString tempname;
+			tempname = (*it).str() + dirName.getLength();
+
+			// Check if file ends with the specified extension (case insensitive)
+			if (tempname.endsWithNoCase(fileExtension.str()))
+			{
+				filesRead += load( *it, loadType, pXfer );
+			}
+			// Check plural form 1 (xxxs.ini)
+			else if (!pluralFileExtension.isEmpty() && tempname.endsWithNoCase(pluralFileExtension.str()))
+			{
+				filesRead += load( *it, loadType, pXfer );
+			}
+			// Check plural form 2 (xxxes.ini)
+			else if (!pluralFileExtension2.isEmpty() && tempname.endsWithNoCase(pluralFileExtension2.str()))
+			{
+				filesRead += load( *it, loadType, pXfer );
+			}
+			++it;
+		}
+	}
+	catch (...)
+	{
+		// propagate the exception
+		throw;
+	}
+
+	return filesRead;
+}
+
+//-------------------------------------------------------------------------------------------------
 /** Load all INI files in the specified directory (and subdirectories if indicated).
 	* If we are to load subdirectories, we will load them *after* we load all the
 	* files in the current directory */
 //-------------------------------------------------------------------------------------------------
-UnsignedInt INI::loadDirectory( AsciiString dirName, INILoadType loadType, Xfer *pXfer, Bool subdirs )
+UnsignedInt INI::loadDirectory(AsciiString dirName, INILoadType loadType, Xfer* pXfer, Bool subdirs)
 {
 	UnsignedInt filesRead = 0;
 
 	// sanity
-	if( dirName.isEmpty() )
+	if (dirName.isEmpty())
 		throw INI_INVALID_DIRECTORY;
 
 	try
@@ -277,7 +347,7 @@ UnsignedInt INI::loadDirectory( AsciiString dirName, INILoadType loadType, Xfer 
 
 			if ((tempname.find('\\') == NULL) && (tempname.find('/') == NULL)) {
 				// this file doesn't reside in a subdirectory, load it first.
-				filesRead += load( *it, loadType, pXfer );
+				filesRead += load(*it, loadType, pXfer);
 			}
 			++it;
 		}
@@ -287,16 +357,39 @@ UnsignedInt INI::loadDirectory( AsciiString dirName, INILoadType loadType, Xfer 
 		{
 			AsciiString tempname;
 			tempname = (*it).str() + dirName.getLength();
-
+			tempname.toLower();	
 			// TheSuperHackers @feature Ahmed Salah 15/01/2025 Exclude .Include.ini files from automatic loading
 			// These files should only be loaded when explicitly included via Include directive
-			if (tempname.endsWithNoCase(".Include.ini")) {
+			if (tempname.endsWithNoCase(".include.ini")
+				|| tempname.endsWithNoCase(".ammo.ini")
+				|| tempname.endsWithNoCase(".ammos.ini")
+				|| tempname.endsWithNoCase(".commandButton.ini")
+				|| tempname.endsWithNoCase(".commandButtons.ini")
+				|| tempname.endsWithNoCase(".commandSet.ini")
+				|| tempname.endsWithNoCase(".commandSets.ini")
+				|| tempname.endsWithNoCase(".fxlist.ini")
+				|| tempname.endsWithNoCase(".fxlists.ini")
+				|| tempname.endsWithNoCase(".locomotor.ini")
+				|| tempname.endsWithNoCase(".locomotors.ini")
+				|| tempname.endsWithNoCase(".mappedImage.ini")
+				|| tempname.endsWithNoCase(".mappedImages.ini")
+				|| tempname.endsWithNoCase(".object.ini")
+				|| tempname.endsWithNoCase(".objects.ini")
+				|| tempname.endsWithNoCase(".ocl.ini")
+				|| tempname.endsWithNoCase(".ocls.ini")
+				|| tempname.endsWithNoCase(".soundeffect.ini")
+				|| tempname.endsWithNoCase(".soundeffects.ini")
+				|| tempname.endsWithNoCase(".upgrade.ini")
+				|| tempname.endsWithNoCase(".upgrades.ini")
+				|| tempname.endsWithNoCase(".weapon.ini")
+				|| tempname.endsWithNoCase(".weapons.ini")
+				) {
 				++it;
 				continue;
 			}
 
 			if ((tempname.find('\\') != NULL) || (tempname.find('/') != NULL)) {
-				filesRead += load( *it, loadType, pXfer );
+				filesRead += load(*it, loadType, pXfer);
 			}
 			++it;
 		}
@@ -309,6 +402,7 @@ UnsignedInt INI::loadDirectory( AsciiString dirName, INILoadType loadType, Xfer 
 
 	return filesRead;
 }
+
 
 //-------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------

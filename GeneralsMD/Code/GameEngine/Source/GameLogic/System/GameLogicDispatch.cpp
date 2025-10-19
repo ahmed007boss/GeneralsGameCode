@@ -63,7 +63,9 @@
 #include "GameLogic/Module/ProductionUpdate.h"
 #include "GameLogic/Module/SpecialPowerModule.h"
 #include "GameLogic/Module/InventoryBehavior.h"
+#include "GameLogic/Module/WarningBehavior.h"
 #include "GameLogic/Module/ActiveBody.h"
+#include "GameLogic/PartitionManager.h"
 #include "GameLogic/Component.h"
 #include "GameLogic/ScriptActions.h"
 #include "GameLogic/ScriptEngine.h"
@@ -347,6 +349,93 @@ void GameLogic::prepareNewGame( GameMode gameMode, GameDifficulty diff, Int rank
 /** This message handles dispatches object command messages to the
   * appropriate objects.
 	* @todo Rename this to "CommandProcessor", or similar. */
+//-------------------------------------------------------------------------------------------------
+// TheSuperHackers @feature Ahmed Salah 15/01/2025 Check for nearby objects with WarningBehavior and trigger warnings
+//-------------------------------------------------------------------------------------------------
+void checkForWarningObjects( GameMessage::Type commandType, const Coord3D *commandPos, Object *commandingObject )
+{
+	if( !commandPos || !commandingObject )
+		return;
+		
+	// Get all objects in a reasonable range around the command position
+	// We'll use a larger radius to catch potential warning objects
+	Real searchRadius = 500.0f; // Search radius for warning objects
+	ObjectIterator *iter = ThePartitionManager->iterateObjectsInRange( commandPos, searchRadius, FROM_CENTER_2D );
+	MemoryPoolObjectHolder hold(iter);
+	
+	if( !iter )
+		return;
+		
+	// Check each nearby object for WarningBehavior
+	for( Object *nearbyObj = iter->first(); nearbyObj; nearbyObj = iter->next() )
+	{
+		// Skip the commanding object itself
+		if( nearbyObj == commandingObject )
+			continue;
+			
+		// Find WarningBehavior module in this object
+		WarningBehavior *warningBehavior = NULL;
+		for( BehaviorModule **b = nearbyObj->getBehaviorModules(); *b; ++b )
+		{
+			if( (*b)->getModuleNameKey() == TheNameKeyGenerator->nameToKey("WarningBehavior") )
+			{
+				warningBehavior = (WarningBehavior*)(*b);
+				break;
+			}
+		}
+		
+		if( !warningBehavior )
+			continue;
+			
+		// Use the WarningBehavior's own logic to determine if warning should trigger
+		if( warningBehavior->shouldTriggerWarning( commandPos, commandingObject ) )
+		{
+			// TheSuperHackers @feature Ahmed Salah 15/01/2025 Find the actual target object for attack commands
+			Object* targetObject = NULL;
+			
+			// For attack commands, try to find the target object at the command position
+			switch( commandType )
+			{
+				case GameMessage::MSG_DO_ATTACK_OBJECT:
+				case GameMessage::MSG_DO_ATTACKSQUAD:
+				case GameMessage::MSG_DO_FORCE_ATTACK_OBJECT:
+				{
+					// Try to find an object at the command position
+					ObjectIterator *targetIter = ThePartitionManager->iterateObjectsInRange( commandPos, 50.0f, FROM_CENTER_2D );
+					if( targetIter )
+					{
+						MemoryPoolObjectHolder targetHold(targetIter);
+						targetObject = targetIter->first();
+					}
+					break;
+				}
+				
+				case GameMessage::MSG_DO_ATTACKMOVETO:
+				case GameMessage::MSG_DO_GROUPATTACKMOVETO:
+				case GameMessage::MSG_DO_FORCE_ATTACK_GROUND:
+				{
+					// Ground attacks - no specific target object
+					targetObject = NULL;
+					break;
+				}
+				
+				default:
+					// Non-attack commands - no target object
+					targetObject = NULL;
+					break;
+			}
+			
+			// Only trigger warning if we have a valid target or it's a ground attack
+			if( targetObject || commandType == GameMessage::MSG_DO_ATTACKMOVETO || 
+				commandType == GameMessage::MSG_DO_GROUPATTACKMOVETO || 
+				commandType == GameMessage::MSG_DO_FORCE_ATTACK_GROUND )
+			{
+				warningBehavior->doWarning( commandType, commandPos, commandingObject, targetObject );
+			}
+		}
+	}
+}
+
 //-------------------------------------------------------------------------------------------------
 void GameLogic::logicMessageDispatcher( GameMessage *msg, void *userData )
 {

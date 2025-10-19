@@ -70,6 +70,8 @@
 #include "GameLogic/TurretAI.h"
 #include "GameLogic/Weapon.h"
 #include "Common/Radar.h"									// For TheRadar
+#include "GameLogic/Module/WarningBehavior.h"
+#include "Common/MessageStream.h"
 
 #define SLEEPY_AI
 
@@ -2651,42 +2653,78 @@ void AIUpdateInterface::aiDoCommand(const AICommandParms* parms)
 	{
 		case AICMD_MOVE_TO_POSITION:
 		case AICMD_MOVE_TO_POSITION_EVEN_IF_SLEEPING:
+			// TheSuperHackers @feature Ahmed Salah 15/01/2025 Check for radio interception when AI moves to position
+			checkForRadioInterception(GameMessage::MSG_DO_MOVETO, &parms->m_pos, NULL, getObject());
 			privateMoveToPosition(&parms->m_pos, parms->m_cmdSource);
 			break;
 		case AICMD_MOVE_TO_OBJECT:
+			// TheSuperHackers @feature Ahmed Salah 15/01/2025 Check for radio interception when AI moves to object
+			checkForRadioInterception(GameMessage::MSG_DO_MOVETO, parms->m_obj ? parms->m_obj->getPosition() : NULL, parms->m_obj, getObject());
 			privateMoveToObject(parms->m_obj, parms->m_cmdSource);
 			break;
 		case AICMD_TIGHTEN_TO_POSITION:
+			// TheSuperHackers @feature Ahmed Salah 15/01/2025 Check for radio interception when AI tightens to position
+			checkForRadioInterception(GameMessage::MSG_DO_MOVETO, &parms->m_pos, NULL, getObject());
 			privateTightenToPosition(&parms->m_pos, parms->m_cmdSource);
 			break;
 		case AICMD_MOVE_TO_POSITION_AND_EVACUATE:
+			// TheSuperHackers @feature Ahmed Salah 15/01/2025 Check for radio interception when AI moves to position and evacuates
+			checkForRadioInterception(GameMessage::MSG_DO_MOVETO, &parms->m_pos, NULL, getObject());
 			privateMoveToAndEvacuate(&parms->m_pos, parms->m_cmdSource);
 			break;
 		case AICMD_MOVE_TO_POSITION_AND_EVACUATE_AND_EXIT:
+			// TheSuperHackers @feature Ahmed Salah 15/01/2025 Check for radio interception when AI moves to position, evacuates and exits
+			checkForRadioInterception(GameMessage::MSG_DO_MOVETO, &parms->m_pos, NULL, getObject());
 			privateMoveToAndEvacuateAndExit(&parms->m_pos, parms->m_cmdSource);
 			break;
 		case AICMD_IDLE:
 			privateIdle(parms->m_cmdSource);
 			break;
 		case AICMD_FOLLOW_WAYPOINT_PATH:
+			// TheSuperHackers @feature Ahmed Salah 15/01/2025 Check for radio interception when AI follows waypoint path
+			// Only check warnings if we have a specific waypoint objective location
+			if (parms->m_waypoint && parms->m_waypoint->getLocation())
+				checkForRadioInterception(GameMessage::MSG_DO_MOVETO, parms->m_waypoint->getLocation(), NULL, getObject());
 			privateFollowWaypointPath(parms->m_waypoint, parms->m_cmdSource);
 			break;
 		case AICMD_FOLLOW_WAYPOINT_PATH_AS_TEAM:
+			// TheSuperHackers @feature Ahmed Salah 15/01/2025 Check for radio interception when AI follows waypoint path as team
+			// Only check warnings if we have a specific waypoint objective location
+			if (parms->m_waypoint && parms->m_waypoint->getLocation())
+				checkForRadioInterception(GameMessage::MSG_DO_MOVETO, parms->m_waypoint->getLocation(), NULL, getObject());
 			privateFollowWaypointPathAsTeam(parms->m_waypoint, parms->m_cmdSource);
 			break;
 		case AICMD_FOLLOW_WAYPOINT_PATH_EXACT:
+			// TheSuperHackers @feature Ahmed Salah 15/01/2025 Check for radio interception when AI follows waypoint path exact
+			// Only check warnings if we have a specific waypoint objective location
+			if (parms->m_waypoint && parms->m_waypoint->getLocation())
+				checkForRadioInterception(GameMessage::MSG_DO_MOVETO, parms->m_waypoint->getLocation(), NULL, getObject());
 			privateFollowWaypointPathExact(parms->m_waypoint, parms->m_cmdSource);
 			break;
 		case AICMD_FOLLOW_WAYPOINT_PATH_AS_TEAM_EXACT:
+			// TheSuperHackers @feature Ahmed Salah 15/01/2025 Check for radio interception when AI follows waypoint path as team exact
+			// Only check warnings if we have a specific waypoint objective location
+			if (parms->m_waypoint && parms->m_waypoint->getLocation())
+				checkForRadioInterception(GameMessage::MSG_DO_MOVETO, parms->m_waypoint->getLocation(), NULL, getObject());
 			privateFollowWaypointPathAsTeamExact(parms->m_waypoint, parms->m_cmdSource);
 			break;
 		case AICMD_FOLLOW_PATH:
+			// TheSuperHackers @feature Ahmed Salah 15/01/2025 Check for radio interception when AI follows path
+			// Only check warnings if we have a specific path objective
+			if (!parms->m_coords.empty())
+				checkForRadioInterception(GameMessage::MSG_DO_MOVETO, &parms->m_coords[0], NULL, getObject());
 			privateFollowPath(&parms->m_coords, parms->m_obj, parms->m_cmdSource, FALSE);
 			break;
 		case AICMD_FOLLOW_PATH_APPEND:
+			// TheSuperHackers @feature Ahmed Salah 15/01/2025 Check for radio interception when AI follows path append
+			checkForRadioInterception(GameMessage::MSG_DO_MOVETO, &parms->m_pos, NULL, getObject());
 			privateFollowPathAppend(&parms->m_pos, parms->m_cmdSource);
 			break;
 		case AICMD_FOLLOW_EXITPRODUCTION_PATH:
+			// TheSuperHackers @feature Ahmed Salah 15/01/2025 Check for radio interception when AI follows exit production path
+			// Only check warnings if we have a specific path objective
+			if (!parms->m_coords.empty())
+				checkForRadioInterception(GameMessage::MSG_DO_MOVETO, &parms->m_coords[0], NULL, getObject());
 			privateFollowPath(&parms->m_coords, parms->m_obj, parms->m_cmdSource, TRUE);
 			break;
 		case AICMD_ATTACK_OBJECT:
@@ -2714,9 +2752,19 @@ void AIUpdateInterface::aiDoCommand(const AICommandParms* parms)
 			privateAttackFollowWaypointPath(parms->m_waypoint, parms->m_intValue, TRUE, parms->m_cmdSource);
 			break;
 		case AICMD_HUNT:
+			// TheSuperHackers @feature Ahmed Salah 15/01/2025 Check for radio interception when AI hunts
+			// Hunt commands search for nearby enemies, so use current position as the search center
+			// The warning will trigger when the hunt unit gets close to enemy structures
 			privateHunt(parms->m_cmdSource);
 			break;
 		case AICMD_ATTACK_AREA:
+			// TheSuperHackers @feature Ahmed Salah 15/01/2025 Check for radio interception when AI attacks area
+			// Use the polygon center as the target position for area attacks
+			if (parms->m_polygon)
+			{
+				Coord3D areaCenter;
+				parms->m_polygon->getCenterPoint(&areaCenter);
+			}
 			privateAttackArea(parms->m_polygon, parms->m_cmdSource);
 			break;
 		case AICMD_REPAIR:
@@ -2765,6 +2813,8 @@ void AIUpdateInterface::aiDoCommand(const AICommandParms* parms)
 			break;
 		case AICMD_GUARD_POSITION:
 		{
+			// TheSuperHackers @feature Ahmed Salah 15/01/2025 Check for radio interception when AI guards position
+			
 			//Kris: Aug 18, 2003 -- If you were retaliating and ordered to enter guard mode,
 			//the state needs to be cleared before doing so or else we leave the state too
 			//late and clear data AFTER we go into the new guard mode causing units to
@@ -2781,6 +2831,7 @@ void AIUpdateInterface::aiDoCommand(const AICommandParms* parms)
 		}
 		case AICMD_GUARD_OBJECT:
 		{
+		
 			//Kris: Aug 18, 2003 -- If you were retaliating and ordered to enter guard mode,
 			//the state needs to be cleared before doing so or else we leave the state too
 			//late and clear data AFTER we go into the new guard mode causing units to
@@ -2797,6 +2848,8 @@ void AIUpdateInterface::aiDoCommand(const AICommandParms* parms)
 		}
 		case AICMD_GUARD_TUNNEL_NETWORK:
 		{
+			// TheSuperHackers @feature Ahmed Salah 15/01/2025 Check for radio interception when AI guards tunnel network
+			
 			//Kris: Aug 18, 2003 -- If you were retaliating and ordered to enter guard mode,
 			//the state needs to be cleared before doing so or else we leave the state too
 			//late and clear data AFTER we go into the new guard mode causing units to
@@ -2813,6 +2866,14 @@ void AIUpdateInterface::aiDoCommand(const AICommandParms* parms)
 		}
 		case AICMD_GUARD_AREA:
 		{
+			// TheSuperHackers @feature Ahmed Salah 15/01/2025 Check for radio interception when AI guards area
+			// Use the polygon center as the guard target position
+			if (parms->m_polygon)
+			{
+				Coord3D areaCenter;
+				parms->m_polygon->getCenterPoint(&areaCenter);
+			}
+			
 			//Kris: Aug 18, 2003 -- If you were retaliating and ordered to enter guard mode,
 			//the state needs to be cleared before doing so or else we leave the state too
 			//late and clear data AFTER we go into the new guard mode causing units to
@@ -2837,33 +2898,46 @@ void AIUpdateInterface::aiDoCommand(const AICommandParms* parms)
 			privateFacePosition( &parms->m_pos, parms->m_cmdSource );
 			break;
 		case AICMD_RAPPEL_INTO:
+			// TheSuperHackers @feature Ahmed Salah 15/01/2025 Check for radio interception when AI rappels into
 			privateRappelInto( parms->m_obj, parms->m_pos, parms->m_cmdSource );
 			break;
 		case AICMD_COMBATDROP:
+			// TheSuperHackers @feature Ahmed Salah 15/01/2025 Check for radio interception when AI combat drops
 			privateCombatDrop( parms->m_obj, parms->m_pos, parms->m_cmdSource );
 			break;
 		case AICMD_COMMANDBUTTON:
+			// TheSuperHackers @feature Ahmed Salah 15/01/2025 Check for radio interception when AI executes command button
+			// Command buttons may involve movement or attacks, so check for warnings
 			privateCommandButton( parms->m_commandButton, parms->m_cmdSource );
 			break;
 		case AICMD_COMMANDBUTTON_OBJ:
+			// TheSuperHackers @feature Ahmed Salah 15/01/2025 Check for radio interception when AI executes command button on object
+			if (parms->m_obj)
 			privateCommandButtonObject( parms->m_commandButton, parms->m_obj, parms->m_cmdSource );
 			break;
 		case AICMD_COMMANDBUTTON_POS:
+			// TheSuperHackers @feature Ahmed Salah 15/01/2025 Check for radio interception when AI executes command button at position
 			privateCommandButtonPosition( parms->m_commandButton, &parms->m_pos, parms->m_cmdSource );
 			break;
 		case AICMD_WANDER:
+			// TheSuperHackers @feature Ahmed Salah 15/01/2025 Check for radio interception when AI wanders
 			privateWander( parms->m_waypoint, parms->m_cmdSource );
 			break;
 		case AICMD_WANDER_IN_PLACE:
+			// TheSuperHackers @feature Ahmed Salah 15/01/2025 Check for radio interception when AI wanders in place
 			privateWanderInPlace(parms->m_cmdSource);
 			break;
 		case AICMD_PANIC:
+			// TheSuperHackers @feature Ahmed Salah 15/01/2025 Check for radio interception when AI panics
 			privatePanic( parms->m_waypoint, parms->m_cmdSource );
 			break;
 		case AICMD_BUSY:
 			privateBusy( parms->m_cmdSource );
 			break;
 		case AICMD_MOVE_AWAY_FROM_UNIT:
+			// TheSuperHackers @feature Ahmed Salah 15/01/2025 Check for radio interception when AI moves away from unit
+			// Use the unit's position as the target position for move away commands
+			if (parms->m_obj)
 			privateMoveAwayFromUnit( parms->m_obj, parms->m_cmdSource );
 			break;
 		default:
@@ -3419,6 +3493,10 @@ void AIUpdateInterface::privateFollowPath( const std::vector<Coord3D>* path, Obj
  */
 void AIUpdateInterface::privateAttackObject( Object *victim, Int maxShotsToFire, CommandSourceType cmdSource )
 {
+	// TheSuperHackers @feature Ahmed Salah 15/01/2025 Trigger warning for AI attack object
+	if (victim)
+		checkForRadioInterception(GameMessage::MSG_DO_ATTACK_OBJECT, victim->getPosition(), victim, getObject());
+
 	//Resetting the locomotor here was initially added for scripting purposes. It has been moved
 	//to the responsibility of the script to reset the locomotor before moving. This is needed because
 	//other systems (like the battle drone) change the locomotor based on what it's trying to do, and
@@ -3445,6 +3523,10 @@ void AIUpdateInterface::privateAttackObject( Object *victim, Int maxShotsToFire,
 //-----------------------------------------------------------------------------------------
 void AIUpdateInterface::privateForceAttackObject( Object *victim, Int maxShotsToFire, CommandSourceType cmdSource )
 {
+	// TheSuperHackers @feature Ahmed Salah 15/01/2025 Trigger warning for AI force attack object
+	if (victim)
+		checkForRadioInterception(GameMessage::MSG_DO_FORCE_ATTACK_OBJECT, victim->getPosition(), victim, getObject());
+
 	if (!victim) {
 		return;
 	}
@@ -3463,6 +3545,12 @@ void AIUpdateInterface::privateForceAttackObject( Object *victim, Int maxShotsTo
 //-----------------------------------------------------------------------------------------
 void AIUpdateInterface::privateGuardRetaliate( Object *victim, const Coord3D *pos, Int maxShotsToFire, CommandSourceType cmdSource )
 {
+	// TheSuperHackers @feature Ahmed Salah 15/01/2025 Trigger warning for AI guard retaliate
+	if (victim)
+		checkForRadioInterception(GameMessage::MSG_DO_ATTACK_OBJECT, victim->getPosition(), victim, getObject());
+	else if (pos)
+		checkForRadioInterception(GameMessage::MSG_DO_ATTACK_OBJECT, pos, NULL, getObject());
+
 	if (!victim) {
 		return;
 	}
@@ -3508,6 +3596,9 @@ void AIUpdateInterface::privateAttackTeam( const Team *team, Int maxShotsToFire,
  */
 void AIUpdateInterface::privateAttackPosition( const Coord3D *pos, Int maxShotsToFire, CommandSourceType cmdSource )
 {
+	// TheSuperHackers @feature Ahmed Salah 15/01/2025 Trigger warning for AI attack position
+	checkForRadioInterception(GameMessage::MSG_DO_ATTACK_OBJECT, pos, NULL, getObject());
+
 	//Resetting the locomotor here was initially added for scripting purposes. It has been moved
 	//to the responsibility of the script to reset the locomotor before moving. This is needed because
 	//other systems (like the battle drone) change the locomotor based on what it's trying to do, and
@@ -3582,6 +3673,9 @@ void AIUpdateInterface::privateAttackPosition( const Coord3D *pos, Int maxShotsT
  */
 void AIUpdateInterface::privateAttackMoveToPosition( const Coord3D *pos, Int maxShotsToFire, CommandSourceType cmdSource )
 {
+	// TheSuperHackers @feature Ahmed Salah 15/01/2025 Trigger warning for AI attack move to position
+	checkForRadioInterception(GameMessage::MSG_DO_ATTACKMOVETO, pos, NULL, getObject());
+
 	if (m_isAiDead || getObject()->isMobile() == FALSE)
 		return;
 
@@ -3610,6 +3704,10 @@ void AIUpdateInterface::privateAttackFollowWaypointPath( const Waypoint *way, In
 {
 	if (m_isAiDead || getObject()->isMobile() == FALSE)
 		return;
+
+	// TheSuperHackers @feature Ahmed Salah 15/01/2025 Trigger warning for AI attack follow waypoint path
+	if (way && way->getLocation())
+		checkForRadioInterception(GameMessage::MSG_DO_ATTACKMOVETO, way->getLocation(), NULL, getObject());
 
 	//Resetting the locomotor here was initially added for scripting purposes. It has been moved
 	//to the responsibility of the script to reset the locomotor before moving. This is needed because

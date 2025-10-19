@@ -1935,10 +1935,10 @@ void ControlBar::init( void )
 	// load the command buttons
 	ini.loadFileDirectory( AsciiString( "Data\\INI\\Default\\CommandButton" ), INI_LOAD_OVERWRITE, NULL );
 	ini.loadFileDirectory( AsciiString( "Data\\INI\\CommandButton" ), INI_LOAD_OVERWRITE, NULL );
-
+	ini.loadDirectory( AsciiString( "Data\\INI\\Object" ), AsciiString( "CommandButton.ini" ), INI_LOAD_MULTIFILE, NULL );
 	// load the command sets
 	ini.loadFileDirectory( AsciiString( "Data\\INI\\CommandSet" ), INI_LOAD_OVERWRITE, NULL );
-
+	ini.loadDirectory( AsciiString( "Data\\INI\\Object" ), AsciiString( "CommandSet.ini" ), INI_LOAD_MULTIFILE, NULL );
 	// post process step after loading the command buttons and command sets
 	postProcessCommands();
 

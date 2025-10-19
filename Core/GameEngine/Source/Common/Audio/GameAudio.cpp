@@ -214,15 +214,19 @@ void AudioManager::init()
 
 	ini.loadFileDirectory( AsciiString( "Data\\INI\\Default\\Music" ), INI_LOAD_OVERWRITE, NULL );
 	ini.loadFileDirectory( AsciiString( "Data\\INI\\Music" ), INI_LOAD_OVERWRITE, NULL );
+	ini.loadDirectory( AsciiString( "Data\\INI\\Object" ), AsciiString( "Music.ini" ), INI_LOAD_MULTIFILE, NULL );
 
 	ini.loadFileDirectory( AsciiString( "Data\\INI\\Default\\SoundEffects" ), INI_LOAD_OVERWRITE, NULL );
 	ini.loadFileDirectory( AsciiString( "Data\\INI\\SoundEffects" ), INI_LOAD_OVERWRITE, NULL );
+	ini.loadDirectory( AsciiString( "Data\\INI\\Object" ), AsciiString( "SoundEffect.ini" ), INI_LOAD_MULTIFILE, NULL );
 
 	ini.loadFileDirectory( AsciiString( "Data\\INI\\Default\\Speech" ), INI_LOAD_OVERWRITE, NULL );
 	ini.loadFileDirectory( AsciiString( "Data\\INI\\Speech" ), INI_LOAD_OVERWRITE, NULL );
+	ini.loadDirectory( AsciiString( "Data\\INI\\Object" ), AsciiString( "Speech.ini" ), INI_LOAD_MULTIFILE, NULL );
 
 	ini.loadFileDirectory( AsciiString( "Data\\INI\\Default\\Voice" ), INI_LOAD_OVERWRITE, NULL );
 	ini.loadFileDirectory( AsciiString( "Data\\INI\\Voice" ), INI_LOAD_OVERWRITE, NULL );
+	ini.loadDirectory( AsciiString( "Data\\INI\\Object" ), AsciiString( "AudioEvent.ini" ), INI_LOAD_MULTIFILE, NULL );
 
 	// do the miscellaneous sound files last so that we find the AudioEventRTS associated with the events.
 	ini.loadFileDirectory( AsciiString( "Data\\INI\\MiscAudio" ), INI_LOAD_OVERWRITE, NULL);

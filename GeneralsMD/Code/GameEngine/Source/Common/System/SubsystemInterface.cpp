@@ -151,7 +151,7 @@ void SubsystemInterfaceList::removeSubsystem(SubsystemInterface* sys)
 #endif
 }
 //-----------------------------------------------------------------------------
-void SubsystemInterfaceList::initSubsystem(SubsystemInterface* sys, const char* path1, const char* path2, Xfer *pXfer, AsciiString name)
+void SubsystemInterfaceList::initSubsystem(SubsystemInterface* sys, const char* path1, const char* path2, Xfer *pXfer, AsciiString name, const char* objectFolderFileExtension)
 {
 	sys->setName(name);
 	sys->init();
@@ -161,8 +161,44 @@ void SubsystemInterfaceList::initSubsystem(SubsystemInterface* sys, const char* 
 		ini.loadFileDirectory(path1, INI_LOAD_OVERWRITE, pXfer );
 	if (path2)
 		ini.loadFileDirectory(path2, INI_LOAD_OVERWRITE, pXfer );
-
+	if (objectFolderFileExtension)
+		ini.loadDirectory( AsciiString( "Data\\INI\\Object" ), AsciiString(objectFolderFileExtension), INI_LOAD_MULTIFILE, pXfer,true);
 	m_subsystems.push_back(sys);
+}
+
+//-----------------------------------------------------------------------------
+void SubsystemInterfaceList::initSubsystem(SubsystemInterface* sys, const char* path1, const char* path2, Xfer *pXfer, AsciiString name, const AsciiStringVec& objectFolderFileExtensions)
+{
+	sys->setName(name);
+	sys->init();
+
+	INI ini;
+	if (path1)
+		ini.loadFileDirectory(path1, INI_LOAD_OVERWRITE, pXfer );
+	if (path2)
+		ini.loadFileDirectory(path2, INI_LOAD_OVERWRITE, pXfer );
+	
+	// Load all object folder file extensions
+	for (AsciiStringVec::const_iterator it = objectFolderFileExtensions.begin(); it != objectFolderFileExtensions.end(); ++it)
+	{
+		if (!it->isEmpty())
+		{
+			ini.loadDirectory( AsciiString( "Data\\INI\\Object" ), *it, INI_LOAD_OVERWRITE, NULL );
+		}
+	}
+	
+	m_subsystems.push_back(sys);
+}
+
+//-----------------------------------------------------------------------------
+AsciiStringVec SubsystemInterfaceList::createExtensions(const char* ext1, const char* ext2, const char* ext3, const char* ext4)
+{
+	AsciiStringVec extensions;
+	if (ext1) extensions.push_back(AsciiString(ext1));
+	if (ext2) extensions.push_back(AsciiString(ext2));
+	if (ext3) extensions.push_back(AsciiString(ext3));
+	if (ext4) extensions.push_back(AsciiString(ext4));
+	return extensions;
 }
 
 //-----------------------------------------------------------------------------

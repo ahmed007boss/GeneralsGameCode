@@ -50,8 +50,8 @@ struct MiscAudio
 	AudioEventRTS m_battleCrySound;												///< snd to play when user presses 'battlecry' key
 	AudioEventRTS m_guiClickSound;												///< snd to play when user presses button in GUI
 	AudioEventRTS m_noCanDoSound;													///< Global "No Can Do" sound
-	AudioEventRTS	m_stealthDiscoveredSound;								///< I have just discovered an enemy stealth unit
-	AudioEventRTS	m_stealthNeutralizedSound;							///< One of my stealthed units has just been discovered by the enemy
+	AudioEventRTS m_stealthDiscoveredSound;								///< I have just discovered an enemy stealth unit
+	AudioEventRTS m_stealthNeutralizedSound;							///< One of my stealthed units has just been discovered by the enemy
 	AudioEventRTS m_moneyDepositSound;										///< Money was deposited in my bank
 	AudioEventRTS m_moneyWithdrawSound;										///< Money was withdrawn from my bank
 	AudioEventRTS m_buildingDisabled;											///< Building has lost power, been hit with an EMP, or disable hacked.

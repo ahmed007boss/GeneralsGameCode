@@ -239,6 +239,10 @@ class AIUpdateInterface : public UpdateModule, public AICommandInterface
 	MEMORY_POOL_GLUE_WITH_USERLOOKUP_CREATE( AIUpdateInterface, "AIUpdateInterface" )
 	MAKE_STANDARD_MODULE_MACRO_WITH_MODULE_DATA( AIUpdateInterface, AIUpdateModuleData )
 
+public:
+	// Override AICommandInterface::getObject() to use UpdateModule::getObject()
+	Object* getObject() const override { return const_cast<Object*>(UpdateModule::getObject()); }
+
 protected:
 
 	// yes, protected, NOT public.

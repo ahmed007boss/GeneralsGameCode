@@ -1985,3 +1985,7 @@ Bool INI::isEndOfBlock( char *bufferToCheck )
 
 	return retVal;
 }
+
+UnsignedInt INI::loadDirectory(AsciiString dirName, AsciiString fileExtension, INILoadType loadType, Xfer* pXfer, Bool subdirs) {
+	return 0;
+}

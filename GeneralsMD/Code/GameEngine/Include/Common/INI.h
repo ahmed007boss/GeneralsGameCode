@@ -182,7 +182,7 @@ public:
 	// For example "Data\INI\Armor" loads "Data\INI\Armor.ini" and all *.ini files in "Data\INI\Armor".
 	// Throws if not a single INI file is found or one is not read correctly.
 	UnsignedInt loadFileDirectory( AsciiString fileDirName, INILoadType loadType, Xfer *pXfer, Bool subdirs = TRUE );
-
+	UnsignedInt loadDirectory( AsciiString dirName,AsciiString fileExtension, INILoadType loadType, Xfer *pXfer, Bool subdirs = TRUE );
 	// Load INI files from a directory (and its subdirectories).
 	// Throws if one INI file is not read correctly.
 	UnsignedInt loadDirectory( AsciiString dirName, INILoadType loadType, Xfer *pXfer, Bool subdirs = TRUE );
