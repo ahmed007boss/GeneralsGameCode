@@ -352,6 +352,7 @@ set(GAMEENGINE_SRC
     Include/GameLogic/Module/ImmortalBody.h
     Include/GameLogic/Module/InactiveBody.h
     Include/GameLogic/Module/InventoryBehavior.h
+    Include/GameLogic/Module/AutoSupplyItemBehavior.h
     Include/GameLogic/Module/InstantDeathBehavior.h
     Include/GameLogic/Module/InternetHackContain.h
     Include/GameLogic/Module/JetAIUpdate.h
@@ -874,6 +875,7 @@ set(GAMEENGINE_SRC
     Source/GameLogic/Object/Behavior/GrantStealthBehavior.cpp
     Source/GameLogic/Object/Behavior/InstantDeathBehavior.cpp
     Source/GameLogic/Object/Behavior/InventoryBehavior.cpp
+    Source/GameLogic/Module/AutoSupplyItemBehavior.cpp
     Source/GameLogic/Object/Behavior/JetSlowDeathBehavior.cpp
     Source/GameLogic/Object/Behavior/MinefieldBehavior.cpp
     Source/GameLogic/Object/Behavior/NeutonBlastBehavior.cpp

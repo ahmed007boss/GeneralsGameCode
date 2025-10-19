@@ -90,6 +90,7 @@
 #include "GameLogic/Module/BattleBusSlowDeathBehavior.h"
 #include "GameLogic/Module/JetSlowDeathBehavior.h"
 #include "GameLogic/Module/InventoryBehavior.h"
+#include "GameLogic/Module/AutoSupplyItemBehavior.h"
 #include "GameLogic/Module/WarningBehavior.h"
 
 // die includes
@@ -379,6 +380,8 @@ void ModuleFactory::init( void )
 	addModule( SpawnBehavior );
 	// TheSuperHackers @feature author 15/01/2025 Add Inventory module
 	addModule( InventoryBehavior );
+	// TheSuperHackers @feature author 15/01/2025 Add AutoSupplyItem module
+	addModule( AutoSupplyItemBehavior );
 	// TheSuperHackers @feature Ahmed Salah 15/01/2025 Add WarningBehavior module
 	addModule( WarningBehavior );
 	// die modules
