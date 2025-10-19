@@ -778,6 +778,18 @@ Int Object::getTransportSlotCount() const
 	return count;
 }
 
+Object* Object::getEnclosingContainedBy()
+{
+	for (Object* child = this, *container = getContainedBy(); container; child = container, container = container->getContainedBy())
+	{
+		ContainModuleInterface* containModule = container->getContain();
+		if (containModule && containModule->isEnclosingContainerFor(child))
+			return container;
+	}
+
+	return NULL;
+}
+
 //-------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------
 void Object::addSlavedObject(Object* slavedObject)
@@ -5027,6 +5039,15 @@ void Object::adjustModelConditionForWeaponStatus()
 			}
 		}
 	}
+}
+
+//-------------------------------------------------------------------------------------------------
+Bool Object::hasGhostObject() const
+{
+	if (m_partitionData == NULL)
+		return false;
+
+	return m_partitionData->getGhostObject() != NULL;
 }
 
 //-------------------------------------------------------------------------------------------------

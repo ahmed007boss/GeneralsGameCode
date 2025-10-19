@@ -27,9 +27,11 @@
 // Debug class implementation
 //////////////////////////////////////////////////////////////////////////////
 #include "_pch.h"
+#include <stringex.h>
 #include <stdlib.h>
 #include <Utility/stdio_adapter.h>
 #include <string.h>
+#include <WWCommon.h>
 #include <new>      // needed for placement new prototype
 
 // a little dummy variable that makes the linker actually include
@@ -346,7 +348,7 @@ bool Debug::AssertDone(void)
                         "time being (stops logging this assertion as well).";
     char *help=(char *)DebugAllocMemory(ioBuffer[curType].used+strlen(addInfo)+1);
     strcpy(help,ioBuffer[curType].buffer+82);
-    strcat(help,addInfo);
+    strcat(help, addInfo);
 
     // First hit? Then do a stack trace
     if (curFrameEntry->hits==1)
@@ -610,7 +612,7 @@ bool Debug::CrashDone(bool die)
 #endif
     char *help=(char *)DebugAllocMemory(ioBuffer[curType].used+strlen(addInfo)+1);
     strcpy(help,ioBuffer[curType].buffer+82);
-    strcat(help,addInfo);
+    strcat(help, addInfo);
 
     // First hit? Then do a stack trace
     if (curFrameEntry->hits==1)
@@ -729,8 +731,7 @@ Debug& Debug::operator<<(const char *str)
 
 void Debug::SetPrefixAndRadix(const char *prefix, int radix)
 {
-  strncpy(m_prefix,prefix?prefix:"",sizeof(m_prefix)-1);
-  m_prefix[sizeof(m_prefix)-1]=0;
+  strlcpy(m_prefix,prefix?prefix:"",sizeof(m_prefix));
   m_radix=radix;
 }
 
@@ -1423,11 +1424,11 @@ void Debug::SetBuildInfo(const char *version,
                          const char *buildDate)
 {
   if (version)
-    strncpy(Instance.m_version,version,sizeof(Instance.m_version)-1);
+    strlcpy(Instance.m_version,version,sizeof(Instance.m_version));
   if (internalVersion)
-    strncpy(Instance.m_intVersion,internalVersion,sizeof(Instance.m_intVersion)-1);
+    strlcpy(Instance.m_intVersion,internalVersion,sizeof(Instance.m_intVersion));
   if (buildDate)
-    strncpy(Instance.m_buildDate,buildDate,sizeof(Instance.m_buildDate)-1);
+    strlcpy(Instance.m_buildDate,buildDate,sizeof(Instance.m_buildDate));
 }
 
 void Debug::WriteBuildInfo(void)

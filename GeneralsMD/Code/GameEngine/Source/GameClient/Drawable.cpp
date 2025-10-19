@@ -36,10 +36,11 @@
 #include "Common/BuildAssistant.h"
 #include "Common/ClientUpdateModule.h"
 #include "Common/DrawModule.h"
+#include "Common/FramePacer.h"
 #include "Common/GameAudio.h"
-#include "Common/GameEngine.h"
 #include "Common/GameLOD.h"
 #include "Common/GameState.h"
+#include "Common/GameUtility.h"
 #include "Common/GlobalData.h"
 #include "Common/ModuleFactory.h"
 #include "Common/PerfTimer.h"
@@ -401,7 +402,7 @@ Drawable::Drawable( const ThingTemplate *thingTemplate, DrawableStatusBits statu
 	m_timeElapsedFade = 0;
 	m_timeToFade = 0;
 
-	m_shroudClearFrame = 0;
+	m_shroudClearFrame = InvalidShroudClearFrame;
 
 	for (i = 0; i < NUM_DRAWABLE_MODULE_TYPES; ++i)
 		m_modules[i] = NULL;
@@ -4194,13 +4195,7 @@ DrawModule** Drawable::getDrawModules()
 		}
 		else
 		{
-			for (DrawModule** dm2 = dm; *dm2; ++dm2)
-			{
-				ObjectDrawInterface* di = (*dm2)->getObjectDrawInterface();
-				if (di)
-					di->replaceModelConditionState( m_conditionState );
-			}
-			m_isModelDirty = false;
+			replaceModelConditionStateInDrawable();
 		}
 	}
 #endif
@@ -4226,14 +4221,7 @@ DrawModule const** Drawable::getDrawModules() const
 		}
 		else
 		{
-			// yeah, yeah, yeah... I know (srj)
-			for (DrawModule** dm2 = (DrawModule**)dm; *dm2; ++dm2)
-			{
-				ObjectDrawInterface* di = (*dm2)->getObjectDrawInterface();
-				if (di)
-					di->replaceModelConditionState( m_conditionState );
-			}
-			m_isModelDirty = false;
+			const_cast<Drawable*>(this)->replaceModelConditionStateInDrawable();
 		}
 	}
 #endif
@@ -4256,12 +4244,7 @@ void Drawable::clearAndSetModelConditionFlags(const ModelConditionFlags& clr, co
 #ifdef DIRTY_CONDITION_FLAGS
 	m_isModelDirty = true;
 #else
-	for (DrawModule** dm = getDrawModules(); *dm; ++dm)
-	{
-		ObjectDrawInterface* di = (*dm)->getObjectDrawInterface();
-		if (di)
-			di->replaceModelConditionState( m_conditionState );
-	}
+	replaceModelConditionStateInDrawable();
 #endif
 }
 
@@ -4283,24 +4266,37 @@ void Drawable::replaceModelConditionFlags( const ModelConditionFlags &flags, Boo
 	// when forcing a replace we won't use dirty flags, we will immediately do an update now
 	if( forceReplace == TRUE )
 	{
-		for (DrawModule** dm = getDrawModules(); *dm; ++dm)
-		{
-			ObjectDrawInterface* di = (*dm)->getObjectDrawInterface();
-			if (di)
-				di->replaceModelConditionState( m_conditionState );
-		}
-		m_isModelDirty = false;
+		replaceModelConditionStateInDrawable();
 	}
 	else
+	{
 		m_isModelDirty = true;
+	}
 #else
+	replaceModelConditionStateInDrawable();
+#endif
+}
+
+//-------------------------------------------------------------------------------------------------
+void Drawable::replaceModelConditionStateInDrawable()
+{
+	// TheSuperHackers @info Set not dirty early to avoid recursive calls from within getDrawModules().
+	m_isModelDirty = false;
+
+	// TheSuperHackers @bugfix Remove and re-add the terrain decal before processing the individual draw
+	// modules, because the terrain decal is applied to the first draw module only, and the new first
+	// draw module may be different than before.
+	const TerrainDecalType terrainDecalType = getTerrainDecalType();
+	setTerrainDecal(TERRAIN_DECAL_NONE);
+
 	for (DrawModule** dm = getDrawModules(); *dm; ++dm)
 	{
 		ObjectDrawInterface* di = (*dm)->getObjectDrawInterface();
 		if (di)
 			di->replaceModelConditionState( m_conditionState );
 	}
-#endif
+
+	setTerrainDecal(terrainDecalType);
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -4373,7 +4369,7 @@ void Drawable::friend_bindToObject( Object *obj ) ///< bind this drawable to an 
 
 		if (getObject()->isKindOf(KINDOF_FS_FAKE))
 		{
-			Relationship rel=ThePlayerList->getLocalPlayer()->getRelationship(getObject()->getTeam());
+			Relationship rel = rts::getObservedOrLocalPlayer()->getRelationship(getObject()->getTeam());
 			if (rel == ALLIES || rel == NEUTRAL)
 				setTerrainDecal(TERRAIN_DECAL_SHADOW_TEXTURE);
 			else
@@ -4411,7 +4407,7 @@ void Drawable::changedTeam()
 
 		if (object->isKindOf(KINDOF_FS_FAKE))
 		{
-			Relationship rel=ThePlayerList->getLocalPlayer()->getRelationship(object->getTeam());
+			Relationship rel = rts::getObservedOrLocalPlayer()->getRelationship(object->getTeam());
 			if (rel == ALLIES || rel == NEUTRAL)
 				setTerrainDecal(TERRAIN_DECAL_SHADOW_TEXTURE);
 			else
@@ -5753,7 +5749,7 @@ void TintEnvelope::setDecayFrames( UnsignedInt frames )
 void TintEnvelope::update(void)
 {
 	// TheSuperHackers @tweak The tint time step is now decoupled from the render update.
-	const Real timeScale = TheGameEngine->getActualLogicTimeScaleOverFpsRatio();
+	const Real timeScale = TheFramePacer->getActualLogicTimeScaleOverFpsRatio();
 
 	switch ( m_envState )
 	{
