@@ -1174,7 +1174,6 @@ void GameEngine::execute( void )
 						TheNetwork ? 1 : 0,
 						TheNetwork ? TheNetwork->isStalling() : 0));
 					DEBUG_LOG(("GameEngine::execute - Frame: %d", TheGameLogic ? TheGameLogic->getFrame() : 0));
-					DEBUG_LOG(("GameEngine::execute - Time frozen: %d, Game halted: %d", m_isTimeFrozen, m_isGameHalted));
 					
 					// Log stack trace to identify where the exception was thrown
 					LogStackTrace("ErrorCode Exception");
@@ -1192,8 +1191,7 @@ void GameEngine::execute( void )
 					DEBUG_LOG(("GameEngine::execute - Network state: Connected=%d, Stalling=%d", 
 						TheNetwork ? 1 : 0,
 						TheNetwork ? TheNetwork->isStalling() : 0));
-					DEBUG_LOG(("GameEngine::execute - Frame: %d", TheGameLogic ? TheGameLogic->getFrame() : 0));
-					DEBUG_LOG(("GameEngine::execute - Time frozen: %d, Game halted: %d", m_isTimeFrozen, m_isGameHalted));
+					DEBUG_LOG(("GameEngine::execute - Frame: %d", TheGameLogic ? TheGameLogic->getFrame() : 0));				
 					
 					// Log stack trace to identify where the exception was thrown
 					LogStackTrace("std::exception");
@@ -1226,7 +1224,6 @@ void GameEngine::execute( void )
 						TheNetwork ? 1 : 0,
 						TheNetwork ? TheNetwork->isStalling() : 0));
 					DEBUG_LOG(("GameEngine::execute - Frame: %d", TheGameLogic ? TheGameLogic->getFrame() : 0));
-					DEBUG_LOG(("GameEngine::execute - Time frozen: %d, Game halted: %d", m_isTimeFrozen, m_isGameHalted));
 					DEBUG_LOG(("GameEngine::execute - Quitting: %d, Active: %d", m_quitting, m_isActive));
 					
 					// Log stack trace to identify where the exception was thrown
