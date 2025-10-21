@@ -316,12 +316,12 @@ void GameTextManager::init( void )
 	// Prepare file paths with language formatting
 	AsciiString csfFile;
 	csfFile.format(g_csfFile, GetRegistryLanguage().str());
-	
+	countStringFilesEntries(m_textCount);
 
 	
 	// Determine file format and get initial text count
 	Int format;
-	if ( m_useStringFile)
+	if ( m_useStringFile && m_textCount > 0 )
 	{
 		format = STRING_FILE;
 	}
@@ -334,11 +334,6 @@ void GameTextManager::init( void )
 		return;
 	}
 
-	// Count additional string files if using string file format
-	if ( format == STRING_FILE )
-	{
-		countStringFilesEntries(m_textCount);
-	}
 
 	// Validate we have strings to process
 	if( m_textCount == 0 )

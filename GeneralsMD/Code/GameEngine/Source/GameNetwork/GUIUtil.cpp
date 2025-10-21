@@ -339,7 +339,7 @@ void PopulateStartingCashComboBox(GameWindow *comboBox, GameInfo *myGame)
   {
     Int newIndex = GadgetComboBoxAddEntry(comboBox, formatMoneyForStartingCashComboBox( *it ),
                                           comboBox->winGetEnabled() ? comboBox->winGetEnabledTextColor() : comboBox->winGetDisabledTextColor());
-    GadgetComboBoxSetItemData(comboBox, newIndex, (void *)it->countMoney());
+    GadgetComboBoxSetItemData(comboBox, newIndex, (void *)(Int)it->countMoney());
 
     if ( myGame->getStartingCash().amountEqual( *it ) )
     {
@@ -352,7 +352,7 @@ void PopulateStartingCashComboBox(GameWindow *comboBox, GameInfo *myGame)
     DEBUG_CRASH( ("Current selection for starting cash not found in list") );
     currentSelectionIndex = GadgetComboBoxAddEntry(comboBox, formatMoneyForStartingCashComboBox( myGame->getStartingCash() ),
                                           comboBox->winGetEnabled() ? comboBox->winGetEnabledTextColor() : comboBox->winGetDisabledTextColor());
-    GadgetComboBoxSetItemData(comboBox, currentSelectionIndex, (void *)it->countMoney() );
+    GadgetComboBoxSetItemData(comboBox, currentSelectionIndex, (void *)(Int)myGame->getStartingCash().countMoney() );
   }
 
   GadgetComboBoxSetSelectedPos(comboBox, currentSelectionIndex);
