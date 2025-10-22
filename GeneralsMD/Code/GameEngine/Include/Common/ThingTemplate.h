@@ -426,6 +426,12 @@ public:
 	/// set the display name
 	const UnicodeString& getDisplayName() const { return m_displayName; }  ///< return display name
 
+	// TheSuperHackers @feature author 15/01/2025 Get the original INI file path where this template was defined
+	const AsciiString& getIniFilePath() const { return m_iniFilePath; }
+	
+	// TheSuperHackers @feature author 15/01/2025 Set the original INI file path where this template was defined
+	void setIniFilePath(const AsciiString& iniPath) { m_iniFilePath = iniPath; }
+
 	RadarPriorityType getDefaultRadarPriority() const { return (RadarPriorityType)m_radarPriority; }  ///< return radar priority from INI
 
 	// note, you should not call this directly; rather, call Object::getTransportSlotCount().
@@ -731,6 +737,7 @@ private:
 	AsciiString				m_shadowTextureName;					///< name of texture to use for shadow decal
 	AsciiString				m_moduleBeingReplacedName;		///< used only during map.ini loading... name (not tag) of Module being replaced, or empty if not inside ReplaceModule block
 	AsciiString				m_moduleBeingReplacedTag;			///< used only during map.ini loading... tag (not name) of Module being replaced, or empty if not inside ReplaceModule block
+	AsciiString				m_iniFilePath;						///< TheSuperHackers @feature author 15/01/2025 Store the original INI file path where this template was defined
 #ifdef LOAD_TEST_ASSETS
 	AsciiString				m_LTAName;
 #endif

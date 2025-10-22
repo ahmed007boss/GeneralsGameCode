@@ -619,11 +619,20 @@ void WW3DAssetManager::Create_Asset_List(DynamicVectorClass<StringClass> & model
  * HISTORY:                                                                                    *
  *   10/22/98   BMG : Created.                                                                 *
  *=============================================================================================*/
-bool WW3DAssetManager::Load_3D_Assets( const char * filename )
+bool WW3DAssetManager::Load_3D_Assets( const char * filename, const char* thingConfigDirectory )
 {
 	bool result = false;
 
-	FileClass * file = _TheFileFactory->Get_File( filename );
+	FileClass * file;
+	if (thingConfigDirectory != NULL && strlen(thingConfigDirectory) > 0)
+	{
+		file = _TheFileFactory->Get_File( filename, thingConfigDirectory );
+	}
+	else
+	{
+		file = _TheFileFactory->Get_File( filename );
+	}
+	
 	if ( file ) {
 		if ( file->Is_Available() ) {
 			result = WW3DAssetManager::Load_3D_Assets( *file );
@@ -635,6 +644,7 @@ bool WW3DAssetManager::Load_3D_Assets( const char * filename )
 
 	return result;
 }
+
 
 
 /***********************************************************************************************
@@ -787,7 +797,7 @@ bool WW3DAssetManager::Load_Prototype(ChunkLoadClass & cload)
  * HISTORY:                                                                                    *
  *   12/21/97   GTH : Created.                                                                 *
  *=============================================================================================*/
-RenderObjClass * WW3DAssetManager::Create_Render_Obj(const char * name)
+RenderObjClass * WW3DAssetManager::Create_Render_Obj(const char * name, const char* thingConfigDirectory)
 {
 	WWPROFILE( "WW3DAssetManager::Create_Render_Obj" );
 	WWMEMLOG(MEM_GEOMETRY);
@@ -807,11 +817,25 @@ RenderObjClass * WW3DAssetManager::Create_Render_Obj(const char * name)
 			sprintf( filename, "%s.w3d", name);
 		}
 
-		// If we can't find it, try the parent directory
-		if ( Load_3D_Assets( filename ) == false ) {
-			StringClass	new_filename(StringClass("..\\"),true);
-			new_filename+=filename;
-			Load_3D_Assets( new_filename );
+		// TheSuperHackers @feature author 15/01/2025 Use thing config directory if provided
+		if (thingConfigDirectory != NULL && strlen(thingConfigDirectory) > 0)
+		{
+			// Try to load with thing config directory first
+			if ( Load_3D_Assets( filename, thingConfigDirectory ) == false )
+			{
+				// If we can't find it, try the parent directory
+				StringClass	new_filename = StringClass("..\\") + filename;
+				Load_3D_Assets(new_filename, thingConfigDirectory);
+			}
+		}
+		else
+		{
+			// If we can't find it, try the parent directory
+			if ( Load_3D_Assets( filename ) == false )
+			{
+				StringClass	new_filename = StringClass("..\\") + filename;
+				Load_3D_Assets( new_filename );
+			}
 		}
 
 		proto = Find_Prototype(name);		// try again
@@ -831,6 +855,7 @@ RenderObjClass * WW3DAssetManager::Create_Render_Obj(const char * name)
 
 	return proto->Create();
 }
+
 
 
 /***********************************************************************************************

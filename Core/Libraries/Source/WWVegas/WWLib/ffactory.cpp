@@ -304,6 +304,15 @@ FileClass * SimpleFileFactoryClass::Get_File( char const *filename )
 	return file;
 }
 
+//-------------------------------------------------------------------------------------------------
+// TheSuperHackers @feature author 15/01/2025 Get file with thing config directory (ignores thingConfigDirectory for SimpleFileFactoryClass)
+//-------------------------------------------------------------------------------------------------
+FileClass * SimpleFileFactoryClass::Get_File( char const *filename, const char* thingConfigDirectory )
+{
+	// SimpleFileFactoryClass doesn't support thing config directories, so just call the regular Get_File
+	return Get_File( filename );
+}
+
 void SimpleFileFactoryClass::Return_File( FileClass *file )
 {
 	delete file;

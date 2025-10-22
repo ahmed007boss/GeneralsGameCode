@@ -53,6 +53,7 @@ class GameFileClass : public FileClass
 public:
 
 	GameFileClass(char const *filename);
+	GameFileClass(char const *filename, const char* thingConfigDirectory);
 	GameFileClass(void);
 	virtual ~GameFileClass(void);
 
@@ -79,6 +80,7 @@ protected:
 	Bool					m_fileExists;		///< TRUE if the file exists
 	char					m_filePath[_MAX_PATH];  ///< the file name *and* path (relative)
 	char					m_filename[_MAX_PATH];	///< The file name only
+	char					m_thingConfigDirectory[_MAX_PATH]; ///< TheSuperHackers @feature author 15/01/2025 Thing config directory for this file
 
 };
 
@@ -93,6 +95,7 @@ public:
 	~W3DFileSystem(void);
 
 	virtual FileClass * Get_File( char const *filename );
+	virtual FileClass * Get_File( char const *filename, const char* thingConfigDirectory );
 	virtual void Return_File( FileClass *file );
 
 private:

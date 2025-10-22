@@ -401,6 +401,9 @@ AsciiString TheThingTemplateBeingParsedName;
 		thingTemplate = TheThingFactory->newOverride( thingTemplate );
 	}
 
+	// TheSuperHackers @feature author 15/01/2025 Store the original INI file path where this template was defined
+	thingTemplate->setIniFilePath(ini->getFilename());
+
 	if (reskinFrom.isNotEmpty())
 	{
 		const ThingTemplate* reskinTmpl = TheThingFactory->findTemplate(reskinFrom);
@@ -471,6 +474,8 @@ void ThingFactory::parseObjectExtendDefinition(INI* ini, const AsciiString& name
 		thingTemplate = TheThingFactory->newOverride(thingTemplate);
 	}
 
+	// TheSuperHackers @feature author 15/01/2025 Store the original INI file path where this template was defined
+	thingTemplate->setIniFilePath(ini->getFilename());
 
 	const ThingTemplate* extendTmpl = TheThingFactory->findTemplate(extendFrom);
 	if (extendTmpl)

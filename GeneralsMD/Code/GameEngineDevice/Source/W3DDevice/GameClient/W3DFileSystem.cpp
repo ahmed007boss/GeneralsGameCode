@@ -77,6 +77,29 @@ GameFileClass::GameFileClass( char const *filename )
 	m_fileExists = FALSE;
 	m_filePath[0] = 0;
 	m_filename[0] = 0;
+	m_thingConfigDirectory[0] = 0;
+
+	if( filename )
+		Set_Name( filename );
+
+}
+
+//-------------------------------------------------------------------------------------------------
+// TheSuperHackers @feature author 15/01/2025 Constructor with search directory support
+//-------------------------------------------------------------------------------------------------
+GameFileClass::GameFileClass( char const *filename, const char* thingConfigDirectory )
+{
+
+	m_theFile = NULL;
+	m_fileExists = FALSE;
+	m_filePath[0] = 0;
+	m_filename[0] = 0;
+	
+	// Store the thing config directory
+	if( thingConfigDirectory )
+		strlcpy( m_thingConfigDirectory, thingConfigDirectory, _MAX_PATH );
+	else
+		m_thingConfigDirectory[0] = 0;
 
 	if( filename )
 		Set_Name( filename );
@@ -92,6 +115,7 @@ GameFileClass::GameFileClass( void )
 	m_theFile = NULL;
 	m_filePath[ 0 ] = 0;
 	m_filename[ 0 ] = 0;
+	m_thingConfigDirectory[ 0 ] = 0;
 
 }
 
@@ -168,8 +192,33 @@ char const * GameFileClass::Set_Name( char const *filename )
 
 	GameFileType fileType = getFileType(filename);
 
+	// TheSuperHackers @feature author 15/01/2025 Try thing config directory first if provided
+	if( m_thingConfigDirectory[0] != 0 )
+	{
+		if( fileType == FILE_TYPE_W3D )
+		{
+			strcpy( m_filePath, m_thingConfigDirectory );
+			strlcat(m_filePath, W3D_DIR_PATH, ARRAY_SIZE(m_filePath));
+			strlcat(m_filePath, filename, ARRAY_SIZE(m_filePath));
+		}
+		else if( isImageFileType(fileType) )
+		{
+			strcpy( m_filePath, m_thingConfigDirectory );
+			strlcat(m_filePath, TGA_DIR_PATH, ARRAY_SIZE(m_filePath));
+			strlcat(m_filePath, filename, ARRAY_SIZE(m_filePath));
+		}
+		else
+		{
+			strcpy( m_filePath, m_thingConfigDirectory );
+			strlcat(m_filePath, filename, ARRAY_SIZE(m_filePath));
+		}
+
+		// see if the file exists in thing config directory
+		m_fileExists = TheFileSystem->doesFileExist( m_filePath );
+	}
+
 	// We need to be able to grab w3d's from a localization dir, since Germany hates exploding people units.
-	if( fileType == FILE_TYPE_W3D )
+	if(m_fileExists == FALSE && fileType == FILE_TYPE_W3D )
 	{
 		static const char *localizedPathFormat = "Data/%s/Art/W3D/";
 		sprintf(m_filePath,localizedPathFormat, GetRegistryLanguage().str());
@@ -456,6 +505,14 @@ W3DFileSystem::~W3DFileSystem(void)
 FileClass * W3DFileSystem::Get_File( char const *filename )
 {
 	return NEW GameFileClass( filename );	// poolify
+}
+
+//-------------------------------------------------------------------------------------------------
+// TheSuperHackers @feature author 15/01/2025 Gets a file with the specified filename and search directory
+//-------------------------------------------------------------------------------------------------
+FileClass * W3DFileSystem::Get_File( char const *filename, const char* thingConfigDirectory )
+{
+	return NEW GameFileClass( filename, thingConfigDirectory );	// poolify
 }
 
 //-------------------------------------------------------------------------------------------------

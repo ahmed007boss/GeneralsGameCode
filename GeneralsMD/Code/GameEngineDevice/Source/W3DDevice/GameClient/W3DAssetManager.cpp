@@ -846,6 +846,164 @@ RenderObjClass * W3DAssetManager::Create_Render_Obj(
 }
 
 //---------------------------------------------------------------------
+// TheSuperHackers @feature author 15/01/2025 Enhanced Create_Render_Obj with search directory support
+//---------------------------------------------------------------------
+RenderObjClass * W3DAssetManager::Create_Render_Obj(
+	const char * name,
+	float scale,
+	const int color,
+	const char * thingConfigDirectory,
+	const char *oldTexture,
+	const char *newTexture
+)
+{
+	#ifdef DUMP_PERF_STATS
+	__int64 startTime64,endTime64;
+	GetPrecisionTimer(&startTime64);
+	#endif
+
+	Bool reallyscale = (WWMath::Fabs(scale - ident_scale) > scale_epsilon);
+	Bool reallycolor = (color & 0xFFFFFF) != 0;	//black is not a valid color and assumes no custom coloring.
+	Bool reallytexture = (oldTexture != NULL && newTexture != NULL);
+
+	// base case, no scale or color
+	if (!reallyscale && !reallycolor && !reallytexture)
+	{
+		// TheSuperHackers @feature author 15/01/2025 Use thing config directory if provided
+		RenderObjClass *robj = WW3DAssetManager::Create_Render_Obj(name, thingConfigDirectory);
+	#ifdef DUMP_PERF_STATS
+		GetPrecisionTimer(&endTime64);
+		Total_Create_Render_Obj_Time += endTime64-startTime64;
+	#endif
+		return robj;
+	}
+
+	char newname[512];
+	Munge_Render_Obj_Name(newname, name, scale, color, newTexture);
+
+	// see if we got a cached version
+	RenderObjClass *rendobj = NULL;
+
+	Set_WW3D_Load_On_Demand(false); // munged name will never be found in a file.
+	rendobj = WW3DAssetManager::Create_Render_Obj(newname);
+	if (rendobj)
+	{	//store the color that we used to create asset so we can read it back out
+		//when we need to save this render object to a file.  Used during saving
+		//of fog of war ghost objects.
+		rendobj->Set_ObjectColor(color);
+		Set_WW3D_Load_On_Demand(true); // Auto Load.
+
+	#ifdef DUMP_PERF_STATS
+		GetPrecisionTimer(&endTime64);
+		Total_Create_Render_Obj_Time += endTime64-startTime64;
+	#endif
+		return rendobj;
+	}
+
+	// create a new one based on exisiting prototype
+
+	WWPROFILE( "WW3DAssetManager::Create_Render_Obj" );
+	WWMEMLOG(MEM_GEOMETRY);
+
+	// Try to find a prototype
+	PrototypeClass * proto = Find_Prototype(name);
+
+	Set_WW3D_Load_On_Demand(true); // Auto Load.
+	if (WW3D_Load_On_Demand && proto == NULL)
+	{
+		// If we didn't find one, try to load on demand
+		char filename [MAX_PATH];
+		const char *mesh_name = strchr (name, '.');
+		if (mesh_name != NULL)
+		{
+			lstrcpyn(filename, name, ((int)mesh_name) - ((int)name) + 1);
+			lstrcat(filename, ".w3d");
+		} else {
+			sprintf( filename, "%s.w3d", name);
+		}
+
+		// TheSuperHackers @feature author 15/01/2025 Use thing config directory if provided
+		if (thingConfigDirectory != NULL && strlen(thingConfigDirectory) > 0)
+		{
+			// Try to load with thing config directory first
+			if ( Load_3D_Assets( filename, thingConfigDirectory ) == false )
+			{
+				// If we can't find it, try the parent directory
+				StringClass	new_filename = StringClass("..\\") + filename;
+				Load_3D_Assets(new_filename, thingConfigDirectory);
+			}
+		}
+		else
+		{
+			// If we can't find it, try the parent directory
+			if ( Load_3D_Assets( filename ) == false )
+			{
+				StringClass	new_filename = StringClass("..\\") + filename;
+				Load_3D_Assets(new_filename);
+			}
+		}
+
+		proto = Find_Prototype(name);		// try again
+	}
+
+	if (proto == NULL)
+	{
+		static int warning_count = 0;
+		if (++warning_count <= 20)
+		{
+			WWDEBUG_SAY(("WARNING: Failed to create Render Object: %s",name));
+		}
+	#ifdef DUMP_PERF_STATS
+		GetPrecisionTimer(&endTime64);
+		Total_Create_Render_Obj_Time += endTime64-startTime64;
+	#endif
+		return NULL;		// Failed to find a prototype
+	}
+
+	rendobj = proto->Create();
+
+	if (!rendobj)
+	{
+	#ifdef DUMP_PERF_STATS
+		GetPrecisionTimer(&endTime64);
+		Total_Create_Render_Obj_Time += endTime64-startTime64;
+	#endif
+		return NULL;
+	}
+
+	if (reallyscale)
+		rendobj->Scale(scale);	//this also makes it unique
+
+	Make_Unique(rendobj,reallyscale,reallycolor);
+
+	if (reallytexture)
+	{
+		TextureClass *oldTex = Get_Texture(oldTexture);
+		TextureClass *newTex = Get_Texture(newTexture);
+		replaceAssetTexture(rendobj,oldTex,newTex);
+		REF_PTR_RELEASE(newTex);
+		REF_PTR_RELEASE(oldTex);
+	}
+
+	if (reallycolor)
+		Recolor_Asset(rendobj,color);
+
+	W3DPrototypeClass *w3dproto = newInstance(W3DPrototypeClass)(rendobj, newname);
+	rendobj->Release_Ref();
+	Add_Prototype(w3dproto);
+
+	rendobj = w3dproto->Create();
+	rendobj->Set_ObjectColor(color);
+
+#ifdef DUMP_PERF_STATS
+	GetPrecisionTimer(&endTime64);
+	Total_Create_Render_Obj_Time += endTime64-startTime64;
+#endif
+
+	return rendobj;
+}
+
+//---------------------------------------------------------------------
 /** Generals specific code to generate customized render objects for each team color
 */
 int W3DAssetManager::Recolor_Asset(RenderObjClass *robj, const int color)
@@ -965,7 +1123,7 @@ __int64 Total_Load_3D_Assets=0;
 static Int Load_3D_Asset_Recursions=0;
 #endif
 //---------------------------------------------------------------------
-bool W3DAssetManager::Load_3D_Assets( const char * filename )
+bool W3DAssetManager::Load_3D_Assets( const char * filename, const char* thingConfigDirectory )
 {
 #ifdef DUMP_PERF_STATS
 		Load_3D_Asset_Recursions++;
@@ -993,7 +1151,7 @@ bool W3DAssetManager::Load_3D_Assets( const char * filename )
 		return TRUE;	//this file has already been loaded.
 	}
 
-	bool result = WW3DAssetManager::Load_3D_Assets(filename);
+	bool result = WW3DAssetManager::Load_3D_Assets(filename, thingConfigDirectory);
 
 #if defined(RTS_DEBUG)
 	if (result && TheGlobalData->m_preloadReport)
@@ -1019,6 +1177,7 @@ bool W3DAssetManager::Load_3D_Assets( const char * filename )
 	return result;
 
 }
+
 
 #ifdef DUMP_PERF_STATS
 __int64 Total_Get_HAnim_Time=0;

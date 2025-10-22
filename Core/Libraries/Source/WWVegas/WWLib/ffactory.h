@@ -64,6 +64,7 @@ class	FileFactoryClass {
 public:
 	virtual ~FileFactoryClass(void){};
 	virtual FileClass * Get_File( char const *filename ) = 0;
+	virtual FileClass * Get_File( char const *filename, const char* thingConfigDirectory ) = 0; // TheSuperHackers @feature author 15/01/2025 Get file with thing config directory
 	virtual void Return_File( FileClass *file ) = 0;
 };
 
@@ -132,6 +133,7 @@ public:
 	~SimpleFileFactoryClass( void )	{}
 
 	virtual FileClass *	Get_File( char const *filename );
+	virtual FileClass *	Get_File( char const *filename, const char* thingConfigDirectory ); // TheSuperHackers @feature author 15/01/2025 Get file with thing config directory
 	virtual void			Return_File( FileClass *file );
 
 	// sub_directory may be a semicolon seperated search path.  New files will always

@@ -260,12 +260,12 @@ struct ModelConditionInfo
 	void addPublicBone(const AsciiString& boneName) const;
 	Bool matchesMode(Bool night, Bool snowy) const;
 
-	void validateStuff(RenderObjClass* robj, Real scale, const std::vector<AsciiString>& extraPublicBones) const;
+	void validateStuff(RenderObjClass* robj, Real scale, const std::vector<AsciiString>& extraPublicBones, const char* thingConfigDirectory = NULL) const;
 
 private:
 	void validateWeaponBarrelInfo() const;
 	void validateTurretInfo() const;
-	void validateCachedBones(RenderObjClass* robj, Real scale) const;
+	void validateCachedBones(RenderObjClass* robj, Real scale, const char* thingConfigDirectory = NULL) const;
 };
 typedef std::vector<ModelConditionInfo> ModelConditionVector;
 
@@ -316,7 +316,7 @@ public:
 
 	W3DModelDrawModuleData();
 	~W3DModelDrawModuleData();
-	void validateStuffForTimeAndWeather(const Drawable* draw, Bool night, Bool snowy) const;
+	void validateStuffForTimeAndWeather(const Drawable* draw, Bool night, Bool snowy, const char* thingConfigDirectory = NULL) const;
 	static void buildFieldParse(MultiIniFieldParse& p);
  	AsciiString getBestModelNameForWB(const ModelConditionFlags& c) const;
 	const ModelConditionInfo* findBestInfo(const ModelConditionFlags& c) const;
@@ -428,6 +428,9 @@ public:
 	inline RenderObjClass *getRenderObject() { return m_renderObject; }
 	virtual Bool updateBonesForClientParticleSystems( void );///< this will reposition particle systems on the fly ML
 
+	// TheSuperHackers @feature author 15/01/2025 Get the INI file directory from ThingTemplate
+	const AsciiString& getIniDirectory() const { return m_iniDirectory; }
+
 	virtual void onDrawableBoundToObject();
 	virtual void setTerrainDecalSize(Real x, Real y);
 	virtual void setTerrainDecalOpacity(Real o);
@@ -511,11 +514,15 @@ private:
 	Bool													m_pauseAnimation;
 	Int														m_animationMode;
 	Bool													m_isFirstDrawModule;
+	AsciiString											m_iniDirectory;						///< TheSuperHackers @feature author 15/01/2025 Store the INI file directory from ThingTemplate
 
 	void adjustAnimation(const ModelConditionInfo* prevState, Real prevAnimFraction);
 	Real getCurrentAnimFraction() const;
 	void applyCorrectModelStateAnimation();
 	const ModelConditionInfo* findTransitionForSig(TransitionSig sig) const;
+	
+	// TheSuperHackers @feature author 15/01/2025 Extract directory from INI file path
+	void extractIniDirectory();
 	void rebuildWeaponRecoilInfo(const ModelConditionInfo* state);
 	void doHideShowProjectileObjects( UnsignedInt showCount, UnsignedInt maxCount, WeaponSlotType slot );///< Means effectively, show m of n.
 	void nukeCurrentRender(Matrix3D* xform);

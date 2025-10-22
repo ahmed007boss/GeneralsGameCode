@@ -64,7 +64,7 @@ public:
 	virtual RenderObjClass * Create_Render_Obj(const char * name);
 	// unique to W3DAssetManager
 	virtual HAnimClass *	Get_HAnim(const char * name);
-	virtual bool Load_3D_Assets( const char * filename ); // This CANNOT be Bool, as it will not inherit properly if you make Bool == Int
+	virtual bool Load_3D_Assets( const char * filename, const char* thingConfigDirectory = NULL ); // TheSuperHackers @feature author 15/01/2025 Load 3D assets with optional thing config directory
 
 	virtual TextureClass *	Get_Texture
 	(
@@ -84,6 +84,8 @@ public:
 	void Report_Used_FontChars (void);
 
 	virtual RenderObjClass * Create_Render_Obj(const char * name,float scale, const int color, const char *oldTexure=NULL, const char *newTexture=NULL);
+	// TheSuperHackers @feature author 15/01/2025 Enhanced Create_Render_Obj with search directory support
+	virtual RenderObjClass * Create_Render_Obj(const char * name, float scale, const int color, const char * thingConfigDirectory, const char *oldTexure=NULL, const char *newTexture=NULL);
 	///Swaps the specified textures in the render object prototype.
 	int replacePrototypeTexture(RenderObjClass *robj, const char * oldname, const char * newname);
 

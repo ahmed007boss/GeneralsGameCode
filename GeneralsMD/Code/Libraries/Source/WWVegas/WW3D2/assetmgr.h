@@ -208,7 +208,7 @@ public:
 	/*
 	** Load data from any type of w3d file
 	*/
-	virtual bool						Load_3D_Assets( const char * filename);
+	virtual bool						Load_3D_Assets( const char * filename, const char* thingConfigDirectory = NULL); // TheSuperHackers @feature author 15/01/2025 Load 3D assets with optional thing config directory
 	virtual bool						Load_3D_Assets(FileClass & assetfile);
 
 	/*
@@ -230,7 +230,7 @@ public:
 	/*
 	** create me an instance of one of the prototype render objects
 	*/
-	virtual RenderObjClass *		Create_Render_Obj(const char * name);
+	virtual RenderObjClass *		Create_Render_Obj(const char * name, const char* thingConfigDirectory = NULL); // TheSuperHackers @feature author 15/01/2025 Create render object with optional thing config directory
 
 	/*
 	** query if there is a render object with the specified name

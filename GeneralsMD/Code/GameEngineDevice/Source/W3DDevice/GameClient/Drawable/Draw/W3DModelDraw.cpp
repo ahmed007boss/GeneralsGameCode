@@ -566,7 +566,7 @@ static Bool doSingleBoneName(RenderObjClass* robj, const AsciiString& boneName, 
 }
 
 //-------------------------------------------------------------------------------------------------
-void ModelConditionInfo::validateStuff(RenderObjClass* robj, Real scale, const std::vector<AsciiString>& extraPublicBones) const
+void ModelConditionInfo::validateStuff(RenderObjClass* robj, Real scale, const std::vector<AsciiString>& extraPublicBones, const char* thingConfigDirectory) const
 {
 // srj sez: hm, this doesn't make sense; I think we really do need to validate transition states.
 //	if (m_transition != NO_TRANSITION)
@@ -581,13 +581,13 @@ void ModelConditionInfo::validateStuff(RenderObjClass* robj, Real scale, const s
 		}
 		m_validStuff |= PUBLIC_BONES_VALID;
 	}
-	validateCachedBones(robj, scale);
+	validateCachedBones(robj, scale, thingConfigDirectory);
 	validateTurretInfo();
 	validateWeaponBarrelInfo();
 }
 
 //-------------------------------------------------------------------------------------------------
-void ModelConditionInfo::validateCachedBones(RenderObjClass* robj, Real scale) const
+void ModelConditionInfo::validateCachedBones(RenderObjClass* robj, Real scale, const char* thingConfigDirectory) const
 {
 	//DEBUG_ASSERTCRASH(isValidTimeToCalcLogicStuff(), ("calling validateCachedBones() from in GameClient!"));
 	if (m_validStuff & PRISTINE_BONES_VALID)
@@ -620,7 +620,7 @@ void ModelConditionInfo::validateCachedBones(RenderObjClass* robj, Real scale) c
 			return;
 		}
 
-		robj = W3DDisplay::m_assetManager->Create_Render_Obj(m_modelName.str(), scale, 0);
+		robj = W3DDisplay::m_assetManager->Create_Render_Obj(m_modelName.str(), scale, 0, thingConfigDirectory, NULL, NULL);
 		DEBUG_ASSERTCRASH(robj, ("*** ASSET ERROR: Model %s not found!",m_modelName.str()));
 		if (!robj)
 		{
@@ -1046,7 +1046,7 @@ W3DModelDrawModuleData::W3DModelDrawModuleData() :
 }
 
 //-------------------------------------------------------------------------------------------------
-void W3DModelDrawModuleData::validateStuffForTimeAndWeather(const Drawable* draw, Bool night, Bool snowy) const
+void W3DModelDrawModuleData::validateStuffForTimeAndWeather(const Drawable* draw, Bool night, Bool snowy, const char* thingConfigDirectory) const
 {
 	if (!isValidTimeToCalcLogicStuff())
 		return;
@@ -1080,7 +1080,7 @@ void W3DModelDrawModuleData::validateStuffForTimeAndWeather(const Drawable* draw
 		if (!c_it->matchesMode(false, false) && !c_it->matchesMode(night, snowy))
 			continue;
 
-		c_it->validateStuff(NULL, draw->getScale(), m_extraPublicBones);
+		c_it->validateStuff(NULL, draw->getScale(), m_extraPublicBones, thingConfigDirectory);
 	}
 
 	for (TransitionMap::iterator t_it = m_transitionMap.begin(); t_it != m_transitionMap.end(); ++t_it)
@@ -1109,7 +1109,7 @@ void W3DModelDrawModuleData::validateStuffForTimeAndWeather(const Drawable* draw
 			//it->addPublicBone(m_extraPublicBones);
 
 		// srj sez: hm, this doesn't make sense; I think we really do need to validate transition states.
-			t_it->second.validateStuff(NULL, draw->getScale(), m_extraPublicBones);
+			t_it->second.validateStuff(NULL, draw->getScale(), m_extraPublicBones, thingConfigDirectory);
 		}
 	}
 }
@@ -1742,10 +1742,15 @@ W3DModelDraw::W3DModelDraw(Thing *thing, const ModuleData* moduleData) : DrawMod
 	m_needRecalcBoneParticleSystems = false;
 	m_fullyObscuredByShroud = false;
 
+	// TheSuperHackers @feature author 15/01/2025 Extract thing config directory from INI file path in constructor
+	extractIniDirectory();
+	const char* thingConfigDir = !m_iniDirectory.isEmpty() ? m_iniDirectory.str() : NULL;
+
 	// only validate the current time-of-day and weather conditions by default.
 	getW3DModelDrawModuleData()->validateStuffForTimeAndWeather(getDrawable(),
 											TheGlobalData->m_timeOfDay == TIME_OF_DAY_NIGHT,
-											TheGlobalData->m_weather == WEATHER_SNOWY);
+											TheGlobalData->m_weather == WEATHER_SNOWY,
+											thingConfigDir);
 
 	ModelConditionFlags emptyFlags;
 	const ModelConditionInfo* info = findBestInfo(emptyFlags);
@@ -1786,12 +1791,51 @@ W3DModelDraw::W3DModelDraw(Thing *thing, const ModuleData* moduleData) : DrawMod
 }
 
 //-------------------------------------------------------------------------------------------------
+// TheSuperHackers @feature author 15/01/2025 Extract directory from INI file path
+//-------------------------------------------------------------------------------------------------
+	void W3DModelDraw::extractIniDirectory()
+	{
+		m_iniDirectory.clear();
+
+		Drawable* draw = getDrawable();
+		if (draw)
+		{
+			const ThingTemplate* thingTemplate = draw->getTemplate();
+			if (thingTemplate)
+			{
+				AsciiString iniPath = thingTemplate->getIniFilePath();
+				
+				if (!iniPath.isEmpty())
+				{
+					// Find the last slash or backslash to determine directory
+					const char* lastSlash = iniPath.reverseFind('\\');
+					if (lastSlash == NULL)
+						lastSlash = iniPath.reverseFind('/');
+					
+					if (lastSlash != NULL)
+					{
+						// Calculate the length of the directory part
+						Int dirLength = (Int)(lastSlash - iniPath.str()) + 1;
+					// Create substring by copying the directory part
+					m_iniDirectory.set(iniPath.str(), dirLength);
+					}
+				}
+			}
+		}
+	}
+
+//-------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------
 void W3DModelDraw::onDrawableBoundToObject(void)
 {
+	// TheSuperHackers @feature author 15/01/2025 Extract thing config directory from INI file path
+	extractIniDirectory();
+	const char* thingConfigDir = !m_iniDirectory.isEmpty() ? m_iniDirectory.str() : NULL;
+
 	getW3DModelDrawModuleData()->validateStuffForTimeAndWeather(getDrawable(),
 											TheGlobalData->m_timeOfDay == TIME_OF_DAY_NIGHT,
-											TheGlobalData->m_weather == WEATHER_SNOWY);
+											TheGlobalData->m_weather == WEATHER_SNOWY,
+											thingConfigDir);
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -3020,6 +3064,12 @@ void W3DModelDraw::setModelState(const ModelConditionInfo* newState)
 	// and always hide muzzle flashes, in case modelstate and model have crossed at the same time
 	hideAllMuzzleFlashes(newState, m_renderObject);
 
+	// TheSuperHackers @feature author 15/01/2025 Use thing config directory from INI file path
+	// Extract INI directory just before we need it
+	extractIniDirectory();
+	// Always use the 6-parameter version to avoid ambiguity
+	const char* thingConfigDir = !m_iniDirectory.isEmpty() ? m_iniDirectory.str() : NULL;
+
 	// note that different states might use the same model; for these, don't go thru the
 	// expense of creating a new render-object. (exception: if color is changing, or subobjs are changing,
 	// or a few other things...)
@@ -3043,14 +3093,14 @@ void W3DModelDraw::setModelState(const ModelConditionInfo* newState)
 		}
 		else
 		{
-			m_renderObject = W3DDisplay::m_assetManager->Create_Render_Obj(newState->m_modelName.str(), draw->getScale(), m_hexColor);
+		m_renderObject = W3DDisplay::m_assetManager->Create_Render_Obj(newState->m_modelName.str(), draw->getScale(), m_hexColor, thingConfigDir, NULL, NULL);
 			DEBUG_ASSERTCRASH(m_renderObject, ("*** ASSET ERROR: Model %s not found!",newState->m_modelName.str()));
 		}
 
 		//BONEPOS_LOG(("validateStuff() from within W3DModelDraw::setModelState()"));
 		//BONEPOS_DUMPREAL(draw->getScale());
 
-		newState->validateStuff(m_renderObject, draw->getScale(), getW3DModelDrawModuleData()->m_extraPublicBones);
+		newState->validateStuff(m_renderObject, draw->getScale(), getW3DModelDrawModuleData()->m_extraPublicBones, thingConfigDir);
 		// ensure that any muzzle flashes from the *new* state, start out hidden...
 //		hideAllMuzzleFlashes(newState, m_renderObject);//moved to above
 		rebuildWeaponRecoilInfo(newState);
@@ -3176,7 +3226,7 @@ void W3DModelDraw::setModelState(const ModelConditionInfo* newState)
 		//BONEPOS_LOG(("validateStuff() from within W3DModelDraw::setModelState()"));
 		//BONEPOS_DUMPREAL(getDrawable()->getScale());
 
-		newState->validateStuff(m_renderObject, getDrawable()->getScale(), getW3DModelDrawModuleData()->m_extraPublicBones);
+		newState->validateStuff(m_renderObject, getDrawable()->getScale(), getW3DModelDrawModuleData()->m_extraPublicBones, thingConfigDir);
 		rebuildWeaponRecoilInfo(newState);
 
 		// ensure that any muzzle flashes from the *previous* state, are hidden...
@@ -3309,7 +3359,7 @@ Bool W3DModelDraw::getProjectileLaunchOffset(
 	//DUMPREAL(getDrawable()->getScale());
 	//BONEPOS_LOG(("validateStuffs() from within W3DModelDraw::getProjectileLaunchOffset()"));
 	//BONEPOS_DUMPREAL(getDrawable()->getScale());
-	stateToUse->validateStuff(NULL, getDrawable()->getScale(), d->m_extraPublicBones);
+	stateToUse->validateStuff(NULL, getDrawable()->getScale(), d->m_extraPublicBones, NULL);
 
 	DEBUG_ASSERTCRASH(stateToUse->m_transitionSig == NO_TRANSITION,
 		("It is never legal to getProjectileLaunchOffset from a Transition state (they vary on a per-client basis)... however, we can fix this (see srj)\n"));
@@ -3447,7 +3497,8 @@ Int W3DModelDraw::getPristineBonePositionsForConditionState(
 		// so that we don't have to re-create it!
 		stateToUse == m_curState ? m_renderObject : NULL,
 		getDrawable()->getScale(),
-		getW3DModelDrawModuleData()->m_extraPublicBones);
+		getW3DModelDrawModuleData()->m_extraPublicBones,
+		NULL);
 
 	const int MAX_BONE_GET = 64;
 	Matrix3D tmpMtx[MAX_BONE_GET];
