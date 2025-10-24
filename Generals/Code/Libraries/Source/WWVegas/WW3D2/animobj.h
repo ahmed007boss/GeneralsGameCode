@@ -38,9 +38,7 @@
  *   Animatable3DObjClass::Combo_Update -- Animation update for a combination of anims         *
  * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
-#if defined(_MSC_VER)
 #pragma once
-#endif
 
 #ifndef ANIMOBJ_H
 #define ANIMOBJ_H
@@ -190,6 +188,7 @@ protected:
 			float		  				Frame;
 			float						PrevFrame;
 			int						AnimMode;
+			int								LastSyncTime;
 			float							animDirection;
 			float							frameRateMultiplier;	// 020607 srj -- added
 		} ModeAnim;

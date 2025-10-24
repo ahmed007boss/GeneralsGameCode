@@ -49,7 +49,7 @@ static void changePlayerCommon(Player* player)
 
 } // namespace detail
 
-Bool localPlayerIsObserving()
+bool localPlayerIsObserving()
 {
 	if (TheGameLogic->isInReplayGame() || TheGameLogic->isInShellGame())
 		return true;
@@ -60,17 +60,63 @@ Bool localPlayerIsObserving()
 	return false;
 }
 
+bool localPlayerHasRadar()
+{
+	// Using "local" instead of "observed or local" player because as an observer we prefer
+	// the radar to be turned on when observing a player that has no radar.
+	const Player* player = ThePlayerList->getLocalPlayer();
+	const PlayerIndex index = player->getPlayerIndex();
+
+	if (TheRadar->isRadarForced(index))
+		return true;
+
+	if (!TheRadar->isRadarHidden(index) && player->hasRadar())
+		return true;
+
+	return false;
+}
+
 Player* getObservedOrLocalPlayer()
 {
+	DEBUG_ASSERTCRASH(TheControlBar != NULL, ("TheControlBar is NULL"));
 	Player* player = TheControlBar->getObservedPlayer();
 	if (player == NULL)
+	{
+		DEBUG_ASSERTCRASH(ThePlayerList != NULL, ("ThePlayerList is NULL"));
 		player = ThePlayerList->getLocalPlayer();
+	}
 	return player;
+}
+
+Player* getObservedOrLocalPlayer_Safe()
+{
+	Player* player = NULL;
+
+	if (TheControlBar != NULL)
+		player = TheControlBar->getObservedPlayer();
+
+	if (player == NULL)
+		if (ThePlayerList != NULL)
+			player = ThePlayerList->getLocalPlayer();
+
+	return player;
+}
+
+PlayerIndex getObservedOrLocalPlayerIndex_Safe()
+{
+	if (Player* player = getObservedOrLocalPlayer_Safe())
+		return player->getPlayerIndex();
+
+	return 0;
 }
 
 void changeLocalPlayer(Player* player)
 {
+	DEBUG_ASSERTCRASH(player != NULL, ("Player is NULL"));
+
 	ThePlayerList->setLocalPlayer(player);
+	TheControlBar->setObserverLookAtPlayer(NULL);
+	TheControlBar->setObservedPlayer(NULL);
 	TheControlBar->setControlBarSchemeByPlayer(player);
 	TheControlBar->initSpecialPowershortcutBar(player);
 
@@ -87,7 +133,11 @@ void changeObservedPlayer(Player* player)
 	if (canBeginObservePlayer || canEndObservePlayer)
 	{
 		TheControlBar->setObservedPlayer(player);
-		detail::changePlayerCommon(player);
+
+		Player *becomePlayer = player;
+		if (becomePlayer == NULL)
+			becomePlayer = ThePlayerList->findPlayerWithNameKey(TheNameKeyGenerator->nameToKey("ReplayObserver"));
+		detail::changePlayerCommon(becomePlayer);
 	}
 }
 
