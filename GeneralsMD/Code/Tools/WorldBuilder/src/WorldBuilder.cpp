@@ -90,7 +90,14 @@ template<class SUBSYSTEM>
 void initSubsystem(SUBSYSTEM*& sysref, SUBSYSTEM* sys, const char* path1 = NULL, const char* path2 = NULL, const char* objectFolderFileExtension = NULL)
 {
 	sysref = sys;
-	TheSubsystemListRecord.initSubsystem(sys, path1, path2, NULL, objectFolderFileExtension);
+	TheSubsystemListRecord.initSubsystem(sys, path1, path2, NULL, NULL, objectFolderFileExtension);
+}
+
+template<class SUBSYSTEM>
+void initSubsystem(SUBSYSTEM*& sysref, SUBSYSTEM* sys, const char* path1, const char* path2, const AsciiStringVec& objectFolderFileExtensions)
+{
+	sysref = sys;
+	TheSubsystemListRecord.initSubsystem(sys, path1, path2, NULL, NULL, objectFolderFileExtensions);
 }
 
 
@@ -414,11 +421,11 @@ BOOL CWorldBuilderApp::InitInstance()
 	initSubsystem(TheParticleSystemManager, (ParticleSystemManager*)(new W3DParticleSystemManager()));
 	initSubsystem(TheFXListStore, new FXListStore(), "Data\\INI\\Default\\FXList", "Data\\INI\\FXList", "FXList.ini");
 	initSubsystem(TheWeaponStore, new WeaponStore(), NULL, "Data\\INI\\Weapon", "Weapon.ini");
-	initSubsystem(TheObjectCreationListStore, new ObjectCreationListStore(), "Data\\INI\\Default\\ObjectCreationList", "Data\\INI\\ObjectCreationList", "OCL.ini");
+	initSubsystem(TheObjectCreationListStore, new ObjectCreationListStore(), "Data\\INI\\Default\\ObjectCreationList", "Data\\INI\\ObjectCreationList", SubsystemInterfaceList::createExtensions("OCL.ini", "ObjectCreationList.ini"));
 	initSubsystem(TheLocomotorStore, new LocomotorStore(), NULL, "Data\\INI\\Locomotor", "Locomotor.ini");
 	initSubsystem(TheDamageFXStore, new DamageFXStore(), NULL, "Data\\INI\\DamageFX", "DamageFX.ini");
 	initSubsystem(TheArmorStore, new ArmorStore(), NULL, "Data\\INI\\Armor");
-	initSubsystem(TheThingFactory, new ThingFactory(), "Data\\INI\\Default\\Object", "Data\\INI\\Object", "Object.ini");
+	initSubsystem(TheThingFactory, new ThingFactory(), "Data\\INI\\Default\\Object", "Data\\INI\\Object", SubsystemInterfaceList::createExtensions("Object.ini", "Ammo.ini", "HelperObject.ini"));
 	initSubsystem(TheCrateSystem, new CrateSystem(), "Data\\INI\\Default\\Crate", "Data\\INI\\Crate", "Crate.ini");
 	initSubsystem(TheUpgradeCenter, new UpgradeCenter, "Data\\INI\\Default\\Upgrade", "Data\\INI\\Upgrade", "Upgrade.ini");
 	initSubsystem(TheAnim2DCollection, new Anim2DCollection ); //Init's itself.
