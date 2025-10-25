@@ -133,7 +133,7 @@ void ArchiveFileSystem::loadIntoDirectoryTree(ArchiveFile *archiveFile, Bool ove
 		AsciiString tokenizer = *it;
 		tokenizer.toLower();
 		Bool infoInPath = tokenizer.nextToken(&token, "\\/");
-.
+
 		while (infoInPath && (!token.find('.') || tokenizer.find('.')))
 		{
 			path.concat(token);
