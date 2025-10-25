@@ -184,12 +184,18 @@ void AsciiString::releaseBuffer()
 	ScopedCriticalSection scopedCriticalSection(TheAsciiStringCriticalSection);
 
 	validate();
-	if (m_data)
+	if (m_data && m_data != (AsciiStringData*)0x40400000)
 	{
 		if (--m_data->m_refCount == 0)
 		{
 			TheDynamicMemoryAllocator->freeBytes(m_data);
 		}
+		m_data = 0;
+	}
+	else if (m_data == (AsciiStringData*)0x40400000)
+	{
+		// TheSuperHackers @bugfix 20/08/2025 Prevent crash from corrupted AsciiString memory
+		DEBUG_LOG(("AsciiString corruption detected (0x40400000), skipping release"));
 		m_data = 0;
 	}
 	validate();

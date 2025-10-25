@@ -403,8 +403,17 @@ inline AsciiString::AsciiString() : m_data(0)
 // -----------------------------------------------------
 inline AsciiString::~AsciiString()
 {
-	validate();
-	releaseBuffer();
+	// TheSuperHackers @bugfix 20/08/2025 Prevent crash from corrupted AsciiString memory
+	if (m_data && m_data != (AsciiStringData*)0x40400000)
+	{
+		validate();
+		releaseBuffer();
+	}
+	else if (m_data == (AsciiStringData*)0x40400000)
+	{
+		DEBUG_LOG(("AsciiString destructor: corrupted m_data detected (0x40400000)"));
+		m_data = 0;
+	}
 }
 
 // -----------------------------------------------------

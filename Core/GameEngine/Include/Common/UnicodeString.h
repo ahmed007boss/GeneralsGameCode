@@ -358,8 +358,17 @@ inline UnicodeString::UnicodeString() : m_data(0)
 // -----------------------------------------------------
 inline UnicodeString::~UnicodeString()
 {
-	validate();
-	releaseBuffer();
+	// TheSuperHackers @bugfix 20/08/2025 Prevent crash from corrupted UnicodeString memory
+	if (m_data && m_data != (UnicodeStringData*)0x40400000)
+	{
+		validate();
+		releaseBuffer();
+	}
+	else if (m_data == (UnicodeStringData*)0x40400000)
+	{
+		DEBUG_LOG(("UnicodeString destructor: corrupted m_data detected (0x40400000)"));
+		m_data = 0;
+	}
 }
 
 // -----------------------------------------------------
