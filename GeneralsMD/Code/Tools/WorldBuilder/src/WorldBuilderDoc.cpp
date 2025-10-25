@@ -483,6 +483,38 @@ AsciiString ConvertFaction(AsciiString name)
 	return AsciiString::TheEmptyString;
 }
 
+AsciiString ConvertFactionRussia(AsciiString name)
+{
+	char oldName[256];
+	char newName[256];
+	strcpy(oldName, name.str());
+	strcpy(newName, "FactionRussia");
+	strlcat(newName, oldName+strlen("FactionRussia"), ARRAY_SIZE(newName));
+	AsciiString swapName;
+	swapName.set(newName);
+	const PlayerTemplate* pt = ThePlayerTemplateStore->findPlayerTemplate(NAMEKEY(swapName));
+	if (pt) {
+		return swapName;
+	}
+	return AsciiString::TheEmptyString;
+}
+
+AsciiString ConvertFactionNATO(AsciiString name)
+{
+	char oldName[256];
+	char newName[256];
+	strcpy(oldName, name.str());
+	strcpy(newName, "FactionNATO");
+	strlcat(newName, oldName+strlen("FactionNATO"), ARRAY_SIZE(newName));
+	AsciiString swapName;
+	swapName.set(newName);
+	const PlayerTemplate* pt = ThePlayerTemplateStore->findPlayerTemplate(NAMEKEY(swapName));
+	if (pt) {
+		return swapName;
+	}
+	return AsciiString::TheEmptyString;
+}
+
 void CWorldBuilderDoc::validate(void)
 {
 	DEBUG_LOG(("Validating"));
@@ -507,6 +539,20 @@ void CWorldBuilderDoc::validate(void)
 			DEBUG_LOG(("Player '%s' Faction '%s' could not be found in sides list!", playername.str(), tmplname.str()));
 			if (tmplname.startsWith("FactionFundamentalist")) {
 				swapName = ConvertFaction(tmplname);
+				if (swapName != AsciiString::TheEmptyString) {
+					DEBUG_LOG(("Changing Faction from %s to %s", tmplname.str(), swapName.str()));
+					pSide->getDict()->setAsciiString(TheKey_playerFaction, swapName);
+				}
+			}
+			else if (tmplname.startsWith("FactionRussia")) {
+				swapName = ConvertFactionRussia(tmplname);
+				if (swapName != AsciiString::TheEmptyString) {
+					DEBUG_LOG(("Changing Faction from %s to %s", tmplname.str(), swapName.str()));
+					pSide->getDict()->setAsciiString(TheKey_playerFaction, swapName);
+				}
+			}
+			else if (tmplname.startsWith("FactionNATO")) {
+				swapName = ConvertFactionNATO(tmplname);
 				if (swapName != AsciiString::TheEmptyString) {
 					DEBUG_LOG(("Changing Faction from %s to %s", tmplname.str(), swapName.str()));
 					pSide->getDict()->setAsciiString(TheKey_playerFaction, swapName);
@@ -645,6 +691,20 @@ void CWorldBuilderDoc::validate(void)
 						DEBUG_LOG(("Player '%s' Faction '%s' could not be found in sides list!", playername.str(), tmplname.str()));
 						if (tmplname.startsWith("FactionFundamentalist")) {
 							swapName = ConvertFaction(tmplname);
+							if (swapName != AsciiString::TheEmptyString) {
+								DEBUG_LOG(("Changing Faction from %s to %s", tmplname.str(), swapName.str()));
+								pSide->getDict()->setAsciiString(TheKey_playerFaction, swapName);
+							}
+						}
+						else if (tmplname.startsWith("FactionRussia")) {
+							swapName = ConvertFactionRussia(tmplname);
+							if (swapName != AsciiString::TheEmptyString) {
+								DEBUG_LOG(("Changing Faction from %s to %s", tmplname.str(), swapName.str()));
+								pSide->getDict()->setAsciiString(TheKey_playerFaction, swapName);
+							}
+						}
+						else if (tmplname.startsWith("FactionNATO")) {
+							swapName = ConvertFactionNATO(tmplname);
 							if (swapName != AsciiString::TheEmptyString) {
 								DEBUG_LOG(("Changing Faction from %s to %s", tmplname.str(), swapName.str()));
 								pSide->getDict()->setAsciiString(TheKey_playerFaction, swapName);

@@ -320,12 +320,28 @@ const PlayerTemplate* PlayerTemplateStore::findPlayerTemplate(NameKeyType nameke
 	static NameKeyType g3 = NAMEKEY("FactionGLABiowarCommand");
 	static NameKeyType g4 = NAMEKEY("FactionGLAWarlordCommand");
 
+	static NameKeyType r0 = NAMEKEY("FactionRussia");
+	static NameKeyType r1 = NAMEKEY("FactionRussiaTankGeneral");
+	static NameKeyType r2 = NAMEKEY("FactionRussiaWinterGeneral");
+	static NameKeyType r3 = NAMEKEY("FactionRussiaSpetsnazGeneral");
+	static NameKeyType r4 = NAMEKEY("FactionRussiaDefenseGeneral");
+
+	static NameKeyType n0 = NAMEKEY("FactionNATO");
+	static NameKeyType n1 = NAMEKEY("FactionNATOSpecialForcesGeneral");
+	static NameKeyType n2 = NAMEKEY("FactionNATOAllianceGeneral");
+	static NameKeyType n3 = NAMEKEY("FactionNATOTechnologyGeneral");
+	static NameKeyType n4 = NAMEKEY("FactionNATOCoalitionGeneral");
+
 	if (namekey == a1 || namekey == a2 || namekey == a3 || namekey == a4)
 		namekey = a0;
 	else if (namekey == c1 || namekey == c2 || namekey == c3 || namekey == c4)
 		namekey = c0;
 	else if (namekey == g1 || namekey == g2 || namekey == g3 || namekey == g4)
 		namekey = g0;
+	else if (namekey == r1 || namekey == r2 || namekey == r3 || namekey == r4)
+		namekey = r0;
+	else if (namekey == n1 || namekey == n2 || namekey == n3 || namekey == n4)
+		namekey = n0;
 // end ugly, hokey code to quietly load old maps...
 
 	#ifdef RTS_DEBUG

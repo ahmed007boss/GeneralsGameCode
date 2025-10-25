@@ -876,15 +876,42 @@ void PlayerListDlg::OnAddskirmishplayers()
 	addSide(&m_sides, "FactionAmerica", "SkirmishAmerica", L"SkirmishAmerica");
 	addSide(&m_sides, "FactionChina", "SkirmishChina", L"SkirmishChina");
 	addSide(&m_sides, "FactionGLA", "SkirmishGLA", L"SkirmishGLA");
+	addSide(&m_sides, "FactionNATO", "SkirmishNATO", L"SkirmishNATO");
+	addSide(&m_sides, "FactionRussia", "SkirmishRussia", L"SkirmishRussia");
 
+	// America Generals (5 total)
 	addSide(&m_sides, "FactionAmericaAirForceGeneral", "SkirmishAmericaAirForceGeneral", L"SkirmishAmericaAirForceGeneral");
 	addSide(&m_sides, "FactionAmericaLaserGeneral", "SkirmishAmericaLaserGeneral", L"SkirmishAmericaLaserGeneral");
 	addSide(&m_sides, "FactionAmericaSuperWeaponGeneral", "SkirmishAmericaSuperWeaponGeneral", L"SkirmishAmericaSuperWeaponGeneral");
+	addSide(&m_sides, "FactionAmericaMarineGeneral", "SkirmishAmericaMarineGeneral", L"SkirmishAmericaMarineGeneral");
+	addSide(&m_sides, "FactionAmericaSpaceGeneral", "SkirmishAmericaSpaceGeneral", L"SkirmishAmericaSpaceGeneral");
+
+	// China Generals (5 total)
 	addSide(&m_sides, "FactionChinaTankGeneral", "SkirmishChinaTankGeneral", L"SkirmishChinaTankGeneral");
 	addSide(&m_sides, "FactionChinaNukeGeneral", "SkirmishChinaNukeGeneral", L"SkirmishChinaNukeGeneral");
 	addSide(&m_sides, "FactionChinaInfantryGeneral", "SkirmishChinaInfantryGeneral", L"SkirmishChinaInfantryGeneral");
+	addSide(&m_sides, "FactionChinaArtilleryGeneral", "SkirmishChinaArtilleryGeneral", L"SkirmishChinaArtilleryGeneral");
+	addSide(&m_sides, "FactionChinaCyberGeneral", "SkirmishChinaCyberGeneral", L"SkirmishChinaCyberGeneral");
+
+	// GLA Generals (5 total)
 	addSide(&m_sides, "FactionGLADemolitionGeneral", "SkirmishGLADemolitionGeneral", L"SkirmishGLADemolitionGeneral");
 	addSide(&m_sides, "FactionGLAToxinGeneral", "SkirmishGLAToxinGeneral", L"SkirmishGLAToxinGeneral");
 	addSide(&m_sides, "FactionGLAStealthGeneral", "SkirmishGLAStealthGeneral", L"SkirmishGLAStealthGeneral");
+	addSide(&m_sides, "FactionGLARocketGeneral", "SkirmishGLARocketGeneral", L"SkirmishGLARocketGeneral");
+	addSide(&m_sides, "FactionGLABiochemicalGeneral", "SkirmishGLABiochemicalGeneral", L"SkirmishGLABiochemicalGeneral");
+
+	// Russia Faction (5 generals)
+	addSide(&m_sides, "FactionRussiaTankGeneral", "SkirmishRussiaTankGeneral", L"SkirmishRussiaTankGeneral");
+	addSide(&m_sides, "FactionRussiaWinterGeneral", "SkirmishRussiaWinterGeneral", L"SkirmishRussiaWinterGeneral");
+	addSide(&m_sides, "FactionRussiaSpetsnazGeneral", "SkirmishRussiaSpetsnazGeneral", L"SkirmishRussiaSpetsnazGeneral");
+	addSide(&m_sides, "FactionRussiaDefenseGeneral", "SkirmishRussiaDefenseGeneral", L"SkirmishRussiaDefenseGeneral");
+	addSide(&m_sides, "FactionRussiaMissileGeneral", "SkirmishRussiaMissileGeneral", L"SkirmishRussiaMissileGeneral");
+
+	// NATO Faction (5 generals)
+	addSide(&m_sides, "FactionNATOSpecialForcesGeneral", "SkirmishNATOSpecialForcesGeneral", L"SkirmishNATOSpecialForcesGeneral");
+	addSide(&m_sides, "FactionNATOAllianceGeneral", "SkirmishNATOAllianceGeneral", L"SkirmishNATOAllianceGeneral");
+	addSide(&m_sides, "FactionNATOTechnologyGeneral", "SkirmishNATOTechnologyGeneral", L"SkirmishNATOTechnologyGeneral");
+	addSide(&m_sides, "FactionNATOCoalitionGeneral", "SkirmishNATOCoalitionGeneral", L"SkirmishNATOCoalitionGeneral");
+	addSide(&m_sides, "FactionNATOMultinationalGeneral", "SkirmishNATOMultinationalGeneral", L"SkirmishNATOMultinationalGeneral");
 	updateTheUI();
 }
