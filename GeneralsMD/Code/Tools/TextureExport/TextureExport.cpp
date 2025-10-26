@@ -337,15 +337,28 @@ bool CopyTextureFile(const string& textureName, const vector<string>& sourceDirs
     
     // Search in all source directories
     for (const string& sourceDir : sourceDirs) {
+        // Get base filename without extension
+        string baseName = textureName;
+        size_t lastDot = baseName.find_last_of('.');
+        if (lastDot != string::npos) {
+            baseName = baseName.substr(0, lastDot);
+        }
+        
+        // Try different file extensions
+        vector<string> extensions = {".tga", ".dds", ".bmp", ".jpg", ".jpeg", ".png"};
+        
         // Try different possible paths for the texture in this directory
-        vector<string> possiblePaths = {
-            sourceDir + "\\" + textureName,
-            sourceDir + "\\" + textureName.substr(textureName.find_last_of("\\/") + 1), // just filename
-            sourceDir + "\\Textures\\" + textureName,
-            sourceDir + "\\Textures\\" + textureName.substr(textureName.find_last_of("\\/") + 1),
-            sourceDir + "\\Art\\" + textureName,
-            sourceDir + "\\Art\\" + textureName.substr(textureName.find_last_of("\\/") + 1)
-        };
+        vector<string> possiblePaths;
+        
+        // Get just the filename (without path)
+        string fileName = textureName.substr(textureName.find_last_of("\\/") + 1);
+        
+        // Add original texture name with different extensions
+        for (const string& ext : extensions) {
+            string altName = baseName + ext;
+            possiblePaths.push_back(sourceDir + "\\" + altName);
+            possiblePaths.push_back(sourceDir + "\\Art\\Textures\\" + altName);
+        }
         
         // Find the source file in this directory
         for (const string& path : possiblePaths) {
@@ -370,12 +383,27 @@ bool CopyTextureFile(const string& textureName, const vector<string>& sourceDirs
         return false;
     }
     
+    // Debug: Show where the file was found
+    COLOR_GREEN;
+    cout << "FOUND AT: " << sourcePath << endl;
+    COLOR_RESET;
+    
+    // Show if we found a different extension than requested
+    string foundExt = sourcePath.substr(sourcePath.find_last_of('.'));
+    string requestedExt = textureName.substr(textureName.find_last_of('.'));
+    if (foundExt != requestedExt) {
+        COLOR_YELLOW;
+        cout << "NOTE: Found " << foundExt << " instead of " << requestedExt << endl;
+        COLOR_RESET;
+    }
+    
     // Ensure destination directory exists
     string cmd = "mkdir \"" + destDir + "\" 2>nul";
     system(cmd.c_str());
     
-    // Create destination directory if it doesn't exist
-    string destPath = destDir + "\\" + textureName.substr(textureName.find_last_of("\\/") + 1);
+    // Create destination path using the actual found file's extension
+    string foundFileName = sourcePath.substr(sourcePath.find_last_of("\\/") + 1);
+    string destPath = destDir + "\\" + foundFileName;
     
     // Check if destination file already exists
     ifstream testFile(destPath);
@@ -407,12 +435,12 @@ bool CopyTextureFile(const string& textureName, const vector<string>& sourceDirs
                 break;
             case 'r': // Rename
                 {
-                    string baseName = textureName.substr(0, textureName.find_last_of('.'));
-                    string extension = textureName.substr(textureName.find_last_of('.'));
+                    string foundBaseName = foundFileName.substr(0, foundFileName.find_last_of('.'));
+                    string foundExtension = foundFileName.substr(foundFileName.find_last_of('.'));
                     int counter = 1;
                     string newDestPath;
                     do {
-                        newDestPath = destDir + "\\" + baseName + "_" + to_string(counter) + extension;
+                        newDestPath = destDir + "\\" + foundBaseName + "_" + to_string(counter) + foundExtension;
                         counter++;
                         ifstream testFile(newDestPath);
                         bool exists = testFile.is_open();
@@ -444,6 +472,8 @@ bool CopyTextureFile(const string& textureName, const vector<string>& sourceDirs
     }
     
     // Copy file
+    cout << "DEBUG: Attempting to copy from " << sourcePath << " to " << destPath << endl;
+    
     ifstream src(sourcePath, ios::binary);
     ofstream dst(destPath, ios::binary);
     
@@ -538,7 +568,7 @@ bool ProcessW3DFile(const string& w3dFile, const vector<string>& sourceDirs, con
     
     for (const string& textureName : textureNames) {
         COLOR_CYAN;
-        cout << "FOUND: " << textureName << endl;
+        cout << "EXTRACTED: " << textureName << endl;
         COLOR_RESET;
         
         if (CopyTextureFile(textureName, sourceDirs, destDir, skipAllConflicts)) {
