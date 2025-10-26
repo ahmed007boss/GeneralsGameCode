@@ -58,6 +58,7 @@
 #include "meshmatdesc.h"
 #include "texturethumbnail.h"
 #include "wwprofile.h"
+#include <windows.h>  // TheSuperHackers @feature author 15/01/2025 For _MAX_PATH
 
 const unsigned DEFAULT_INACTIVATION_TIME=20000;
 
@@ -70,6 +71,28 @@ static unsigned unused_texture_id;
 // This throttles submissions to the background texture loading queue.
 static unsigned TexturesAppliedPerFrame;
 const unsigned MAX_TEXTURES_APPLIED_PER_FRAME=2;
+
+// TheSuperHackers @feature author 15/01/2025 Global variable to store current thing config directory for texture loading
+static char g_currentThingConfigDirectory[_MAX_PATH] = {0};
+
+// TheSuperHackers @feature author 15/01/2025 Function to set the current thing config directory
+void Set_Current_Thing_Config_Directory(const char* thingConfigDirectory)
+{
+	if (thingConfigDirectory && strlen(thingConfigDirectory) > 0)
+	{
+		strncpy_s(g_currentThingConfigDirectory, _MAX_PATH, thingConfigDirectory, _TRUNCATE);
+	}
+	else
+	{
+		g_currentThingConfigDirectory[0] = 0;
+	}
+}
+
+// TheSuperHackers @feature author 15/01/2025 Function to get the current thing config directory
+const char* Get_Current_Thing_Config_Directory(void)
+{
+	return (g_currentThingConfigDirectory[0] != 0) ? g_currentThingConfigDirectory : NULL;
+}
 
 
 /*!
@@ -1045,7 +1068,7 @@ unsigned TextureClass::Get_Texture_Memory_Usage() const
 
 
 // Utility functions
-TextureClass* Load_Texture(ChunkLoadClass & cload)
+TextureClass* Load_Texture(ChunkLoadClass & cload, const char* thingConfigDirectory)
 {
 	// Assume failure
 	TextureClass *newtex = NULL;
@@ -1157,7 +1180,21 @@ TextureClass* Load_Texture(ChunkLoadClass & cload)
 
 		} else
 		{
-			newtex = WW3DAssetManager::Get_Instance()->Get_Texture(name);
+			// TheSuperHackers @feature author 15/01/2025 Use thingConfigDirectory if provided, otherwise use global variable
+			const char* dirToUse = (thingConfigDirectory && strlen(thingConfigDirectory) > 0) ? thingConfigDirectory : 
+								   (g_currentThingConfigDirectory[0] != 0) ? g_currentThingConfigDirectory : NULL;
+			
+			if (dirToUse)
+			{
+				// TheSuperHackers @feature author 15/01/2025 Use directory for texture loading
+				// Note: We need to set the global variable since Get_Texture doesn't take directory parameter
+				Set_Current_Thing_Config_Directory(dirToUse);
+				newtex = WW3DAssetManager::Get_Instance()->Get_Texture(name, MIP_LEVELS_ALL, WW3D_FORMAT_UNKNOWN, true, TextureBaseClass::TEX_REGULAR, true);
+			}
+			else
+			{
+				newtex = WW3DAssetManager::Get_Instance()->Get_Texture(name);
+			}
 		}
 
 		WWASSERT(newtex);

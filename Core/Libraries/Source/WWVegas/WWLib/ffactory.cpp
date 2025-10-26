@@ -67,6 +67,17 @@ file_auto_ptr::file_auto_ptr(FileFactoryClass *fac, const char *filename) :
 	}
 }
 
+// TheSuperHackers @feature author 15/01/2025 Constructor with thing config directory
+file_auto_ptr::file_auto_ptr(FileFactoryClass *fac, const char *filename, const char* thingConfigDirectory) :
+	_Ptr(NULL), _Fac(fac)
+{
+	assert(_Fac);
+	_Ptr=_Fac->Get_File(filename, thingConfigDirectory);
+	if ( _Ptr == NULL ) {
+		_Ptr = W3DNEW BufferedFileClass();
+	}
+}
+
 file_auto_ptr::~file_auto_ptr()
 {
 	_Fac->Return_File(_Ptr);

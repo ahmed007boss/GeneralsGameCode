@@ -76,6 +76,7 @@ class file_auto_ptr
 {
 public:
 	explicit	file_auto_ptr(FileFactoryClass *fac, const char *filename);
+	explicit	file_auto_ptr(FileFactoryClass *fac, const char *filename, const char* thingConfigDirectory); // TheSuperHackers @feature author 15/01/2025 Constructor with thing config directory
 				~file_auto_ptr();
 
 	operator FileClass*(void) const

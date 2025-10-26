@@ -24,6 +24,7 @@
 #include "dx8wrapper.h"
 #include "bitmaphandler.h"
 #include "colorspace.h"
+#include "texture.h"  // TheSuperHackers @feature author 15/01/2025 For Get_Current_Thing_Config_Directory
 #include <string.h>
 #include <ddraw.h>
 
@@ -54,7 +55,10 @@ DDSFileClass::DDSFileClass(const char* name,unsigned reduction_factor)
 	Name[len-2]='d';
 	Name[len-1]='s';
 
-	file_auto_ptr file(_TheFileFactory,Name);
+	// TheSuperHackers @feature author 15/01/2025 Use thing config directory if available
+	const char* thingConfigDir = Get_Current_Thing_Config_Directory();
+	
+	file_auto_ptr file(_TheFileFactory, Name, thingConfigDir);
 	if (!file->Is_Available())
 	{
 		return;
@@ -254,7 +258,10 @@ bool DDSFileClass::Load()
 	if (DDSMemory) return false;
 	if (!LevelSizes || !LevelOffsets) return false;
 
-	file_auto_ptr file(_TheFileFactory,Name);
+	// TheSuperHackers @feature author 15/01/2025 Use thing config directory if available
+	const char* thingConfigDir = Get_Current_Thing_Config_Directory();
+	
+	file_auto_ptr file(_TheFileFactory, Name, thingConfigDir);
 	if (!file->Is_Available())
 	{
 		return false;

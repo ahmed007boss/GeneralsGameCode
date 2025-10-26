@@ -226,7 +226,7 @@ char const * GameFileClass::Set_Name( char const *filename )
 
 	}
 	// We need to be able to grab images from a localization dir, because Art has a fetish for baked-in text.  Munkee.
-	else if( isImageFileType(fileType) )
+	else if(m_fileExists == FALSE && isImageFileType(fileType) )
 	{
 		static const char *localizedPathFormat = "Data/%s/Art/Textures/";
 		sprintf(m_filePath,localizedPathFormat, GetRegistryLanguage().str());

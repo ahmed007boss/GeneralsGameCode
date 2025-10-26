@@ -380,6 +380,9 @@ protected:
 		PROTOTYPE_HASH_MASK =			0x00000FFF
 	};
 
+	// TheSuperHackers @feature author 15/01/2025 Private internal method for loading 3D assets
+	bool									Load_3D_Assets_Internal(FileClass& w3dfile, const char* thingConfigDirectory);
+
 	PrototypeClass * *												PrototypeHashTable;
 
 	/*

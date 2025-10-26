@@ -476,7 +476,13 @@ protected:
 };
 
 // Utility functions for loading and saving texture descriptions from/to W3D files
-TextureClass *Load_Texture(ChunkLoadClass & cload);
+TextureClass *Load_Texture(ChunkLoadClass & cload, const char* thingConfigDirectory = NULL);
 void Save_Texture(TextureClass * texture, ChunkSaveClass & csave);
+
+// TheSuperHackers @feature author 15/01/2025 Function to set the current thing config directory for texture loading
+void Set_Current_Thing_Config_Directory(const char* thingConfigDirectory);
+
+// TheSuperHackers @feature author 15/01/2025 Function to get the current thing config directory for texture loading
+const char* Get_Current_Thing_Config_Directory(void);
 
 #endif //TEXTURE_H
