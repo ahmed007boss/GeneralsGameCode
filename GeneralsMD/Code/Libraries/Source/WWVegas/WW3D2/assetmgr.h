@@ -270,6 +270,18 @@ public:
 		bool allow_reduction=true
 	);
 
+	// TheSuperHackers @feature author 15/01/2025 Get texture with full path for directory-priority loading
+	virtual TextureClass *			Get_Texture
+	(
+		const char * filename,
+		const char * full_path,
+		MipCountType mip_level_count=MIP_LEVELS_ALL,
+		WW3DFormat texture_format=WW3D_FORMAT_UNKNOWN,
+		bool allow_compression=true,
+		TextureBaseClass::TexAssetType type=TextureBaseClass::TEX_REGULAR,
+		bool allow_reduction=true
+	);
+
 	virtual void						Release_All_Textures(void);
 	virtual void						Release_Unused_Textures(void);
 	virtual void						Release_Texture(TextureClass *);

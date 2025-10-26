@@ -2643,7 +2643,33 @@ void W3DDisplay::drawImage( const Image *image, Int startX, Int startY,
 	if( BitIsSet( image->getStatus(), IMAGE_STATUS_RAW_TEXTURE ) )
 		m_2DRender->Set_Texture( (TextureClass *)(image->getRawTextureData()) );
 	else
-		m_2DRender->Set_Texture( image->getFilename().str() );
+	{
+		// TheSuperHackers @feature author 15/01/2025 Try INI directory first, then fallback to default
+		if (image->getIniDirectory().getLength() > 0)
+		{
+			// Construct full path: iniDirectory (already includes Art/UI/) + filename
+			char fullPath[_MAX_PATH];
+			strcpy(fullPath, image->getIniDirectory().str());
+			strcat(fullPath, image->getFilename().str());
+			
+			// Check if file exists at full path before using it
+			if (TheFileSystem->doesFileExist(fullPath))
+			{
+				// File exists in INI directory, use full path
+				m_2DRender->Set_Texture( image->getFilename().str(), fullPath );
+			}
+			else
+			{
+				// File doesn't exist in INI directory, fallback to default behavior
+				m_2DRender->Set_Texture( image->getFilename().str() );
+			}
+		}
+		else
+		{
+			// Fallback to current behavior
+			m_2DRender->Set_Texture( image->getFilename().str() );
+		}
+	}
 
 	RectClass screen_rect(startX,startY,endX,endY);
 	RectClass uv_rect(uv->lo.x,uv->lo.y,uv->hi.x,uv->hi.y);

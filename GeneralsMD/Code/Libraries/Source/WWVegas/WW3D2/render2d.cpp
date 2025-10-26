@@ -139,6 +139,30 @@ void Render2DClass::Set_Texture( const char * filename)
 	}
 }
 
+// TheSuperHackers @feature author 15/01/2025 Directory-priority texture loading
+void Render2DClass::Set_Texture( const char * filename, const char * full_path)
+{
+	TextureClass * tex;
+	
+	// Check if full_path is not null or empty, then use appropriate Get_Texture version
+	if (full_path && strlen(full_path) > 0)
+	{
+		// Use the new overloaded Get_Texture method that accepts full_path
+		tex = WW3DAssetManager::Get_Instance()->Get_Texture( filename, full_path, MIP_LEVELS_1 );
+	}
+	else
+	{
+		// Use the standard Get_Texture method
+		tex = WW3DAssetManager::Get_Instance()->Get_Texture( filename, MIP_LEVELS_1 );
+	}
+	
+	Set_Texture( tex );
+	if ( tex != NULL ) {
+		SET_REF_OWNER( tex );
+		tex->Release_Ref();
+	}
+}
+
 /**added for generals to draw disabled button states - MW*/
 void Render2DClass::Enable_Grayscale(bool b)
 {

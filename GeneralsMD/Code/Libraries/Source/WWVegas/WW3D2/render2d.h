@@ -110,6 +110,7 @@ public:
 	void	Set_Texture(TextureClass* tex);
 	TextureClass * Peek_Texture( void )			{ return Texture; }
 	void	Set_Texture( const char * filename );
+	void	Set_Texture( const char * filename, const char * full_path );  // TheSuperHackers @feature author 15/01/2025 Directory-priority texture loading
 	void	Enable_Additive(bool b);
 	void	Enable_Alpha(bool b);
 	void	Enable_Grayscale(bool b);///<added for generals to draw disabled button states - MW

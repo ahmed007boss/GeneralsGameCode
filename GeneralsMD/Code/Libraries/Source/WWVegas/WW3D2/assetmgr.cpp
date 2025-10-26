@@ -1184,6 +1184,93 @@ TextureClass* WW3DAssetManager::Get_Texture
 
 
 /***********************************************************************************************
+ * WW3DAssetManager::Get_Texture -- get a TextureClass with full path for directory-priority   *
+ *                                                                                             *
+ * INPUT:                                                                                      *
+ *                                                                                             *
+ * OUTPUT:                                                                                     *
+ *                                                                                             *
+ * WARNINGS:                                                                                   *
+ *                                                                                             *
+ * HISTORY:                                                                                    *
+ *   15/01/2025  TheSuperHackers : Created.                                                   *
+ *=============================================================================================*/
+TextureClass* WW3DAssetManager::Get_Texture
+(
+	const char* filename,
+	const char* full_path,
+	MipCountType mip_level_count,
+	WW3DFormat texture_format,
+	bool allow_compression,
+	TextureBaseClass::TexAssetType type,
+	bool allow_reduction
+)
+{
+	WWPROFILE("WW3DAssetManager::Get_Texture 2");
+
+	/*
+	** We cannot currently mip-map bumpmaps
+	*/
+	if (texture_format == WW3D_FORMAT_U8V8)
+	{
+		mip_level_count = MIP_LEVELS_1;
+	}
+
+	/*
+	** Bail if the user isn't really asking for anything
+	*/
+	if ((filename == NULL) || (strlen(filename) == 0))
+	{
+		return NULL;
+	}
+
+	StringClass lower_case_name(filename, true);
+	_strlwr(lower_case_name.Peek_Buffer());
+
+	/*
+	** See if the texture has already been loaded.
+	*/
+	TextureClass* tex = TextureHash.Get(lower_case_name);
+	if (tex && (tex->Is_Initialized() == true) && (texture_format != WW3D_FORMAT_UNKNOWN))
+	{
+		WWASSERT_PRINT(tex->Get_Texture_Format() == texture_format, ("Texture %s has already been loaded with different format", filename));
+	}
+
+	/*
+	** Didn't have it so we have to create a new texture
+	*/
+	if (!tex)
+	{
+		// TheSuperHackers @feature author 15/01/2025 Use full_path if provided for directory-priority loading
+		const char* pathToUse = (full_path && strlen(full_path) > 0) ? full_path : NULL;
+		
+		if (type == TextureBaseClass::TEX_REGULAR)
+		{
+			tex = NEW_REF(TextureClass, (lower_case_name, pathToUse, mip_level_count, texture_format, allow_compression, allow_reduction));
+		}
+		else if (type == TextureBaseClass::TEX_CUBEMAP)
+		{
+			tex = NEW_REF(CubeTextureClass, (lower_case_name, pathToUse, mip_level_count, texture_format, allow_compression, allow_reduction));
+		}
+		else if (type == TextureBaseClass::TEX_VOLUME)
+		{
+			tex = NEW_REF(VolumeTextureClass, (lower_case_name, pathToUse, mip_level_count, texture_format, allow_compression, allow_reduction));
+		}
+		else
+		{
+			WWASSERT_PRINT(false, ("Unhandled case"));
+			return NULL;
+		}
+
+		TextureHash.Insert(tex->Get_Texture_Name(), tex);
+	}
+
+	tex->Add_Ref();
+	return tex;
+}
+
+
+/***********************************************************************************************
  * WW3DAssetManager::Release_All_Textures -- release all textures in the system                *
  *                                                                                             *
  * INPUT:                                                                                      *

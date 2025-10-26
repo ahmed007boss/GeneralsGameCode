@@ -77,6 +77,8 @@ public:
 	AsciiString getName( void ) const;									///< return name
 	void setFilename( AsciiString filename );			///< set filename
 	AsciiString getFilename( void ) const;							///< return filename
+	void setIniDirectory( AsciiString iniDirectory );		///< TheSuperHackers @feature author 15/01/2025 set INI directory path
+	AsciiString getIniDirectory( void ) const;					///< TheSuperHackers @feature author 15/01/2025 return INI directory path
 	void setUV( Region2D *uv );										///< set UV coord range
 	const Region2D *getUV( void ) const;											///< get UV coords
 	void setTextureWidth( Int width );						///< set width of texture page this image is on
@@ -104,6 +106,7 @@ friend class ImageCollection;
 
 	AsciiString m_name;				///< name for this image
 	AsciiString m_filename;		///< texture filename this image is in
+	AsciiString m_iniDirectory;		///< TheSuperHackers @feature author 15/01/2025 INI directory path for this image
 	ICoord2D m_textureSize;		///< size of the texture this image is a part of
 	Region2D m_UVCoords;			///< texture UV coords for image
 	ICoord2D m_imageSize;			///< dimensions of image
@@ -154,6 +157,8 @@ inline void Image::setName( AsciiString name ) { m_name = name; }
 inline AsciiString Image::getName( void ) const { return m_name; }
 inline void Image::setFilename( AsciiString name ) { m_filename = name; }
 inline AsciiString Image::getFilename( void ) const { return m_filename; }
+inline void Image::setIniDirectory( AsciiString iniDirectory ) { m_iniDirectory = iniDirectory; }
+inline AsciiString Image::getIniDirectory( void ) const { return m_iniDirectory; }
 inline void Image::setUV( Region2D *uv ) { if( uv ) m_UVCoords = *uv; }
 inline const Region2D *Image::getUV( void ) const { return &m_UVCoords; }
 inline void Image::setTextureWidth( Int width ) { m_textureSize.x = width; }

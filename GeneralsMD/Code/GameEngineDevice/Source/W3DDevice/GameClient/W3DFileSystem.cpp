@@ -192,8 +192,11 @@ char const * GameFileClass::Set_Name( char const *filename )
 
 	GameFileType fileType = getFileType(filename);
 
+	strcpy(m_filePath, filename);
+	m_fileExists = TheFileSystem->doesFileExist(m_filePath);
+
 	// TheSuperHackers @feature author 15/01/2025 Try thing config directory first if provided
-	if( m_thingConfigDirectory[0] != 0 )
+	if(m_fileExists == FALSE && m_thingConfigDirectory[0] != 0 )
 	{
 		if( fileType == FILE_TYPE_W3D )
 		{
