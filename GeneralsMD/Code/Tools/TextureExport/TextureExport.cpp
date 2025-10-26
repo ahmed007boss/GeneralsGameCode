@@ -707,6 +707,22 @@ int main(int argc, char* argv[])
             }
         }
         
+        // Auto-generate destination directory if W3D file path contains Art\W3D and DEST_DIR not set
+        if (destDir == defaultDestDir && w3dFile.find("Art\\W3D") != string::npos) {
+            string autoDestDir = w3dFile;
+            size_t w3dPos = autoDestDir.find("Art\\W3D");
+            if (w3dPos != string::npos) {
+                autoDestDir.replace(w3dPos, 7, "Art\\Textures");
+                // Remove the filename to get just the directory
+                size_t lastSlash = autoDestDir.find_last_of("\\/");
+                if (lastSlash != string::npos) {
+                    autoDestDir = autoDestDir.substr(0, lastSlash);
+                }
+                destDir = autoDestDir;
+                cout << "Auto-generated destination directory: " << destDir << endl;
+            }
+        }
+        
         // Get optional output file
         if (argc >= 5) {
             outputFile = argv[4];
@@ -733,6 +749,13 @@ int main(int argc, char* argv[])
         cout << "Output File: " << outputFile << endl;
     }
     cout << endl;
+    
+    // Create destination directory if it doesn't exist
+    string cmd = "mkdir \"" + destDir + "\" 2>nul";
+    int result = system(cmd.c_str());
+    if (result == 0) {
+        cout << "Created destination directory: " << destDir << endl;
+    }
 
     // Check if W3D_FILE is a directory or single file
     vector<string> w3dFiles;
