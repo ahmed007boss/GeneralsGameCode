@@ -830,7 +830,7 @@ Int APIENTRY WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance,
 
 
 // Force "splash image" to be loaded from a file, not a resource so same exe can be used in different localizations.
-#if defined(RTS_DEBUG) || defined RTS_PROFILE
+//#if defined(RTS_DEBUG) || defined RTS_PROFILE
 
 			// check both localized directory and root dir
 		char filePath[_MAX_PATH];
@@ -846,11 +846,11 @@ Int APIENTRY WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance,
 		else {
 			gLoadScreenBitmap = (HBITMAP)LoadImage(hInstance, fileName, IMAGE_BITMAP, 0, 0, LR_SHARED|LR_LOADFROMFILE);
 		}
-#else
-
-		// in release, the file only ever lives in the root dir
-		gLoadScreenBitmap = (HBITMAP)LoadImage(hInstance, "Install_Final.bmp", IMAGE_BITMAP, 0, 0, LR_SHARED|LR_LOADFROMFILE);
-#endif
+//#else
+//
+//		// in release, the file only ever lives in the root dir
+//		gLoadScreenBitmap = (HBITMAP)LoadImage(hInstance, "Install_Final.bmp", IMAGE_BITMAP, 0, 0, LR_SHARED|LR_LOADFROMFILE);
+//#endif
 
 		CommandLine::parseCommandLineForStartup();
 

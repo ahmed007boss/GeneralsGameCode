@@ -850,6 +850,7 @@ void GameEngine::init()
 	}
 	catch (ErrorCode ec)
 	{
+#if defined(RTS_DEBUG)
 		// TheSuperHackers @bugfix Ahmed Salah 15/01/2025 Enhanced exception information collection for ErrorCode during initialization
 		DEBUG_LOG(("GameEngine::init - ErrorCode exception caught during initialization: %d", ec));
 		DEBUG_LOG(("GameEngine::init - Subsystem initialization state: FileSystem=%d, GameText=%d, Audio=%d", 
@@ -859,6 +860,7 @@ void GameEngine::init()
 		
 		// Log stack trace to identify where the exception was thrown
 		LogStackTrace("ErrorCode Exception in init()");
+#endif
 		
 		if (ec == ERROR_INVALID_D3D)
 		{
@@ -871,6 +873,7 @@ void GameEngine::init()
 	}
 	catch (INIException e)
 	{
+#if defined(RTS_DEBUG)
 		// TheSuperHackers @bugfix Ahmed Salah 15/01/2025 Enhanced exception information collection for INI exceptions during initialization
 		DEBUG_LOG(("GameEngine::init - INIException caught during initialization"));
 		DEBUG_LOG(("GameEngine::init - Subsystem initialization state: FileSystem=%d, GameText=%d, Audio=%d", 
@@ -880,6 +883,7 @@ void GameEngine::init()
 		
 		// Log stack trace to identify where the exception was thrown
 		LogStackTrace("INIException in init()");
+#endif
 		
 		if (e.mFailureMessage)
 			RELEASE_CRASH((e.mFailureMessage));
@@ -888,6 +892,7 @@ void GameEngine::init()
 	}
 	catch (std::exception& e)
 	{
+#if defined(RTS_DEBUG)
 		// TheSuperHackers @bugfix Ahmed Salah 15/01/2025 Enhanced exception information collection for std::exception during initialization
 		DEBUG_LOG(("GameEngine::init - std::exception caught during initialization: %s", e.what()));
 		DEBUG_LOG(("GameEngine::init - Subsystem initialization state: FileSystem=%d, GameText=%d, Audio=%d", 
@@ -897,11 +902,16 @@ void GameEngine::init()
 		
 		// Log stack trace to identify where the exception was thrown
 		LogStackTrace("std::exception in init()");
+#else
+		// Suppress unreferenced variable warning in release builds
+		(void)e;
+#endif
 		
 		RELEASE_CRASH(("std::exception during initialization"));
 	}
 	catch (...)
 	{
+#if defined(RTS_DEBUG)
 		// TheSuperHackers @bugfix Ahmed Salah 15/01/2025 Enhanced exception information collection for unknown exceptions during initialization
 		DEBUG_LOG(("GameEngine::init - Unknown exception caught during initialization"));
 		DEBUG_LOG(("GameEngine::init - Subsystem initialization state: FileSystem=%d, GameText=%d, Audio=%d", 
@@ -911,6 +921,7 @@ void GameEngine::init()
 		
 		// Log stack trace to identify where the exception was thrown
 		LogStackTrace("Unknown Exception in init()");
+#endif
 		
 		RELEASE_CRASH(("Unknown exception during initialization."));
 	}
@@ -1142,6 +1153,7 @@ void GameEngine::execute( void )
 				}
 				catch (INIException e)
 				{
+#if defined(RTS_DEBUG)
 					// TheSuperHackers @bugfix Ahmed Salah 15/01/2025 Enhanced exception information collection for INI exceptions
 					DEBUG_LOG(("GameEngine::execute - INIException caught in main loop"));
 					DEBUG_LOG(("GameEngine::execute - Game state: InGame=%d, InShell=%d, Paused=%d", 
@@ -1155,6 +1167,7 @@ void GameEngine::execute( void )
 					
 					// Log stack trace to identify where the exception was thrown
 					LogStackTrace("INIException");
+#endif
 					
 					// Release CRASH doesn't return, so don't worry about executing additional code.
 					if (e.mFailureMessage)
@@ -1164,6 +1177,7 @@ void GameEngine::execute( void )
 				}
 				catch (ErrorCode ec)
 				{
+#if defined(RTS_DEBUG)
 					// TheSuperHackers @bugfix Ahmed Salah 15/01/2025 Enhanced exception information collection for ErrorCode exceptions
 					DEBUG_LOG(("GameEngine::execute - ErrorCode exception caught: %d", ec));
 					DEBUG_LOG(("GameEngine::execute - Game state: InGame=%d, InShell=%d, Paused=%d", 
@@ -1177,11 +1191,16 @@ void GameEngine::execute( void )
 					
 					// Log stack trace to identify where the exception was thrown
 					LogStackTrace("ErrorCode Exception");
+#else
+					// Suppress unreferenced variable warning in release builds
+					(void)ec;
+#endif
 					
 					RELEASE_CRASH(("ErrorCode exception in GameEngine::update"));
 				}
 				catch (std::exception& e)
 				{
+#if defined(RTS_DEBUG)
 					// TheSuperHackers @bugfix Ahmed Salah 15/01/2025 Enhanced exception information collection for std::exception
 					DEBUG_LOG(("GameEngine::execute - std::exception caught: %s", e.what()));
 					DEBUG_LOG(("GameEngine::execute - Game state: InGame=%d, InShell=%d, Paused=%d", 
@@ -1195,25 +1214,34 @@ void GameEngine::execute( void )
 					
 					// Log stack trace to identify where the exception was thrown
 					LogStackTrace("std::exception");
+#else
+					// Suppress unreferenced variable warning in release builds
+					(void)e;
+#endif
 					
 					// try to save info off
 					try
 					{
 						if (TheRecorder && TheRecorder->getMode() == RECORDERMODETYPE_RECORD && TheRecorder->isMultiplayer())
 						{
+#if defined(RTS_DEBUG)
 							DEBUG_LOG(("GameEngine::execute - Attempting to clean up replay file"));
+#endif
 							TheRecorder->cleanUpReplayFile();
 						}
 					}
 					catch (...)
 					{
+#if defined(RTS_DEBUG)
 						DEBUG_LOG(("GameEngine::execute - Failed to clean up replay file"));
+#endif
 					}
 					
 					RELEASE_CRASH(("std::exception in GameEngine::update"));
 				}
 				catch (...)
 				{
+#if defined(RTS_DEBUG)
 					// TheSuperHackers @bugfix Ahmed Salah 15/01/2025 Enhanced exception information collection for unknown exceptions
 					DEBUG_LOG(("GameEngine::execute - Unknown exception caught in main loop"));
 					DEBUG_LOG(("GameEngine::execute - Game state: InGame=%d, InShell=%d, Paused=%d", 
@@ -1228,19 +1256,24 @@ void GameEngine::execute( void )
 					
 					// Log stack trace to identify where the exception was thrown
 					LogStackTrace("Unknown Exception");
+#endif
 					
 					// try to save info off
 					try
 					{
 						if (TheRecorder && TheRecorder->getMode() == RECORDERMODETYPE_RECORD && TheRecorder->isMultiplayer())
 						{
+#if defined(RTS_DEBUG)
 							DEBUG_LOG(("GameEngine::execute - Attempting to clean up replay file"));
+#endif
 							TheRecorder->cleanUpReplayFile();
 						}
 					}
 					catch (...)
 					{
+#if defined(RTS_DEBUG)
 						DEBUG_LOG(("GameEngine::execute - Failed to clean up replay file"));
+#endif
 					}
 					
 					RELEASE_CRASH(("Unknown exception in GameEngine::update"));
