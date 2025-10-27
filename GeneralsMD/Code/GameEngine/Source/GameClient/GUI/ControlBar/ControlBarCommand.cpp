@@ -226,7 +226,7 @@ void ControlBar::doTransportInventoryUI( Object *transport, const CommandSet *co
 			// set the inventory exit command into the window (even if it's one of the hidden ones
 			// it's OK cause we'll never see it to click it
 			//
-			setControlCommand( m_commandWindows[ i ], commandButton );
+			setControlCommand( m_commandWindows[ i ], commandButton, commandSet, i );
 
 		}
 
@@ -367,7 +367,7 @@ void ControlBar::populateCommand( Object *obj )
 				m_commandWindows[ i ]->winEnable( TRUE );
 
 				// populate the visible button with data from the command button
-				setControlCommand( m_commandWindows[ i ], commandButton );
+				setControlCommand( m_commandWindows[ i ], commandButton, commandSet, i );
 
 				//
 				// commands that require sciences we don't have are hidden so they never show up

@@ -317,7 +317,7 @@ void ControlBar::populatePurchaseScience( Player* player )
 
 			// populate the visible button with data from the command button
 
-			setControlCommand( m_sciencePurchaseWindowsRank1[ i ], commandButton );
+			setControlCommand( m_sciencePurchaseWindowsRank1[ i ], commandButton, NULL, -1 );
 			if (!commandButton->getScienceVec().empty())
 			{
 				ScienceType	st = commandButton->getScienceVec()[ 0 ];
@@ -377,7 +377,7 @@ void ControlBar::populatePurchaseScience( Player* player )
 
 			// populate the visible button with data from the command button
 
-			setControlCommand( m_sciencePurchaseWindowsRank3[ i ], commandButton );
+			setControlCommand( m_sciencePurchaseWindowsRank3[ i ], commandButton, NULL, -1 );
 			ScienceType	st = SCIENCE_INVALID;
 			ScienceVec sv = commandButton->getScienceVec();
 			if (! sv.empty())
@@ -440,7 +440,7 @@ void ControlBar::populatePurchaseScience( Player* player )
 
 			// populate the visible button with data from the command button
 
-			setControlCommand( m_sciencePurchaseWindowsRank8[ i ], commandButton );
+			setControlCommand( m_sciencePurchaseWindowsRank8[ i ], commandButton, NULL, -1 );
 			ScienceType	st = SCIENCE_INVALID;
 			st = commandButton->getScienceVec()[ 0 ];
 			if( player->isScienceDisabled( st ) )
@@ -1698,8 +1698,34 @@ void CommandSet::parseCommandButton( INI* ini, void *instance, void *store, cons
 
 	// save it
 	buttonArray[ buttonIndex ] = commandButton;
+	
+	// TheSuperHackers @feature author 15/01/2025 Parse optional hotkey override as second token
+	// Check if there's a second token (hotkey override)
+	const char *hotkeyToken = ini->getNextTokenOrNull();
+	if (hotkeyToken != NULL)
+	{
+		// Get the CommandSet instance to store the hotkey override
+		CommandSet *commandSet = (CommandSet *)instance;
+		
+		// Extract just the character from KEY_X format (e.g., "KEY_Q" -> "Q") or use as-is (e.g., "Q" -> "Q")
+		AsciiString hotkeyOverride = AsciiString(hotkeyToken);
+		if (hotkeyOverride.startsWith("KEY_"))
+		{
+			hotkeyOverride = AsciiString(hotkeyOverride.str() + 4); // Skip "KEY_" prefix
+		}
+		// If it doesn't start with "KEY_", use it as-is (e.g., "Q" stays "Q")
+		
+		commandSet->m_hotkeyOverrides[buttonIndex].set(hotkeyOverride);
+	}
+	else
+	{
+		// No hotkey override provided, clear any existing override
+		CommandSet *commandSet = (CommandSet *)instance;
+		commandSet->m_hotkeyOverrides[buttonIndex].clear();
+	}
 
 }
+
 
 //-------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------
@@ -1708,7 +1734,10 @@ CommandSet::CommandSet(const AsciiString& name) :
 	m_next(NULL)
 {
 	for( Int i = 0; i < MAX_COMMANDS_PER_SET; i++ )
+	{
 		m_command[ i ] = NULL;
+		m_hotkeyOverrides[ i ].clear();
+	}
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -2367,7 +2396,7 @@ void ControlBar::update( void )
 			GameWindow *button = m_commandWindows[ i ];
 			if( button != NULL)
 			{
-				const CommandButton *commandButton = (const CommandButton *)GadgetButtonGetData(button);
+				const CommandButton *commandButton = getCommandButtonFromUserData(button);
 				if( commandButton != NULL )
 				{
 					if( commandButton->getFlashCount() > 0 && TheGameClient->getFrame() % 10 == 0 )
@@ -3337,11 +3366,60 @@ void ControlBar::setCommandBarBorder( GameWindow *button, CommandButtonMappedBor
 	}
 }
 
+//-------------------------------------------------------------------------------------------------
+/** Update hotkey in button label - replace existing &X or add if not present */
+//-------------------------------------------------------------------------------------------------
+AsciiString ControlBar::updateHotkeyInLabel(const AsciiString& originalLabel, const AsciiString& newKey)
+{
+	AsciiString result = originalLabel;
+	
+	// Find existing &X pattern and replace, or add if not present
+	const char *str = result.str();
+	Bool foundAmpersand = FALSE;
+	
+	// Search for &X pattern
+	for (int i = 0; i < result.getLength() - 1; i++)
+	{
+		if (str[i] == '&')
+		{
+			// Found ampersand, replace the next character
+			AsciiString before = AsciiString(str, i + 1);  // Everything up to and including &
+			AsciiString after = AsciiString(str + i + 2); // Everything after the character to replace
+			
+			result = before;
+			result.concat(newKey);
+			result.concat(after);
+			foundAmpersand = TRUE;
+			break;
+		}
+	}
+	
+	// If no &X found, add &X at the end
+	if (!foundAmpersand)
+	{
+		result.concat(" (&");
+		result.concat(newKey);
+		result.concat(")");
+	}
+	
+	return result;
+}
+
+// TheSuperHackers @feature author 15/01/2025 Helper function to get CommandButton from user data
+const CommandButton* ControlBar::getCommandButtonFromUserData(GameWindow* button)
+{
+	void* userData = GadgetButtonGetData(button);
+	if (!userData)
+		return NULL;
+		
+	// Return the CommandButton pointer directly
+	return (const CommandButton*)userData;
+}
 
 //-------------------------------------------------------------------------------------------------
 /** Set the command data into the control */
 //-------------------------------------------------------------------------------------------------
-void ControlBar::setControlCommand( GameWindow *button, const CommandButton *commandButton )
+void ControlBar::setControlCommand( GameWindow *button, const CommandButton *commandButton, const CommandSet *commandSet, Int buttonIndex )
 {
 
 	// the window must be a gadget button
@@ -3509,13 +3587,37 @@ void ControlBar::setControlCommand( GameWindow *button, const CommandButton *com
 
 	// save the command in the user data of the window
 	GadgetButtonSetData(button, (void*)commandButton);
-	//button->winSetUserData( commandButton );
+	
+	// TheSuperHackers @feature author 15/01/2025 Set hotkey override if present
+	if (commandSet && buttonIndex >= 0 && commandSet->hasHotkeyOverride(buttonIndex))
+	{
+		AsciiString overrideKey = commandSet->getHotkeyOverride(buttonIndex);
+		commandButton->setHotkeyOverride(overrideKey);
+	}
+	else
+	{
+		// Clear any existing override
+		commandButton->clearHotkeyOverride();
+	}
 
 	setCommandBarBorder(button, commandButton->getCommandButtonMappedBorderType());
 
 	if (TheHotKeyManager)
 	{
-		AsciiString hotKey =	TheHotKeyManager->searchHotKey(commandButton->getTextLabel());
+		AsciiString hotKey;
+		
+		// Check if this CommandSet has a hotkey override for this button
+		if (commandSet && buttonIndex >= 0 && commandSet->hasHotkeyOverride(buttonIndex))
+		{
+			hotKey = commandSet->getHotkeyOverride(buttonIndex);
+			hotKey.toLower(); // HotKeyManager expects lowercase
+		}
+		else
+		{
+			// Use original CommandButton hotkey
+			hotKey = TheHotKeyManager->searchHotKey(commandButton->getTextLabel());
+		}
+		
 		if(hotKey.isNotEmpty())
 			TheHotKeyManager->addHotKey(button, hotKey);
 	}
@@ -3568,7 +3670,7 @@ void ControlBar::setControlCommand( const AsciiString& buttonWindowName, GameWin
 	}
 
 	// call the workhorse
-	setControlCommand( win, commandButton );
+	setControlCommand( win, commandButton, NULL, -1 );
 
 }
 
@@ -4506,7 +4608,7 @@ void ControlBar::populateSpecialPowerShortcut( Player *player)
 			m_specialPowerShortcutButtonParents[ currentButton ]->winEnable( TRUE );
 
 			// populate the visible button with data from the command button
-			setControlCommand( m_specialPowerShortcutButtons[ currentButton ], commandButton );
+			setControlCommand( m_specialPowerShortcutButtons[ currentButton ], commandButton, NULL, -1 );
 			GadgetButtonSetAltSound(m_specialPowerShortcutButtons[ currentButton ], "GUIGenShortcutClick");
 			currentButton++;
 
@@ -4534,7 +4636,7 @@ Bool ControlBar::hasAnyShortcutSelection() const
 			continue;
 
 		// get the command from the control
-		command = (const CommandButton *)GadgetButtonGetData(win);
+		command = getCommandButtonFromUserData(win);
 		if( !command )
 			continue;
 
@@ -4595,7 +4697,7 @@ void ControlBar::updateSpecialPowerShortcut( void )
 		if( win->winIsHidden() == TRUE )
 			continue;
 		// get the command from the control
-		command = (const CommandButton *)GadgetButtonGetData(win);
+		command = getCommandButtonFromUserData(win);
 		//command = (const CommandButton *)win->winGetUserData();
 		if( command == NULL )
 			continue;
@@ -4719,7 +4821,7 @@ void ControlBar::drawSpecialPowerShortcutMultiplierText()
 		if( win->winIsHidden() == TRUE )
 			continue;
 		// get the command from the control
-		command = (const CommandButton *)GadgetButtonGetData(win);
+		command = getCommandButtonFromUserData(win);
 		//command = (const CommandButton *)win->winGetUserData();
 		if( command == NULL )
 			continue;

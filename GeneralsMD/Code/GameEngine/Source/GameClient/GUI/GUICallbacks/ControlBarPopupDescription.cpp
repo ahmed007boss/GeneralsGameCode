@@ -898,6 +898,20 @@ void ControlBar::populateBuildTooltipLayout(const CommandButton* commandButton, 
 	
 
 		name = TheGameText->fetch(commandButton->getTextLabel().str());
+		
+		// TheSuperHackers @feature author 15/01/2025 Apply hotkey override to tooltip if present
+		const AsciiString& hotkeyOverride = commandButton->getHotkeyOverride();
+		if (!hotkeyOverride.isEmpty())
+		{
+			// Apply the hotkey override to the tooltip text
+			AsciiString nameAscii;
+			nameAscii.translate(name);
+			AsciiString modifiedText = TheControlBar->updateHotkeyInLabel(nameAscii, hotkeyOverride);
+			
+			// Convert back to UnicodeString for display
+			name.clear();
+			name.translate(modifiedText);
+		}
 
 		// Add KindOf description if available
 		// TheSuperHackers @tooltip author 15/01/2025 Add KindOf description to tooltip display

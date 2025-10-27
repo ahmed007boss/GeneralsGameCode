@@ -375,6 +375,11 @@ public:
 	const AsciiString& getComponentName() const { return m_componentName; }
 	const AudioEventRTS* getUnitSpecificSound() const { return &m_unitSpecificSound; }
 	const bool isRequireElectronics() const { return m_isRequireElectronics; }
+	
+	// TheSuperHackers @feature author 15/01/2025 Hotkey override methods
+	const AsciiString& getHotkeyOverride() const { return m_hotkeyOverride; }
+	void setHotkeyOverride(const AsciiString& override) const { m_hotkeyOverride = override; }
+	void clearHotkeyOverride() const { m_hotkeyOverride.clear(); }
 
 
 
@@ -518,6 +523,7 @@ private:
 	AsciiString										m_overlayImage2Name;					///< second overlay image name for additional visual indicators
 	AsciiString										m_itemToReplenish;						///< TheSuperHackers @feature author 15/01/2025 Item key to replenish (empty means all items)
 	AsciiString										m_componentName;						///< TheSuperHackers @feature author 15/01/2025 Component name to replace (empty means all damaged components)
+	mutable AsciiString								m_hotkeyOverride;						///< TheSuperHackers @feature author 15/01/2025 Per-CommandSet hotkey override (empty means use default)
 	Int												m_amount;											///< TheSuperHackers @feature author 15/01/2025 Amount of units to queue when button is pressed (default 1)
 	Bool											m_enableMassProduction;					///< TheSuperHackers @feature author 15/01/2025 Enable mass production with modifier keys (default true)
 	GameWindow*										m_window;											///< used during the run-time assignment of a button to a gadget button window
@@ -618,6 +624,10 @@ public:
 
 	const AsciiString& getName() const { return m_name; }
 	const CommandButton* getCommandButton(Int i) const;
+	
+	// Hotkey override methods
+	Bool hasHotkeyOverride(Int slotIndex) const { return slotIndex < MAX_COMMANDS_PER_SET && !m_hotkeyOverrides[slotIndex].isEmpty(); }
+	AsciiString getHotkeyOverride(Int slotIndex) const { return slotIndex < MAX_COMMANDS_PER_SET ? m_hotkeyOverrides[slotIndex] : AsciiString::TheEmptyString; }
 
 	// only for the control bar.
 	CommandSet* friend_getNext() { return m_next; }
@@ -631,6 +641,7 @@ private:
 
 	AsciiString m_name;															  ///< name of this command set
 	const CommandButton *m_command[ MAX_COMMANDS_PER_SET ]; ///< the set of command buttons that make this set
+	AsciiString m_hotkeyOverrides[ MAX_COMMANDS_PER_SET ]; ///< optional hotkey overrides per slot
 
 	CommandSet *m_next;
 
@@ -970,7 +981,7 @@ public:
 	void updateBorderColor( Color color) {m_commandBarBorderColor = color;	}
 
 	/// set the command data into the button
-	void setControlCommand( GameWindow *button, const CommandButton *commandButton );
+	void setControlCommand( GameWindow *button, const CommandButton *commandButton, const CommandSet *commandSet = NULL, Int buttonIndex = -1 );
 
 	void getForegroundMarkerPos(Int *x, Int *y);
 	void getBackgroundMarkerPos(Int *x, Int *y);
@@ -1204,7 +1215,14 @@ private:
 	Color m_commandBarBorderColor;
 
 	void setCommandBarBorder( GameWindow *button, CommandButtonMappedBorderType type);
+	
 public:
+	// Hotkey override helper methods
+	AsciiString updateHotkeyInLabel(const AsciiString& originalLabel, const AsciiString& newKey);
+	
+	// Helper functions for hotkey override management
+	static const CommandButton* getCommandButtonFromUserData(GameWindow* button);
+	
 	void updateCommanBarBorderColors(Color build, Color action, Color upgrade, Color system );
 
 private:
