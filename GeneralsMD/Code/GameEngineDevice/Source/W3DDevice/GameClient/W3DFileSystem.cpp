@@ -50,8 +50,127 @@
 #include "W3DDevice/GameClient/W3DFileSystem.h"
 
 #include <io.h>
+#include <stdio.h>
+#include <time.h>
+#include <windows.h>
 
 // DEFINES ////////////////////////////////////////////////////////////////////////////////////////
+
+#if defined(RTS_DEBUG)
+// TheSuperHackers @feature author 15/01/2025 Missing texture logging (Debug only)
+static FILE* g_missingTextureLog = NULL;
+static bool g_missingTextureLogInitialized = false;
+
+// TheSuperHackers @feature author 15/01/2025 Missing model logging (Debug only)
+static FILE* g_missingModelLog = NULL;
+static bool g_missingModelLogInitialized = false;
+
+//-------------------------------------------------------------------------------------------------
+/** Initialize missing texture log file */
+//-------------------------------------------------------------------------------------------------
+static void initializeMissingTextureLog()
+{
+	if (g_missingTextureLogInitialized)
+		return;
+		
+	g_missingTextureLogInitialized = true;
+	
+	// TheSuperHackers @feature author 15/01/2025 Use game executable directory instead of user data
+	char logPath[_MAX_PATH];
+	char exePath[_MAX_PATH];
+	
+	// Get the executable directory
+	if (GetModuleFileNameA(NULL, exePath, _MAX_PATH))
+	{
+		// Find the last backslash to get directory
+		char* lastSlash = strrchr(exePath, '\\');
+		if (lastSlash)
+		{
+			*(lastSlash + 1) = '\0'; // Null terminate at the backslash
+		}
+		
+		sprintf(logPath, "%smissing_textures.txt", exePath);
+		
+		g_missingTextureLog = fopen(logPath, "a");
+		if (g_missingTextureLog)
+		{
+			// Write header with timestamp
+			time_t now = time(0);
+			char* timeStr = ctime(&now);
+			fprintf(g_missingTextureLog, "# Missing Textures Log - %s", timeStr);
+			fflush(g_missingTextureLog);
+		}
+	}
+}
+
+//-------------------------------------------------------------------------------------------------
+/** Initialize missing model log file */
+//-------------------------------------------------------------------------------------------------
+static void initializeMissingModelLog()
+{
+	if (g_missingModelLogInitialized)
+		return;
+		
+	g_missingModelLogInitialized = true;
+	
+	// TheSuperHackers @feature author 15/01/2025 Use game executable directory instead of user data
+	char logPath[_MAX_PATH];
+	char exePath[_MAX_PATH];
+	
+	// Get the executable directory
+	if (GetModuleFileNameA(NULL, exePath, _MAX_PATH))
+	{
+		// Find the last backslash to get directory
+		char* lastSlash = strrchr(exePath, '\\');
+		if (lastSlash)
+		{
+			*(lastSlash + 1) = '\0'; // Null terminate at the backslash
+		}
+		
+		sprintf(logPath, "%smissing_models.txt", exePath);
+		
+		g_missingModelLog = fopen(logPath, "a");
+		if (g_missingModelLog)
+		{
+			// Write header with timestamp
+			time_t now = time(0);
+			char* timeStr = ctime(&now);
+			fprintf(g_missingModelLog, "# Missing Models Log - %s", timeStr);
+			fflush(g_missingModelLog);
+		}
+	}
+}
+
+//-------------------------------------------------------------------------------------------------
+/** Log missing texture to file */
+//-------------------------------------------------------------------------------------------------
+static void logMissingTexture(const char* filename, const char* attemptedPath)
+{
+	initializeMissingTextureLog();
+	
+	if (g_missingTextureLog)
+	{
+		// TheSuperHackers @feature author 15/01/2025 Computer-friendly parsable format
+		fprintf(g_missingTextureLog, "TEXTURE|%s|%s\n", filename, attemptedPath);
+		fflush(g_missingTextureLog);
+	}
+}
+
+//-------------------------------------------------------------------------------------------------
+/** Log missing model to file */
+//-------------------------------------------------------------------------------------------------
+static void logMissingModel(const char* filename, const char* attemptedPath)
+{
+	initializeMissingModelLog();
+	
+	if (g_missingModelLog)
+	{
+		// TheSuperHackers @feature author 15/01/2025 Computer-friendly parsable format
+		fprintf(g_missingModelLog, "MODEL|%s|%s\n", filename, attemptedPath);
+		fflush(g_missingModelLog);
+	}
+}
+#endif // RTS_DEBUG
 
 //-------------------------------------------------------------------------------------------------
 /** Game file access.  At present this allows us to access test assets, assets from
@@ -362,6 +481,21 @@ char const * GameFileClass::Set_Name( char const *filename )
 		m_fileExists = TheFileSystem->doesFileExist( m_filePath );
 
 	}
+
+#if defined(RTS_DEBUG)
+	// TheSuperHackers @feature author 15/01/2025 Log missing textures and models to files (Debug only)
+	if (!m_fileExists)
+	{
+		if (isImageFileType(fileType))
+		{
+			logMissingTexture(filename, m_filePath);
+		}
+		else if (fileType == FILE_TYPE_W3D)
+		{
+			logMissingModel(filename, m_filePath);
+		}
+	}
+#endif // RTS_DEBUG
 
 	return m_filename;
 
