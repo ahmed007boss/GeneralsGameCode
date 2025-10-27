@@ -159,6 +159,10 @@ public:
 	AsciiString generateFilenameExtension( AudioType audioTypeToPlay );
 protected:
 	void adjustForLocalization( AsciiString &strToAdjust );
+	
+	// TheSuperHackers @feature author 15/01/2025 Helper functions for INI directory sound file search
+	AsciiString extractDirectoryFromPath( const AsciiString& filePath );
+	AsciiString generateTestPath( const AsciiString& iniDirectory );
 
 protected:
 	AsciiString m_filenameToLoad;

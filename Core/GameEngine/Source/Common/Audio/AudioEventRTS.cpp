@@ -320,6 +320,23 @@ void AudioEventRTS::generateFilename( void )
 		return;
 	}
 
+	// TheSuperHackers @feature author 15/01/2025 Search for sound files in INI directory first
+	// Check if we can find the sound file in the same directory as the INI file
+	// Only use INI directory path if the file actually exists there, otherwise fall back to current implementation
+	if (!m_eventInfo->m_iniFilePath.isEmpty()) {
+		AsciiString iniDirectory = extractDirectoryFromPath(m_eventInfo->m_iniFilePath);
+		if (!iniDirectory.isEmpty()) {
+			AsciiString testPath = generateTestPath(iniDirectory);
+			if (!testPath.isEmpty()) { // File exists in INI directory
+				m_filenameToLoad = testPath;
+				adjustForLocalization(m_filenameToLoad);
+				return; // Use INI directory file and exit
+			}
+		}
+	}
+	
+	// Fall back to current implementation if file doesn't exist in INI directory
+
 	m_filenameToLoad = generateFilenamePrefix(m_eventInfo->m_soundType, false);
 
 	Int which = 0;
@@ -333,8 +350,6 @@ void AudioEventRTS::generateFilename( void )
 			m_filenameToLoad = AsciiString::TheEmptyString;
 			return;
 		}
-
-
 
 		if (BitIsSet(m_eventInfo->m_control, AC_RANDOM))
 		{
@@ -355,7 +370,6 @@ void AudioEventRTS::generateFilename( void )
 		}
 		else
 			which = (++m_playingAudioIndex) % m_eventInfo->m_sounds.size();
-
 
 	}
 
@@ -843,4 +857,65 @@ Int AudioEventRTS::getPlayerIndex( void ) const
 void AudioEventRTS::setPlayerIndex( Int playerNdx )
 {
 	m_playerIndex = playerNdx;
+}
+
+//-------------------------------------------------------------------------------------------------
+// TheSuperHackers @feature author 15/01/2025 Extract directory path from full file path
+AsciiString AudioEventRTS::extractDirectoryFromPath( const AsciiString& filePath )
+{
+	const char *lastSlash = filePath.reverseFind('\\');
+	if (lastSlash) {
+		AsciiString directory = filePath;
+		directory.truncateTo(lastSlash - filePath.str());
+		return directory;
+	}
+	return AsciiString::TheEmptyString;
+}
+
+//-------------------------------------------------------------------------------------------------
+// TheSuperHackers @feature author 15/01/2025 Generate test path in INI directory + SoundEffects subdirectory
+AsciiString AudioEventRTS::generateTestPath( const AsciiString& iniDirectory )
+{
+	if (!m_eventInfo) {
+		return AsciiString::TheEmptyString;
+	}
+
+	AsciiString testPath = iniDirectory;
+	testPath.concat("\\SoundEffects\\");
+
+	// For music and streaming, use the filename directly
+	if (m_eventInfo->m_soundType == AT_Music || m_eventInfo->m_soundType == AT_Streaming) {
+		if (!m_eventInfo->m_filename.isEmpty()) {
+			testPath.concat(m_eventInfo->m_filename);
+			if (TheFileSystem->doesFileExist(testPath.str())) {
+				return testPath;
+			}
+		}
+	} else {
+		// For sound effects, check each sound in the list
+		if (m_eventInfo->m_sounds.size() > 0) {
+			Int which = 0;
+			
+			// Use the same logic as the main function for selecting which sound
+			if (BitIsSet(m_eventInfo->m_control, AC_RANDOM)) {
+				if (m_isLogicalAudio) {
+					which = GameLogicRandomValue(0, m_eventInfo->m_sounds.size() - 1);
+				} else {
+					which = GameAudioRandomValue(0, m_eventInfo->m_sounds.size() - 1);
+				}
+			} else {
+				which = m_playingAudioIndex % m_eventInfo->m_sounds.size();
+			}
+
+			AsciiString testSoundPath = testPath;
+			testSoundPath.concat(m_eventInfo->m_sounds[which]);
+			testSoundPath.concat(generateFilenameExtension(m_eventInfo->m_soundType));
+			
+			if (TheFileSystem->doesFileExist(testSoundPath.str())) {
+				return testSoundPath;
+			}
+		}
+	}
+
+	return AsciiString::TheEmptyString;
 }

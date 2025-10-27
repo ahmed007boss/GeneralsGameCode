@@ -62,6 +62,7 @@ void INI::parseMusicTrackDefinition( INI* ini )
 
 	track->m_audioName = name;
 	track->m_soundType = AT_Music;
+	track->m_iniFilePath = ini->getFilename();
 
 	// parse the ini definition
 	ini->initFromINI( track, track->getFieldParse() );
@@ -89,6 +90,7 @@ void INI::parseAudioEventDefinition( INI* ini )
 
 	track->m_audioName = name;
 	track->m_soundType = AT_SoundEffect;
+	track->m_iniFilePath = ini->getFilename();
 
 	// parse the ini definition
 	ini->initFromINI( track, track->getFieldParse() );
@@ -116,6 +118,7 @@ void INI::parseDialogDefinition( INI* ini )
 
 	track->m_audioName = name;
 	track->m_soundType = AT_Streaming;
+	track->m_iniFilePath = ini->getFilename();
 
 	// parse the ini definition
 	ini->initFromINI( track, track->getFieldParse() );

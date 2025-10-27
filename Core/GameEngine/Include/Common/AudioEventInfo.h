@@ -121,7 +121,7 @@ public:
 	Real m_maxDistance;			// greater than this distance and the sound behaves as though it is muted
 
 	AudioType m_soundType;	// This should be either Music, Streaming or SoundEffect
-
+	AsciiString m_iniFilePath;	// The INI file path where this audio event was defined
 
   // DynamicAudioEventInfo interfacing functions
   virtual Bool isLevelSpecific() const { return false; } ///< If true, this sound is only defined on the current level and can be deleted when that level ends
