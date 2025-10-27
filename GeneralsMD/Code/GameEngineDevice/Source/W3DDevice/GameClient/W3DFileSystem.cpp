@@ -144,14 +144,21 @@ static void initializeMissingModelLog()
 //-------------------------------------------------------------------------------------------------
 /** Log missing texture to file */
 //-------------------------------------------------------------------------------------------------
-static void logMissingTexture(const char* filename, const char* attemptedPath)
+static void logMissingTexture(const char* filename, const char* attemptedPath, const char* thingConfigDirectory)
 {
 	initializeMissingTextureLog();
 	
 	if (g_missingTextureLog)
 	{
-		// TheSuperHackers @feature author 15/01/2025 Computer-friendly parsable format
-		fprintf(g_missingTextureLog, "TEXTURE|%s|%s\n", filename, attemptedPath);
+		// TheSuperHackers @feature author 15/01/2025 Computer-friendly parsable format with thing config directory
+		if (thingConfigDirectory && strlen(thingConfigDirectory) > 0)
+		{
+			fprintf(g_missingTextureLog, "TEXTURE|%s|%s|%s\n", filename, attemptedPath, thingConfigDirectory);
+		}
+		else
+		{
+			fprintf(g_missingTextureLog, "TEXTURE|%s|%s|\n", filename, attemptedPath);
+		}
 		fflush(g_missingTextureLog);
 	}
 }
@@ -159,14 +166,21 @@ static void logMissingTexture(const char* filename, const char* attemptedPath)
 //-------------------------------------------------------------------------------------------------
 /** Log missing model to file */
 //-------------------------------------------------------------------------------------------------
-static void logMissingModel(const char* filename, const char* attemptedPath)
+static void logMissingModel(const char* filename, const char* attemptedPath, const char* thingConfigDirectory)
 {
 	initializeMissingModelLog();
 	
 	if (g_missingModelLog)
 	{
-		// TheSuperHackers @feature author 15/01/2025 Computer-friendly parsable format
-		fprintf(g_missingModelLog, "MODEL|%s|%s\n", filename, attemptedPath);
+		// TheSuperHackers @feature author 15/01/2025 Computer-friendly parsable format with thing config directory
+		if (thingConfigDirectory && strlen(thingConfigDirectory) > 0)
+		{
+			fprintf(g_missingModelLog, "MODEL|%s|%s|%s\n", filename, attemptedPath, thingConfigDirectory);
+		}
+		else
+		{
+			fprintf(g_missingModelLog, "MODEL|%s|%s|\n", filename, attemptedPath);
+		}
 		fflush(g_missingModelLog);
 	}
 }
@@ -488,11 +502,11 @@ char const * GameFileClass::Set_Name( char const *filename )
 	{
 		if (isImageFileType(fileType))
 		{
-			logMissingTexture(filename, m_filePath);
+			logMissingTexture(filename, m_filePath, m_thingConfigDirectory);
 		}
 		else if (fileType == FILE_TYPE_W3D)
 		{
-			logMissingModel(filename, m_filePath);
+			logMissingModel(filename, m_filePath, m_thingConfigDirectory);
 		}
 	}
 #endif // RTS_DEBUG
