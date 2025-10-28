@@ -1006,7 +1006,8 @@ public:
 	void groupGuardInPlace( CommandSourceType cmdSource );									///< TheSuperHackers @feature Ahmed Salah 15/01/2025 Guard at current location
 	void groupGuardInPlaceWithoutPursuit( CommandSourceType cmdSource );		///< TheSuperHackers @feature Ahmed Salah 15/01/2025 Guard at current location without pursuit
 	void groupGuardInPlaceFlyingUnitsOnly( CommandSourceType cmdSource );		///< TheSuperHackers @feature Ahmed Salah 15/01/2025 Guard at current location, flying units only
-	void groupRaidArea( const Coord3D *pos, CommandSourceType cmdSource );		///< TheSuperHackers @feature Ahmed Salah 15/01/2025 Raid command - each unit attacks one enemy in area
+	void groupRaidArea( const Coord3D *pos, KindOfType targetKindOf = KINDOF_INVALID, CommandSourceType cmdSource = CMD_FROM_PLAYER );		///< TheSuperHackers @feature Ahmed Salah 15/01/2025 Raid command - each unit attacks one enemy in area
+	void assignRaidTargets( const std::vector<Object*>& enemies, CommandSourceType cmdSource );		///< TheSuperHackers @feature Ahmed Salah 15/01/2025 Assign raid targets to group members
 #ifdef ALLOW_SURRENDER
 	void groupPickUpPrisoner( Object *prisoner, CommandSourceType cmdSource );	///< pick up prisoner
 	void groupReturnToPrison( Object *prison, CommandSourceType cmdSource );		///< return to prison

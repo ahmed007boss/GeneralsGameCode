@@ -309,6 +309,9 @@ static CommandStatus doRaidCommand( const CommandButton *command, const ICoord2D
 	// send the message to raid the area
 	GameMessage *msg = TheMessageStream->appendMessage( GameMessage::MSG_DO_RAID );
 	msg->appendLocationArgument( world );
+	// TheSuperHackers @feature Ahmed Salah 28/10/2025 Pass optional KindOf filter
+	if (command->getTargetKindOfType() != KINDOF_INVALID)
+		msg->appendIntegerArgument((Int)command->getTargetKindOfType());
 
 	// Play the unit voice response
 	pickAndPlayUnitVoiceResponse(TheInGameUI->getAllSelectedDrawables(), GameMessage::MSG_DO_RAID);

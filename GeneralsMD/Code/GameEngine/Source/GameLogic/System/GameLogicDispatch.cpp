@@ -2075,8 +2075,11 @@ void GameLogic::logicMessageDispatcher( GameMessage *msg, void *userData )
 		{
 			// TheSuperHackers @feature Ahmed Salah 15/01/2025 Raid command - each unit attacks one enemy in area
 			Coord3D loc = msg->getArgument( 0 )->location;
+			KindOfType targetKind = KINDOF_INVALID;
+			if (msg->getArgumentCount() > 1)
+				targetKind = (KindOfType)msg->getArgument(1)->integer;
 			if( currentlySelectedGroup )
-				currentlySelectedGroup->groupRaidArea( &loc, CMD_FROM_PLAYER );
+ 				currentlySelectedGroup->groupRaidArea( &loc, targetKind, CMD_FROM_PLAYER );
 
 			break;
 		}

@@ -130,6 +130,7 @@ const FieldParse CommandButton::s_commandButtonFieldParseTable[] =
 	{ "RadiusCursorType",			INI::parseIndexList,				 TheRadiusCursorNames, offsetof( CommandButton, m_radiusCursor ) },
 	{ "UnitSpecificSound",		INI::parseAudioEventRTS,		 NULL, offsetof( CommandButton, m_unitSpecificSound ) },
 	{ "RequireElectronics",		INI::parseBool,							 NULL, offsetof( CommandButton, m_isRequireElectronics) },
+	{ "TargetKindOf",				CommandButton::parseTargetKindOf,	NULL, 0 },
 	{ "EnablePrerequisites",				CommandButton::parseEnablePrerequisites,	0, 0 },
 	{ "VisiblePrerequisites",				CommandButton::parseVisiblePrerequisites,	0, 0 },
 	{ "EnableCallerPrerequisites",				CommandButton::parseEnableCallerUnitPrerequisites,	0, 0 },
@@ -831,6 +832,9 @@ CommandButton::CommandButton( void )
 	m_alternativeButton2 = NULL;
 	m_alternativeButton3 = NULL;
 	m_alternativeButton4 = NULL;
+
+	// TheSuperHackers @feature Ahmed Salah 28/10/2025 Initialize target kind filter to invalid
+	m_targetKindOfType = KINDOF_INVALID;
 
 }
 
@@ -4927,5 +4931,20 @@ void ControlBar::setFullViewportHeight()
 void ControlBar::setScaledViewportHeight()
 {
 	TheTacticalView->setHeight(TheDisplay->getHeight() * TheGlobalData->m_viewportHeightScale);
+}
+
+//-------------------------------------------------------------------------------------------------
+// TheSuperHackers @feature Ahmed Salah 28/10/2025 Parse TargetKindOf for RAID filtering
+//-------------------------------------------------------------------------------------------------
+void CommandButton::parseTargetKindOf( INI* ini, void *instance, void *store, const void *userData )
+{
+	CommandButton* self = (CommandButton*)instance;
+	const char* token = ini->getNextToken();
+	if (token == NULL)
+		throw INI_INVALID_DATA;
+	AsciiString kindStr(token);
+	// Single KindOf token expected (e.g., INFANTRY). Use scanIndexList to map name to enum.
+	KindOfType k = (KindOfType)INI::scanIndexList(kindStr.str(), KindOfMaskType::getBitNames());
+	self->m_targetKindOfType = k;
 }
 

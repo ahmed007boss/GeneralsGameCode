@@ -350,7 +350,8 @@ public:
 	const FieldParse *getFieldParse() const { return s_commandButtonFieldParseTable; }
 	static const FieldParse s_commandButtonFieldParseTable[];		///< the parse table
 	static void parseCommand( INI* ini, void *instance, void *store, const void *userData );
-
+	static void parseTargetKindOf( INI* ini, void *instance, void *store, const void *userData );
+	
 	Bool isContextCommand() const;									///< determines if this is a context sensitive command.
 	Bool isValidRelationshipTarget(Relationship r) const;
 	Bool isValidObjectTarget(const Player* sourcePlayer, const Object* targetObj) const;
@@ -398,6 +399,8 @@ public:
 	RadiusCursorType getRadiusCursorType() const { return m_radiusCursor; }
 	WeaponSlotType getWeaponSlot() const { return m_weaponSlot; }
 	Int getMaxShotsToFire() const { return m_maxShotsToFire; }
+	// TheSuperHackers @feature Ahmed Salah 28/10/2025 RAID target filter KindOf
+	KindOfType getTargetKindOfType() const { return m_targetKindOfType; }
 	const ScienceVec& getScienceVec() const { return m_science; }
 	CommandButtonMappedBorderType getCommandButtonMappedBorderType() const { return m_commandButtonBorder; }
 	Int getAmount() const { return m_amount; }
@@ -528,6 +531,9 @@ private:
 	Bool											m_enableMassProduction;					///< TheSuperHackers @feature author 15/01/2025 Enable mass production with modifier keys (default true)
 	GameWindow*										m_window;											///< used during the run-time assignment of a button to a gadget button window
 	AudioEventRTS									m_unitSpecificSound;					///< Unit sound played whenever button is clicked.
+
+	// TheSuperHackers @feature Ahmed Salah 28/10/2025 KindOf filter for RAID command targets
+	KindOfType								m_targetKindOfType;
 
 	// bleah. shouldn't be mutable, but is. sue me. (srj)
 	mutable const Image*					m_buttonImage;								///< button image
