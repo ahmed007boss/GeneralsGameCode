@@ -601,9 +601,13 @@ bool ProcessW3DFile(const string& w3dFile, const vector<string>& sourceDirs, con
  */
 void PrintUsage(const char* programName)
 {
-    cout << "Usage: " << programName << " [W3D_FILE_OR_DIR] [SOURCE_DIRS] [DEST_DIR] [OUTPUT_FILE]" << endl;
+    cout << "Usage: " << programName << " [-d] [W3D_FILE_OR_DIR] [SOURCE_DIRS] [DEST_DIR] [OUTPUT_FILE]" << endl;
     cout << endl;
-    cout << "Arguments (all optional - will prompt if not provided):" << endl;
+    cout << "Options:" << endl;
+    cout << "  -d              Use defaults for unspecified parameters (no prompts)" << endl;
+    cout << "                  Other command line parameters override defaults" << endl;
+    cout << endl;
+    cout << "Arguments (all optional - will prompt if not provided unless -d is used):" << endl;
     cout << "  W3D_FILE_OR_DIR Path to W3D model file OR directory containing W3D files" << endl;
     cout << "                  If directory, will process all .w3d files recursively" << endl;
     cout << "  SOURCE_DIRS     Comma-separated directories to search for texture files" << endl;
@@ -617,8 +621,11 @@ void PrintUsage(const char* programName)
     cout << endl;
     cout << "Examples:" << endl;
     cout << "  " << programName << "                                    # Interactive mode - prompts for all parameters" << endl;
-    cout << "  " << programName << " model.w3d                          # Process single W3D file" << endl;
-    cout << "  " << programName << " C:\\Models                         # Process all W3D files in directory" << endl;
+    cout << "  " << programName << " -d                                # Use all defaults, no prompts" << endl;
+    cout << "  " << programName << " -d model.w3d                      # Use defaults for source/dest, process specific file" << endl;
+    cout << "  " << programName << " -d C:\\Models C:\\Game\\Textures  # Use defaults for dest/output, override source" << endl;
+    cout << "  " << programName << " model.w3d                         # Process single W3D file" << endl;
+    cout << "  " << programName << " C:\\Models                        # Process all W3D files in directory" << endl;
     cout << "  " << programName << " model.w3d C:\\Game\\Textures,C:\\Game\\Art  # Prompts for destination directory" << endl;
     cout << "  " << programName << " C:\\Models C:\\Game\\Textures C:\\Output\\Textures" << endl;
     cout << "  " << programName << " model.w3d C:\\Game\\Textures,C:\\Game\\Art C:\\Output\\Textures list.txt" << endl;
@@ -650,25 +657,46 @@ int main(int argc, char* argv[])
         cout << "No configuration file found, using built-in defaults" << endl;
     }
     
+    // Check for -d flag and parse arguments accordingly
+    bool useDefaults = false;
+    int argIndex = 1;
+    
+    // Check if first argument is -d
+    if (argc >= 2 && strcmp(argv[1], "-d") == 0) {
+        useDefaults = true;
+        argIndex = 2; // Skip the -d flag
+        cout << "Using defaults mode - no prompts will be shown" << endl;
+    }
+    
     // Parse command line arguments or prompt user for input
     string w3dFile, sourceDirsStr, destDir, outputFile;
     vector<string> sourceDirs;
     
-    if (argc >= 4) {
-        // All required arguments provided via command line
-        w3dFile = argv[1];
-        sourceDirsStr = argv[2];
-        destDir = argv[3];
-        outputFile = (argc >= 5) ? argv[4] : "";
+    // Count non-flag arguments
+    int numArgs = argc - argIndex;
+    
+    if (useDefaults) {
+        // Use defaults for unspecified parameters, command line args override defaults
+        w3dFile = (numArgs >= 1) ? argv[argIndex] : defaultW3DFile;
+        sourceDirsStr = (numArgs >= 2) ? argv[argIndex + 1] : defaultSourceDirs;
+        destDir = (numArgs >= 3) ? argv[argIndex + 2] : defaultDestDir;
+        outputFile = (numArgs >= 4) ? argv[argIndex + 3] : "";
+        sourceDirs = SplitString(sourceDirsStr, ',');
+    } else if (numArgs >= 3) {
+        // All required arguments provided via command line (original behavior)
+        w3dFile = argv[argIndex];
+        sourceDirsStr = argv[argIndex + 1];
+        destDir = argv[argIndex + 2];
+        outputFile = (numArgs >= 4) ? argv[argIndex + 3] : "";
         sourceDirs = SplitString(sourceDirsStr, ',');
     } else {
-        // Prompt user for missing arguments
+        // Prompt user for missing arguments (original behavior)
         cout << "Interactive mode - please provide the required parameters:" << endl;
         cout << endl;
         
         // Get W3D file path
-        if (argc >= 2) {
-            w3dFile = argv[1];
+        if (numArgs >= 1) {
+            w3dFile = argv[argIndex];
             cout << "W3D File: " << w3dFile << endl;
         } else {
             cout << "Enter W3D file path (or press Enter for default): ";
@@ -680,8 +708,8 @@ int main(int argc, char* argv[])
         }
         
         // Get source directories
-        if (argc >= 3) {
-            sourceDirsStr = argv[2];
+        if (numArgs >= 2) {
+            sourceDirsStr = argv[argIndex + 1];
             cout << "Source Directories: " << sourceDirsStr << endl;
             sourceDirs = SplitString(sourceDirsStr, ',');
         } else {
@@ -695,8 +723,8 @@ int main(int argc, char* argv[])
         }
         
         // Get destination directory
-        if (argc >= 4) {
-            destDir = argv[3];
+        if (numArgs >= 3) {
+            destDir = argv[argIndex + 2];
             cout << "Destination Directory: " << destDir << endl;
         } else {
             cout << "Enter destination directory path (or press Enter for default): ";
@@ -707,25 +735,10 @@ int main(int argc, char* argv[])
             }
         }
         
-        // Auto-generate destination directory if W3D file path contains Art\W3D and DEST_DIR not set
-        if (destDir == defaultDestDir && w3dFile.find("Art\\W3D") != string::npos) {
-            string autoDestDir = w3dFile;
-            size_t w3dPos = autoDestDir.find("Art\\W3D");
-            if (w3dPos != string::npos) {
-                autoDestDir.replace(w3dPos, 7, "Art\\Textures");
-                // Remove the filename to get just the directory
-                size_t lastSlash = autoDestDir.find_last_of("\\/");
-                if (lastSlash != string::npos) {
-                    autoDestDir = autoDestDir.substr(0, lastSlash);
-                }
-                destDir = autoDestDir;
-                cout << "Auto-generated destination directory: " << destDir << endl;
-            }
-        }
         
         // Get optional output file
-        if (argc >= 5) {
-            outputFile = argv[4];
+        if (numArgs >= 4) {
+            outputFile = argv[argIndex + 3];
             cout << "Output File: " << outputFile << endl;
         } else {
             cout << "Enter output file path (optional, press Enter to skip): ";
@@ -735,6 +748,34 @@ int main(int argc, char* argv[])
         cout << endl;
     }
 
+    // Auto-generate destination directory if W3D file path contains Art\W3D and DEST_DIR not set
+    // This applies to all modes (interactive, command line, and defaults)
+    if (destDir == defaultDestDir && w3dFile.find("Art\\W3D") != string::npos) {
+        string autoDestDir = w3dFile;
+        size_t w3dPos = autoDestDir.find("Art\\W3D");
+        if (w3dPos != string::npos) {
+            // Debug: show what we're replacing
+            cout << "DEBUG: Found 'Art\\W3D' at position " << w3dPos << " in: " << autoDestDir << endl;
+            cout << "DEBUG: String length to replace: " << string("Art\\W3D").length() << endl;
+            
+            autoDestDir.replace(w3dPos, string("Art\\W3D").length(), "Art\\Textures");
+            cout << "DEBUG: After replace: " << autoDestDir << endl;
+            
+            // Only remove filename if it's a file path (ends with .w3d), not a directory path
+            if (autoDestDir.length() > 4 && autoDestDir.substr(autoDestDir.length() - 4) == ".w3d") {
+                // It's a file path, remove the filename to get just the directory
+                size_t lastSlash = autoDestDir.find_last_of("\\/");
+                if (lastSlash != string::npos) {
+                    autoDestDir = autoDestDir.substr(0, lastSlash);
+                }
+            }
+            // If it's a directory path, keep it as is
+            destDir = autoDestDir;
+            cout << "Auto-generated destination directory: " << destDir << endl;
+        }
+    }
+
+    // Display final configuration
     cout << "W3D File: " << w3dFile << endl;
     cout << "Source Directories: ";
     for (size_t i = 0; i < sourceDirs.size(); i++) {
