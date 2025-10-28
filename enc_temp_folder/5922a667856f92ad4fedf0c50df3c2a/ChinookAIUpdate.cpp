@@ -913,7 +913,7 @@ ChinookAIUpdateModuleData::ChinookAIUpdateModuleData()
 	m_ropeWobbleRate = 0.1f;
     m_rotorWashParticleSystem.clear();
 	m_upgradedSupplyBoost = 0;
-	m_landIfIdle = false; // TheSuperHackers @feature Ahmed Salah 28/10/2025 Force Chinook to land when idle
+	m_landIfIdle = true; // TheSuperHackers @feature Ahmed Salah 28/10/2025 Force Chinook to land when idle
 }
 
 //-------------------------------------------------------------------------------------------------
