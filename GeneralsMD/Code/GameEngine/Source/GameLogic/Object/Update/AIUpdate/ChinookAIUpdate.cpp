@@ -230,6 +230,16 @@ public:
 
 		ai->friend_setFlightStatus(m_landing ? CHINOOK_LANDING : CHINOOK_TAKING_OFF);
 
+		// TheSuperHackers @feature Ahmed Salah 28/10/2025 Set model conditions for taking off/landing states
+		if (m_landing)
+		{
+			ai->setAircraftModelCondition(MODELCONDITION_LANDING);
+		}
+		else
+		{
+			ai->setAircraftModelCondition(MODELCONDITION_TAKING_OFF);
+		}
+
 		if( m_landing )
 		{
 			// A chinook given transport duty loses his supplies.
@@ -304,6 +314,16 @@ public:
 		ChinookAIUpdate* ai = (ChinookAIUpdate*)obj->getAIUpdateInterface();
 
 		ai->friend_setFlightStatus(m_landing ? CHINOOK_LANDED : CHINOOK_FLYING);
+
+		// TheSuperHackers @feature Ahmed Salah 28/10/2025 Set model conditions for landed/takeoff states
+		if (m_landing)
+		{
+			ai->setAircraftModelCondition(MODELCONDITION_LANDED);
+		}
+		else
+		{
+			ai->setAircraftModelCondition(MODELCONDITION_TAKEOFF);
+		}
 
 		// Paranoia checks - sometimes onExit is called when we are
 		// shutting down, and not all pieces are valid.  CurLocomotor
@@ -495,6 +515,9 @@ public:
 		obj->setDisabled( DISABLED_HELD );
 		ai->friend_setFlightStatus(CHINOOK_DOING_COMBAT_DROP);
 
+		// TheSuperHackers @feature Ahmed Salah 28/10/2025 Clear all aircraft model conditions during combat drop
+		ai->clearAllAircraftModelConditions();
+
 		// A chinook given combat drop duty also loses his supplies.
 		while( ai->loseOneBox() );
 
@@ -638,6 +661,9 @@ public:
 
 		obj->clearDisabled( DISABLED_HELD );
 		ai->friend_setFlightStatus(CHINOOK_FLYING);
+
+		// TheSuperHackers @feature Ahmed Salah 28/10/2025 Restore takeoff condition after combat drop
+		ai->setAircraftModelCondition(MODELCONDITION_TAKEOFF);
 
 		if (obj->isEffectivelyDead())
 		{
@@ -885,8 +911,9 @@ ChinookAIUpdateModuleData::ChinookAIUpdateModuleData()
 	m_ropeWobbleLen = 10.0f;
 	m_ropeWobbleAmp = 1.0f;
 	m_ropeWobbleRate = 0.1f;
-  m_rotorWashParticleSystem.clear();
+    m_rotorWashParticleSystem.clear();
 	m_upgradedSupplyBoost = 0;
+	m_landIfIdle = true; // TheSuperHackers @feature Ahmed Salah 28/10/2025 Force Chinook to land when idle
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -912,6 +939,7 @@ ChinookAIUpdateModuleData::ChinookAIUpdateModuleData()
 		{ "WaitForRopesToDrop", INI::parseBool, 0, offsetof(ChinookAIUpdateModuleData, m_waitForRopesToDrop) },
 		{ "RotorWashParticleSystem", INI::parseAsciiString,	NULL, offsetof( ChinookAIUpdateModuleData, m_rotorWashParticleSystem ) },
 		{ "UpgradedSupplyBoost", INI::parseInt, NULL, offsetof( ChinookAIUpdateModuleData, m_upgradedSupplyBoost) },
+		{ "LandIfIdle", INI::parseBool, NULL, offsetof( ChinookAIUpdateModuleData, m_landIfIdle) }, // TheSuperHackers @feature Ahmed Salah 28/10/2025 Force Chinook to land when idle
 
 		{ 0, 0, 0, 0 }
 	};
@@ -935,6 +963,10 @@ ChinookAIUpdate::ChinookAIUpdate( Thing *thing, const ModuleData* moduleData ) :
 	m_flightStatus = CHINOOK_FLYING;	// yep, that's right, even if we start "on ground"
 	m_airfieldForHealing = INVALID_ID;
 	m_originalPos.zero();
+	m_landedDueToIdle = false; // TheSuperHackers @feature Ahmed Salah 28/10/2025 Track if landed due to idle state
+	
+	// TheSuperHackers @feature Ahmed Salah 28/10/2025 Set initial model condition for takeoff state
+	setAircraftModelCondition(MODELCONDITION_TAKEOFF);
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -1105,9 +1137,23 @@ UpdateSleepTime ChinookAIUpdate::update()
 			{
 				setMyState(LANDING, NULL, NULL, CMD_FROM_AI);
 			}
+			else if (!waitingToEnterOrExit && m_flightStatus == CHINOOK_FLYING && m_airfieldForHealing == INVALID_ID)
+			{
+				// TheSuperHackers @feature Ahmed Salah 28/10/2025 Force Chinook to land when idle if enabled
+				const ChinookAIUpdateModuleData* data = getChinookAIUpdateModuleData();
+				if (data && data->m_landIfIdle)
+				{
+					m_landedDueToIdle = true; // Mark that we're landing due to idle
+					setMyState(LANDING, NULL, NULL, CMD_FROM_AI);
+				}
+			}
 			else if (!waitingToEnterOrExit && m_flightStatus == CHINOOK_LANDED && m_airfieldForHealing == INVALID_ID)
 			{
-				setMyState(TAKING_OFF, NULL, NULL, CMD_FROM_AI);
+				// TheSuperHackers @feature Ahmed Salah 28/10/2025 Don't take off if landed due to idle
+				if (!m_landedDueToIdle)
+				{
+					setMyState(TAKING_OFF, NULL, NULL, CMD_FROM_AI);
+				}
 			}
 		}
 
@@ -1156,7 +1202,7 @@ UpdateSleepTime ChinookAIUpdate::update()
 
   if ( getObject()->getShroudedStatus(playerIndex) == OBJECTSHROUD_CLEAR )
   {
-    if ( m_flightStatus == CHINOOK_LANDING || m_flightStatus == CHINOOK_TAKING_OFF || m_flightStatus == CHINOOK_LANDED )
+    if ( m_flightStatus == CHINOOK_LANDING || m_flightStatus == CHINOOK_TAKING_OFF || m_flightStatus == CHINOOK_LANDING )
     {
       Coord3D pos = *getObject()->getPosition();
       Real chopperElevation = pos.z;
@@ -1187,8 +1233,50 @@ UpdateSleepTime ChinookAIUpdate::update()
 }
 
 //-------------------------------------------------------------------------------------------------
+void ChinookAIUpdate::setAircraftModelCondition(ModelConditionFlagType condition)
+{
+	// TheSuperHackers @feature Ahmed Salah 28/10/2025 Set aircraft model condition and clear others
+	Object* obj = getObject();
+	if (obj)
+	{
+		// Clear all aircraft model conditions first
+		obj->clearModelConditionState(MODELCONDITION_LANDED);
+		obj->clearModelConditionState(MODELCONDITION_TAKEOFF);
+		obj->clearModelConditionState(MODELCONDITION_TAKING_OFF);
+		obj->clearModelConditionState(MODELCONDITION_LANDING);
+		
+		// Set the desired condition
+		obj->setModelConditionState(condition);
+	}
+}
+
+//-------------------------------------------------------------------------------------------------
+void ChinookAIUpdate::clearAllAircraftModelConditions()
+{
+	// TheSuperHackers @feature Ahmed Salah 28/10/2025 Clear all aircraft model conditions
+	Object* obj = getObject();
+	if (obj)
+	{
+		obj->clearModelConditionState(MODELCONDITION_LANDED);
+		obj->clearModelConditionState(MODELCONDITION_TAKEOFF);
+		obj->clearModelConditionState(MODELCONDITION_TAKING_OFF);
+		obj->clearModelConditionState(MODELCONDITION_LANDING);
+	}
+}
+
+//-------------------------------------------------------------------------------------------------
 void ChinookAIUpdate::setMyState( StateID cmd, Object* target, const Coord3D* pos, CommandSourceType cmdSource )
 {
+	// TheSuperHackers @feature Ahmed Salah 28/10/2025 Set model conditions for landing/taking off states
+	if (cmd == LANDING)
+	{
+		setAircraftModelCondition(MODELCONDITION_LANDING);
+	}
+	else if (cmd == TAKING_OFF)
+	{
+		setAircraftModelCondition(MODELCONDITION_TAKING_OFF);
+	}
+
 	getStateMachine()->clear();
 	getStateMachine()->setGoalObject( target );
 	setGoalPositionClipped(pos, cmdSource); // yeah, null is ok here.
@@ -1260,6 +1348,7 @@ void ChinookAIUpdate::aiDoCommand(const AICommandParms* parms)
 {
 	// this gets reset every time a command is issued.
 	setAirfieldForHealing(INVALID_ID);
+	m_landedDueToIdle = false; // TheSuperHackers @feature Ahmed Salah 28/10/2025 Reset idle landing flag when new command given
 
 	if (!isAllowedToRespondToAiCommands(parms))
 		return;
@@ -1366,7 +1455,7 @@ void ChinookAIUpdate::xfer( Xfer *xfer )
 {
 
   // version
-  XferVersion currentVersion = 2;
+  XferVersion currentVersion = 3;
   XferVersion version = currentVersion;
   xfer->xferVersion( &version, currentVersion );
 	// extend base class
@@ -1382,6 +1471,11 @@ void ChinookAIUpdate::xfer( Xfer *xfer )
 	if( version >= 2 )
 	{
 		xfer->xferCoord3D( &m_originalPos );
+	}
+
+	if( version >= 3 )
+	{
+		xfer->xferBool( &m_landedDueToIdle );
 	}
 
 }

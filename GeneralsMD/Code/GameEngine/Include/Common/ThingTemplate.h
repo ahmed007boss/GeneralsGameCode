@@ -112,7 +112,8 @@ enum ThingTemplateAudioType CPP_11(: Int)
 	TTAUDIO_soundMoveStartDamaged,		///< Sound when unit starts moving and is damaged
 	TTAUDIO_soundMoveLoop,						///< Sound when unit is moving
 	TTAUDIO_soundMoveLoopDamaged,			///< Sound when unit is moving and is damaged
-	TTAUDIO_soundAmbient,							///< Ambient sound for unit during normal status. Also the default sound
+	TTAUDIO_soundChinookAmbient,
+	TTAUDIO_soundAmbient,							///< Ambient sound for unit during normal status. Also the default sound						
 	TTAUDIO_soundAmbientDamaged,			///< Ambient sound for unit if damaged. Corresponds to body info damage
 	TTAUDIO_soundAmbientReallyDamaged,///< Ambient sound for unit if badly damaged.
 	TTAUDIO_soundAmbientRubble,				///< Ambient sound for unit if it is currently rubble. (Dam, for instance)
@@ -518,6 +519,7 @@ public:
 	const AudioEventRTS *getSoundMoveStartDamaged() const			{ return getAudio(TTAUDIO_soundMoveStartDamaged); }
 	const AudioEventRTS *getSoundMoveLoop() const							{ return getAudio(TTAUDIO_soundMoveLoop); }
 	const AudioEventRTS *getSoundMoveLoopDamaged() const			{ return getAudio(TTAUDIO_soundMoveLoopDamaged); }
+	const AudioEventRTS *getSoundChinookAmbient() const				{ return getAudio(TTAUDIO_soundChinookAmbient); }
 	const AudioEventRTS *getSoundAmbient() const							{ return getAudio(TTAUDIO_soundAmbient); }
 	const AudioEventRTS *getSoundAmbientDamaged() const				{ return getAudio(TTAUDIO_soundAmbientDamaged); }
 	const AudioEventRTS *getSoundAmbientReallyDamaged() const	{ return getAudio(TTAUDIO_soundAmbientReallyDamaged); }

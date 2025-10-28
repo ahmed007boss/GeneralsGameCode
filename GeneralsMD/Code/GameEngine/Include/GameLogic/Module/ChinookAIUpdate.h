@@ -61,6 +61,7 @@ public:
 	Real					m_minDropHeight;
 	Bool					m_waitForRopesToDrop;
 	Int						m_upgradedSupplyBoost;
+	Bool					m_landIfIdle;							///< TheSuperHackers @feature Ahmed Salah 28/10/2025 Force Chinook to land when idle
 
 	ChinookAIUpdateModuleData();
 	static void buildFieldParse(MultiIniFieldParse& p);
@@ -112,6 +113,9 @@ public:
 
 	Int getUpgradedSupplyBoost() const;
 
+	void setAircraftModelCondition(ModelConditionFlagType condition);	///< TheSuperHackers @feature Ahmed Salah 28/10/2025 Set aircraft model condition and clear others
+	void clearAllAircraftModelConditions();							///< TheSuperHackers @feature Ahmed Salah 28/10/2025 Clear all aircraft model conditions
+
 protected:
 
 	virtual AIStateMachine* makeStateMachine();
@@ -124,9 +128,9 @@ protected:
 	virtual void privateAttackPosition( const Coord3D *pos, Int maxShotsToFire, CommandSourceType cmdSource );///< Extension.  Also tell occupants to attackPosition
 	virtual void privateForceAttackObject( Object *victim, Int maxShotsToFire, CommandSourceType cmdSource );///< Extension.  Also tell occupants to forceAttackObject
 
-  virtual void privateIdle(CommandSourceType cmdSource);
+	virtual void privateIdle(CommandSourceType cmdSource);
 
-  void private___TellPortableStructureToAttackWithMe( Object *victim, Int maxShotsToFire, CommandSourceType cmdSource );
+    void private___TellPortableStructureToAttackWithMe( Object *victim, Int maxShotsToFire, CommandSourceType cmdSource );
 
 
 private:
@@ -139,6 +143,7 @@ private:
 	ObjectID								m_airfieldForHealing;
 	Coord3D									m_originalPos;
 	Bool										m_hasPendingCommand;
+	Bool										m_landedDueToIdle;						///< TheSuperHackers @feature Ahmed Salah 28/10/2025 Track if landed due to idle state
 };
 
 #endif

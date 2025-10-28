@@ -171,6 +171,10 @@ enum ModelConditionFlagType CPP_11(: Int)
 	MODELCONDITION_LOADED,				// loaded woot! ... like a transport is loaded
 	MODELCONDITION_JETAFTERBURNER,// shows "flames" for extra motive force (eg, when taking off)
 	MODELCONDITION_JETEXHAUST,		// shows "exhaust" for motive force
+	MODELCONDITION_LANDED,			// TheSuperHackers @feature Ahmed Salah 28/10/2025 Aircraft landed state
+	MODELCONDITION_TAKEOFF,			// TheSuperHackers @feature Ahmed Salah 28/10/2025 Aircraft takeoff state
+	MODELCONDITION_TAKING_OFF,		// TheSuperHackers @feature Ahmed Salah 28/10/2025 Aircraft taking off state
+	MODELCONDITION_LANDING,			// TheSuperHackers @feature Ahmed Salah 28/10/2025 Aircraft landing state
 	MODELCONDITION_PACKING,				// packs an object
 	MODELCONDITION_UNPACKING,			// unpacks an object
 	MODELCONDITION_DEPLOYED,			// a deployed object state
