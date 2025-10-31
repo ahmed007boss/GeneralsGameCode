@@ -484,7 +484,7 @@ void WeaponTemplate::reset(void)
 }
 
 //-------------------------------------------------------------------------------------------------
-/*static*/ void WeaponTemplate::parseWeaponBonusSet(INI* ini, void* instance, void* /*store*/, const void* /*userData*/)
+ void WeaponTemplate::parseWeaponBonusSet(INI* ini, void* instance, void* /*store*/, const void* /*userData*/)
 {
 	WeaponTemplate* self = (WeaponTemplate*)instance;
 
@@ -495,7 +495,7 @@ void WeaponTemplate::reset(void)
 }
 
 //-------------------------------------------------------------------------------------------------
-/*static*/ void WeaponTemplate::parseScatterTarget(INI* ini, void* instance, void* /*store*/, const void* /*userData*/)
+ void WeaponTemplate::parseScatterTarget(INI* ini, void* instance, void* /*store*/, const void* /*userData*/)
 {
 	// Accept multiple listings of Coord2D's.
 	WeaponTemplate* self = (WeaponTemplate*)instance;
@@ -509,7 +509,7 @@ void WeaponTemplate::reset(void)
 }
 
 //-------------------------------------------------------------------------------------------------
-/*static*/ void WeaponTemplate::parseShotDelay(INI* ini, void* instance, void* /*store*/, const void* /*userData*/)
+ void WeaponTemplate::parseShotDelay(INI* ini, void* instance, void* /*store*/, const void* /*userData*/)
 {
 	// This smart parser allows both a single number for traditional delay, and a labeled pair of numbers for a delay range
 	WeaponTemplate* self = (WeaponTemplate*)instance;
@@ -546,7 +546,7 @@ void WeaponTemplate::reset(void)
 }
 
 //-------------------------------------------------------------------------------------------------
-/*static*/ void WeaponTemplate::parseTargetPrerequisites(INI* ini, void* instance, void* /*store*/, const void* /*userData*/)
+ void WeaponTemplate::parseTargetPrerequisites(INI* ini, void* instance, void* /*store*/, const void* /*userData*/)
 {
 	// TheSuperHackers @feature author 15/01/2025 Parse TargetPrerequisite using ObjectPrerequisite system
 	WeaponTemplate* self = (WeaponTemplate*)instance;
@@ -554,7 +554,7 @@ void WeaponTemplate::reset(void)
 }
 
 //-------------------------------------------------------------------------------------------------
-/*static*/ void WeaponTemplate::parseShooterPrerequisites(INI* ini, void* instance, void* /*store*/, const void* /*userData*/)
+ void WeaponTemplate::parseShooterPrerequisites(INI* ini, void* instance, void* /*store*/, const void* /*userData*/)
 {
 	// TheSuperHackers @feature author 15/01/2025 Parse ShooterPrerequisite using ObjectPrerequisite system
 	WeaponTemplate* self = (WeaponTemplate*)instance;
@@ -562,7 +562,7 @@ void WeaponTemplate::reset(void)
 }
 
 //-------------------------------------------------------------------------------------------------
-/*static*/ void WeaponTemplate::parseRadiusDamageAffectsPrerequisites(INI* ini, void* instance, void* /*store*/, const void* /*userData*/)
+ void WeaponTemplate::parseRadiusDamageAffectsPrerequisites(INI* ini, void* instance, void* /*store*/, const void* /*userData*/)
 {
 	// TheSuperHackers @feature author 15/01/2025 Parse RadiusDamageAffectsPrerequisite using ObjectPrerequisite system
 	WeaponTemplate* self = (WeaponTemplate*)instance;
@@ -2151,7 +2151,7 @@ void WeaponStore::postProcessLoad()
 }
 
 //-------------------------------------------------------------------------------------------------
-/*static*/ void WeaponStore::parseWeaponTemplateDefinition(INI* ini)
+ void WeaponStore::parseWeaponTemplateDefinition(INI* ini)
 {
 	AsciiString name;
 
@@ -2191,6 +2191,65 @@ void WeaponStore::postProcessLoad()
 	}
 #endif
 
+}
+
+//-------------------------------------------------------------------------------------------------
+// TheSuperHackers @feature AhmedSalah 02/02/2025 WeaponExtend support
+void WeaponStore::parseWeaponExtendDefinition(INI* ini)
+{
+	const char* new_weapon_name = ini->getNextToken();
+	
+	const char* parent = ini->getNextToken();
+	const WeaponTemplate* parentTemplate = TheWeaponStore->findWeaponTemplate(parent);
+	if (parentTemplate == NULL) {
+		DEBUG_CRASH(("WeaponExtend must extend a previously defined Weapon (%s).\n", parent));
+		throw INI_INVALID_DATA;
+	}
+
+	// Check if weapon already exists
+	WeaponTemplate* weapon = TheWeaponStore->findWeaponTemplatePrivate(TheNameKeyGenerator->nameToKey(new_weapon_name));
+	if (weapon)
+	{
+		if (ini->getLoadType() == INI_LOAD_CREATE_OVERRIDES)
+			weapon = TheWeaponStore->newOverride(weapon);
+		else
+		{
+			DEBUG_CRASH(("Weapon '%s' already exists, but OVERRIDE not specified", new_weapon_name));
+			return;
+		}
+	}
+	else
+	{
+		// Create new weapon template
+		weapon = TheWeaponStore->newWeaponTemplate(new_weapon_name);
+	}
+
+	// Save the new weapon's name and nameKey before copying
+	AsciiString new_weapon_name_saved = weapon->m_name;
+	NameKeyType new_weapon_nameKey_saved = weapon->m_nameKey;
+
+	// Copy from parent template
+	(*weapon) = (*parentTemplate);
+
+	// Restore the new weapon's name and nameKey (should not be copied from parent)
+	weapon->m_name = new_weapon_name_saved;
+	weapon->m_nameKey = new_weapon_nameKey_saved;
+
+	// Reset nextTemplate since this is not an override
+	weapon->friend_setNextTemplate(NULL);
+
+	// Parse the ini weapon definition (allows all fields to be overridden)
+	ini->initFromINI(weapon, weapon->getFieldParse());
+
+	if (weapon->m_projectileName.isNone())
+		weapon->m_projectileName.clear();
+
+#if defined(RTS_DEBUG)
+	if (!weapon->getFireSound().getEventName().isEmpty() && weapon->getFireSound().getEventName().compareNoCase("NoSound") != 0)
+	{
+		DEBUG_ASSERTCRASH(TheAudio->isValidAudioEvent(&weapon->getFireSound()), ("Invalid FireSound %s in Weapon '%s'.", weapon->getFireSound().getEventName().str(), weapon->getName().str()));
+	}
+#endif
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -3505,7 +3564,7 @@ void Weapon::processRequestAssistance(const Object* requestingObject, Object* vi
 }
 
 //-------------------------------------------------------------------------------------------------
-/*static*/ void Weapon::calcProjectileLaunchPosition(
+ void Weapon::calcProjectileLaunchPosition(
 	const Object* launcher,
 	WeaponSlotType wslot,
 	Int specificBarrelToUse,
@@ -3588,7 +3647,7 @@ void Weapon::processRequestAssistance(const Object* requestingObject, Object* vi
 }
 
 //-------------------------------------------------------------------------------------------------
-/*static*/ void Weapon::positionProjectileForLaunch(
+ void Weapon::positionProjectileForLaunch(
 	Object* projectile,
 	const Object* launcher,
 	WeaponSlotType wslot,
@@ -4064,14 +4123,14 @@ void WeaponBonus::appendBonuses(WeaponBonus& bonus) const
 }
 
 //-------------------------------------------------------------------------------------------------
-/*static*/ void WeaponBonusSet::parseWeaponBonusSet(INI* ini, void* /*instance*/, void* store, const void* /*userData*/)
+ void WeaponBonusSet::parseWeaponBonusSet(INI* ini, void* /*instance*/, void* store, const void* /*userData*/)
 {
 	WeaponBonusSet* self = (WeaponBonusSet*)store;
 	self->parseWeaponBonusSet(ini);
 }
 
 //-------------------------------------------------------------------------------------------------
-/*static*/ void WeaponBonusSet::parseWeaponBonusSetPtr(INI* ini, void* /*instance*/, void* store, const void* /*userData*/)
+ void WeaponBonusSet::parseWeaponBonusSetPtr(INI* ini, void* /*instance*/, void* store, const void* /*userData*/)
 {
 	WeaponBonusSet** selfPtr = (WeaponBonusSet**)store;
 	(*selfPtr)->parseWeaponBonusSet(ini);

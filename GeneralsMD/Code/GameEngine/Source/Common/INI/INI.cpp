@@ -82,6 +82,7 @@ static const BlockParse theTypeTable[] =
 	{ "Animation",					INI::parseAnim2DDefinition },
 	{ "Armor",							INI::parseArmorDefinition },
 	{ "ArmorExtend",							INI::parseArmorExtendDefinition },
+	{ "WeaponExtend",						INI::parseWeaponExtendDefinition },
 	{ "AudioEvent",					INI::parseAudioEventDefinition },
 	{ "AudioSettings",			INI::parseAudioSettingsDefinition },
 	{ "Bridge",							INI::parseTerrainBridgeDefinition },
@@ -800,7 +801,7 @@ void INI::parseBitInInt32( INI *ini, void *instance, void *store, const void* us
 
 //-------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------
-/*static*/ Bool INI::scanBool(const char* token)
+ Bool INI::scanBool(const char* token)
 {
 	// translate string yes/no into TRUE/FALSE
 	if( stricmp( token, "yes" ) == 0 )
@@ -1017,7 +1018,7 @@ void INI::parseMappedImage( INI *ini, void * /*instance*/, void *store, const vo
 /** Parse a string label assumed as a Anim2D template name.  Translate that name to an
 	* actual template pointer for storage */
 // ------------------------------------------------------------------------------------------------
-/*static*/ void INI::parseAnim2DTemplate( INI *ini, void *instance, void *store, const void *userData )
+ void INI::parseAnim2DTemplate( INI *ini, void *instance, void *store, const void *userData )
 {
 	const char *token = ini->getNextToken();
 
@@ -1795,7 +1796,7 @@ void INI::continueParsing( void *what, const FieldParse* parseTable, const std::
 }
 
 //-------------------------------------------------------------------------------------------------
-/*static*/ const char* INI::getNextToken(const char* seps)
+ const char* INI::getNextToken(const char* seps)
 {
 	if (!seps) seps = getSeps();
 	const char *token = ::strtok(NULL, seps);
@@ -1805,7 +1806,7 @@ void INI::continueParsing( void *what, const FieldParse* parseTable, const std::
 }
 
 //-------------------------------------------------------------------------------------------------
-/*static*/ const char* INI::getNextTokenOrNull(const char* seps)
+ const char* INI::getNextTokenOrNull(const char* seps)
 {
 	if (!seps) seps = getSeps();
 	const char *token = ::strtok(NULL, seps);
@@ -1813,7 +1814,7 @@ void INI::continueParsing( void *what, const FieldParse* parseTable, const std::
 }
 
 //-------------------------------------------------------------------------------------------------
-/*static*/ ScienceType INI::scanScience(const char* token)
+ ScienceType INI::scanScience(const char* token)
 {
 	return TheScienceStore->friend_lookupScience( token );
 }
@@ -1932,7 +1933,7 @@ void INI::extractBlockParameters( const char* blockType, const AsciiString& curr
 }
 
 //-------------------------------------------------------------------------------------------------
-/*static*/ Int INI::scanInt(const char* token)
+ Int INI::scanInt(const char* token)
 {
 	Int value;
 	if (sscanf( token, "%d", &value ) != 1)
@@ -1941,7 +1942,7 @@ void INI::extractBlockParameters( const char* blockType, const AsciiString& curr
 }
 
 //-------------------------------------------------------------------------------------------------
-/*static*/ UnsignedInt INI::scanUnsignedInt(const char* token)
+ UnsignedInt INI::scanUnsignedInt(const char* token)
 {
 	UnsignedInt value;
 	if (sscanf( token, "%u", &value ) != 1)	// unsigned int is %u, not %d
@@ -1950,7 +1951,7 @@ void INI::extractBlockParameters( const char* blockType, const AsciiString& curr
 }
 
 //-------------------------------------------------------------------------------------------------
-/*static*/ Real INI::scanReal(const char* token)
+ Real INI::scanReal(const char* token)
 {
 	Real value;
 	if (sscanf( token, "%f", &value ) != 1)
@@ -1959,7 +1960,7 @@ void INI::extractBlockParameters( const char* blockType, const AsciiString& curr
 }
 
 //-------------------------------------------------------------------------------------------------
-/*static*/ Real INI::scanPercentToReal(const char* token)
+ Real INI::scanPercentToReal(const char* token)
 {
 	Real value;
 	if (sscanf( token, "%f", &value ) != 1)
@@ -1968,7 +1969,7 @@ void INI::extractBlockParameters( const char* blockType, const AsciiString& curr
 }
 
 //-------------------------------------------------------------------------------------------------
-/*static*/ Int INI::scanIndexList(const char* token, ConstCharPtrArray nameList)
+ Int INI::scanIndexList(const char* token, ConstCharPtrArray nameList)
 {
 	if( nameList == NULL || nameList[ 0 ] == NULL )
 	{
@@ -1994,7 +1995,7 @@ void INI::extractBlockParameters( const char* blockType, const AsciiString& curr
 
 }
 //-------------------------------------------------------------------------------------------------
-/*static*/ Int INI::scanLookupList(const char* token, ConstLookupListRecArray lookupList)
+ Int INI::scanLookupList(const char* token, ConstLookupListRecArray lookupList)
 {
 	if( lookupList == NULL || lookupList[ 0 ].name == NULL )
 	{

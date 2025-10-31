@@ -931,6 +931,7 @@ public:
 	void handleProjectileDetonation( const WeaponTemplate* w, const Object *source, const Coord3D* pos, WeaponBonusConditionFlags extraBonusFlags, Bool inflictDamage = TRUE );
 
 	static void parseWeaponTemplateDefinition(INI* ini);
+	static void parseWeaponExtendDefinition(INI* ini);
 
 protected:
 
