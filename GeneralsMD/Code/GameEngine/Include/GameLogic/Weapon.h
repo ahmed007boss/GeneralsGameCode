@@ -458,6 +458,7 @@ public:
 	
 	// TheSuperHackers @feature author 15/01/2025 Component dependency system
 	inline const std::vector<AsciiString>& getAffectedByComponents() const { return m_affectedByComponents; }
+	inline const AsciiString& getComponentName() const { return m_componentName; }
 	Bool areRequiredComponentsFunctional(const Object* source) const;
 
 	// TheSuperHackers @feature author 15/01/2025 Component dependency system
@@ -498,7 +499,7 @@ public:
 	inline const std::vector<ObjectPrerequisite>& getTargetPrerequisites() const { return m_targetPrerequisites; }
 	inline const std::vector<ObjectPrerequisite>& getShooterPrerequisites() const { return m_shooterPrerequisites; }
 	inline const std::vector<ObjectPrerequisite>& getRadiusDamageAffectsPrerequisites() const { return m_radiusDamageAffectsPrerequisites; }
-	inline BOOL canAttackWithoutTarget() const { return m_canAttackWithoutTarget; }
+	inline Bool canAttackWithoutTarget() const { return m_canAttackWithoutTarget; }
 	inline const AsciiString& getConsumeInventory() const { return m_consumeInventory; }
 	inline Int getRadiusDamageAffectsMaxSimultaneous() const { return m_radiusDamageAffectsMaxSimultaneous; }
 	inline Bool isLeechRangeWeapon() const { return m_leechRangeWeapon; }
@@ -519,6 +520,9 @@ public:
 	// TheSuperHackers @feature author 15/01/2025 Component damage properties
 	std::map<AsciiString, Real> m_primaryComponentDamage;		///< Primary damage to specific components
 	std::map<AsciiString, Real> m_secondaryComponentDamage;	///< Secondary damage to specific components
+	
+	// TheSuperHackers @feature author 15/01/2025 Weapon component dependency
+	AsciiString m_componentName;								///< Name of the component this weapon depends on for functionality
 
 protected:
 

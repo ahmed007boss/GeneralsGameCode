@@ -41,7 +41,7 @@
 #include "GameLogic/Module/AutoHealBehavior.h"
 #include "GameLogic/Module/BodyModule.h"
 #include "GameLogic/Module/ActiveBody.h"
-#include "GameLogic/Component.h"
+#include "GameLogic/Components/Component.h"
 #include "GameLogic/GameLogic.h"
 #include "GameLogic/Object.h"
 #include "GameLogic/PartitionManager.h"
@@ -328,30 +328,32 @@ void AutoHealBehavior::pulseHealObject( Object *obj )
 			for (std::vector<Component>::const_iterator it = components.begin();
 				 it != components.end(); ++it)
 			{
-				const AsciiString& componentName = it->name;
-				Real maxHealth = body->getComponentMaxHealth(componentName);
-				Real currentHealth = body->getComponentHealth(componentName);
+				const AsciiString componentName = it->getName();
+				Component* component = body->GetComponent<Component>(componentName);
 				
-				if (maxHealth > 0.0f) // Component exists
+				if (component && component->getCurrentMaxHealth() > 0.0f) // Component exists
 				{
+					Real maxHealth = component->getCurrentMaxHealth();
+					Real currentHealth = component->getCurrentHealth();
 					Real healingNeeded = maxHealth - currentHealth;
+					
 					if (healingNeeded > 0.0f) // Component needs healing
 					{
 						Real finalHealingAmount = healingNeeded * componentHealingAmount;
 						
 						// Apply healing based on component healing type
-						switch (it->healingType)
+						switch (it->getHealingType())
 						{
 							case COMPONENT_HEALING_NORMAL:
 								// Can be healed from destroyed to max normally
-								body->healComponent(componentName, finalHealingAmount);
+								component->heal(finalHealingAmount);
 								break;
 								
 							case COMPONENT_HEALING_PARTIAL_ONLY:
 								// Can be healed if not destroyed to max normally
 								if (currentHealth > 0.0f)
 								{
-									body->healComponent(componentName, finalHealingAmount);
+									component->heal(finalHealingAmount);
 								}
 								break;
 								
@@ -365,13 +367,13 @@ void AutoHealBehavior::pulseHealObject( Object *obj )
 									if (healToTarget > 0.0f)
 									{
 										Real actualHeal = healToTarget * componentHealingAmount;
-										body->healComponent(componentName, actualHeal);
+										component->heal(actualHeal);
 									}
 								}
 								else
 								{
 									// Normal healing if not destroyed
-									body->healComponent(componentName, finalHealingAmount);
+									component->heal(finalHealingAmount);
 								}
 								break;
 								
@@ -385,7 +387,7 @@ void AutoHealBehavior::pulseHealObject( Object *obj )
 									if (healToTarget > 0.0f)
 									{
 										Real actualHeal = healToTarget * componentHealingAmount;
-										body->healComponent(componentName, actualHeal);
+										component->heal(actualHeal);
 									}
 								}
 								break;

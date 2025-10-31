@@ -22,7 +22,7 @@
 //																																						//
 ////////////////////////////////////////////////////////////////////////////////
 
-// FILE: EWDamageHelper.cpp ////////////////////////////////////////////////////////////////////////
+// FILE: JammingDamageHelper.cpp ////////////////////////////////////////////////////////////////////////
 // Author: Graham Smallwood, June 2003
 // Desc:   Object helper - Clears ew status and heals ew damage since Body modules can't have Updates
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -34,11 +34,12 @@
 #include "GameLogic/Object.h"
 #include "GameLogic/Module/BodyModule.h"
 #include "GameLogic/Module/ActiveBody.h"
-#include "GameLogic/Module/EWDamageHelper.h"
+#include "GameLogic/Module/JammingDamageHelper.h"
+#include "GameLogic/Components/ElectronicsComponentInterface.h"
 
 // ------------------------------------------------------------------------------------------------
 // ------------------------------------------------------------------------------------------------
-EWDamageHelper::EWDamageHelper(Thing* thing, const ModuleData* modData) : ObjectHelper(thing, modData)
+JammingDamageHelper::JammingDamageHelper(Thing* thing, const ModuleData* modData) : ObjectHelper(thing, modData)
 {
 	m_healingStepCountdown = 0;
 
@@ -47,32 +48,32 @@ EWDamageHelper::EWDamageHelper(Thing* thing, const ModuleData* modData) : Object
 
 // ------------------------------------------------------------------------------------------------
 // ------------------------------------------------------------------------------------------------
-EWDamageHelper::~EWDamageHelper(void)
+JammingDamageHelper::~JammingDamageHelper(void)
 {
 
 }
 
 // ------------------------------------------------------------------------------------------------
 // ------------------------------------------------------------------------------------------------
-UpdateSleepTime EWDamageHelper::update()
+UpdateSleepTime JammingDamageHelper::update()
 {
 	BodyModuleInterface* body = getObject()->getBodyModule();
 
-	// TheSuperHackers @feature Ahmed Salah 15/01/2025 Process component-based EW damage healing
-	processComponentEWDamageHealing();
+	// TheSuperHackers @feature Ahmed Salah 15/01/2025 Process component-based Jamming damage healing
+	processComponentJammingDamageHealing();
 
 	m_healingStepCountdown--;
 	if (m_healingStepCountdown > 0)
 		return UPDATE_SLEEP_NONE;
 
-	m_healingStepCountdown = body->getEWDamageHealRate();
+	m_healingStepCountdown = body->getJammingDamageHealRate();
 
-	DamageInfo removeEWDamage;
-	removeEWDamage.in.m_damageType = DAMAGE_EW_UNRESISTABLE;
-	removeEWDamage.in.m_amount = -body->getEWDamageHealAmount();
-	body->attemptDamage(&removeEWDamage);
+	DamageInfo removeJammingDamage;
+	removeJammingDamage.in.m_damageType = DAMAGE_JAMMING_UNRESISTABLE;
+	removeJammingDamage.in.m_amount = -body->getJammingDamageHealAmount();
+	body->attemptDamage(&removeJammingDamage);
 
-	if (body->hasAnyEWDamage())
+	if (body->hasAnyJammingDamage())
 		return UPDATE_SLEEP_NONE;
 	else
 		return UPDATE_SLEEP_FOREVER;
@@ -80,11 +81,11 @@ UpdateSleepTime EWDamageHelper::update()
 
 // ------------------------------------------------------------------------------------------------
 // ------------------------------------------------------------------------------------------------
-void EWDamageHelper::notifyEWDamage(Real amount)
+void JammingDamageHelper::notifyJammingDamage(Real amount)
 {
 	if (amount > 0)
 	{
-		m_healingStepCountdown = getObject()->getBodyModule()->getEWDamageHealRate();
+		m_healingStepCountdown = getObject()->getBodyModule()->getJammingDamageHealRate();
 		setWakeFrame(getObject(), UPDATE_SLEEP_NONE);
 	}
 }
@@ -92,7 +93,7 @@ void EWDamageHelper::notifyEWDamage(Real amount)
 // ------------------------------------------------------------------------------------------------
 /** CRC */
 // ------------------------------------------------------------------------------------------------
-void EWDamageHelper::crc(Xfer* xfer)
+void JammingDamageHelper::crc(Xfer* xfer)
 {
 
 	// object helper crc
@@ -105,11 +106,11 @@ void EWDamageHelper::crc(Xfer* xfer)
 	* Version Info;
 	* 1: Initial version */
 	// ------------------------------------------------------------------------------------------------
-void EWDamageHelper::xfer(Xfer* xfer)
+void JammingDamageHelper::xfer(Xfer* xfer)
 {
 
 	// version
-	XferVersion currentVersion = 2; // TheSuperHackers @feature Ahmed Salah 15/01/2025 Incremented for component EW damage support
+	XferVersion currentVersion = 2; // TheSuperHackers @feature Ahmed Salah 15/01/2025 Incremented for component Jamming damage support
 	XferVersion version = currentVersion;
 	xfer->xferVersion(&version, currentVersion);
 
@@ -118,29 +119,29 @@ void EWDamageHelper::xfer(Xfer* xfer)
 
 	xfer->xferUnsignedInt(&m_healingStepCountdown);
 	
-	// TheSuperHackers @feature Ahmed Salah 15/01/2025 Component EW damage countdown tracking
+	// TheSuperHackers @feature Ahmed Salah 15/01/2025 Component Jamming damage countdown tracking
 	if (version >= 2)
 	{
-		// Xfer component EW heal countdown map
-		UnsignedInt countdownSize = m_componentEWHealCountdown.size();
+		// Xfer component Jamming heal countdown map
+		UnsignedInt countdownSize = m_componentJammingHealCountdown.size();
 		xfer->xferUnsignedInt(&countdownSize);
 		
 		if (xfer->getXferMode() == XFER_LOAD)
 		{
-			m_componentEWHealCountdown.clear();
+			m_componentJammingHealCountdown.clear();
 			for (UnsignedInt i = 0; i < countdownSize; i++)
 			{
 				AsciiString componentName;
 				UnsignedInt countdown;
 				xfer->xferAsciiString(&componentName);
 				xfer->xferUnsignedInt(&countdown);
-				m_componentEWHealCountdown[componentName] = countdown;
+				m_componentJammingHealCountdown[componentName] = countdown;
 			}
 		}
 		else
 		{
-			for (std::map<AsciiString, UnsignedInt>::iterator it = m_componentEWHealCountdown.begin();
-				 it != m_componentEWHealCountdown.end(); ++it)
+			for (std::map<AsciiString, UnsignedInt>::iterator it = m_componentJammingHealCountdown.begin();
+				 it != m_componentJammingHealCountdown.end(); ++it)
 			{
 				AsciiString componentName = it->first;
 				UnsignedInt countdown = it->second;
@@ -155,7 +156,7 @@ void EWDamageHelper::xfer(Xfer* xfer)
 // ------------------------------------------------------------------------------------------------
 /** Load post process */
 // ------------------------------------------------------------------------------------------------
-void EWDamageHelper::loadPostProcess(void)
+void JammingDamageHelper::loadPostProcess(void)
 {
 
 	// object helper base class
@@ -164,40 +165,47 @@ void EWDamageHelper::loadPostProcess(void)
 }
 
 // ------------------------------------------------------------------------------------------------
-// TheSuperHackers @feature Ahmed Salah 15/01/2025 Component-based EW damage management
+// TheSuperHackers @feature Ahmed Salah 15/01/2025 Component-based Jamming damage management
 // ------------------------------------------------------------------------------------------------
-void EWDamageHelper::notifyComponentEWDamage(const AsciiString& componentName, Real amount)
+void JammingDamageHelper::notifyComponentJammingDamage(const AsciiString& componentName, Real amount)
 {
 	if (componentName.isEmpty() || amount <= 0.0f)
 		return;
 		
-	// Get the ActiveBody module to add component EW damage
+	// Get the ActiveBody module to add component Jamming damage
 	ActiveBody* activeBody = static_cast<ActiveBody*>(getObject()->getBodyModule());
 	if (!activeBody)
 		return;
 		
-	// Add EW damage to the component
-	activeBody->addComponentEWDamage(componentName, amount);
-	
-	// Set up healing countdown for this component
-	UnsignedInt healRate = activeBody->getComponentEWDamageHealRate(componentName);
-	if (healRate > 0)
+	// Add Jamming damage to the component
+	Component* component = activeBody->GetComponent<Component>(componentName);
+	if (component)
 	{
-		m_componentEWHealCountdown[componentName] = healRate;
-		setWakeFrame(getObject(), UPDATE_SLEEP_NONE);
+		IElectronicsComponent* ec = dynamic_cast<IElectronicsComponent*>(component);
+		if (ec)
+		{
+			ec->addJammingDamage(amount);
+			// Set up healing countdown for this component
+			UnsignedInt healRate = ec->getJammingDamageHealRate();
+			if (healRate > 0)
+			{
+				m_componentJammingHealCountdown[componentName] = healRate;
+				setWakeFrame(getObject(), UPDATE_SLEEP_NONE);
+			}
+		}
 	}
 }
 
 // ------------------------------------------------------------------------------------------------
-void EWDamageHelper::processComponentEWDamageHealing()
+void JammingDamageHelper::processComponentJammingDamageHealing()
 {
 	ActiveBody* activeBody = static_cast<ActiveBody*>(getObject()->getBodyModule());
 	if (!activeBody)
 		return;
 		
-	// Process each component's EW damage healing
-	for (std::map<AsciiString, UnsignedInt>::iterator it = m_componentEWHealCountdown.begin();
-		 it != m_componentEWHealCountdown.end(); )
+	// Process each component's Jamming damage healing
+	for (std::map<AsciiString, UnsignedInt>::iterator it = m_componentJammingHealCountdown.begin();
+		 it != m_componentJammingHealCountdown.end(); )
 	{
 		const AsciiString& componentName = it->first;
 		UnsignedInt& countdown = it->second;
@@ -211,30 +219,37 @@ void EWDamageHelper::processComponentEWDamageHealing()
 		// Check if it's time to heal
 		if (countdown == 0)
 		{
-			Real healAmount = activeBody->getComponentEWDamageHealAmount(componentName);
-			if (healAmount > 0.0f)
+			Component* component = activeBody->GetComponent<Component>(componentName);
+			if (component)
 			{
-				activeBody->healComponentEWDamage(componentName, healAmount);
-				
-				// Reset countdown if there's still damage
-				Real currentDamage = activeBody->getComponentEWDamage(componentName);
-				if (currentDamage > 0.0f)
+				IElectronicsComponent* ec = dynamic_cast<IElectronicsComponent*>(component);
+				if (ec)
 				{
-					UnsignedInt healRate = activeBody->getComponentEWDamageHealRate(componentName);
-					countdown = healRate;
+					Real healAmount = ec->getJammingDamageHealAmount();
+					if (healAmount > 0.0f)
+					{
+						ec->healJammingDamage(healAmount);
+						// Reset countdown if there's still damage
+						Real currentDamage = ec->getCurrentJammingDamage();
+						if (currentDamage > 0.0f)
+						{
+							UnsignedInt healRate = ec->getJammingDamageHealRate();
+							countdown = healRate;
+						}
+						else
+						{
+							// No more damage, remove from tracking
+							it = m_componentJammingHealCountdown.erase(it);
+							continue;
+						}
+					}
+					else
+					{
+						// No healing amount, remove from tracking
+						it = m_componentJammingHealCountdown.erase(it);
+						continue;
+					}
 				}
-				else
-				{
-					// No more damage, remove from tracking
-					it = m_componentEWHealCountdown.erase(it);
-					continue;
-				}
-			}
-			else
-			{
-				// No healing amount, remove from tracking
-				it = m_componentEWHealCountdown.erase(it);
-				continue;
 			}
 		}
 		

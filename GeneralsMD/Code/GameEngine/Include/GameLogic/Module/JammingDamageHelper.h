@@ -22,15 +22,15 @@
 //																																						//
 ////////////////////////////////////////////////////////////////////////////////
 
-// FILE: EWDamageHelper.h ////////////////////////////////////////////////////////////////////////
+// FILE: JammingDamageHelper.h ////////////////////////////////////////////////////////////////////////
 // Author: Graham Smallwood, June 2003
 // Desc:   Object helper - Clears ew status and heals ew damage since Body modules can't have Updates
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 #pragma once
 
-#ifndef __EWDamageHelper_H_
-#define __EWDamageHelper_H_
+#ifndef __JammingDamageHelper_H_
+#define __JammingDamageHelper_H_
 
 // INCLUDES ///////////////////////////////////////////////////////////////////////////////////////
 #include "GameLogic/Module/ObjectHelper.h"
@@ -39,39 +39,39 @@
 
 // ------------------------------------------------------------------------------------------------
 // ------------------------------------------------------------------------------------------------
-class EWDamageHelperModuleData : public ModuleData
+class JammingDamageHelperModuleData : public ModuleData
 {
 
 };
 
 // ------------------------------------------------------------------------------------------------
 // ------------------------------------------------------------------------------------------------
-class EWDamageHelper : public ObjectHelper
+class JammingDamageHelper : public ObjectHelper
 {
 
-	MAKE_STANDARD_MODULE_MACRO_WITH_MODULE_DATA(EWDamageHelper, EWDamageHelperModuleData)
-		MEMORY_POOL_GLUE_WITH_USERLOOKUP_CREATE(EWDamageHelper, "EWDamageHelper")
+	MAKE_STANDARD_MODULE_MACRO_WITH_MODULE_DATA(JammingDamageHelper, JammingDamageHelperModuleData)
+	MEMORY_POOL_GLUE_WITH_USERLOOKUP_CREATE(JammingDamageHelper, "JammingDamageHelper")
 
 public:
 
-	EWDamageHelper(Thing* thing, const ModuleData* modData);
+	JammingDamageHelper(Thing* thing, const ModuleData* modData);
 	// virtual destructor prototype provided by memory pool object
 
 	virtual DisabledMaskType getDisabledTypesToProcess() const { return DISABLEDMASK_ALL; }
 	virtual UpdateSleepTime update();
 
-	void notifyEWDamage(Real amount);
+	void notifyJammingDamage(Real amount);
 
-	// TheSuperHackers @feature Ahmed Salah 15/01/2025 Component-based EW damage management
-	void notifyComponentEWDamage(const AsciiString& componentName, Real amount);
-	void processComponentEWDamageHealing();
+	// TheSuperHackers @feature Ahmed Salah 15/01/2025 Component-based Jamming damage management
+	void notifyComponentJammingDamage(const AsciiString& componentName, Real amount);
+	void processComponentJammingDamageHealing();
 
 protected:
 	UnsignedInt m_healingStepCountdown;
 	
-	// TheSuperHackers @feature Ahmed Salah 15/01/2025 Component EW damage tracking
-	std::map<AsciiString, UnsignedInt> m_componentEWHealCountdown;	///< Countdown for each component's EW damage healing
+	// TheSuperHackers @feature Ahmed Salah 15/01/2025 Component Jamming damage tracking
+	std::map<AsciiString, UnsignedInt> m_componentJammingHealCountdown;	///< Countdown for each component's Jamming damage healing
 };
 
 
-#endif  // end __EWDamageHelper_H_
+#endif  // end __JammingDamageHelper_H_

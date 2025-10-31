@@ -139,7 +139,7 @@ public:
 
 	// UpdateModuleInterface
 	virtual UpdateSleepTime update();
-	virtual DisabledMaskType getDisabledTypesToProcess() const { return MAKE_DISABLED_MASK2( DISABLED_HELD, DISABLED_EW); }
+	virtual DisabledMaskType getDisabledTypesToProcess() const { return MAKE_DISABLED_MASK2( DISABLED_HELD, DISABLED_JAMMING); }
 
 	// CountermeasuresBehaviorInterface
 	virtual void reportMissileForCountermeasures( Object *missile );

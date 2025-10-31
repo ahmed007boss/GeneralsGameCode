@@ -94,7 +94,7 @@
 #include "GameLogic/Module/ProductionUpdate.h"
 #include "GameLogic/Module/InventoryBehavior.h"
 #include "GameLogic/Module/ActiveBody.h"
-#include "GameLogic/Component.h"
+#include "GameLogic/Components/Component.h"
 #include "GameLogic/ScriptEngine.h"
 
 #include "GameNetwork/NetworkInterface.h"

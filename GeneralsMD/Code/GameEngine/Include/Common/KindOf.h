@@ -229,8 +229,6 @@ enum KindOfType CPP_11(: Int)
 		KINDOF_EW_RADAR_JAMMER,							///< Electronic Warfare radar jamming system.
 		KINDOF_EW_RADIO_JAMMER,							///< Electronic Warfare radio jamming system.
 		KINDOF_EW_JAMMABLE,								///< Object that can be jammed by electronic warfare systems.
-		KINDOF_EW_DIRECT_JAMMABLE,						///< Object that can be directly jammed by electronic warfare.
-		KINDOF_EW_AREA_JAMMABLE,						///< Object that can be affected by area jamming.
 		KINDOF_EW_RADIO_JAMMABLE,						///< Object that can have its radio communications jammed.
 		KINDOF_LOITERING_MUNITION_LAUNCHER,				///< Loitering munition launcher system.
 		KINDOF_UNMANNED_AERIAL_CARRIER,					///< Unmanned aerial vehicle carrier system.

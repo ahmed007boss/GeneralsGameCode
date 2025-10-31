@@ -350,13 +350,10 @@ Bool SalvageCrateCollide::eligibleForFullRestore( Object *other )
 	for( std::vector<Component>::const_iterator it = components.begin(); it != components.end(); ++it )
 	{
 		const Component& component = *it;
-		if( !component.name.isEmpty() )
+		if( !component.getName().isEmpty() )
 		{
-			Real currentHealth = body->getComponentHealth( component.name );
-			Real maxHealth = body->getComponentMaxHealth( component.name );
-			
 			// If component is damaged (health < max), it can be restored
-			if( currentHealth < maxHealth )
+			if( component.getCurrentHealth() < component.getCurrentMaxHealth() )
 				return TRUE;
 		}
 	}
@@ -680,10 +677,13 @@ void SalvageCrateCollide::doFullRestore( Object *other )
 	for( std::vector<Component>::const_iterator it = components.begin(); it != components.end(); ++it )
 	{
 		const Component& component = *it;
-		if( !component.name.isEmpty() )
+		if( !component.getName().isEmpty() )
 		{
-			Real maxHealth = body->getComponentMaxHealth( component.name );
-			body->setComponentHealth( component.name, maxHealth );
+			Component* comp = body->GetComponent<Component>(component.getName());
+			if (comp)
+			{
+				comp->setCurrentHealth(comp->getCurrentMaxHealth());
+			}
 		}
 	}
 

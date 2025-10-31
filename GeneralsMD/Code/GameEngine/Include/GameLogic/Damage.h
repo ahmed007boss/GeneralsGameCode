@@ -96,10 +96,8 @@ enum DamageType CPP_11(: Int)
 	DAMAGE_ANTI_AIR_GUN = 42,
 	DAMAGE_ANTI_AIR_MISSILE = 43,
 	DAMAGE_ARTILLERY = 44,
-	DAMAGE_EW_MISSILE = 45,	
-	DAMAGE_EW_VEHICLE = 46,
-	DAMAGE_EW_BUILDING = 47,
-	DAMAGE_EW_UNRESISTABLE = 48,
+	DAMAGE_ELECTRONIC_JAMMING= 45,	
+	DAMAGE_JAMMING_UNRESISTABLE = 46,
 
 	DAMAGE_NUM_TYPES
 };
@@ -140,14 +138,12 @@ inline Bool IsSubdualDamage( DamageType type )
 
 	return FALSE;
 }
-inline Bool IsEWDamage(DamageType type)
+inline Bool IsJammingDamage(DamageType type)
 {
 	switch (type)
 	{
-	case DAMAGE_EW_MISSILE:
-	case DAMAGE_EW_VEHICLE:
-	case DAMAGE_EW_BUILDING:
-	case DAMAGE_EW_UNRESISTABLE:
+	case DAMAGE_ELECTRONIC_JAMMING:
+	case DAMAGE_JAMMING_UNRESISTABLE:
 		return TRUE;
 	}
 
@@ -167,10 +163,8 @@ inline Bool IsHealthDamagingDamage( DamageType type )
 		case DAMAGE_SUBDUAL_UNRESISTABLE:
 		case DAMAGE_KILLPILOT:
 		case DAMAGE_KILL_GARRISONED:
-		case DAMAGE_EW_MISSILE:
-		case DAMAGE_EW_VEHICLE:
-		case DAMAGE_EW_BUILDING:
-		case DAMAGE_EW_UNRESISTABLE:
+		case DAMAGE_ELECTRONIC_JAMMING:
+		case DAMAGE_JAMMING_UNRESISTABLE:
 			
 			return FALSE;
 	}
@@ -473,4 +467,3 @@ protected:
 };
 
 #endif // __DAMAGE_H_
-

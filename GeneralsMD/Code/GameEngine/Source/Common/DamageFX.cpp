@@ -100,10 +100,8 @@ inline Bool IsDisableEffectDamageType(DamageType type)
 {
 	switch (type)
 	{
-	case DAMAGE_EW_MISSILE:
-	case DAMAGE_EW_VEHICLE:
-	case DAMAGE_EW_BUILDING:
-	case DAMAGE_EW_UNRESISTABLE:
+	case DAMAGE_ELECTRONIC_JAMMING:
+	case DAMAGE_JAMMING_UNRESISTABLE:
 		return TRUE;
 	}
 

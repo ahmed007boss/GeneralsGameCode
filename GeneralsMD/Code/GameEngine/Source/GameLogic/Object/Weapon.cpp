@@ -370,6 +370,7 @@ const FieldParse WeaponTemplate::TheWeaponTemplateFieldParseTable[] =
 	{ "PrimaryComponentDamage",		parsePrimaryComponentDamage,								NULL,							0 },
 	{ "SecondaryComponentDamage",	parseSecondaryComponentDamage,							NULL,							0 },
 	{ "AffectedByComponents",		parseAffectedByComponents,								NULL,							0 },
+	{ "ComponentName",				INI::parseAsciiString,									NULL,							offsetof(WeaponTemplate, m_componentName) },
 	{ NULL,												NULL,																		NULL,							0 }
 
 };
@@ -437,7 +438,7 @@ WeaponTemplate::WeaponTemplate() : m_nextTemplate(NULL)
 	m_extraBonus = NULL;
 	m_shotsPerBarrel = 1;
 	m_antiMask = WEAPON_ANTI_GROUND;	// but not air or projectile.
-	m_canAttackWithoutTarget = true;
+	m_canAttackWithoutTarget = TRUE;
 	m_projectileStreamName.clear();
 	m_laserName.clear();
 	m_laserBoneName.clear();
@@ -969,6 +970,24 @@ WeaponValidationResult Weapon::validateWeaponUse(const Object* source, const Obj
 
 	if (victim)
 	{
+		auto componentName = weaponTemplate->m_componentName;
+		if (weaponTemplate->getDamageType() == DAMAGE_ELECTRONIC_JAMMING)
+		{
+			auto victimBody = victim->getBodyModule();
+			if (victimBody)
+			{
+				auto victimActiveBody = dynamic_cast<ActiveBody*>(victimBody);
+				if (victimActiveBody)
+				{
+					if (
+					!victimActiveBody->canBeJammedWithDirectJammers(weaponTemplate->m_primaryComponentDamage)
+				&& (!victimActiveBody->canBeJammedWithAreaJammers(weaponTemplate->m_primaryComponentDamage) && weaponTemplate->canAttackWithoutTarget() ))
+					{
+						return WEAPON_VALIDATION_TARGET_PREREQ_FAILED;
+					}					
+				}			
+			}
+		}
 		// Check target prerequisites using ObjectPrerequisite system
 		const std::vector<ObjectPrerequisite>& targetPrereqs = weaponTemplate->getTargetPrerequisites();
 		for (size_t i = 0; i < targetPrereqs.size(); i++)
@@ -4115,45 +4134,22 @@ Bool Weapon::isWeaponSlotFunctional(const Object* source) const
 		return false;
 
 
-	// Map weapon slot to component name
-	AsciiString componentName;
-	switch (static_cast<Int>(m_wslot))
-	{
-		case 0: // PRIMARY
-			componentName = BodyModule::COMPONENT_PRIMARY_WEAPON;
-			break;
-		case 1: // SECONDARY
-			componentName = BodyModule::COMPONENT_SECONDARY_WEAPON;
-			break;
-		case 2: // TERTIARY
-			componentName = BodyModule::COMPONENT_TERTIARY_WEAPON;
-			break;
-		case 3: // WEAPON_FOUR
-			componentName = BodyModule::COMPONENT_WEAPON_FOUR;
-			break;
-		case 4: // WEAPON_FIVE
-			componentName = BodyModule::COMPONENT_WEAPON_FIVE;
-			break;
-		case 5: // WEAPON_SIX
-			componentName = BodyModule::COMPONENT_WEAPON_SIX;
-			break;
-		case 6: // WEAPON_SEVEN
-			componentName = BodyModule::COMPONENT_WEAPON_SEVEN;
-			break;
-		case 7: // WEAPON_EIGHT
-			componentName = BodyModule::COMPONENT_WEAPON_EIGHT;
-			break;
-		default:
-			// Invalid weapon slot - assume functional (no component restriction)
-			return true;
-	}
+	// Get component name from weapon template
+	AsciiString componentName = m_template->getComponentName();
 	
-	// Check component status
-	ComponentStatus status = body->getComponentStatus(componentName);
+	// If no component name specified, weapon should work (no component restriction)
+	if (componentName.isEmpty())
+		return true;
+	
+	// Get the component using the new GetComponent method
+	Component* component = body->GetComponent<Component>(componentName);
 	
 	// If component doesn't exist, weapon should work (no component restriction)
-	if (status == COMPONENT_STATUS_NONE)
+	if (!component)
 		return true;
+	
+	// Check component status using the new component method
+	ComponentStatus status = component->getStatus();
 	
 	// If component exists, it must not be downed to work
 	if (status == COMPONENT_STATUS_DOWNED)
@@ -4192,11 +4188,13 @@ Bool WeaponTemplate::areRequiredComponentsFunctional(const Object* source) const
 		 it != m_affectedByComponents.end(); ++it)
 	{
 		const AsciiString& componentName = *it;
-		ComponentStatus status = body->getComponentStatus(componentName);
+		Component* component = body->GetComponent<Component>(componentName);
 		
 		// If component doesn't exist, skip it (not required)
-		if (status == COMPONENT_STATUS_NONE)
+		if (!component)
 			continue;
+		
+		ComponentStatus status = component->getStatus();
 		
 		// If component exists and is downed, weapon is not functional
 		if (status == COMPONENT_STATUS_DOWNED)

@@ -52,7 +52,7 @@
 #include "GameLogic/Object.h"
 #include "GameLogic/PartitionManager.h"
 #include "GameLogic/Module/BodyModule.h"
-#include "GameLogic/Component.h"
+#include "GameLogic/Components/Component.h"
 #include "GameClient/Drawable.h"
 #include "GameClient/GameText.h"
 
@@ -343,8 +343,8 @@ Bool ObjectPrerequisite::isSatisfied(const Object* object) const
 		for (size_t i = 0; i < m_objectHasComponentNames.size(); i++)
 		{
 			const AsciiString& componentName = m_objectHasComponentNames[i];
-			Real maxHealth = bodyModule->getComponentMaxHealth(componentName);
-			if (maxHealth <= 0.0f)
+			Component* component = bodyModule->GetComponent<Component>(componentName);
+			if (!component || component->getCurrentMaxHealth() <= 0.0f)
 				return false; // Component doesn't exist
 		}
 		
@@ -352,8 +352,8 @@ Bool ObjectPrerequisite::isSatisfied(const Object* object) const
 		for (size_t i = 0; i < m_objectHasNoComponentNames.size(); i++)
 		{
 			const AsciiString& componentName = m_objectHasNoComponentNames[i];
-			Real maxHealth = bodyModule->getComponentMaxHealth(componentName);
-			if (maxHealth > 0.0f)
+			Component* component = bodyModule->GetComponent<Component>(componentName);
+			if (component && component->getCurrentMaxHealth() > 0.0f)
 				return false; // Component exists
 		}
 		
@@ -361,8 +361,8 @@ Bool ObjectPrerequisite::isSatisfied(const Object* object) const
 		for (size_t i = 0; i < m_objectHasWorkingComponentNames.size(); i++)
 		{
 			const AsciiString& componentName = m_objectHasWorkingComponentNames[i];
-			ComponentStatus status = bodyModule->getComponentStatus(componentName);
-			if ( status == COMPONENT_STATUS_DOWNED || status == COMPONENT_STATUS_USER_DISABLED)
+			Component* component = bodyModule->GetComponent<Component>(componentName);
+			if (!component || component->getStatus() == COMPONENT_STATUS_DOWNED || component->getStatus() == COMPONENT_STATUS_USER_DISABLED)
 				return false; // Component doesn't exist or is not working
 		}
 		
@@ -370,8 +370,8 @@ Bool ObjectPrerequisite::isSatisfied(const Object* object) const
 		for (size_t i = 0; i < m_objectHasNoWorkingComponentNames.size(); i++)
 		{
 			const AsciiString& componentName = m_objectHasNoWorkingComponentNames[i];
-			ComponentStatus status = bodyModule->getComponentStatus(componentName);
-			if ( status != COMPONENT_STATUS_DOWNED && status != COMPONENT_STATUS_USER_DISABLED)
+			Component* component = bodyModule->GetComponent<Component>(componentName);
+			if (component && component->getStatus() != COMPONENT_STATUS_DOWNED && component->getStatus() != COMPONENT_STATUS_USER_DISABLED)
 				return false; // Component exists and is working
 		}
 	}
@@ -729,8 +729,8 @@ UnicodeString ObjectPrerequisite::getRequiresList(const Object* object) const
 		for (size_t i = 0; i < m_objectHasComponentNames.size(); i++)
 		{
 			const AsciiString& componentName = m_objectHasComponentNames[i];
-			Real maxHealth = bodyModule->getComponentMaxHealth(componentName);
-			if (maxHealth <= 0.0f)
+			Component* component = bodyModule->GetComponent<Component>(componentName);
+			if (!component || component->getCurrentMaxHealth() <= 0.0f)
 			{
 				UnicodeString componentName = formatObjectDisplayText(m_objectHasComponentNames[i]);
 				if (firstRequirement)
@@ -745,8 +745,8 @@ UnicodeString ObjectPrerequisite::getRequiresList(const Object* object) const
 		for (size_t i = 0; i < m_objectHasWorkingComponentNames.size(); i++)
 		{
 			const AsciiString& componentName = m_objectHasWorkingComponentNames[i];
-			ComponentStatus status = bodyModule->getComponentStatus(componentName);
-			if ( status == COMPONENT_STATUS_DOWNED || status == COMPONENT_STATUS_USER_DISABLED)
+			Component* component = bodyModule->GetComponent<Component>(componentName);
+			if (!component || component->getStatus() == COMPONENT_STATUS_DOWNED || component->getStatus() == COMPONENT_STATUS_USER_DISABLED)
 			{
 				UnicodeString componentName = formatObjectDisplayText(m_objectHasWorkingComponentNames[i]);
 				componentName.concat(L" (working)");
@@ -1204,8 +1204,8 @@ UnicodeString ObjectPrerequisite::getConflictList(const Object* object) const
 		for (size_t i = 0; i < m_objectHasNoComponentNames.size(); i++)
 		{
 			const AsciiString& componentName = m_objectHasNoComponentNames[i];
-			Real maxHealth = bodyModule->getComponentMaxHealth(componentName);
-			if (maxHealth > 0.0f)
+			Component* component = bodyModule->GetComponent<Component>(componentName);
+			if (component && component->getCurrentMaxHealth() > 0.0f)
 			{
 				UnicodeString componentName = formatObjectDisplayText(m_objectHasNoComponentNames[i]);
 				if (firstConflict)
@@ -1220,8 +1220,8 @@ UnicodeString ObjectPrerequisite::getConflictList(const Object* object) const
 		for (size_t i = 0; i < m_objectHasNoWorkingComponentNames.size(); i++)
 		{
 			const AsciiString& componentName = m_objectHasNoWorkingComponentNames[i];
-			ComponentStatus status = bodyModule->getComponentStatus(componentName);
-			if ( status != COMPONENT_STATUS_DOWNED && status != COMPONENT_STATUS_USER_DISABLED)
+			Component* component = bodyModule->GetComponent<Component>(componentName);
+			if (component && component->getStatus() != COMPONENT_STATUS_DOWNED && component->getStatus() != COMPONENT_STATUS_USER_DISABLED)
 			{
 				UnicodeString componentName = formatObjectDisplayText(m_objectHasNoWorkingComponentNames[i]);
 				componentName.concat(L" (working)");

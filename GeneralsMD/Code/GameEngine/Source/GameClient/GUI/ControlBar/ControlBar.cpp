@@ -61,7 +61,7 @@
 #include "GameLogic/Module/RebuildHoleBehavior.h"
 #include "GameLogic/Module/InventoryBehavior.h"
 #include "GameLogic/Module/ActiveBody.h"
-#include "GameLogic/Component.h"
+#include "GameLogic/Components/Component.h"
 #include "GameLogic/ScriptEngine.h"
 #include "GameLogic/Weapon.h"
 
@@ -1358,15 +1358,12 @@ UnsignedInt CommandButton::getCostOfExecution(const Player* player, const Object
 					 it != components.end(); ++it)
 				{
 					const Component& component = *it;
-					if (component.replacementCost > 0)
+					if (component.getReplacementCost() > 0)
 					{
-						Real currentHealth = body->getComponentHealth(component.name);
-						Real maxHealth = body->getComponentMaxHealth(component.name);
-						
 						// Only include cost if component is damaged
-						if (currentHealth < maxHealth)
+						if (component.getCurrentHealth() < component.getCurrentMaxHealth())
 						{
-							totalCost += component.replacementCost;
+							totalCost += component.getReplacementCost();
 						}
 					}
 				}
@@ -1374,22 +1371,13 @@ UnsignedInt CommandButton::getCostOfExecution(const Player* player, const Object
 			else
 			{
 				// Calculate cost for specific component
-				Real currentHealth = body->getComponentHealth(componentName);
-				Real maxHealth = body->getComponentMaxHealth(componentName);
-				
-				// Only include cost if component is damaged
-				if (currentHealth < maxHealth)
+				Component* component = body->GetComponent<Component>(componentName);
+				if (component)
 				{
-					// Find the component to get its replacement cost
-					std::vector<Component> components = object->getComponents();
-					for (std::vector<Component>::const_iterator it = components.begin();
-						 it != components.end(); ++it)
-					{
-						if (it->name == componentName)
+				// Only include cost if component is damaged
+					if (component->getCurrentHealth() < component->getCurrentMaxHealth())
 						{
-							totalCost = it->replacementCost;
-							break;
-						}
+						totalCost += component->getReplacementCost();
 					}
 				}
 			}

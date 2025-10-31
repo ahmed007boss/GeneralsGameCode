@@ -91,43 +91,24 @@ UnicodeString BodyModuleData::getModuleDescription() const
 //-------------------------------------------------------------------------------------------------
 // TheSuperHackers @feature author 15/01/2025 Basic component name constants
 //-------------------------------------------------------------------------------------------------
-const AsciiString BodyModule::COMPONENT_ENGINE = "ENGINE";
-const AsciiString BodyModule::COMPONENT_WHEELS = "WHEELS";
-const AsciiString BodyModule::COMPONENT_TRACKS = "TRACKS";
-const AsciiString BodyModule::COMPONENT_FUEL_TANK = "FUEL_TANK";
-const AsciiString BodyModule::COMPONENT_TURRET_A = "TURRET_A";
-const AsciiString BodyModule::COMPONENT_TURRET_B = "TURRET_B";
-const AsciiString BodyModule::COMPONENT_TURRET_C = "TURRET_C";
-const AsciiString BodyModule::COMPONENT_PRIMARY_WEAPON = "PRIMARY_WEAPON";
-const AsciiString BodyModule::COMPONENT_SECONDARY_WEAPON = "SECONDARY_WEAPON";
-const AsciiString BodyModule::COMPONENT_TERTIARY_WEAPON = "TERTIARY_WEAPON";
-const AsciiString BodyModule::COMPONENT_WEAPON_FOUR = "WEAPON_FOUR";
-const AsciiString BodyModule::COMPONENT_WEAPON_FIVE = "WEAPON_FIVE";
-const AsciiString BodyModule::COMPONENT_WEAPON_SIX = "WEAPON_SIX";
-const AsciiString BodyModule::COMPONENT_WEAPON_SEVEN = "WEAPON_SEVEN";
-const AsciiString BodyModule::COMPONENT_WEAPON_EIGHT = "WEAPON_EIGHT";
-const AsciiString BodyModule::COMPONENT_RADAR = "RADAR";
-const AsciiString BodyModule::COMPONENT_VISION = "VISION";
-const AsciiString BodyModule::COMPONENT_ELECTRONICS = "ELECTRONICS";
-const AsciiString BodyModule::COMPONENT_POWER = "POWER";
-const AsciiString BodyModule::COMPONENT_COMMUNICATION_A = "COMMUNICATION_A";
-const AsciiString BodyModule::COMPONENT_COMMUNICATION_B = "COMMUNICATION_B";
-
-//-------------------------------------------------------------------------------------------------
-// TheSuperHackers @feature Ahmed Salah 15/01/2025 Default component toggle implementations for BodyModule base class
-//-------------------------------------------------------------------------------------------------
-void BodyModule::toggleComponentDisabled(const AsciiString& componentName)
-{
-	// Default implementation: do nothing (components not supported by this body type)
-}
-
-Bool BodyModule::isComponentUserDisabled(const AsciiString& componentName) const
-{
-	// Default implementation: components not disabled (components not supported by this body type)
-	return FALSE;
-}
-
-void BodyModule::setComponentUserDisabled(const AsciiString& componentName, Bool disabled)
-{
-	// Default implementation: do nothing (components not supported by this body type)
-}
+// const AsciiString BodyModule::COMPONENT_ENGINE = "ENGINE";
+// const AsciiString BodyModule::COMPONENT_WHEELS = "WHEELS";
+// const AsciiString BodyModule::COMPONENT_TRACKS = "TRACKS";
+// const AsciiString BodyModule::COMPONENT_FUEL_TANK = "FUEL_TANK";
+// const AsciiString BodyModule::COMPONENT_TURRET_A = "TURRET_A";
+// const AsciiString BodyModule::COMPONENT_TURRET_B = "TURRET_B";
+// const AsciiString BodyModule::COMPONENT_TURRET_C = "TURRET_C";
+// const AsciiString BodyModule::COMPONENT_PRIMARY_WEAPON = "PRIMARY_WEAPON";
+// const AsciiString BodyModule::COMPONENT_SECONDARY_WEAPON = "SECONDARY_WEAPON";
+// const AsciiString BodyModule::COMPONENT_TERTIARY_WEAPON = "TERTIARY_WEAPON";
+// const AsciiString BodyModule::COMPONENT_WEAPON_FOUR = "WEAPON_FOUR";
+// const AsciiString BodyModule::COMPONENT_WEAPON_FIVE = "WEAPON_FIVE";
+// const AsciiString BodyModule::COMPONENT_WEAPON_SIX = "WEAPON_SIX";
+// const AsciiString BodyModule::COMPONENT_WEAPON_SEVEN = "WEAPON_SEVEN";
+// const AsciiString BodyModule::COMPONENT_WEAPON_EIGHT = "WEAPON_EIGHT";
+// const AsciiString BodyModule::COMPONENT_RADAR = "RADAR";
+// const AsciiString BodyModule::COMPONENT_VISION = "VISION";
+// const AsciiString BodyModule::COMPONENT_ELECTRONICS = "ELECTRONICS";
+// const AsciiString BodyModule::COMPONENT_POWER = "POWER";
+// const AsciiString BodyModule::COMPONENT_COMMUNICATION_A = "COMMUNICATION_A";
+// const AsciiString BodyModule::COMPONENT_COMMUNICATION_B = "COMMUNICATION_B";

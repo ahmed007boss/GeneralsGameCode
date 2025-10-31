@@ -71,7 +71,7 @@
 #include "GameLogic/Module/BehaviorModule.h"
 #include "GameLogic/Module/BodyModule.h"
 #include "GameLogic/Module/ActiveBody.h"
-#include "GameLogic/Component.h"
+#include "GameLogic/Components/Component.h"
 #include "GameLogic/Module/CollideModule.h"
 #include "GameLogic/Module/ContainModule.h"
 #include "GameLogic/Module/CountermeasuresBehavior.h"
@@ -98,7 +98,7 @@
 #include "GameLogic/Module/StatusDamageHelper.h"
 #include "GameLogic/Module/StickyBombUpdate.h"
 #include "GameLogic/Module/SubdualDamageHelper.h"
-#include "GameLogic/Module/EWDamageHelper.h"
+#include "GameLogic/Module/JammingDamageHelper.h"
 #include "GameLogic/Module/TempWeaponBonusHelper.h"
 #include "GameLogic/Module/ToppleUpdate.h"
 #include "GameLogic/Module/UpdateModule.h"
@@ -119,6 +119,7 @@
 #include "Common/AudioEventInfo.h"
 #include "Common/DynamicAudioEventInfo.h"
 
+#include "GameLogic/Components/VisionComponentInterface.h"
 
 #ifdef DEBUG_OBJECT_ID_EXISTS
 ObjectID TheObjectIDToDebug = INVALID_ID;
@@ -242,7 +243,7 @@ Object::Object(const ThingTemplate* tt, const ObjectStatusMaskType& objectStatus
 	m_statusDamageHelper(NULL),
 	m_tempWeaponBonusHelper(NULL),
 	m_subdualDamageHelper(NULL),
-	m_ewDamageHelper(NULL),
+	m_jammingDamageHelper(NULL),
 	m_smcHelper(NULL),
 	m_wsHelper(NULL),
 	m_defectionHelper(NULL),
@@ -390,11 +391,11 @@ Object::Object(const ThingTemplate* tt, const ObjectStatusMaskType& objectStatus
 		m_statusDamageHelper = newInstance(StatusDamageHelper)(this, &statusModuleData);
 		*curB++ = m_statusDamageHelper;
 
-		static const NameKeyType ewHelperModuleDataTagNameKey = NAMEKEY("ModuleTag_EWDamageHelper");
-		static EWDamageHelperModuleData ewModuleData;
+		static const NameKeyType ewHelperModuleDataTagNameKey = NAMEKEY("ModuleTag_JammingDamageHelper");
+		static JammingDamageHelperModuleData ewModuleData;
 		ewModuleData.setModuleTagNameKey(ewHelperModuleDataTagNameKey);
-		m_ewDamageHelper = newInstance(EWDamageHelper)(this, &ewModuleData);
-		*curB++ = m_ewDamageHelper;
+		m_jammingDamageHelper = newInstance(JammingDamageHelper)(this, &ewModuleData);
+		*curB++ = m_jammingDamageHelper;
 	}
 
 	if (TheAI != NULL
@@ -713,7 +714,7 @@ Object::~Object()
 	m_statusDamageHelper = NULL;
 	m_tempWeaponBonusHelper = NULL;
 	m_subdualDamageHelper = NULL;
-	m_ewDamageHelper = NULL;
+	m_jammingDamageHelper = NULL;
 	m_smcHelper = NULL;
 	m_wsHelper = NULL;
 	m_defectionHelper = NULL;
@@ -5414,36 +5415,28 @@ void Object::setVisionRange(Real newVisionRange)
 	m_visionRange = newVisionRange;
 }
 
+
 //-------------------------------------------------------------------------------------------------
 Real Object::getShroudClearingRange() const
 {
 	Real shroudClearingRange = m_shroudClearingRange;
 
-	// TheSuperHackers @feature Ahmed Salah 15/01/2025 Shroud clearing range based on ActiveBody component status
-	// Check if object has ActiveBody module and RADAR component
+	// TheSuperHackers @feature Ahmed Salah 30/10/2025 Aggregate shroud clearing from Vision components (includes Sensor)
 	const ActiveBody* activeBody = static_cast<const ActiveBody*>(getBodyModule());
 	if (activeBody)
 	{
-		ComponentStatus radarStatus = activeBody->getComponentStatus(BodyModule::COMPONENT_RADAR);
-		
-		if (radarStatus == COMPONENT_STATUS_DOWNED || radarStatus == COMPONENT_STATUS_USER_DISABLED)
+		// Collect all components and consider those implementing IVisionComponent; take the largest effective range
+		std::vector<Component*> comps = activeBody->GetComponentsOfType<Component>();
+		for (std::vector<Component*>::const_iterator it = comps.begin(); it != comps.end(); ++it)
 		{
-			// RADAR component is destroyed - use disabled range or default to 30
-			if (m_shroudClearingDisabledRange > 0)
+			IVisionComponent* vc = dynamic_cast<IVisionComponent*>(*it);
+			if (vc)
 			{
-				shroudClearingRange = m_shroudClearingDisabledRange;
-			}
-			else
-			{
-				shroudClearingRange = 30.0f;
+				Real r = vc->getShroudClearingRange();
+				if (r > shroudClearingRange)
+					shroudClearingRange = r;
 			}
 		}
-		else if (radarStatus == COMPONENT_STATUS_PARTIALLY_FUNCTIONAL)
-		{
-			// RADAR component is partially functional - use 50% of original range
-			shroudClearingRange = m_shroudClearingRange * 0.5f;
-		}
-		// If COMPONENT_STATUS_FULLY_FUNCTIONAL, use original range (no change)
 	}
 
 	if (getStatusBits().test(OBJECT_STATUS_UNDER_CONSTRUCTION))
@@ -5475,7 +5468,7 @@ Real Object::getShroudClearingRange() const
 //-------------------------------------------------------------------------------------------------
 void Object::setShroudClearingRange(Real newShroudClearingRange)
 {
-	if (getDisabledFlags().test(DISABLED_EW) && m_shroudClearingDisabledRange >= 0)
+	if (getDisabledFlags().test(DISABLED_JAMMING) && m_shroudClearingDisabledRange >= 0)
 	{
 		newShroudClearingRange = m_shroudClearingDisabledRange;
 	}
@@ -5617,18 +5610,18 @@ void Object::notifySubdualDamage(Real amount)
 
 }
 //-------------------------------------------------------------------------------------------------
-void Object::notifyEWDamage(Real amount)
+void Object::notifyJammingDamage(Real amount)
 {
-	if (m_ewDamageHelper)
-		m_ewDamageHelper->notifyEWDamage(amount);
+	if (m_jammingDamageHelper)
+		m_jammingDamageHelper->notifyJammingDamage(amount);
 
 	// If we are gaining ew damage, we are slowly tinting
 	if (getDrawable())
 	{
 		if (amount > 0)
-			getDrawable()->setTintStatus(TINT_STATUS_GAINING_EW_DAMAGE);
+			getDrawable()->setTintStatus(TINT_STATUS_GAINING_JAMMING_DAMAGE);
 		else
-			getDrawable()->clearTintStatus(TINT_STATUS_GAINING_EW_DAMAGE);
+			getDrawable()->clearTintStatus(TINT_STATUS_GAINING_JAMMING_DAMAGE);
 	}
 	if (m_shroudClearingDisabledRange >= 0)
 	{

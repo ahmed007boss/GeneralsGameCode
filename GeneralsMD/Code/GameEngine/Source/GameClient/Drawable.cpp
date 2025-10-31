@@ -1290,7 +1290,7 @@ void Drawable::updateDrawable( void )
 				m_colorTintEnvelope = newInstance(TintEnvelope);
 				m_colorTintEnvelope->play( &SUBDUAL_DAMAGE_COLOR, 150, 150, SUSTAIN_INDEFINITELY);
 		}
-		else if (testTintStatus(TINT_STATUS_GAINING_EW_DAMAGE))
+		else if (testTintStatus(TINT_STATUS_GAINING_JAMMING_DAMAGE))
 		{
 			// Disabled has precendence, so it goes first
 			if (m_colorTintEnvelope == NULL)
@@ -3724,7 +3724,7 @@ void Drawable::drawJammed(const IRegion2D* healthBarRegion)
 	//
 	// Disabled Emoticon /Lightning
 	//                   7/
-	if (obj->isDisabledByType(DISABLED_EW)		)		
+	if (obj->isDisabledByType(DISABLED_JAMMING)		)		
 	{
 		// create icon if necessary
 		if (getIconInfo()->m_icon[ICON_JAMMED] == NULL)

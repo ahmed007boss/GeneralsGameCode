@@ -86,7 +86,7 @@ static PoolSizeRec PoolSizes[] =
 	{ "ObjectDefectionHelperPool", 2048, 256 },
 	{ "StatusDamageHelper", 1500, 256 },
 	{ "SubdualDamageHelper", 1500, 256 },
-	{ "EWDamageHelper", 1500, 256 },
+	{ "JammingDamageHelper", 1500, 256 },
 	{ "TempWeaponBonusHelper", 4096, 256 },
 	{ "Locomotor", 2048, 32 },
 	{ "LocomotorTemplate", 192, 32	},

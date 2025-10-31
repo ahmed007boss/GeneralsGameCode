@@ -243,7 +243,20 @@ set(GAMEENGINE_SRC
     Include/GameLogic/AITNGuard.h
     Include/GameLogic/Armor.h
     Include/GameLogic/ArmorSet.h
-    Include/GameLogic/Component.h
+	Include/GameLogic/Components/Component.h
+	Include/GameLogic/Components/WeaponComponent.h
+	Include/GameLogic/Components/EngineComponent.h
+	Include/GameLogic/Components/VisionComponent.h
+	Include/GameLogic/Components/TurretComponent.h
+	Include/GameLogic/Components/CommunicationComponent.h
+	Include/GameLogic/Components/PowerComponent.h
+	Include/GameLogic/Components/ElectronicsComponent.h
+	Include/GameLogic/Components/ElectronicsComponentInterface.h
+	Include/GameLogic/Components/JetEngineComponent.h
+	Include/GameLogic/Components/SensorComponent.h
+	Include/GameLogic/Components/VisionComponentInterface.h
+	Include/GameLogic/Components/RemoteControlComponent.h
+	Include/GameLogic/Components/InventoryStorageComponent.h
     Include/GameLogic/CaveSystem.h
     Include/GameLogic/CrateSystem.h
     Include/GameLogic/Damage.h
@@ -450,7 +463,7 @@ set(GAMEENGINE_SRC
     Include/GameLogic/Module/StatusDamageHelper.h
     Include/GameLogic/Module/StealthDetectorUpdate.h
     Include/GameLogic/Module/StealthUpdate.h
-    Include/GameLogic/Module/EWDamageHelper.h
+    Include/GameLogic/Module/JammingDamageHelper.h
     Include/GameLogic/Module/StealthUpgrade.h
     Include/GameLogic/Module/StickyBombUpdate.h
     Include/GameLogic/Module/StructureBody.h
@@ -891,8 +904,22 @@ set(GAMEENGINE_SRC
     Source/GameLogic/Object/Behavior/SpawnBehavior.cpp
     Source/GameLogic/Object/Behavior/SupplyWarehouseCripplingBehavior.cpp
     Source/GameLogic/Object/Behavior/TechBuildingBehavior.cpp
+	Source/GameLogic/Components/Component.cpp
+	Source/GameLogic/Components/WeaponComponent.cpp
+	Source/GameLogic/Components/EngineComponent.cpp
+	Source/GameLogic/Components/VisionComponent.cpp
+	Source/GameLogic/Components/TurretComponent.cpp
+	Source/GameLogic/Components/CommunicationComponent.cpp
+	Source/GameLogic/Components/PowerComponent.cpp
+	Source/GameLogic/Components/ElectronicsComponent.cpp
+	
+	Source/GameLogic/Components/JetEngineComponent.cpp
+	Source/GameLogic/Components/SensorComponent.cpp
+	Source/GameLogic/Components/RemoteControlComponent.cpp
+
+	Source/GameLogic/Components/InventoryStorageComponent.cpp
     Source/GameLogic/Object/Body/ActiveBody.cpp
-    Source/GameLogic/Object/Body/ActiveBodyEW.cpp
+    Source/GameLogic/Object/Body/ActiveBodyJamming.cpp
     Source/GameLogic/Object/Body/BodyModule.cpp
     Source/GameLogic/Object/Body/HighlanderBody.cpp
     Source/GameLogic/Object/Body/HiveStructureBody.cpp
@@ -969,7 +996,7 @@ set(GAMEENGINE_SRC
     Source/GameLogic/Object/Helper/ObjectWeaponStatusHelper.cpp
     Source/GameLogic/Object/Helper/StatusDamageHelper.cpp
     Source/GameLogic/Object/Helper/SubdualDamageHelper.cpp
-    Source/GameLogic/Object/Helper/EWDamageHelper.cpp
+    Source/GameLogic/Object/Helper/JammingDamageHelper.cpp
     Source/GameLogic/Object/Helper/TempWeaponBonusHelper.cpp
     Source/GameLogic/Object/Locomotor.cpp
     Source/GameLogic/Object/Object.cpp

@@ -46,7 +46,7 @@
 #include "GameClient/GameText.h"
 #include "GameLogic/Module/InventoryBehavior.h"
 #include "GameLogic/Module/ActiveBody.h"
-#include "GameLogic/Component.h"
+#include "GameLogic/Components/Component.h"
 
 //-------------------------------------------------------------------------------------------------
 // TheSuperHackers @feature Ahmed Salah 30/09/2025 Parsing functions for restoration properties
@@ -802,23 +802,23 @@ void ParkingPlaceBehavior::restoreParkedVehicle(Object* vehicle, const ParkingPl
 		{
 			for (std::vector<AsciiString>::const_iterator it = data->m_restoreComponents.begin();
 				 it != data->m_restoreComponents.end(); ++it)
-			{
-				const AsciiString& componentName = *it;
-				if (!componentName.isEmpty())
 				{
-					// Get current and max health for this component
-					Real currentHealth = body->getComponentHealth(componentName);
-					Real maxHealth = body->getComponentMaxHealth(componentName);
-					
-					// Restore to max health if damaged
-					if (currentHealth < maxHealth)
+					const AsciiString& componentName = *it;
+					if (!componentName.isEmpty())
 					{
-						body->setComponentHealth(componentName, maxHealth);
-						// Update model state after component restoration
-						body->setCorrectDamageState();
+						Component* component = body->GetComponent<Component>(componentName);
+						if (component)
+						{
+							// Restore to max health if damaged
+							if (component->getCurrentHealth() < component->getCurrentMaxHealth())
+							{
+								component->setCurrentHealth(component->getCurrentMaxHealth());
+								// Update model state after component restoration
+								body->setCorrectDamageState();
+							}
+						}
 					}
 				}
-			}
 		}
 	}
 }

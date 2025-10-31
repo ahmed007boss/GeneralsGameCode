@@ -47,7 +47,7 @@
 #include "GameLogic/WeaponBonusConditionFlags.h"
 #include "GameLogic/WeaponSet.h"
 #include "GameLogic/WeaponSetFlags.h"
-#include "Component.h"
+#include "GameLogic/Components/Component.h"
 #include "GameLogic/Module/StealthUpdate.h"
 #include "GameLogic/Module/InventoryBehavior.h"
 
@@ -109,7 +109,7 @@ class ObjectSMCHelper;
 class ObjectRepulsorHelper;
 class StatusDamageHelper;
 class SubdualDamageHelper;
-class EWDamageHelper;
+class JammingDamageHelper;
 class TempWeaponBonusHelper;
 class ObjectWeaponStatusHelper;
 class ObjectDefectionHelper;
@@ -245,9 +245,9 @@ public:
 	void kill( DamageType damageType = DAMAGE_UNRESISTABLE, DeathType deathType = DEATH_NORMAL );	///< kill the object with an optional type of damage and death.
 	void healCompletely();														///< Restore max health to this Object
 	void notifySubdualDamage( Real amount );///< At this level, we just pass this on to our helper and do a special tint
-	void notifyEWDamage( Real amount );///< At this level, we just pass this on to our helper and do a special tint
-	EWDamageHelper* getEWDamageHelper() { return m_ewDamageHelper; }///< Get the EW damage helper
-	const EWDamageHelper* getEWDamageHelper() const { return m_ewDamageHelper; }///< Get the EW damage helper (const)
+	void notifyJammingDamage( Real amount );///< At this level, we just pass this on to our helper and do a special tint
+	JammingDamageHelper* getJammingDamageHelper() { return m_jammingDamageHelper; }///< Get the EW damage helper
+	const JammingDamageHelper* getJammingDamageHelper() const { return m_jammingDamageHelper; }///< Get the EW damage helper (const)
 	void doStatusDamage( ObjectStatusTypes status, Real duration );///< At this level, we just pass this on to our helper
 	void doTempWeaponBonus( WeaponBonusConditionType status, UnsignedInt duration );///< At this level, we just pass this on to our helper
 
@@ -665,7 +665,7 @@ public:
 	DisabledMaskType getDisabledFlags() const { return m_disabledMask; }
 	
 	/// Returns TRUE if object is disabled by non-EW means or by multiple disabled types (including EW).
-	/// Logic: DISABLED_EW alone does not disable the object, but when combined with other disabled
+	/// Logic: DISABLED_JAMMING alone does not disable the object, but when combined with other disabled
 	/// types (like DISABLED_SUBDUED), the object becomes disabled. This allows EW to jam specific
 	/// systems without completely disabling the vehicle.
 	Bool isDisabled() const {
@@ -674,26 +674,26 @@ public:
 			return false;
 		}
 		
-		// If DISABLED_EW is not set, then any other flag means disabled
-		if (!m_disabledMask.test(DISABLED_EW)) {
+		// If DISABLED_JAMMING is not set, then any other flag means disabled
+		if (!m_disabledMask.test(DISABLED_JAMMING)) {
 			return true;
 		}
 		
-		// DISABLED_EW is set, check if there are any other flags
+		// DISABLED_JAMMING is set, check if there are any other flags
 		for (Int i = 0; i < DISABLED_COUNT; ++i) {
-			if (i != DISABLED_EW && m_disabledMask.test(i)) {
+			if (i != DISABLED_JAMMING && m_disabledMask.test(i)) {
 				return true; // Found a non-EW flag, object is disabled
 			}
 		}
 		
-		// Only DISABLED_EW is set, object is not disabled
+		// Only DISABLED_JAMMING is set, object is not disabled
 		return false;
 	};
 
 	/// Returns TRUE if object is disabled by electronic warfare (EMP or EW jamming).
 	/// This checks for electronic-based disabling effects that affect electronic systems.
 	Bool isElectronicallyDisabled() const {
-		return getDisabledFlags().test(DISABLED_EMP) ||  getDisabledFlags().test(DISABLED_EW);
+		return getDisabledFlags().test(DISABLED_EMP) ||  getDisabledFlags().test(DISABLED_JAMMING);
 	};
 	Bool clearDisabled( DisabledType type );
 
@@ -853,7 +853,7 @@ private:
 	ObjectDefectionHelper*				m_defectionHelper;
 	StatusDamageHelper*						m_statusDamageHelper;
 	SubdualDamageHelper*					m_subdualDamageHelper;
-	EWDamageHelper*								m_ewDamageHelper;
+	JammingDamageHelper*								m_jammingDamageHelper;
 	TempWeaponBonusHelper*				m_tempWeaponBonusHelper;
 	FiringTracker*								m_firingTracker;	///< Tracker is really a "helper" and is included NUM_SLEEP_HELPERS
 

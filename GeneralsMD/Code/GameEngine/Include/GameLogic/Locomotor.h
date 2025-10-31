@@ -47,6 +47,7 @@ class LocomotorTemplate;
 class INI;
 class PhysicsBehavior;
 class ActiveBody;
+class EngineComponent;
 enum BodyDamageType CPP_11(: Int);
 enum PhysicsTurningType CPP_11(: Int);
 
@@ -157,6 +158,7 @@ public:
 
 	// TheSuperHackers @feature author 15/01/2025 Component dependency system
 	std::vector<AsciiString> m_affectedByComponents;			///< List of component names that affect this locomotor's functionality
+	AsciiString								m_engineComponentName;		///< TheSuperHackers @feature Ahmed Salah 30/10/2025 Engine component name (INI), default "Engine"
 
 protected:
 
@@ -173,18 +175,22 @@ private:
 	UnicodeString							m_displayName;					///< Display Name
 	LocomotorSurfaceTypeMask	m_surfaces;							///< flags indicating the kinds of surfaces we can use
 	Real											m_maxSpeed;							///< max speed
-	Real											m_maxSpeedDamaged;			///< max speed when "damaged"
-	Real											m_maxSpeedDestroyed;		///< max speed when destroyed (default 0)
-	Real											m_minSpeed;							///< we should never brake past this
+	Real									m_maxSpeedDamaged;			///< max speed when "damaged"
+	Real									m_maxSpeedDestroyed;		///< max speed when destroyed (default 0)
+	Real									m_maxSpeedOutOfInventoryItem;	///< max speed when out of required inventory item (fuel)
+	Real									m_minSpeed;							///< we should never brake past this
 	Real											m_maxTurnRate;					///< max rate at which we can turn, in rads/frame
-	Real											m_maxTurnRateDamaged;		///< max turn rate when "damaged"
-	Real											m_maxTurnRateDestroyed;	///< max turn rate when destroyed (default 0)
+	Real									m_maxTurnRateDamaged;		///< max turn rate when "damaged"
+	Real									m_maxTurnRateDestroyed;	///< max turn rate when destroyed (default 0)
+	Real									m_maxTurnRateOutOfInventoryItem;	///< max turn rate when out of required inventory item (fuel)
 	Real											m_acceleration;					///< max acceleration
-	Real											m_accelerationDamaged;	///< max acceleration when damaged
-	Real											m_accelerationDestroyed;	///< max acceleration when destroyed (default 0)
+	Real									m_accelerationDamaged;	///< max acceleration when damaged
+	Real									m_accelerationDestroyed;	///< max acceleration when destroyed (default 0)
+	Real									m_accelerationOutOfInventoryItem;	///< max acceleration when out of required inventory item (fuel)
 	Real											m_lift;									///< max lifting acceleration (flying objects only)
-	Real											m_liftDamaged;					///< max lift when damaged
-	Real											m_liftDestroyed;					///< max lift when destroyed (default 0)
+	Real									m_liftDamaged;					///< max lift when damaged
+	Real									m_liftDestroyed;					///< max lift when destroyed (default 0)
+	Real									m_liftOutOfInventoryItem;	///< max lift when out of required inventory item (fuel)
 	Real											m_braking;							///< max braking (deceleration)
 	Real											m_minTurnSpeed;					///< we must be going >= this speed in order to turn
 	Real											m_preferredHeight;			///< our preferred height (if flying)
@@ -278,7 +284,7 @@ public:
 	Real getMaxLift(BodyDamageType condition, const Object* obj = NULL) const;  ///< get lift given condition
 	Real getBraking() const;  ///< get braking given condition
 
-	ComponentStatus getEngineComponentStatus(const Object* obj) const;  ///< TheSuperHackers @feature author 15/01/2025 Get engine component status from object (returns ComponentStatus enum value)
+    EngineComponent* getEngineComponent(const Object* obj) const;  ///< TheSuperHackers @feature Ahmed Salah 30/10/2025 Fetch engine component by INI-configured name
 	Real getMaxReachableDistance(const Object* obj) const;  ///< TheSuperHackers @feature Ahmed Salah 30/09/2025 Calculate max distance object can reach based on fuel, speed, and acceleration
 
 	inline Real getPreferredHeight() const { return m_preferredHeight;} ///< Just return preferredheight, no damage consideration
@@ -289,6 +295,7 @@ public:
 	inline LocomotorSurfaceTypeMask getLegalSurfaces() const { return m_template->m_surfaces; }
 
 	inline AsciiString getTemplateName() const { return m_template->m_name;}
+	inline const AsciiString& getEngineComponentName() const { return m_template->m_engineComponentName; }
 	inline AsciiString getName() const { return m_template->getName(); }
 	inline const UnicodeString& getDisplayName() const { return m_template->getDisplayName(); }
 	inline Real getMinSpeed() const { return m_template->m_minSpeed;}

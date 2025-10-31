@@ -53,94 +53,30 @@
 #include "GameLogic/PartitionManager.h"
 #include "GameLogic/TerrainLogic.h"
 #include "GameLogic/Weapon.h"
+#include "GameLogic/Components/RemoteControlComponent.h"
 #include "GameLogic/Module/AIUpdate.h"
 #include "GameLogic/Module/BridgeBehavior.h"
 #include "GameLogic/Module/ContainModule.h"
 #include "GameLogic/Module/DamageModule.h"
 #include "GameClient/GameText.h"
 #include "GameLogic/Module/ActiveBody.h"
-#include "GameLogic/Module/EWDamageHelper.h"
+#include "GameLogic/Module/JammingDamageHelper.h"
+#include "GameLogic/Components/Component.h"
+#include "GameLogic/Components/EngineComponent.h"
+#include "GameLogic/Components/VisionComponent.h"
+#include "GameLogic/Components/WeaponComponent.h"
+#include "GameLogic/Components/TurretComponent.h"
+#include "GameLogic/Components/ElectronicsComponent.h"
+#include "GameLogic/Components/InventoryStorageComponent.h"
+#include "GameLogic/Components/PowerComponent.h"
+#include "GameLogic/Components/CommunicationComponent.h"
+#include "GameLogic/Components/JetEngineComponent.h"
+#include "GameLogic/Components/SensorComponent.h"
 #include "Common/GameType.h"
-#include "ActiveBodyEW.cpp"
+#include "ActiveBodyJamming.cpp"
+#include <minwindef.h>
 
 #define YELLOW_DAMAGE_PERCENT (0.25f)
-
-//-------------------------------------------------------------------------------------------------
-// Custom parsers for component health values that auto-detect percentage values
-//-------------------------------------------------------------------------------------------------
-static void parseComponentMaxHealth(INI* ini, void* instance, void* /*store*/, const void* /*userData*/)
-{
-	Component* self = (Component*)instance;
-	
-	// Get the token and check if it contains a percentage symbol
-	const char* token = ini->getNextToken();
-	if (!token) return;
-	
-	// Check if the token contains a percentage symbol
-	const char* percentPos = strchr(token, '%');
-	if (percentPos != NULL)
-	{
-		// Extract the numeric value (copy everything before the %)
-		char valueBuffer[256];
-		strncpy(valueBuffer, token, percentPos - token);
-		valueBuffer[percentPos - token] = '\0';
-		
-		// Parse the numeric value
-		Real value = 0.0f;
-		if (sscanf(valueBuffer, "%f", &value) == 1)
-		{
-			self->maxHealth = value;
-			self->maxHealthValueType = VALUE_TYPE_PERCENTAGE;
-		}
-	}
-	else
-	{
-		// Parse as absolute value
-		Real value = 0.0f;
-		if (sscanf(token, "%f", &value) == 1)
-		{
-			self->maxHealth = value;
-			self->maxHealthValueType = VALUE_TYPE_ABSOLUTE;
-		}
-	}
-}
-
-static void parseComponentInitialHealth(INI* ini, void* instance, void* /*store*/, const void* /*userData*/)
-{
-	Component* self = (Component*)instance;
-	
-	// Get the token and check if it contains a percentage symbol
-	const char* token = ini->getNextToken();
-	if (!token) return;
-	
-	// Check if the token contains a percentage symbol
-	const char* percentPos = strchr(token, '%');
-	if (percentPos != NULL)
-	{
-		// Extract the numeric value (copy everything before the %)
-		char valueBuffer[256];
-		strncpy(valueBuffer, token, percentPos - token);
-		valueBuffer[percentPos - token] = '\0';
-		
-		// Parse the numeric value
-		Real value = 0.0f;
-		if (sscanf(valueBuffer, "%f", &value) == 1)
-		{
-			self->initialHealth = value;
-			self->initialHealthValueType = VALUE_TYPE_PERCENTAGE;
-		}
-	}
-	else
-	{
-		// Parse as absolute value
-		Real value = 0.0f;
-		if (sscanf(token, "%f", &value) == 1)
-		{
-			self->initialHealth = value;
-			self->initialHealthValueType = VALUE_TYPE_ABSOLUTE;
-		}
-	}
-}
 
 // FORWARD REFERENCES /////////////////////////////////////////////////////////////////////////////
 
@@ -203,43 +139,7 @@ static BodyDamageType calcDamageState(Real health, Real maxHealth)
 //-------------------------------------------------------------------------------------------------
 // TheSuperHackers @feature author 15/01/2025 Calculate component-specific damage state
 //-------------------------------------------------------------------------------------------------
-static BodyDamageType calcComponentDamageState(const AsciiString& componentName, Real componentHealth, Real componentMaxHealth)
-{
-	if (componentMaxHealth <= 0.0f)
-		return BODY_PRISTINE; // No component defined
-	
-	Real ratio = componentHealth / componentMaxHealth;
-	
-	// Component is considered destroyed if health is 10% or less
-	if (ratio <= 0.1f)
-	{
-		// Map component names to specific damage states
-		if (componentName == BodyModule::COMPONENT_ENGINE)
-			return BODY_COMPONENT_ENGINE_DESTROYED;
-		else if (componentName == BodyModule::COMPONENT_PRIMARY_WEAPON)
-			return BODY_COMPONENT_WEAPON_A_DESTROYED;
-		else if (componentName == BodyModule::COMPONENT_SECONDARY_WEAPON)
-			return BODY_COMPONENT_WEAPON_B_DESTROYED;
-		else if (componentName == BodyModule::COMPONENT_TERTIARY_WEAPON)
-			return BODY_COMPONENT_WEAPON_C_DESTROYED;
-		else if (componentName == BodyModule::COMPONENT_WEAPON_FOUR)
-			return BODY_COMPONENT_WEAPON_D_DESTROYED;
-		else if (componentName == BodyModule::COMPONENT_WEAPON_FIVE)
-			return BODY_COMPONENT_WEAPON_E_DESTROYED;
-		else if (componentName == BodyModule::COMPONENT_WEAPON_SIX)
-			return BODY_COMPONENT_WEAPON_F_DESTROYED;
-		else if (componentName == BodyModule::COMPONENT_WEAPON_SEVEN)
-			return BODY_COMPONENT_WEAPON_G_DESTROYED;
-		else if (componentName == BodyModule::COMPONENT_WEAPON_EIGHT)
-			return BODY_COMPONENT_WEAPON_H_DESTROYED;
-		else if (componentName == BodyModule::COMPONENT_TURRET_A ||
-				 componentName == BodyModule::COMPONENT_TURRET_B ||
-				 componentName == BodyModule::COMPONENT_TURRET_C)
-			return BODY_COMPONENT_TURRET_DESTROYED;
-	}
-	
-	return BODY_PRISTINE; // Component is functional
-}
+// moved: component damage state calculation now in Component::calcDamageState
 
 //-------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------
@@ -251,126 +151,25 @@ ActiveBodyModuleData::ActiveBodyModuleData()
 	m_subdualDamageHealRate = 0;
 	m_subdualDamageHealAmount = 0;
 
-	m_ewDamageCap = 0;
-	m_ewDamageHealRate = 0;
-	m_ewDamageHealAmount = 0;
+	m_jammingDamageCap = 0;
+	m_jammingDamageHealRate = 0;
+	m_jammingDamageHealAmount = 0;
+
+	m_canBeJammedByDirectJammers = FALSE;
+	m_canBeJammedByAreaJammers = FALSE;
 }
 
-//-------------------------------------------------------------------------------------------------
-// TheSuperHackers @feature author 15/01/2025 Parse Component healing type from INI
-//-------------------------------------------------------------------------------------------------
-static void parseComponentHealingType(INI* ini, void* instance, void* /*store*/, const void* /*userData*/)
+ActiveBodyModuleData::~ActiveBodyModuleData()
 {
-	Component* self = (Component*)instance;
-	const char* token = ini->getNextToken();
-	if (!token) return;
-	
-	// Parse healing type string
-	AsciiString healingTypeStr;
-	healingTypeStr.set(token);
-	
-	if (healingTypeStr == "NORMAL")
-		self->healingType = COMPONENT_HEALING_NORMAL;
-	else if (healingTypeStr == "PARTIAL_ONLY")
-		self->healingType = COMPONENT_HEALING_PARTIAL_ONLY;
-	else if (healingTypeStr == "PARTIAL_DESTROYED")
-		self->healingType = COMPONENT_HEALING_PARTIAL_DESTROYED;
-	else if (healingTypeStr == "PARTIAL_LIMITED")
-		self->healingType = COMPONENT_HEALING_PARTIAL_LIMITED;
-	else if (healingTypeStr == "REPLACEMENT_ONLY")
-		self->healingType = COMPONENT_HEALING_REPLACEMENT_ONLY;
-	else
-		self->healingType = COMPONENT_HEALING_NORMAL; // Default to normal
-}
-
-// TheSuperHackers @feature author 15/01/2025 Parse entire line from INI as a single token
-//-------------------------------------------------------------------------------------------------
-static AsciiString parseFullLineFromINI(INI* ini)
-{
-	AsciiString fullLine;
-	for (const char* token = ini->getNextToken(); token != NULL; token = ini->getNextTokenOrNull())
+	for (std::vector<Component*>::iterator it = m_components.begin(); it != m_components.end(); ++it)
 	{
-		if (!fullLine.isEmpty())
-			fullLine.concat(" ");
-		fullLine.concat(token);
+		delete *it;
 	}
-	return fullLine;
+	m_components.clear();
 }
 
-// TheSuperHackers @feature author 15/01/2025 Parse Component damage sides from INI
-//-------------------------------------------------------------------------------------------------
-static void parseComponentDamageOnSides(INI* ini, void* instance, void* /*store*/, const void* /*userData*/)
-{
-	Component* self = (Component*)instance;
-	
-	// Clear existing flags
-	self->damageOnSides.clear();
-	
-	// Get the full line and parse it
-	AsciiString fullLine = parseFullLineFromINI(ini);
-	AsciiString remaining = fullLine;
-	AsciiString token;
-	
-	// Parse multiple hit sides (e.g., "HIT_SIDE_FRONT HIT_SIDE_TOP")
-	while (remaining.nextToken(&token, " "))
-	{
-		if (token == "HIT_SIDE_FRONT")
-			self->damageOnSides.set(HIT_SIDE_FRONT, TRUE);
-		else if (token == "HIT_SIDE_BACK")
-			self->damageOnSides.set(HIT_SIDE_BACK, TRUE);
-		else if (token == "HIT_SIDE_LEFT")
-			self->damageOnSides.set(HIT_SIDE_LEFT, TRUE);
-		else if (token == "HIT_SIDE_RIGHT")
-			self->damageOnSides.set(HIT_SIDE_RIGHT, TRUE);
-		else if (token == "HIT_SIDE_TOP")
-			self->damageOnSides.set(HIT_SIDE_TOP, TRUE);
-		else if (token == "HIT_SIDE_BOTTOM")
-			self->damageOnSides.set(HIT_SIDE_BOTTOM, TRUE);
-		else if (token == "HIT_SIDE_UNKNOWN")
-			self->damageOnSides.set(HIT_SIDE_UNKNOWN, TRUE);
-	}
-}
 
-//-------------------------------------------------------------------------------------------------
-// TheSuperHackers @feature author 15/01/2025 Parse Component health data from INI
-//-------------------------------------------------------------------------------------------------
-static void parseComponent(INI* ini, void* instance, void* /*store*/, const void* /*userData*/)
-{
-	ActiveBodyModuleData* self = (ActiveBodyModuleData*)instance;
-	
-	// Get component name from the first token (e.g., "Engine", "Turret", etc.)
-	const char* componentName = ini->getNextToken();
-	if (!componentName) return;
-	
-	// Create new component
-	Component component;
-	component.name.set(componentName);
-	
-	// Parse component properties using FieldParse table
-	static const FieldParse componentFieldParse[] = {
-		{ "MaxHealth", parseComponentMaxHealth, NULL, 0 },
-		{ "InitialHealth", parseComponentInitialHealth, NULL, 0 },
-		{ "HealingType", parseComponentHealingType, NULL, offsetof(Component, healingType) },
-		{ "DamageOnSides", parseComponentDamageOnSides, NULL, offsetof(Component, damageOnSides) },
-		{ "ReplacementCost", INI::parseUnsignedInt, NULL, offsetof(Component, replacementCost) },
-		{ "ForceReturnOnDestroy", INI::parseBool, NULL, offsetof(Component, forceReturnOnDestroy) },
-		{ "MaxHealthValueType", INI::parseIndexList, TheValueTypeNames, offsetof(Component, maxHealthValueType) },
-		{ "InitialHealthValueType", INI::parseIndexList, TheValueTypeNames, offsetof(Component, initialHealthValueType) },
-		
-		// TheSuperHackers @feature Ahmed Salah 15/01/2025 Component EW damage properties
-		{ "EWDamageCap", INI::parseReal, NULL, offsetof(Component, ewDamageCap) },
-		{ "EWDamageHealRate", INI::parseUnsignedInt, NULL, offsetof(Component, ewDamageHealRate) },
-		{ "EWDamageHealAmount", INI::parseReal, NULL, offsetof(Component, ewDamageHealAmount) },
-		
-		{ 0, 0, 0, 0 }
-	};
-	
-	// Parse the component block using the field parse table
-	ini->initFromINI(&component, componentFieldParse);
-	
-	// Add component to the list
-	self->m_components.push_back(component);
-}
+
 
 //-------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------
@@ -387,13 +186,26 @@ void ActiveBodyModuleData::buildFieldParse(MultiIniFieldParse& p)
 		{ "SubdualDamageHealRate",		INI::parseDurationUnsignedInt,	NULL,		offsetof( ActiveBodyModuleData, m_subdualDamageHealRate ) },
 		{ "SubdualDamageHealAmount",	INI::parseReal,									NULL,		offsetof( ActiveBodyModuleData, m_subdualDamageHealAmount ) },
 
-		{ "EWDamageCap",				INI::parseReal,									NULL,		offsetof(ActiveBodyModuleData, m_ewDamageCap) },
-		{ "EWDamageHealRate",		INI::parseDurationUnsignedInt,	NULL,		offsetof(ActiveBodyModuleData, m_ewDamageHealRate) },
-		{ "EWDamageHealAmount",	INI::parseReal,									NULL,		offsetof(ActiveBodyModuleData, m_ewDamageHealAmount) },
+		{ "JammingDamageCap",				INI::parseReal,									NULL,		offsetof(ActiveBodyModuleData, m_jammingDamageCap) },
+		{ "JammingDamageHealRate",		INI::parseDurationUnsignedInt,	NULL,		offsetof(ActiveBodyModuleData, m_jammingDamageHealRate) },
+		{ "JammingDamageHealAmount",	INI::parseReal,									NULL,		offsetof(ActiveBodyModuleData, m_jammingDamageHealAmount) },
+
+		{ "CanBeJammedByDirectJammers", INI::parseBool, NULL, offsetof(ActiveBodyModuleData, m_canBeJammedByDirectJammers) },
+		{ "CanBeJammedByAreaJammers", INI::parseBool, NULL, offsetof(ActiveBodyModuleData, m_canBeJammedByAreaJammers) },
 
 		// TheSuperHackers @feature author 15/01/2025 Component parsing - dynamic field names
-		{ "Component", parseComponent, NULL, 0 },
-
+		{ "Component", Component::parseComponent, NULL, 0 },
+		{ "EngineComponent", EngineComponent::parseEngineComponent, NULL, 0 },
+		{ "VisionComponent", VisionComponent::parseVisionComponent, NULL, 0 },
+		{ "WeaponComponent", WeaponComponent::parseWeaponComponent, NULL, 0 },
+		{ "TurretComponent", TurretComponent::parseTurretComponent, NULL, 0 },
+		{ "ElectronicsComponent", ElectronicsComponent::parseElectronicsComponent, NULL, 0 },
+		{ "InventoryStorageComponent", InventoryStorageComponent::parseInventoryStorageComponent, NULL, 0 },
+		{ "PowerComponent", PowerComponent::parsePowerComponent, NULL, 0 },
+		{ "CommunicationComponent", CommunicationComponent::parseCommunicationComponent, NULL, 0 },
+		{ "RemoteControlComponent", RemoteControlComponent::parseRemoteControlComponent, NULL, 0 },
+		{ "JetEngineComponent", JetEngineComponent::parseJetEngineComponent, NULL, 0 },
+		{ "SensorComponent", SensorComponent::parseSensorComponent, NULL, 0 },
 		{ 0, 0, 0, 0 }
 	};
   p.add(dataFieldParse);
@@ -415,7 +227,7 @@ ActiveBody::ActiveBody( Thing *thing, const ModuleData* moduleData ) :
 	m_lastDamageCleared(false),
 	m_particleSystems(NULL),
 	m_currentSubdualDamage(0),
-	m_currentEWDamage(0),
+	m_currentJammingDamage(0),
 	m_indestructible(false)
 {
 	m_currentHealth = getActiveBodyModuleData()->m_initialHealth;
@@ -430,7 +242,7 @@ ActiveBody::ActiveBody( Thing *thing, const ModuleData* moduleData ) :
 
 	// TheSuperHackers @feature author 15/01/2025 Initialize component health from module data
 	initializeComponentHealth();
-
+	
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -457,24 +269,25 @@ void ActiveBody::setCorrectDamageState()
 	BodyDamageType componentDamageState = BODY_PRISTINE;
 	
 	// Check all components for damage states
-	for (std::map<AsciiString, Real>::const_iterator it = m_componentHealth.begin(); 
-		 it != m_componentHealth.end(); ++it)
+	const ActiveBodyModuleData* data = static_cast<const ActiveBodyModuleData*>(getModuleData());
+	if (data)
 	{
-		const AsciiString& componentName = it->first;
-		Real componentHealth = it->second;
-		
-		// Find max health for this component
-		std::map<AsciiString, Real>::const_iterator maxIt = m_componentMaxHealth.find(componentName);
-		if (maxIt != m_componentMaxHealth.end())
-		{
-			Real componentMaxHealth = maxIt->second;
-			BodyDamageType compState = calcComponentDamageState(componentName, componentHealth, componentMaxHealth);
-			
+		for (std::vector<Component*>::const_iterator it = data->m_components.begin();
+			 it != data->m_components.end(); ++it)
+	{
+			const Component* component = *it;
+			if (!component->getName().isEmpty())
+			{
+				Real componentHealth = component->getCurrentHealth();
+				Real componentMaxHealth = component->getCurrentMaxHealth();
+				
+				BodyDamageType compState = component->calcDamageState(componentHealth, componentMaxHealth);			
 			// Use the most severe component damage state
 			if (compState != BODY_PRISTINE)
 			{
 				componentDamageState = compState;
 				break; // Use the first destroyed component found
+				}
 			}
 		}
 	}
@@ -574,7 +387,7 @@ Real ActiveBody::estimateDamage( DamageInfoInput& damageInfo ) const
 		return 0.0f;
 
 	//ew jamming damage can't affect you if you can't be jammed
-	if (IsEWDamage(damageInfo.m_damageType) && !canBeEWJammed())
+	if (IsJammingDamage(damageInfo.m_damageType) && !canBeJammed())
 		return 0.0f;
 
 	if( damageInfo.m_damageType == DAMAGE_KILL_GARRISONED )
@@ -843,41 +656,45 @@ void ActiveBody::attemptDamage( DamageInfo *damageInfo )
 		getObject()->notifySubdualDamage(amount);
 	}
 
-	if (IsEWDamage(damageInfo->in.m_damageType))
+	if (IsJammingDamage(damageInfo->in.m_damageType))
 	{
-		if (!canBeEWJammed())
+		if (!canBeJammed())
 			return;
 
-		Bool wasEWJammed = isEWJammed();
-		internalAddEWDamage(amount);
-		Bool nowEWJammed = isEWJammed();
+		Bool wasJammingJammed = isJammingJammed();
+		internalAddJammingDamage(amount);
+		Bool nowJammingJammed = isJammingJammed();
 		alreadyHandled = TRUE;
 		allowModifier = FALSE;
 
-		if (wasEWJammed != nowEWJammed)
+		if (wasJammingJammed != nowJammingJammed)
 		{
-			onEWChange(nowEWJammed);
+			onJammingChange(nowJammingJammed);
 		}
 
-		getObject()->notifyEWDamage(amount);
+		getObject()->notifyJammingDamage(amount);
 
-		// TheSuperHackers @feature Ahmed Salah 15/01/2025 Apply EW damage to components
+		// TheSuperHackers @feature Ahmed Salah 15/01/2025 Apply Jamming damage to components
 		if (!damageInfo->in.m_componentDamage.empty())
 		{
 			for (std::map<AsciiString, Real>::const_iterator it = damageInfo->in.m_componentDamage.begin();
 				 it != damageInfo->in.m_componentDamage.end(); ++it)
 			{
 				const AsciiString& componentName = it->first;
-				Real componentEWDamage = it->second;
+				Real componentJammingDamage = it->second;
 				
-				// Apply EW damage to this component
-				addComponentEWDamage(componentName, componentEWDamage);
+				// Apply Jamming damage to this component
+				ElectronicsComponent* component = GetComponent<ElectronicsComponent>(componentName);
+				if (component)
+				{					
+					component->addJammingDamage(componentJammingDamage);					
+				}
 				
-				// Notify the EWDamageHelper about component EW damage
-				EWDamageHelper* ewHelper = getObject()->getEWDamageHelper();
-				if (ewHelper)
+				// Notify the JammingDamageHelper about component Jamming damage
+				JammingDamageHelper* jammingHelper = getObject()->getJammingDamageHelper();
+				if (jammingHelper)
 				{
-					ewHelper->notifyComponentEWDamage(componentName, componentEWDamage);
+					jammingHelper->notifyComponentJammingDamage(componentName, componentJammingDamage);
 				}
 			}
 		}
@@ -947,15 +764,15 @@ void ActiveBody::attemptDamage( DamageInfo *damageInfo )
 					// Find the component to check its damageOnSides
 					Bool canDamageFromThisSide = TRUE; // Default: can be damaged from any side
 					
-					for (std::vector<Component>::const_iterator compIt = moduleData->m_components.begin();
+				for (std::vector<Component*>::const_iterator compIt = moduleData->m_components.begin();
 						 compIt != moduleData->m_components.end(); ++compIt)
 					{
-						if (compIt->name == it->first)
+					if ((*compIt)->getName() == it->first)
 						{
 							// If component has specific damage sides defined, check if this hit side is allowed
-							if (compIt->damageOnSides.any())
+						if ((*compIt)->getDamageOnSides().any())
 							{
-								canDamageFromThisSide = compIt->damageOnSides.test(damageInfo->in.m_hitSide);
+							canDamageFromThisSide = (*compIt)->getDamageOnSides().test(damageInfo->in.m_hitSide);
 							}
 							break;
 						}
@@ -1009,7 +826,9 @@ void ActiveBody::attemptDamage( DamageInfo *damageInfo )
 				// Apply the adjusted component damage
 				if (adjustedComponentDamage > 0.0f)
 				{
-					damageComponent(it->first, adjustedComponentDamage);
+					Component* component = GetComponent<Component>(it->first);
+					if (component)
+						component->damage(adjustedComponentDamage);
 				}
 			}
 		}
@@ -1825,6 +1644,7 @@ Bool ActiveBody::hasAnySubdualDamage() const
 {
 	return m_currentSubdualDamage > 0;
 }
+
 //-------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------
 Real ActiveBody::getInitialHealth() const
@@ -1988,6 +1808,21 @@ void ActiveBody::crc( Xfer *xfer )
   // extend base class
 	BodyModule::crc( xfer );
 
+	// TheSuperHackers @feature Ahmed Salah 31/10/2025 Include components in body CRC
+	const ActiveBodyModuleData* data_crc = static_cast<const ActiveBodyModuleData*>(getModuleData());
+	if (data_crc)
+	{
+		AsciiString marker = "MARKER:Components";
+		xfer->xferAsciiString(&marker);
+		for (std::vector<Component*>::const_iterator it = data_crc->m_components.begin(); it != data_crc->m_components.end(); ++it)
+		{
+			if (*it)
+			{
+				(*it)->crc(xfer);
+			}
+		}
+	}
+
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -1999,7 +1834,7 @@ void ActiveBody::xfer( Xfer *xfer )
 {
 
 	// version
-	XferVersion currentVersion = 1;
+	XferVersion currentVersion = 2;
 	XferVersion version = currentVersion;
 	xfer->xferVersion( &version, currentVersion );
 
@@ -2011,7 +1846,7 @@ void ActiveBody::xfer( Xfer *xfer )
 
 	xfer->xferReal( &m_currentSubdualDamage );
 
-	xfer->xferReal( &m_currentEWDamage );
+	xfer->xferReal( &m_currentJammingDamage );
 
 	// previous health
 	xfer->xferReal( &m_prevHealth );
@@ -2107,6 +1942,21 @@ void ActiveBody::xfer( Xfer *xfer )
 	// armor set flags
 	m_curArmorSetFlags.xfer( xfer );
 
+	// TheSuperHackers @feature Ahmed Salah 31/10/2025 Include components in save/load
+	ActiveBodyModuleData* data_xfer = const_cast<ActiveBodyModuleData*>(getActiveBodyModuleData());
+	if (data_xfer && version >= 2)
+	{
+		UnsignedInt compCount = static_cast<UnsignedInt>(data_xfer->m_components.size());
+		xfer->xferUnsignedInt(&compCount);
+		for (std::vector<Component*>::iterator it = data_xfer->m_components.begin(); it != data_xfer->m_components.end(); ++it)
+		{
+			if (*it)
+			{
+				(*it)->xfer(xfer);
+			}
+		}
+	}
+
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -2117,6 +1967,19 @@ void ActiveBody::loadPostProcess( void )
 
 	// extend base class
 	BodyModule::loadPostProcess();
+
+	// TheSuperHackers @feature Ahmed Salah 31/10/2025 Forward load post process to components
+	ActiveBodyModuleData* data_lpp = const_cast<ActiveBodyModuleData*>(getActiveBodyModuleData());
+	if (data_lpp)
+	{
+		for (std::vector<Component*>::iterator it = data_lpp->m_components.begin(); it != data_lpp->m_components.end(); ++it)
+		{
+			if (*it)
+			{
+				(*it)->loadPostProcess();
+			}
+		}
+	}
 
 }
 
@@ -2136,130 +1999,6 @@ UnicodeString ActiveBodyModuleData::getModuleDescription() const
 	return *m_description;
 }
 
-//-------------------------------------------------------------------------------------------------
-// TheSuperHackers @feature author 15/01/2025 Component health management implementation
-//-------------------------------------------------------------------------------------------------
-Real ActiveBody::getComponentHealth(const AsciiString& componentName) const
-{
-	std::map<AsciiString, Real>::const_iterator it = m_componentHealth.find(componentName);
-	return (it != m_componentHealth.end()) ? it->second : 0.0f;
-}
-
-Real ActiveBody::getComponentMaxHealth(const AsciiString& componentName) const
-{
-	std::map<AsciiString, Real>::const_iterator it = m_componentMaxHealth.find(componentName);
-	return (it != m_componentMaxHealth.end()) ? it->second : 0.0f;
-}
-
-Bool ActiveBody::setComponentHealth(const AsciiString& componentName, Real health)
-{
-	if (componentName.isEmpty())
-		return false;
-
-	// Clamp health between 0 and max health
-	Real maxHealth = getComponentMaxHealth(componentName);
-	if (maxHealth > 0.0f)
-	{
-		if (health < 0.0f) health = 0.0f;
-		if (health > maxHealth) health = maxHealth;
-	}
-	else
-	{
-		if (health < 0.0f) health = 0.0f;
-	}
-
-	m_componentHealth[componentName] = health;
-	return true;
-}
-
-Bool ActiveBody::damageComponent(const AsciiString& componentName, Real damage)
-{
-	if (componentName.isEmpty() || damage <= 0.0f)
-		return false;
-
-	Real currentHealth = getComponentHealth(componentName);
-	Real newHealth = currentHealth - damage;
-	return setComponentHealth(componentName, newHealth);
-}
-
-Bool ActiveBody::healComponent(const AsciiString& componentName, Real healing)
-{
-	if (componentName.isEmpty() || healing <= 0.0f)
-		return false;
-
-	// Get component data to check healing type
-	const ActiveBodyModuleData* data = static_cast<const ActiveBodyModuleData*>(getModuleData());
-	if (!data) return false;
-	
-	// Find the component definition
-	ComponentHealingType healingType = COMPONENT_HEALING_NORMAL;
-	for (std::vector<Component>::const_iterator it = data->m_components.begin();
-		 it != data->m_components.end(); ++it)
-	{
-		if (it->name == componentName)
-		{
-			healingType = it->healingType;
-			break;
-		}
-	}
-	
-	Real currentHealth = getComponentHealth(componentName);
-	Real maxHealth = getComponentMaxHealth(componentName);
-	Bool isDestroyed = (currentHealth <= 0.1f * maxHealth); // 10% threshold for destroyed
-	
-	// Apply healing restrictions based on healing type
-	Real newHealth = currentHealth + healing;
-	
-	switch (healingType)
-	{
-		case COMPONENT_HEALING_NORMAL:
-			// Can be healed from destroyed to max normally
-			// No restrictions
-			break;
-			
-		case COMPONENT_HEALING_PARTIAL_ONLY:
-			// Can be healed if not destroyed to max normally
-			if (isDestroyed)
-				return false; // Cannot heal if destroyed
-			break;
-			
-		case COMPONENT_HEALING_PARTIAL_DESTROYED:
-			// Can be healed from destroyed to partially working normally, but to max needs replacement
-			if (isDestroyed)
-			{
-				// Can only heal to 50% (partially working)
-				Real partialHealth = 0.5f * maxHealth;
-				newHealth = min(newHealth, partialHealth);
-			}
-			break;
-			
-		case COMPONENT_HEALING_PARTIAL_LIMITED:
-			// Can be healed if not destroyed to partially working normally, but to max needs replacement
-			if (isDestroyed)
-				return false; // Cannot heal if destroyed
-			else
-			{
-				// Can only heal to 50% (partially working)
-				Real partialHealth = 0.5f * maxHealth;
-				newHealth = min(newHealth, partialHealth);
-			}
-			break;
-			
-		case COMPONENT_HEALING_REPLACEMENT_ONLY:
-			// Cannot be healed normally, needs replacement
-			return false;
-			
-		default:
-			break;
-	}
-	
-	return setComponentHealth(componentName, newHealth);
-}
-
-Bool ActiveBody::isComponentDestroyed(const AsciiString& componentName) const
-{
-	return getComponentHealth(componentName) <= 0.0f;
-}
 
 void ActiveBody::initializeComponentHealth()
 {
@@ -2270,69 +2009,14 @@ void ActiveBody::initializeComponentHealth()
 		// Initialize component health from module data
 	for (size_t i = 0; i < data->m_components.size(); i++)
 	{
-		const Component& component = data->m_components[i];
-		if (!component.name.isEmpty())
+		Component* component = data->m_components[i];
+		if (!component->getName().isEmpty())
 		{
-			Real componentMaxHealth = component.maxHealth;
-			Real componentInitialHealth = component.initialHealth;
 			Real mainMaxHealth = getMaxHealth();
-			
-			// Calculate max health based on its value type
-			if (component.maxHealthValueType == VALUE_TYPE_PERCENTAGE)
-			{
-				// Percentage: calculate as percentage of main object's max health
-				componentMaxHealth = mainMaxHealth * (component.maxHealth / 100.0f);
-			}
-			// For VALUE_TYPE_ABSOLUTE, use the value directly
-			
-			// Calculate initial health based on its value type
-			if (component.initialHealthValueType == VALUE_TYPE_PERCENTAGE)
-			{
-				// Percentage: calculate as percentage of main object's max health
-				componentInitialHealth = mainMaxHealth * (component.initialHealth / 100.0f);
-			}
-			// For VALUE_TYPE_ABSOLUTE, use the value directly
-			
-			m_componentMaxHealth[component.name] = componentMaxHealth;
-			m_componentHealth[component.name] = componentInitialHealth;
+			component->initializeHealth(mainMaxHealth);
+	}
 		}
 	}
-}
-
-//-------------------------------------------------------------------------------------------------
-// TheSuperHackers @feature author 15/01/2025 Component functionality status
-//-------------------------------------------------------------------------------------------------
-ComponentStatus ActiveBody::getComponentStatus(const AsciiString& componentName) const
-{
-	if (componentName.isEmpty())
-		return COMPONENT_STATUS_NONE;
-
-	// Check if component exists
-	Real maxHealth = getComponentMaxHealth(componentName);
-	if (maxHealth <= 0.0f)
-		return COMPONENT_STATUS_NONE;
-
-	// TheSuperHackers @feature Ahmed Salah 15/01/2025 Check if component is user disabled
-	if (isComponentUserDisabled(componentName))
-		return COMPONENT_STATUS_USER_DISABLED;
-
-	// Get current health and calculate percentage
-	Real currentHealth = getComponentHealth(componentName);
-	Real healthPercentage = (currentHealth / maxHealth) * 100.0f;
-
-	// Determine status based on health percentage
-	if (healthPercentage >= 50.0f)
-		return COMPONENT_STATUS_FULLY_FUNCTIONAL;
-	else if (healthPercentage >= 10.0f)
-		return COMPONENT_STATUS_PARTIALLY_FUNCTIONAL;
-	else
-		return COMPONENT_STATUS_DOWNED;
-}
-
-
-//-------------------------------------------------------------------------------------------------
-// TheSuperHackers @feature author 15/01/2025 Basic component name constants - now in BodyModule base class
-//-------------------------------------------------------------------------------------------------
 
 //-------------------------------------------------------------------------------------------------
 // TheSuperHackers @feature author 15/01/2025 Get component definitions
@@ -2340,56 +2024,96 @@ ComponentStatus ActiveBody::getComponentStatus(const AsciiString& componentName)
 std::vector<Component> ActiveBody::getComponents() const
 {
 	std::vector<Component> components;
-	
+
 	// Get component data from module data
 	const ActiveBodyModuleData* data = static_cast<const ActiveBodyModuleData*>(getModuleData());
 	if (!data)
 		return components;
 	
-	// Return a copy of the components vector
-	return data->m_components;
-}
-
-//-------------------------------------------------------------------------------------------------
-// TheSuperHackers @feature Ahmed Salah 15/01/2025 User component toggle methods
-//-------------------------------------------------------------------------------------------------
-void ActiveBody::toggleComponentDisabled(const AsciiString& componentName)
-{
-	if (componentName.isEmpty())
-		return;
-
-	// Check if component exists
-	Real maxHealth = getComponentMaxHealth(componentName);
-	if (maxHealth <= 0.0f)
-		return;
-
-	// Toggle the disabled status
-	Bool currentlyDisabled = isComponentUserDisabled(componentName);
-	setComponentUserDisabled(componentName, !currentlyDisabled);
-}
-
-Bool ActiveBody::isComponentUserDisabled(const AsciiString& componentName) const
-{
-	if (componentName.isEmpty())
-		return FALSE;
-
-	// Check if component is in the user disabled set (per-object)
-	return m_userDisabledComponents.find(componentName) != m_userDisabledComponents.end();
-}
-
-void ActiveBody::setComponentUserDisabled(const AsciiString& componentName, Bool disabled)
-{
-	if (componentName.isEmpty())
-		return;
-
-	if (disabled)
+	// Build a copy of components by value from the stored pointers
+	for (std::vector<Component*>::const_iterator it = data->m_components.begin(); it != data->m_components.end(); ++it)
 	{
-		// Add to disabled set (per-object)
-		m_userDisabledComponents.insert(componentName);
+		if (*it)
+			components.push_back(**it);
 	}
-	else
-	{
-		// Remove from disabled set (per-object)
-		m_userDisabledComponents.erase(componentName);
-	}
+	return components;
 }
+
+// Explicit specializations to resolve BodyModuleInterface::GetComponent<T> calls
+template<>
+Component* BodyModuleInterface::GetComponent<Component>(const AsciiString& componentName) const
+{
+	const ActiveBody* ab = dynamic_cast<const ActiveBody*>(this);
+	return ab ? const_cast<ActiveBody*>(ab)->GetComponent<Component>(componentName) : NULL;
+}
+
+template<>
+EngineComponent* BodyModuleInterface::GetComponent<EngineComponent>(const AsciiString& componentName) const
+{
+	const ActiveBody* ab = dynamic_cast<const ActiveBody*>(this);
+	return ab ? const_cast<ActiveBody*>(ab)->GetComponent<EngineComponent>(componentName) : NULL;
+}
+
+template<>
+ElectronicsComponent* BodyModuleInterface::GetComponent<ElectronicsComponent>(const AsciiString& componentName) const
+{
+	const ActiveBody* ab = dynamic_cast<const ActiveBody*>(this);
+	return ab ? const_cast<ActiveBody*>(ab)->GetComponent<ElectronicsComponent>(componentName) : NULL;
+}
+
+template<>
+VisionComponent* BodyModuleInterface::GetComponent<VisionComponent>(const AsciiString& componentName) const
+{
+	const ActiveBody* ab = dynamic_cast<const ActiveBody*>(this);
+	return ab ? const_cast<ActiveBody*>(ab)->GetComponent<VisionComponent>(componentName) : NULL;
+}
+
+template<>
+PowerComponent* BodyModuleInterface::GetComponent<PowerComponent>(const AsciiString& componentName) const
+{
+	const ActiveBody* ab = dynamic_cast<const ActiveBody*>(this);
+	return ab ? const_cast<ActiveBody*>(ab)->GetComponent<PowerComponent>(componentName) : NULL;
+}
+
+template<>
+CommunicationComponent* BodyModuleInterface::GetComponent<CommunicationComponent>(const AsciiString& componentName) const
+{
+	const ActiveBody* ab = dynamic_cast<const ActiveBody*>(this);
+	return ab ? const_cast<ActiveBody*>(ab)->GetComponent<CommunicationComponent>(componentName) : NULL;
+}
+
+template<>
+TurretComponent* BodyModuleInterface::GetComponent<TurretComponent>(const AsciiString& componentName) const
+{
+	const ActiveBody* ab = dynamic_cast<const ActiveBody*>(this);
+	return ab ? const_cast<ActiveBody*>(ab)->GetComponent<TurretComponent>(componentName) : NULL;
+}
+
+template<>
+InventoryStorageComponent* BodyModuleInterface::GetComponent<InventoryStorageComponent>(const AsciiString& componentName) const
+{
+	const ActiveBody* ab = dynamic_cast<const ActiveBody*>(this);
+	return ab ? const_cast<ActiveBody*>(ab)->GetComponent<InventoryStorageComponent>(componentName) : NULL;
+}
+
+template<>
+JetEngineComponent* BodyModuleInterface::GetComponent<JetEngineComponent>(const AsciiString& componentName) const
+{
+	const ActiveBody* ab = dynamic_cast<const ActiveBody*>(this);
+	return ab ? const_cast<ActiveBody*>(ab)->GetComponent<JetEngineComponent>(componentName) : NULL;
+}
+
+template<>
+SensorComponent* BodyModuleInterface::GetComponent<SensorComponent>(const AsciiString& componentName) const
+{
+	const ActiveBody* ab = dynamic_cast<const ActiveBody*>(this);
+	return ab ? const_cast<ActiveBody*>(ab)->GetComponent<SensorComponent>(componentName) : NULL;
+	}
+
+template<>
+WeaponComponent* BodyModuleInterface::GetComponent<WeaponComponent>(const AsciiString& componentName) const
+{
+	const ActiveBody* ab = dynamic_cast<const ActiveBody*>(this);
+	return ab ? const_cast<ActiveBody*>(ab)->GetComponent<WeaponComponent>(componentName) : NULL;
+}
+

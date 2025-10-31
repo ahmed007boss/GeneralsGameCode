@@ -67,7 +67,7 @@
 #include "GameLogic/Module/WarningBehavior.h"
 #include "GameLogic/Module/ActiveBody.h"
 #include "GameLogic/PartitionManager.h"
-#include "GameLogic/Component.h"
+#include "GameLogic/Components/Component.h"
 #include "GameLogic/ScriptActions.h"
 #include "GameLogic/ScriptEngine.h"
 #include "GameLogic/VictoryConditions.h"
@@ -985,9 +985,9 @@ void GameLogic::logicMessageDispatcher( GameMessage *msg, void *userData )
 								for (std::vector<Component>::const_iterator it = components.begin();
 									 it != components.end(); ++it)
 								{
-									if (it->name.getLength() == componentLength)
+									if (it->getName().getLength() == componentLength)
 									{
-										componentName = it->name;
+										componentName = it->getName();
 										break;
 									}
 								}
@@ -1026,15 +1026,12 @@ void GameLogic::logicMessageDispatcher( GameMessage *msg, void *userData )
 							 compIt != components.end(); ++compIt)
 						{
 							const Component& component = *compIt;
-							if (component.replacementCost > 0)
+							if (component.getReplacementCost() > 0)
 							{
-								Real currentHealth = body->getComponentHealth(component.name);
-								Real maxHealth = body->getComponentMaxHealth(component.name);
-								
 								// Only include cost if component is damaged
-								if (currentHealth < maxHealth)
+								if (component.getCurrentHealth() < component.getCurrentMaxHealth())
 								{
-									totalCost += component.replacementCost;
+									totalCost += component.getReplacementCost();
 								}
 							}
 						}
@@ -1042,22 +1039,13 @@ void GameLogic::logicMessageDispatcher( GameMessage *msg, void *userData )
 					else
 					{
 						// Replace specific component
-						Real currentHealth = body->getComponentHealth(componentName);
-						Real maxHealth = body->getComponentMaxHealth(componentName);
-						
-						// Only include cost if component is damaged
-						if (currentHealth < maxHealth)
+						Component* component = body->GetComponent<Component>(componentName);
+						if (component)
 						{
-							// Find the component to get its replacement cost
-							std::vector<Component> components = obj->getComponents();
-							for (std::vector<Component>::const_iterator compIt = components.begin();
-								 compIt != components.end(); ++compIt)
+							// Only include cost if component is damaged
+							if (component->getCurrentHealth() < component->getCurrentMaxHealth())
 							{
-								if (compIt->name == componentName)
-								{
-									totalCost = compIt->replacementCost;
-									break;
-								}
+								totalCost = component->getReplacementCost();
 							}
 						}
 					}
@@ -1077,17 +1065,18 @@ void GameLogic::logicMessageDispatcher( GameMessage *msg, void *userData )
 								 compIt != components.end(); ++compIt)
 							{
 								const Component& component = *compIt;
-								if (component.replacementCost > 0)
+								if (component.getReplacementCost() > 0)
 								{
-									Real currentHealth = body->getComponentHealth(component.name);
-									Real maxHealth = body->getComponentMaxHealth(component.name);
-									
 									// Only replace if component is damaged
-									if (currentHealth < maxHealth)
+									if (component.getCurrentHealth() < component.getCurrentMaxHealth())
 									{
-										body->setComponentHealth(component.name, maxHealth);
-										// TheSuperHackers @feature author 15/01/2025 Update model state after component replacement
-										body->setCorrectDamageState();
+										Component* comp = body->GetComponent<Component>(component.getName());
+										if (comp)
+										{
+											comp->setCurrentHealth(comp->getCurrentMaxHealth());
+											// TheSuperHackers @feature author 15/01/2025 Update model state after component replacement
+											body->setCorrectDamageState();
+										}
 									}
 								}
 							}
@@ -1095,15 +1084,16 @@ void GameLogic::logicMessageDispatcher( GameMessage *msg, void *userData )
 						else
 						{
 							// Replace specific component
-							Real currentHealth = body->getComponentHealth(componentName);
-							Real maxHealth = body->getComponentMaxHealth(componentName);
-							
-							// Only replace if component is damaged
-							if (currentHealth < maxHealth)
+							Component* component = body->GetComponent<Component>(componentName);
+							if (component)
 							{
-								body->setComponentHealth(componentName, maxHealth);
-								// TheSuperHackers @feature author 15/01/2025 Update model state after component replacement
-								body->setCorrectDamageState();
+								// Only replace if component is damaged
+								if (component->getCurrentHealth() < component->getCurrentMaxHealth())
+								{
+									component->setCurrentHealth(component->getCurrentMaxHealth());
+									// TheSuperHackers @feature author 15/01/2025 Update model state after component replacement
+									body->setCorrectDamageState();
+								}
 							}
 						}
 					}

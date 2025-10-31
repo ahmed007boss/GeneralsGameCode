@@ -88,11 +88,10 @@ const char* const DamageTypeFlags::s_bitNameList[] =
 	"ANTI_AIR_GUN",
 	"ANTI_AIR_MISSILE",
 	"ARTILLERY",
-
-	"EW_MISSILE",
-	"EW_VEHICLE",
-	"EW_BUILDING",
-	"EW_UNRESISTABLE",
+	"ELECTRONIC_JAMMING",
+	//"JAMMING_MISSILE",
+	//"JAMMING_BUILDING",
+	"JAMMING_UNRESISTABLE",
 	NULL
 };
 static_assert(ARRAY_SIZE(DamageTypeFlags::s_bitNameList) == DamageTypeFlags::NumBits + 1, "Incorrect array size");

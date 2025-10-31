@@ -37,11 +37,12 @@
 #include "GameLogic/Module/BodyModule.h"
 #include "GameLogic/Damage.h"
 #include "GameLogic/Armor.h"
-#include "GameLogic/Component.h"
+#include "GameLogic/Components/Component.h"
 #include <set>
 #include "GameLogic/ArmorSet.h"
 #include "Common/UnicodeString.h"
 #include <map>
+#include <type_traits>
 
 // FORWARD REFERENCES /////////////////////////////////////////////////////////////////////////////
 class BodyParticleSystem;
@@ -62,13 +63,18 @@ public:
 	UnsignedInt m_subdualDamageHealRate;		///< Every this often, we drop subdual damage...
 	Real m_subdualDamageHealAmount;					///< by this much.
 
-	Real m_ewDamageCap;								///< Subdual damage will never accumulate past this
-	UnsignedInt m_ewDamageHealRate;		///< Every this often, we drop subdual damage...
-	Real m_ewDamageHealAmount;					///< by this much.
+	Real m_jammingDamageCap;								///< Subdual damage will never accumulate past this
+	UnsignedInt m_jammingDamageHealRate;		///< Every this often, we drop subdual damage...
+	Real m_jammingDamageHealAmount;					///< by this much.
 
-	std::vector<Component> m_components;		///< List of components with individual health values
+	// TheSuperHackers @feature Ahmed Salah 30/10/2025 Jamming capability flags parsed from INI
+	Bool m_canBeJammedByDirectJammers;
+	Bool m_canBeJammedByAreaJammers;
+
+	std::vector<Component*> m_components;		///< List of components with individual health values
 
 	ActiveBodyModuleData();
+	virtual ~ActiveBodyModuleData();
 
 	static void buildFieldParse(MultiIniFieldParse& p);
 
@@ -106,20 +112,15 @@ public:
 	virtual Bool hasAnySubdualDamage() const;
 	virtual Real getCurrentSubdualDamageAmount() const { return m_currentSubdualDamage; }
 
-	virtual UnsignedInt getEWDamageHealRate() const;
-	virtual Real getEWDamageHealAmount() const;
-	virtual Bool hasAnyEWDamage() const;
-	virtual Real getCurrentEWDamageAmount() const { return m_currentEWDamage; }
+	virtual UnsignedInt getJammingDamageHealRate() const;
+	virtual Real getJammingDamageHealAmount() const;
+	virtual Bool hasAnyJammingDamage() const;
+	virtual Real getCurrentJammingDamageAmount() const { return m_currentJammingDamage; }
 	
-	// TheSuperHackers @feature Ahmed Salah 15/01/2025 Component-aware EW damage methods
-	virtual Real getTotalEWDamage() const;									///< Get total EW damage (global + components)
-	virtual Real getEWDamagePercentage() const;							///< Get EW damage as percentage of total capacity
+	// TheSuperHackers @feature Ahmed Salah 15/01/2025 Component-aware Jamming damage methods
+	virtual Real getTotalJammingDamage() const;									///< Get total Jamming damage (global + components)
+	virtual Real getJammingDamagePercentage() const;							///< Get Jamming damage as percentage of total capacity
 	
-	// TheSuperHackers @feature Ahmed Salah 15/01/2025 Component-based EW damage property methods
-	virtual Real getTotalComponentEWDamageCap() const;					///< Get total component EW damage cap
-	virtual Real getEffectiveEWDamageCap() const;							///< Get effective EW damage cap (global + components)
-	virtual UnsignedInt getFastestComponentEWHealRate() const;			///< Get fastest component EW heal rate
-	virtual Real getTotalComponentEWHealAmount() const;					///< Get total component EW heal amount
 
 	virtual const DamageInfo *getLastDamageInfo() const { return &m_lastDamageInfo; }	///< return info on last damage dealt to this object
 	virtual UnsignedInt getLastDamageTimestamp() const { return m_lastDamageTimestamp; }	///< return frame of last damage dealt
@@ -127,7 +128,7 @@ public:
 	virtual ObjectID getClearableLastAttacker() const { return (m_lastDamageCleared ? INVALID_ID : m_lastDamageInfo.in.m_sourceID); }
 	virtual void clearLastAttacker() { m_lastDamageCleared = true; }
 
-	void onVeterancyLevelChanged( VeterancyLevel oldLevel, VeterancyLevel newLevel, Bool provideFeedback = TRUE );
+	virtual void onVeterancyLevelChanged( VeterancyLevel oldLevel, VeterancyLevel newLevel, Bool provideFeedback = TRUE );
 
 	virtual void setArmorSetFlag(ArmorSetType ast) { m_curArmorSetFlags.set(ast, 1); }
 	virtual void clearArmorSetFlag(ArmorSetType ast) { m_curArmorSetFlags.set(ast, 0); }
@@ -160,38 +161,63 @@ public:
 	virtual Bool canBeSubdued() const;
 	virtual void onSubdualChange( Bool isNowSubdued );///< Override this if you want a totally different effect than DISABLED_SUBDUED
 
-	virtual Bool isEWJammed() const;
-	virtual Bool canBeEWJammed() const;
-	virtual void onEWChange( Bool isNowEWJammed );///< Override this if you want a totally different effect than DISABLED_SUBDUED
+	virtual Bool isJammingJammed() const;
+	virtual Bool canBeJammed() const;
+	virtual Bool canBeJammedWithDirectJammers(const std::map<AsciiString, Real>& componentNames = std::map<AsciiString, Real>()) const;
+	virtual Bool canBeJammedWithAreaJammers(const std::map<AsciiString, Real>& componentNames = std::map<AsciiString, Real>()) const;
+	virtual void onJammingChange( Bool isNowJammingJammed );///< Override this if you want a totally different effect than DISABLED_SUBDUED
 
 	// TheSuperHackers @feature author 15/01/2025 Component health management - now inherited from BodyModule
-	virtual Real getComponentHealth(const AsciiString& componentName) const;
-	virtual Real getComponentMaxHealth(const AsciiString& componentName) const;
-	virtual Bool setComponentHealth(const AsciiString& componentName, Real health);
-	virtual Bool damageComponent(const AsciiString& componentName, Real damage);
-	virtual Bool healComponent(const AsciiString& componentName, Real healing);
-	virtual Bool isComponentDestroyed(const AsciiString& componentName) const;
 	virtual void initializeComponentHealth();
-	
-	// TheSuperHackers @feature Ahmed Salah 15/01/2025 Component EW damage management - now inherited from BodyModule
-	virtual Real getComponentEWDamage(const AsciiString& componentName) const;
-	virtual Real getComponentEWDamageCap(const AsciiString& componentName) const;
-	virtual UnsignedInt getComponentEWDamageHealRate(const AsciiString& componentName) const;
-	virtual Real getComponentEWDamageHealAmount(const AsciiString& componentName) const;
-	virtual Bool setComponentEWDamage(const AsciiString& componentName, Real damage);
-	virtual Bool addComponentEWDamage(const AsciiString& componentName, Real damage);
-	virtual Bool hasAnyComponentEWDamage() const;
-	virtual void healComponentEWDamage(const AsciiString& componentName, Real healing);
 	
 	// TheSuperHackers @feature author 15/01/2025 Get component definitions - now inherited from BodyModule
 	virtual std::vector<Component> getComponents() const;
 	
-	virtual ComponentStatus getComponentStatus(const AsciiString& componentName) const;
+	// TheSuperHackers @feature author 15/01/2025 Generic component getter method
+	template<typename TComponent>
+	TComponent* GetComponent(const AsciiString& componentName) const
+	{
+		static_assert(std::is_base_of<Component, TComponent>::value, "TComponent must inherit from Component");
+		
+		// Get component data from module data
+		const ActiveBodyModuleData* data = static_cast<const ActiveBodyModuleData*>(getModuleData());
+		if (!data) return nullptr;
+		
+		// Find the component by name
+		for (std::vector<Component*>::const_iterator it = data->m_components.begin();
+			 it != data->m_components.end(); ++it)
+		{
+			if ((*it)->getName() == componentName)
+			{
+				// Safe downcast
+				return dynamic_cast<TComponent*>(*it);
+			}
+		}
+		
+		return nullptr;
+	}
 	
-	// TheSuperHackers @feature Ahmed Salah 15/01/2025 User component toggle methods
-	virtual void toggleComponentDisabled(const AsciiString& componentName);
-	virtual Bool isComponentUserDisabled(const AsciiString& componentName) const;
-	virtual void setComponentUserDisabled(const AsciiString& componentName, Bool disabled);
+	// TheSuperHackers @feature Ahmed Salah 30/10/2025 Get all components of a specific type
+	template<typename TComponent>
+	std::vector<TComponent*> GetComponentsOfType() const
+	{
+		static_assert(std::is_base_of<Component, TComponent>::value, "TComponent must inherit from Component");
+		std::vector<TComponent*> results;
+		const ActiveBodyModuleData* data = static_cast<const ActiveBodyModuleData*>(getModuleData());
+		if (!data) return results;
+		for (std::vector<Component*>::const_iterator it = data->m_components.begin();
+			 it != data->m_components.end(); ++it)
+		{
+			// Use dynamic_cast for safety when RTTI is available
+			TComponent* derived = dynamic_cast<TComponent*>(*it);
+			if (derived)
+			{
+				results.push_back(derived);
+			}
+		}
+		return results;
+	}
+	
 	
 	// TheSuperHackers @feature author 15/01/2025 Update model state based on current damage
 	virtual void setCorrectDamageState();
@@ -213,7 +239,7 @@ protected:
 
 	virtual void internalAddSubdualDamage( Real delta );								///< change health
 
-	virtual void internalAddEWDamage( Real delta );								///< change health
+	virtual void internalAddJammingDamage( Real delta );								///< change health
 
 private:
 
@@ -222,7 +248,7 @@ private:
   	Real									m_maxHealth;						///< max health this object can have
   	Real									m_initialHealth;				///< starting health for this object
 	Real									m_currentSubdualDamage;	///< Starts at zero and goes up.  Inherited modules will do something when "subdued".
-	Real									m_currentEWDamage;	///< Starts at zero and goes up.  Inherited modules will do something when "subdued".
+	Real									m_currentJammingDamage;	///< Starts at zero and goes up.  Inherited modules will do something when "subdued".
 
 	BodyDamageType				m_curDamageState;				///< last known damage state
 	UnsignedInt						m_nextDamageFXTime;
@@ -233,7 +259,8 @@ private:
 	Bool									m_frontCrushed;
 	Bool									m_backCrushed;
 	Bool									m_lastDamageCleared;
-	Bool									m_indestructible;				///< is this object indestructible?
+	Bool									m_indestructible;			///< is this object indestructible?
+
 
 	BodyParticleSystem *m_particleSystems;				///< particle systems created and attached to this object
 
@@ -244,17 +271,6 @@ private:
 	mutable const ArmorTemplateSet*		m_curArmorSet;
 	mutable Armor											m_curArmor;
 	mutable const DamageFX*						m_curDamageFX;
-
-	// TheSuperHackers @feature author 15/01/2025 Runtime component health tracking
-	std::map<AsciiString, Real>			m_componentHealth;		///< Current health of each component
-	std::map<AsciiString, Real>			m_componentMaxHealth;	///< Maximum health of each component
-	
-	// TheSuperHackers @feature Ahmed Salah 15/01/2025 Runtime component EW damage tracking
-	std::map<AsciiString, Real>			m_componentEWDamage;		///< Current EW damage of each component
-	std::map<AsciiString, UnsignedInt>	m_componentEWHealCountdown;	///< Countdown for EW damage healing
-	
-	// TheSuperHackers @feature Ahmed Salah 15/01/2025 Per-object component disabled state
-	std::set<AsciiString>							m_userDisabledComponents;	///< Components disabled by user (per-object)
 
 };
 

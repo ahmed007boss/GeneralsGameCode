@@ -1099,10 +1099,14 @@ CBCommandStatus ControlBar::processCommandUI( GameWindow *control,
 				if (bodyModule && !componentName.isEmpty())
 				{
 					// Toggle the component disabled status
-					bodyModule->toggleComponentDisabled(componentName);
-					
-					// Mark UI dirty to refresh component status display
-					markUIDirty();
+					Component* component = bodyModule->GetComponent<Component>(componentName);
+					if (component)
+					{
+						component->toggleDisabled();
+						
+						// Mark UI dirty to refresh component status display
+						markUIDirty();
+					}
 				}
 			}
 			break;

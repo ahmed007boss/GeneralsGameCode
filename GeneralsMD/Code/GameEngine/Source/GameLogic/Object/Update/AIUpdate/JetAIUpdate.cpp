@@ -729,9 +729,8 @@ public:
 		Locomotor* loco = jetAI->getCurLocomotor();
 		DEBUG_ASSERTCRASH(loco, ("no loco"));
 		loco->setMaxLift(BIGNUM);
-		BodyDamageType bdt = jet->getBodyModule()->getDamageState();
-		m_maxLift = loco->getMaxLift(bdt);
-		m_maxSpeed = loco->getMaxSpeedForCondition(bdt);
+		m_maxLift = loco->getMaxLift(jet->getBodyModule()->getDamageState());
+		m_maxSpeed = loco->getMaxSpeedForCondition(jet->getBodyModule()->getDamageState());
 		m_landingSoundPlayed = FALSE;
 		if (m_landing)
 		{
@@ -2891,12 +2890,12 @@ Bool JetAIUpdate::shouldForceReturn() const
 		std::vector<Component> components = obj->getComponents();
 		for (const Component& component : components)
 		{
-			if (component.forceReturnOnDestroy && body->isComponentDestroyed(component.name))
-				{
-					return TRUE;
-				}
+			if (component.getForceReturnOnDestroy() && component.isDestroyed())
+			{
+				return TRUE;
 			}
 		}
-		return FALSE;
-}
+	}
 	
+	return FALSE;
+}

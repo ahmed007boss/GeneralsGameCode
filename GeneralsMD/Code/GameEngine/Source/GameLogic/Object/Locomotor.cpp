@@ -46,7 +46,8 @@
 #include "GameLogic/Module/BodyModule.h"
 #include "GameLogic/Module/AIUpdate.h"
 #include "GameLogic/Module/ActiveBody.h"
-#include "GameLogic/Component.h"
+#include "GameLogic/Components/Component.h"
+#include "GameLogic/Components/EngineComponent.h"
 #include "GameLogic/Module/InventoryBehavior.h"
 
 
@@ -288,9 +289,13 @@ LocomotorTemplate::LocomotorTemplate()
 	
 	// TheSuperHackers @feature author 15/01/2025 Initialize destroyed state properties (default 0)
 	m_maxSpeedDestroyed = 0.0f;
+	m_maxSpeedOutOfInventoryItem = 0.0f;
 	m_maxTurnRateDestroyed = 0.0f;
+	m_maxTurnRateOutOfInventoryItem = 0.0f;
 	m_accelerationDestroyed = 0.0f;
+	m_accelerationOutOfInventoryItem = 0.0f;
 	m_liftDestroyed = 0.0f;
+	m_liftOutOfInventoryItem = 0.0f;
 
 	m_surfaces = 0;
 	m_maxSpeed = 0.0f;
@@ -359,6 +364,9 @@ LocomotorTemplate::LocomotorTemplate()
 	m_wanderWidthFactor = 0.0f;
 	m_wanderLengthFactor = 1.0f;
 	m_wanderAboutPointRadius = 0.0f;
+
+	// TheSuperHackers @feature Ahmed Salah 30/10/2025 Default engine component name
+	m_engineComponentName = "Engine";
 
 	m_rudderCorrectionDegree    = 0.0f;
 	m_rudderCorrectionRate      = 0.0f;
@@ -580,6 +588,11 @@ const FieldParse* LocomotorTemplate::getFieldParse() const
 		{ "ElevatorCorrectionDegree",	 INI::parseReal, NULL, offsetof(LocomotorTemplate, m_elevatorCorrectionDegree) },
 		{ "ElevatorCorrectionRate",		 INI::parseReal, NULL, offsetof(LocomotorTemplate, m_elevatorCorrectionRate) },
 		{ "AffectedByComponents",		 parseAffectedByComponents, NULL, 0 },
+		{ "EngineComponentName",        INI::parseAsciiString, NULL, offsetof(LocomotorTemplate, m_engineComponentName) },
+		{ "SpeedOutOfInventoryItem",    INI::parseVelocityReal, NULL, offsetof(LocomotorTemplate, m_maxSpeedOutOfInventoryItem) },
+		{ "TurnRateOutOfInventoryItem", INI::parseAngularVelocityReal, NULL, offsetof(LocomotorTemplate, m_maxTurnRateOutOfInventoryItem) },
+		{ "AccelerationOutOfInventoryItem", INI::parseAccelerationReal, NULL, offsetof(LocomotorTemplate, m_accelerationOutOfInventoryItem) },
+		{ "LiftOutOfInventoryItem",     INI::parseAccelerationReal, NULL, offsetof(LocomotorTemplate, m_liftOutOfInventoryItem) },
 		{ NULL, NULL, NULL, 0 }
 
 	};
@@ -872,25 +885,20 @@ void Locomotor::startMove(void)
 }
 
 //-------------------------------------------------------------------------------------------------
-// TheSuperHackers @feature author 15/01/2025 Get engine component status from object
+// TheSuperHackers @feature Ahmed Salah 30/10/2025 Fetch engine component by INI-configured name
 //-------------------------------------------------------------------------------------------------
-ComponentStatus Locomotor::getEngineComponentStatus(const Object* obj) const
+EngineComponent* Locomotor::getEngineComponent(const Object* obj) const
 {
 	if (!obj)
-		return COMPONENT_STATUS_NONE;
-		
+		return NULL;
 	BodyModuleInterface* body = obj->getBodyModule();
 	if (!body)
-		return COMPONENT_STATUS_NONE;
-	
-	// Get engine component status
-	ComponentStatus engineStatus = body->getComponentStatus(BodyModule::COMPONENT_ENGINE);
-	
-	// Get required components status from template
-	ComponentStatus requiredComponentsStatus = static_cast<ComponentStatus>(m_template->getRequiredComponentsStatus(obj));
-	
-	// Return the lowest status between engine and required components
-	return (engineStatus < requiredComponentsStatus) ? engineStatus : requiredComponentsStatus;
+		return NULL;
+
+	const AsciiString& name = m_template->m_engineComponentName;
+	if (!name.isEmpty())
+		return body->GetComponent<EngineComponent>(name);
+	return body->GetComponent<EngineComponent>("Engine");
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -952,23 +960,22 @@ Real Locomotor::getMaxSpeedForCondition(BodyDamageType condition, const Object* 
 	else
 		speed = m_template->m_maxSpeedDamaged;
 
-	// TheSuperHackers @feature author 15/01/2025 Check engine and required components status
-	ComponentStatus engineStatus = getEngineComponentStatus(obj);
-	if (engineStatus == COMPONENT_STATUS_DOWNED || engineStatus == COMPONENT_STATUS_USER_DISABLED)
+	// TheSuperHackers @feature Ahmed Salah 30/10/2025 Delegate engine-based speed adjustment to EngineComponent
+	if (obj)
 	{
-		speed = m_template->m_maxSpeedDestroyed; // Engine or required components destroyed - use destroyed speed
+		Component* baseEngine = getEngineComponent(obj);
+		if (baseEngine)
+		{
+			EngineComponent* engineComp = static_cast<EngineComponent*>(baseEngine);
+			engineComp->calculateComponentMaxSpeed(speed, m_template->m_maxSpeedDamaged);
+		}
 	}
-	else if (engineStatus == COMPONENT_STATUS_PARTIALLY_FUNCTIONAL)
-	{
-		speed = m_template->m_maxSpeedDamaged; // Engine or required components partially working - use damaged speed
-	}
-	// If engine and required components are fully functional or don't exist, use normal speed calculation
 
 	// TheSuperHackers @feature Ahmed Salah 30/09/2025 Check fuel levels for non-jets
 	if (obj && !obj->isJet() && !obj->hasInventoryItem(m_consumeItem, m_consumeRate))
 	{
-		// Out of fuel - use destroyed speed for non-jets
-		speed = m_template->m_maxSpeedDestroyed;
+		// Out of fuel - clamp to the stricter of destroyed vs out-of-inventory limits
+		speed = min(m_template->m_maxSpeedDestroyed, m_template->m_maxSpeedOutOfInventoryItem);
 	}
 
 	if (speed > m_maxSpeed)
@@ -992,22 +999,21 @@ Real Locomotor::getMaxTurnRate(BodyDamageType condition, const Object* obj) cons
 		turn = m_template->m_maxTurnRateDamaged;
 
 	// TheSuperHackers @feature author 15/01/2025 Check engine and required components status
-	ComponentStatus engineStatus = getEngineComponentStatus(obj);
-	if (engineStatus == COMPONENT_STATUS_DOWNED|| engineStatus == COMPONENT_STATUS_USER_DISABLED)
+	if (obj)
 	{
-		turn = m_template->m_maxTurnRateDestroyed; // Engine or required components destroyed - use destroyed turn rate
+		Component* baseEngine = getEngineComponent(obj);
+		if (baseEngine)
+		{
+			EngineComponent* engineComp = static_cast<EngineComponent*>(baseEngine);
+			engineComp->calculateComponentMaxTurnRate(turn, m_template->m_maxTurnRateDamaged);
+		}
 	}
-	else if (engineStatus == COMPONENT_STATUS_PARTIALLY_FUNCTIONAL)
-	{
-		turn = m_template->m_maxTurnRateDamaged; // Engine or required components partially working - use damaged turn rate
-	}
-	// If engine and required components are fully functional or don't exist, use normal turn rate calculation
 
 	// TheSuperHackers @feature Ahmed Salah 30/09/2025 Check fuel levels for non-jets
 	if (obj && !obj->isJet() && !obj->hasInventoryItem(m_consumeItem, m_consumeRate))
 	{
-		// Out of fuel - use destroyed turn rate for non-jets
-		turn = m_template->m_maxTurnRateDestroyed;
+		// Out of fuel - clamp to stricter of destroyed vs out-of-inventory limits
+		turn = min(m_template->m_maxTurnRateDestroyed, m_template->m_maxTurnRateOutOfInventoryItem);
 	}
 
 	if (turn > m_maxTurnRate)
@@ -1030,23 +1036,22 @@ Real Locomotor::getMaxAcceleration(BodyDamageType condition, const Object* obj) 
 	else
 		accel = m_template->m_accelerationDamaged;
 
-	// TheSuperHackers @feature author 15/01/2025 Check engine and required components status
-	ComponentStatus engineStatus = getEngineComponentStatus(obj);
-	if (engineStatus == COMPONENT_STATUS_DOWNED|| engineStatus == COMPONENT_STATUS_USER_DISABLED)
+	// TheSuperHackers @feature Ahmed Salah 30/10/2025 Delegate engine-based acceleration adjustment to EngineComponent
+	if (obj)
 	{
-		accel = m_template->m_accelerationDestroyed; // Engine or required components destroyed - use destroyed acceleration
+		Component* baseEngine = getEngineComponent(obj);
+		if (baseEngine)
+		{
+			EngineComponent* engineComp = static_cast<EngineComponent*>(baseEngine);
+			engineComp->calculateComponentMaxAcceleration(accel, m_template->m_accelerationDamaged);
+		}
 	}
-	else if (engineStatus == COMPONENT_STATUS_PARTIALLY_FUNCTIONAL)
-	{
-		accel = m_template->m_accelerationDamaged; // Engine or required components partially working - use damaged acceleration
-	}
-	// If engine and required components are fully functional or don't exist, use normal acceleration calculation
 
 	// TheSuperHackers @feature Ahmed Salah 30/09/2025 Check fuel levels for non-jets
 	if (obj && !obj->isJet() && !obj->hasInventoryItem(m_consumeItem, m_consumeRate))
 	{
-		// Out of fuel - use destroyed acceleration for non-jets
-		accel = m_template->m_accelerationDestroyed;
+		// Out of fuel - clamp to stricter of destroyed vs out-of-inventory limits
+		accel = min(m_template->m_accelerationDestroyed, m_template->m_accelerationOutOfInventoryItem);
 	}
 
 	if (accel > m_maxAccel)
@@ -1076,23 +1081,22 @@ Real Locomotor::getMaxLift(BodyDamageType condition, const Object* obj) const
 	else
 		lift = m_template->m_liftDamaged;
 
-	// TheSuperHackers @feature author 15/01/2025 Check engine and required components status
-	Int engineStatus = getEngineComponentStatus(obj);
-	if (engineStatus == COMPONENT_STATUS_DOWNED|| engineStatus == COMPONENT_STATUS_USER_DISABLED)
+	// TheSuperHackers @feature Ahmed Salah 30/10/2025 Delegate engine-based lift adjustment to EngineComponent
+	if (obj)
 	{
-		lift = m_template->m_liftDestroyed; // Engine or required components destroyed - use destroyed lift
+		Component* baseEngine = getEngineComponent(obj);
+		if (baseEngine)
+		{
+			EngineComponent* engineComp = static_cast<EngineComponent*>(baseEngine);
+			engineComp->calculateComponentMaxLift(lift, m_template->m_liftDamaged);
+		}
 	}
-	else if (engineStatus == COMPONENT_STATUS_PARTIALLY_FUNCTIONAL)
-	{
-		lift = m_template->m_liftDamaged; // Engine or required components partially working - use damaged lift
-	}
-	// If engine and required components are fully functional or don't exist, use normal lift calculation
 
 	// TheSuperHackers @feature Ahmed Salah 30/09/2025 Check fuel levels for non-jets
 	if (obj && !obj->isJet() && !obj->hasInventoryItem(m_consumeItem, m_consumeRate))
 	{
-		// Out of fuel - use destroyed lift for non-jets
-		lift = m_template->m_liftDestroyed;
+		// Out of fuel - clamp to stricter of destroyed vs out-of-inventory limits
+		lift = min(m_template->m_liftDestroyed, m_template->m_liftOutOfInventoryItem);
 	}
 
 	if (lift > m_maxLift)
@@ -3076,11 +3080,13 @@ ComponentStatus LocomotorTemplate::getRequiredComponentsStatus(const Object* sou
 		 it != m_affectedByComponents.end(); ++it)
 	{
 		const AsciiString& componentName = *it;
-		ComponentStatus status = body->getComponentStatus(componentName);
+		Component* component = body->GetComponent<Component>(componentName);
 		
 		// If component doesn't exist, skip it (not required)
-		if (status == COMPONENT_STATUS_NONE)
+		if (!component)
 			continue;
+		
+		ComponentStatus status = component->getStatus();
 		
 		// Update lowest status if this component has a worse status
 		Int statusInt = static_cast<Int>(status);

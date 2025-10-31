@@ -66,6 +66,16 @@ public:
 
 	virtual void internalChangeHealth( Real delta );
 
+	// Component APIs (empty implementations for inactive bodies)
+	virtual std::vector<Component> getComponents() const { return std::vector<Component>(); }
+
+	template<typename TComponent>
+	TComponent* GetComponent(const AsciiString& /*componentName*/) const
+	{
+		static_assert(std::is_base_of<Component, TComponent>::value, "TComponent must inherit from Component");
+		return NULL;
+	}
+
 private:
 	Bool m_dieCalled;
 };

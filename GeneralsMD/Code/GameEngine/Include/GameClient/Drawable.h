@@ -247,7 +247,7 @@ enum TintStatus CPP_11(: Int)
 	TINT_STATUS_IRRADIATED	= 0x00000002,///< drawable tint color is sickly green
 	TINT_STATUS_POISONED		= 0x00000004,///< drawable tint color is open-sore red
 	TINT_STATUS_GAINING_SUBDUAL_DAMAGE		= 0x00000008,///< When gaining subdual damage, we tint SUBDUAL_DAMAGE_COLOR
-	TINT_STATUS_GAINING_EW_DAMAGE		= 0x00000012,///< When gaining subdual damage, we tint SUBDUAL_DAMAGE_COLOR
+	TINT_STATUS_GAINING_JAMMING_DAMAGE		= 0x00000012,///< When gaining subdual damage, we tint SUBDUAL_DAMAGE_COLOR
 	TINT_STATUS_FRENZY			= 0x00000010,///< When frenzied, we tint FRENZY_COLOR
 
 };

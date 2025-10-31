@@ -1710,14 +1710,14 @@ CommandAvailability ControlBar::getCommandAvailability( const CommandButton *com
 			}
 
 			// Check if the component exists (has max health > 0)
-			Real maxHealth = bodyModule->getComponentMaxHealth(componentName);
-			if (maxHealth <= 0.0f)
+			Component* component = bodyModule->GetComponent<Component>(componentName);
+			if (!component || component->getCurrentMaxHealth() <= 0.0f)
 			{
 				return COMMAND_RESTRICTED;
 			}
 
 			// Check if the component is currently enabled (show as active/pressed when enabled)
-			if (!bodyModule->isComponentUserDisabled(componentName))
+			if (!component->isUserDisabled())
 			{
 				return COMMAND_ACTIVE;
 			}
