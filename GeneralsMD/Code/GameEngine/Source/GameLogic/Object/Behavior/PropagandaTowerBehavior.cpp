@@ -91,7 +91,7 @@ PropagandaTowerBehaviorModuleData::PropagandaTowerBehaviorModuleData( void )
 
 // ------------------------------------------------------------------------------------------------
 // ------------------------------------------------------------------------------------------------
-/*static*/ void PropagandaTowerBehaviorModuleData::buildFieldParse( MultiIniFieldParse &p )
+ void PropagandaTowerBehaviorModuleData::buildFieldParse( MultiIniFieldParse &p )
 {
   UpdateModuleData::buildFieldParse( p );
 

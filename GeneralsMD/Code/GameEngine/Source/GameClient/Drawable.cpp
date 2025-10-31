@@ -259,19 +259,19 @@ const Int MAX_ENABLED_MODULES								= 16;
 // ------------------------------------------------------------------------------------------------
 // ------------------------------------------------------------------------------------------------
 
-/*static*/ Bool							Drawable::s_staticImagesInited = false;
-/*static*/ const Image*			Drawable::s_veterancyImage[LEVEL_COUNT]	= { NULL };
-/*static*/ const Image*			Drawable::s_fullAmmo = NULL;
-/*static*/ const Image*			Drawable::s_emptyAmmo = NULL;
-/*static*/ const Image*			Drawable::s_fullContainer = NULL;
-/*static*/ const Image*			Drawable::s_emptyContainer = NULL;
-/*static*/ Anim2DTemplate**	Drawable::s_animationTemplates = NULL;
+ Bool							Drawable::s_staticImagesInited = false;
+ const Image*			Drawable::s_veterancyImage[LEVEL_COUNT]	= { NULL };
+ const Image*			Drawable::s_fullAmmo = NULL;
+ const Image*			Drawable::s_emptyAmmo = NULL;
+ const Image*			Drawable::s_fullContainer = NULL;
+ const Image*			Drawable::s_emptyContainer = NULL;
+ Anim2DTemplate**	Drawable::s_animationTemplates = NULL;
 #ifdef DIRTY_CONDITION_FLAGS
-/*static*/ Int							Drawable::s_modelLockCount = 0;
+ Int							Drawable::s_modelLockCount = 0;
 #endif
 
 // ------------------------------------------------------------------------------------------------
-/*static*/ void Drawable::initStaticImages()
+ void Drawable::initStaticImages()
 {
 	if (s_staticImagesInited)
 		return;
@@ -311,7 +311,7 @@ const Int MAX_ENABLED_MODULES								= 16;
 }
 
 //-------------------------------------------------------------------------------------------------
-/*static*/ void Drawable::killStaticImages()
+ void Drawable::killStaticImages()
 {
 	delete[] s_animationTemplates;
 	s_animationTemplates = NULL;
@@ -5665,7 +5665,7 @@ const Locomotor* Drawable::getLocomotor() const
 //=================================================================================================
 //=================================================================================================
 #ifdef DIRTY_CONDITION_FLAGS
-/*static*/ void Drawable::friend_lockDirtyStuffForIteration()
+ void Drawable::friend_lockDirtyStuffForIteration()
 {
 	if (s_modelLockCount == 0)
 	{
@@ -5685,7 +5685,7 @@ const Locomotor* Drawable::getLocomotor() const
 //=================================================================================================
 //=================================================================================================
 #ifdef DIRTY_CONDITION_FLAGS
-/*static*/ void Drawable::friend_unlockDirtyStuffForIteration()
+ void Drawable::friend_unlockDirtyStuffForIteration()
 {
 	if (s_modelLockCount > 0)
 		--s_modelLockCount;

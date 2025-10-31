@@ -56,7 +56,7 @@ FlammableUpdateModuleData::FlammableUpdateModuleData()
 }
 
 //-------------------------------------------------------------------------------------------------
-/*static*/ void FlammableUpdateModuleData::buildFieldParse(MultiIniFieldParse& p)
+ void FlammableUpdateModuleData::buildFieldParse(MultiIniFieldParse& p)
 {
   UpdateModuleData::buildFieldParse(p);
 

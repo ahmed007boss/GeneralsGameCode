@@ -287,7 +287,7 @@ BridgeBehavior::~BridgeBehavior( void )
 // ------------------------------------------------------------------------------------------------
 /** Get bridge behavior interface */
 // ------------------------------------------------------------------------------------------------
-/*static */BridgeBehaviorInterface *BridgeBehavior::getBridgeBehaviorInterfaceFromObject( Object *obj )
+BridgeBehaviorInterface *BridgeBehavior::getBridgeBehaviorInterfaceFromObject( Object *obj )
 {
 
 	// sanity

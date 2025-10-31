@@ -62,7 +62,7 @@ CommandButtonHuntUpdateModuleData::CommandButtonHuntUpdateModuleData()
 }
 
 //-------------------------------------------------------------------------------------------------
-/*static*/ void CommandButtonHuntUpdateModuleData::buildFieldParse(MultiIniFieldParse& p)
+ void CommandButtonHuntUpdateModuleData::buildFieldParse(MultiIniFieldParse& p)
 {
 	ModuleData::buildFieldParse(p);
 

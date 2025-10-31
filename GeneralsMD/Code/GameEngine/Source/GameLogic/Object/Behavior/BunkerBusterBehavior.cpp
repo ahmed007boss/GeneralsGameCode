@@ -67,7 +67,7 @@ BunkerBusterBehaviorModuleData::BunkerBusterBehaviorModuleData( void )
 
 // ------------------------------------------------------------------------------------------------
 // ------------------------------------------------------------------------------------------------
-/*static*/ void BunkerBusterBehaviorModuleData::buildFieldParse( MultiIniFieldParse &p )
+ void BunkerBusterBehaviorModuleData::buildFieldParse( MultiIniFieldParse &p )
 {
   UpdateModuleData::buildFieldParse( p );
 

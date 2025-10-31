@@ -1529,7 +1529,7 @@ void ObjectCreationListStore::addObjectCreationNugget(ObjectCreationNugget* nugg
 }
 
 //-------------------------------------------------------------------------------------------------
-/*static */ void ObjectCreationListStore::parseObjectCreationListDefinition(INI *ini)
+ void ObjectCreationListStore::parseObjectCreationListDefinition(INI *ini)
 {
 	// read the ObjectCreationList name
 	const char *c = ini->getNextToken();

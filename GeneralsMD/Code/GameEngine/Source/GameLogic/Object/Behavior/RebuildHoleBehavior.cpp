@@ -56,7 +56,7 @@ RebuildHoleBehaviorModuleData::RebuildHoleBehaviorModuleData( void )
 
 //-------------------------------------------------------------------------------------------------
 // ------------------------------------------------------------------------------------------------
-/*static*/ void RebuildHoleBehaviorModuleData::buildFieldParse( MultiIniFieldParse &p )
+ void RebuildHoleBehaviorModuleData::buildFieldParse( MultiIniFieldParse &p )
 {
 
   UpdateModuleData::buildFieldParse( p );
@@ -360,7 +360,7 @@ void RebuildHoleBehavior::onDie( const DamageInfo *damageInfo )
 // ------------------------------------------------------------------------------------------------
 /** Helper method to get interface given an object */
 // ------------------------------------------------------------------------------------------------
-/*static*/ RebuildHoleBehaviorInterface* RebuildHoleBehavior::getRebuildHoleBehaviorInterfaceFromObject( Object *obj )
+ RebuildHoleBehaviorInterface* RebuildHoleBehavior::getRebuildHoleBehaviorInterfaceFromObject( Object *obj )
 {
 	RebuildHoleBehaviorInterface *rhbi = NULL;
 

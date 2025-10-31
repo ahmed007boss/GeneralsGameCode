@@ -106,7 +106,7 @@ static Int findSideListEntryWithPlayerOfSide(AsciiString side)
 /////////////////////////////////////////////////////////////////////////////
 // ObjectOptions data access method.
 
-/*static*/ void ObjectOptions::update()
+ void ObjectOptions::update()
 {
 	if (m_staticThis)
 		m_staticThis->updateLabel();

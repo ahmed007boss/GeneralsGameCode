@@ -346,7 +346,7 @@ void WeaponSet::updateWeaponSet(const Object* obj)
 }
 
 //-------------------------------------------------------------------------------------------------
-/*static*/ ModelConditionFlags WeaponSet::getModelConditionForWeaponSlot(WeaponSlotType wslot, WeaponSetConditionType a)
+ ModelConditionFlags WeaponSet::getModelConditionForWeaponSlot(WeaponSlotType wslot, WeaponSetConditionType a)
 {
 	static const ModelConditionFlagType Nothing[WEAPONSLOT_COUNT] = { MODELCONDITION_INVALID, MODELCONDITION_INVALID, MODELCONDITION_INVALID, MODELCONDITION_INVALID, MODELCONDITION_INVALID, MODELCONDITION_INVALID, MODELCONDITION_INVALID, MODELCONDITION_INVALID };
 	static const ModelConditionFlagType Firing[WEAPONSLOT_COUNT] = { MODELCONDITION_FIRING_A, MODELCONDITION_FIRING_B, MODELCONDITION_FIRING_C, MODELCONDITION_FIRING_D, MODELCONDITION_FIRING_E, MODELCONDITION_FIRING_F, MODELCONDITION_FIRING_G, MODELCONDITION_FIRING_H };

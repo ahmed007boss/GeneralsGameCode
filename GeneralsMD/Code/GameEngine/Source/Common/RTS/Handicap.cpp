@@ -109,7 +109,7 @@ void Handicap::readFromDict(const Dict* d)
 }
 
 //-----------------------------------------------------------------------------
-/*static*/ Handicap::ThingType Handicap::getBestThingType(const ThingTemplate *tmpl)
+ Handicap::ThingType Handicap::getBestThingType(const ThingTemplate *tmpl)
 {
 	/// if this ends up being too slow, cache the information in the object
 	if (tmpl->isKindOf(KINDOF_STRUCTURE))

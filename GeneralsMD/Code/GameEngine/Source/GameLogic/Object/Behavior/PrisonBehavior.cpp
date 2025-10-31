@@ -98,7 +98,7 @@ PrisonBehaviorModuleData::PrisonBehaviorModuleData( void )
 
 // ------------------------------------------------------------------------------------------------
 // ------------------------------------------------------------------------------------------------
-/*static*/ void PrisonBehaviorModuleData::buildFieldParse( MultiIniFieldParse &p )
+ void PrisonBehaviorModuleData::buildFieldParse( MultiIniFieldParse &p )
 {
   OpenContainModuleData::buildFieldParse( p );
 

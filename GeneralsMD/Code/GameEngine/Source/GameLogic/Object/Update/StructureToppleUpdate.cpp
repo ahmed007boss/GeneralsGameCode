@@ -106,7 +106,7 @@ static void parseAngleFX(INI* ini, void *instance, void * /* store */, const voi
 }
 
 //-------------------------------------------------------------------------------------------------
-/*static*/ void StructureToppleUpdateModuleData::buildFieldParse(MultiIniFieldParse& p)
+ void StructureToppleUpdateModuleData::buildFieldParse(MultiIniFieldParse& p)
 {
   UpdateModuleData::buildFieldParse(p);
 

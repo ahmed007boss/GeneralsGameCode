@@ -79,7 +79,7 @@ JetSlowDeathBehaviorModuleData::JetSlowDeathBehaviorModuleData( void )
 
 // ------------------------------------------------------------------------------------------------
 // ------------------------------------------------------------------------------------------------
-/*static*/ void JetSlowDeathBehaviorModuleData::buildFieldParse( MultiIniFieldParse &p )
+ void JetSlowDeathBehaviorModuleData::buildFieldParse( MultiIniFieldParse &p )
 {
   SlowDeathBehaviorModuleData::buildFieldParse( p );
 

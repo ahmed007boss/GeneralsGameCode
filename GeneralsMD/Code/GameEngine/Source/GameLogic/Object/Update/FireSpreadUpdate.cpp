@@ -84,7 +84,7 @@ FireSpreadUpdateModuleData::FireSpreadUpdateModuleData()
 }
 
 //-------------------------------------------------------------------------------------------------
-/*static*/ void FireSpreadUpdateModuleData::buildFieldParse(MultiIniFieldParse& p)
+ void FireSpreadUpdateModuleData::buildFieldParse(MultiIniFieldParse& p)
 {
   UpdateModuleData::buildFieldParse(p);
 

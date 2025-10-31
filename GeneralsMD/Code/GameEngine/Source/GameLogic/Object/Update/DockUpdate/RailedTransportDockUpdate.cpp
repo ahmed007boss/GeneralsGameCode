@@ -57,7 +57,7 @@ RailedTransportDockUpdateModuleData::RailedTransportDockUpdateModuleData( void )
 
 // ------------------------------------------------------------------------------------------------
 // ------------------------------------------------------------------------------------------------
-/*static*/ void RailedTransportDockUpdateModuleData::buildFieldParse( MultiIniFieldParse &p )
+ void RailedTransportDockUpdateModuleData::buildFieldParse( MultiIniFieldParse &p )
 {
   DockUpdateModuleData::buildFieldParse( p );
 

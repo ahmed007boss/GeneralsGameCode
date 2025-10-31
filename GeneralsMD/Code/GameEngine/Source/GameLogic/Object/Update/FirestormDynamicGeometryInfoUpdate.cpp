@@ -62,7 +62,7 @@ FirestormDynamicGeometryInfoUpdateModuleData::FirestormDynamicGeometryInfoUpdate
 }
 
 //-------------------------------------------------------------------------------------------------
-/*static*/ void FirestormDynamicGeometryInfoUpdateModuleData::buildFieldParse(MultiIniFieldParse& p)
+ void FirestormDynamicGeometryInfoUpdateModuleData::buildFieldParse(MultiIniFieldParse& p)
 {
 	DynamicGeometryInfoUpdateModuleData::buildFieldParse(p);
 

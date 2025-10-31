@@ -42,35 +42,35 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 //=============================================================================
-/*static*/ void GeometryInfo::parseGeometryType( INI* ini, void * /*instance*/, void *store, const void* /*userData*/ )
+ void GeometryInfo::parseGeometryType( INI* ini, void * /*instance*/, void *store, const void* /*userData*/ )
 {
 	((GeometryInfo*)store)->m_type = (GeometryType)INI::scanIndexList(ini->getNextToken(), GeometryNames);
 	((GeometryInfo*)store)->calcBoundingStuff();
 }
 
 //=============================================================================
-/*static*/ void GeometryInfo::parseGeometryIsSmall( INI* ini, void * /*instance*/, void *store, const void* /*userData*/ )
+ void GeometryInfo::parseGeometryIsSmall( INI* ini, void * /*instance*/, void *store, const void* /*userData*/ )
 {
 	((GeometryInfo*)store)->m_isSmall = INI::scanBool(ini->getNextToken());
 	((GeometryInfo*)store)->calcBoundingStuff();
 }
 
 //=============================================================================
-/*static*/ void GeometryInfo::parseGeometryHeight( INI* ini, void * /*instance*/, void *store, const void* /*userData*/ )
+ void GeometryInfo::parseGeometryHeight( INI* ini, void * /*instance*/, void *store, const void* /*userData*/ )
 {
 	((GeometryInfo*)store)->m_height = INI::scanReal(ini->getNextToken());
 	((GeometryInfo*)store)->calcBoundingStuff();
 }
 
 //=============================================================================
-/*static*/ void GeometryInfo::parseGeometryMajorRadius( INI* ini, void * /*instance*/, void *store, const void* /*userData*/ )
+ void GeometryInfo::parseGeometryMajorRadius( INI* ini, void * /*instance*/, void *store, const void* /*userData*/ )
 {
 	((GeometryInfo*)store)->m_majorRadius = INI::scanReal(ini->getNextToken());
 	((GeometryInfo*)store)->calcBoundingStuff();
 }
 
 //=============================================================================
-/*static*/ void GeometryInfo::parseGeometryMinorRadius( INI* ini, void * /*instance*/, void *store, const void* /*userData*/ )
+ void GeometryInfo::parseGeometryMinorRadius( INI* ini, void * /*instance*/, void *store, const void* /*userData*/ )
 {
 	((GeometryInfo*)store)->m_minorRadius = INI::scanReal(ini->getNextToken());
 	((GeometryInfo*)store)->calcBoundingStuff();

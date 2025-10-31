@@ -304,7 +304,7 @@ void DamageFXStore::update()
 }
 
 //-------------------------------------------------------------------------------------------------
-/*static */ void DamageFXStore::parseDamageFXDefinition(INI* ini)
+ void DamageFXStore::parseDamageFXDefinition(INI* ini)
 {
 
 	const char *c = ini->getNextToken();

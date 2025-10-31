@@ -53,7 +53,7 @@ DynamicShroudClearingRangeUpdateModuleData::DynamicShroudClearingRangeUpdateModu
 }
 
 //-------------------------------------------------------------------------------------------------
-/*static*/ void DynamicShroudClearingRangeUpdateModuleData::buildFieldParse(MultiIniFieldParse& p)
+ void DynamicShroudClearingRangeUpdateModuleData::buildFieldParse(MultiIniFieldParse& p)
 {
   UpdateModuleData::buildFieldParse(p);
 

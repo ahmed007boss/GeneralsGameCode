@@ -48,7 +48,7 @@ TechBuildingBehaviorModuleData::TechBuildingBehaviorModuleData( void )
 
 // ------------------------------------------------------------------------------------------------
 // ------------------------------------------------------------------------------------------------
-/*static*/ void TechBuildingBehaviorModuleData::buildFieldParse( MultiIniFieldParse &p )
+ void TechBuildingBehaviorModuleData::buildFieldParse( MultiIniFieldParse &p )
 {
   UpdateModuleData::buildFieldParse( p );
 

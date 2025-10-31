@@ -49,7 +49,7 @@ PoisonedBehaviorModuleData::PoisonedBehaviorModuleData()
 }
 
 //-------------------------------------------------------------------------------------------------
-/*static*/ void PoisonedBehaviorModuleData::buildFieldParse(MultiIniFieldParse& p)
+ void PoisonedBehaviorModuleData::buildFieldParse(MultiIniFieldParse& p)
 {
 
 	static const FieldParse dataFieldParse[] =

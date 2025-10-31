@@ -149,7 +149,7 @@ UnicodeString ArmorTemplate::getModuleDescription() const
 }
 
 //-------------------------------------------------------------------------------------------Static
-/*static*/ void ArmorTemplate::parseArmorCoefficients( INI* ini, void *instance, void* /* store */, const void* userData )
+ void ArmorTemplate::parseArmorCoefficients( INI* ini, void *instance, void* /* store */, const void* userData )
 {
 	ArmorTemplate* self = (ArmorTemplate*) instance;
 
@@ -176,7 +176,7 @@ void ArmorTemplate::parseArmorMultiplier(INI* ini, void* instance, void* /* stor
 	const char* damageName = ini->getNextToken();
 	Real mult = INI::scanPercentToReal(ini->getNextToken());
 
-	if (stricmp(damageName, "Default") == 0)
+	if (stricmp(damageName, "All") == 0 || stricmp(damageName, "Default") == 0)
 	{
 		for (Int i = 0; i < DAMAGE_NUM_TYPES; i++)
 		{
@@ -220,12 +220,13 @@ const ArmorTemplate* ArmorStore::findArmorTemplate(AsciiString name) const
 }
 
 //-------------------------------------------------------------------------------------------------
-/*static */ void ArmorStore::parseArmorDefinition(INI *ini)
+void ArmorStore::parseArmorDefinition(INI *ini)
 {
 	static const FieldParse myFieldParse[] =
 	{
 		{ "DisplayName", INI::parseAndTranslateLabel, NULL, offsetof(ArmorTemplate, m_displayName) },
 		{ "Armor", ArmorTemplate::parseArmorCoefficients, NULL, 0 },
+		{ "ArmorMultiplier", ArmorTemplate::parseArmorMultiplier, NULL, 0 },
 		{ NULL, NULL, NULL, 0 }
 	};
 
@@ -237,12 +238,14 @@ const ArmorTemplate* ArmorStore::findArmorTemplate(AsciiString name) const
 }
 
 //-------------------------------------------------------------------------------------------------
-/*static */ void ArmorStore::parseArmorExtendDefinition(INI* ini)
+void ArmorStore::parseArmorExtendDefinition(INI* ini)
 {
 	static const FieldParse myFieldParse[] =
 	{
+		{ "DisplayName", INI::parseAndTranslateLabel, NULL, offsetof(ArmorTemplate, m_displayName) },
 		{ "Armor", ArmorTemplate::parseArmorCoefficients, NULL, 0 },
-		{ "ArmorMult", ArmorTemplate::parseArmorMultiplier, NULL, 0 }
+		{ "ArmorMultiplier", ArmorTemplate::parseArmorMultiplier, NULL, 0 },
+				{ NULL, NULL, NULL, 0 }
 	};
 
 	const char* new_armor_name = ini->getNextToken();
@@ -263,13 +266,13 @@ const ArmorTemplate* ArmorStore::findArmorTemplate(AsciiString name) const
 }
 
 //-------------------------------------------------------------------------------------------------
-/*static*/ void INI::parseArmorDefinition(INI *ini)
+ void INI::parseArmorDefinition(INI *ini)
 {
 	ArmorStore::parseArmorDefinition(ini);
 }
 
 //-------------------------------------------------------------------------------------------------
-/*static*/ void INI::parseArmorExtendDefinition(INI* ini)
+ void INI::parseArmorExtendDefinition(INI* ini)
 {
 	ArmorStore::parseArmorExtendDefinition(ini);
 }

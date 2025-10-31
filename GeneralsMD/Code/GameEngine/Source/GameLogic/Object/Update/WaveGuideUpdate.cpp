@@ -78,7 +78,7 @@ WaveGuideUpdateModuleData::WaveGuideUpdateModuleData( void )
 
 // ------------------------------------------------------------------------------------------------
 // ------------------------------------------------------------------------------------------------
-/*static*/ void WaveGuideUpdateModuleData::buildFieldParse(MultiIniFieldParse& p)
+ void WaveGuideUpdateModuleData::buildFieldParse(MultiIniFieldParse& p)
 {
 
   UpdateModuleData::buildFieldParse( p );

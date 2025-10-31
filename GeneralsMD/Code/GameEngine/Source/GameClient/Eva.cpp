@@ -534,7 +534,7 @@ void Eva::processPlayingMessages(UnsignedInt currentFrame)
 //-------------------------------------------------------------------------------------------------
 /** Parses the name of an Eva message from an INI file */
 //-------------------------------------------------------------------------------------------------
-/*static*/void Eva::parseEvaMessageFromIni( INI * ini, void *instance, void *store, const void* userData )
+void Eva::parseEvaMessageFromIni( INI * ini, void *instance, void *store, const void* userData )
 {
   const char *token = ini->getNextToken();
 

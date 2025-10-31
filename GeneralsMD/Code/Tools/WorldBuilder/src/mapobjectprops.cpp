@@ -44,7 +44,7 @@ const char* NEUTRAL_TEAM_INTERNAL_STR = "team";
 /////////////////////////////////////////////////////////////////////////////
 // MapObjectProps dialog
 
-/*static*/ MapObjectProps *MapObjectProps::TheMapObjectProps = NULL;
+ MapObjectProps *MapObjectProps::TheMapObjectProps = NULL;
 
 void MapObjectProps::makeMain()
 {
@@ -1613,7 +1613,7 @@ BOOL MapObjectProps::OnInitDialog()
 }
 
 //---------------------------------------------------------------------------------------------------
-/*static*/ void MapObjectProps::update(void)
+ void MapObjectProps::update(void)
 {
 	if (TheMapObjectProps)
 	{
@@ -2798,7 +2798,7 @@ void MapObjectProps::enableButtons()
 }
 
 
-/*static*/ MapObject *MapObjectProps::getSingleSelectedMapObject(void)
+ MapObject *MapObjectProps::getSingleSelectedMapObject(void)
 {
 	MapObject *pMapObj;
 	MapObject *theMapObj = NULL;

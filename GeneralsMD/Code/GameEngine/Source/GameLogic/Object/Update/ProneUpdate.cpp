@@ -47,7 +47,7 @@ ProneUpdateModuleData::ProneUpdateModuleData() :
 }
 
 //-------------------------------------------------------------------------------------------------
-/*static*/ void ProneUpdateModuleData::buildFieldParse(MultiIniFieldParse& p)
+ void ProneUpdateModuleData::buildFieldParse(MultiIniFieldParse& p)
 {
 	ModuleData::buildFieldParse(p);
 

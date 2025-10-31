@@ -53,7 +53,7 @@ LaserUpdateModuleData::LaserUpdateModuleData()
 }
 
 //-------------------------------------------------------------------------------------------------
-/*static*/ void LaserUpdateModuleData::buildFieldParse(MultiIniFieldParse& p)
+ void LaserUpdateModuleData::buildFieldParse(MultiIniFieldParse& p)
 {
 	ModuleData::buildFieldParse(p);
 

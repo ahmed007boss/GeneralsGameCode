@@ -47,7 +47,7 @@ SupplyCenterDockUpdateModuleData::SupplyCenterDockUpdateModuleData( void )
 
 // ------------------------------------------------------------------------------------------------
 // ------------------------------------------------------------------------------------------------
-/*static*/ void SupplyCenterDockUpdateModuleData::buildFieldParse(MultiIniFieldParse& p)
+ void SupplyCenterDockUpdateModuleData::buildFieldParse(MultiIniFieldParse& p)
 {
 
 	DockUpdateModuleData::buildFieldParse( p );

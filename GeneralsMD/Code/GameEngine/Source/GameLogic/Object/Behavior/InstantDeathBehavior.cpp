@@ -93,7 +93,7 @@ static void parseWeapon( INI* ini, void *instance, void * /*store*/, const void*
 }
 
 //-------------------------------------------------------------------------------------------------
-/*static*/ void InstantDeathBehaviorModuleData::buildFieldParse(MultiIniFieldParse& p)
+ void InstantDeathBehaviorModuleData::buildFieldParse(MultiIniFieldParse& p)
 {
   DieModuleData::buildFieldParse(p);
 

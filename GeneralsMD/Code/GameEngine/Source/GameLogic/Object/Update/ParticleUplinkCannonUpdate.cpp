@@ -94,7 +94,7 @@ ParticleUplinkCannonUpdateModuleData::ParticleUplinkCannonUpdateModuleData()
 }
 
 //-------------------------------------------------------------------------------------------------
-/*static*/ void ParticleUplinkCannonUpdateModuleData::buildFieldParse(MultiIniFieldParse& p)
+ void ParticleUplinkCannonUpdateModuleData::buildFieldParse(MultiIniFieldParse& p)
 {
 	ModuleData::buildFieldParse(p);
 

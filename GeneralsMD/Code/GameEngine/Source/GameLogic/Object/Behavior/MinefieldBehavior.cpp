@@ -68,7 +68,7 @@ MinefieldBehaviorModuleData::MinefieldBehaviorModuleData()
 
 //-------------------------------------------------------------------------------------------------
 // ------------------------------------------------------------------------------------------------
-/*static*/ void MinefieldBehaviorModuleData::buildFieldParse( MultiIniFieldParse &p )
+ void MinefieldBehaviorModuleData::buildFieldParse( MultiIniFieldParse &p )
 {
 
   UpdateModuleData::buildFieldParse( p );

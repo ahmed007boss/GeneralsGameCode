@@ -180,7 +180,7 @@ static void parseCommonStuff(
 }
 
 //-------------------------------------------------------------------------------------------Static
-/*static*/ void DamageFX::parseAmount( INI* ini, void* instance, void* /*store*/, const void* userData )
+ void DamageFX::parseAmount( INI* ini, void* instance, void* /*store*/, const void* userData )
 {
 	DamageFX* self = (DamageFX*)instance;
 	ConstCharPtrArray names = (ConstCharPtrArray)userData;
@@ -201,7 +201,7 @@ static void parseCommonStuff(
 }
 
 //-------------------------------------------------------------------------------------------Static
-/*static*/ void DamageFX::parseMajorFXList( INI* ini, void* instance, void* /*store*/, const void* userData )
+ void DamageFX::parseMajorFXList( INI* ini, void* instance, void* /*store*/, const void* userData )
 {
 	DamageFX* self = (DamageFX*)instance;
 	ConstCharPtrArray names = (ConstCharPtrArray)userData;
@@ -223,7 +223,7 @@ static void parseCommonStuff(
 }
 
 //-------------------------------------------------------------------------------------------Static
-/*static*/ void DamageFX::parseMinorFXList( INI* ini, void* instance, void* /*store*/, const void* userData )
+ void DamageFX::parseMinorFXList( INI* ini, void* instance, void* /*store*/, const void* userData )
 {
 	DamageFX* self = (DamageFX*)instance;
 	ConstCharPtrArray names = (ConstCharPtrArray)userData;
@@ -245,7 +245,7 @@ static void parseCommonStuff(
 }
 
 //-------------------------------------------------------------------------------------------Static
-/*static*/ void DamageFX::parseTime( INI* ini, void* instance, void* /*store*/, const void* userData )
+ void DamageFX::parseTime( INI* ini, void* instance, void* /*store*/, const void* userData )
 {
 	DamageFX* self = (DamageFX*)instance;
 	ConstCharPtrArray names = (ConstCharPtrArray)userData;
@@ -312,7 +312,7 @@ void DamageFXStore::update()
 }
 
 //-------------------------------------------------------------------------------------------------
-/*static */ void DamageFXStore::parseDamageFXDefinition(INI* ini)
+ void DamageFXStore::parseDamageFXDefinition(INI* ini)
 {
 
 	const char *c = ini->getNextToken();

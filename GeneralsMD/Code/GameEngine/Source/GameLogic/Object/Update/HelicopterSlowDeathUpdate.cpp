@@ -98,7 +98,7 @@ HelicopterSlowDeathBehaviorModuleData::HelicopterSlowDeathBehaviorModuleData( vo
 
 // ------------------------------------------------------------------------------------------------
 // ------------------------------------------------------------------------------------------------
-/*static*/ void HelicopterSlowDeathBehaviorModuleData::buildFieldParse( MultiIniFieldParse &p )
+ void HelicopterSlowDeathBehaviorModuleData::buildFieldParse( MultiIniFieldParse &p )
 {
   SlowDeathBehaviorModuleData::buildFieldParse( p );
 

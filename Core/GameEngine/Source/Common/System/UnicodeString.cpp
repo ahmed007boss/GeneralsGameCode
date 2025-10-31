@@ -49,7 +49,7 @@
 
 // -----------------------------------------------------
 
-/*static*/ UnicodeString UnicodeString::TheEmptyString;
+ UnicodeString UnicodeString::TheEmptyString;
 
 // -----------------------------------------------------
 #ifdef RTS_DEBUG

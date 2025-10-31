@@ -863,7 +863,7 @@ const FXList *FXListStore::findFXList(const char* name) const
 }
 
 //-------------------------------------------------------------------------------------------------
-/*static */ void FXListStore::parseFXListDefinition(INI *ini)
+ void FXListStore::parseFXListDefinition(INI *ini)
 {
 	// read the FXList name
 	const char *c = ini->getNextToken();

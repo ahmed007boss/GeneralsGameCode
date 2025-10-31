@@ -96,7 +96,7 @@ SpectreGunshipUpdateModuleData::SpectreGunshipUpdateModuleData()
 
 static Real zero = 0.0f;
 //-------------------------------------------------------------------------------------------------
-/*static*/ void SpectreGunshipUpdateModuleData::buildFieldParse(MultiIniFieldParse& p)
+ void SpectreGunshipUpdateModuleData::buildFieldParse(MultiIniFieldParse& p)
 {
 	ModuleData::buildFieldParse(p);
 

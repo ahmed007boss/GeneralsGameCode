@@ -75,7 +75,7 @@ NeutronMissileSlowDeathBehaviorModuleData::NeutronMissileSlowDeathBehaviorModule
 
 // ------------------------------------------------------------------------------------------------
 // ------------------------------------------------------------------------------------------------
-/*static*/ void NeutronMissileSlowDeathBehaviorModuleData::buildFieldParse(MultiIniFieldParse& p)
+ void NeutronMissileSlowDeathBehaviorModuleData::buildFieldParse(MultiIniFieldParse& p)
 {
 
   SlowDeathBehaviorModuleData::buildFieldParse( p );

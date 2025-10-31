@@ -107,7 +107,7 @@ static void parseOCL( INI* ini, void *instance, void * /*store*/, const void* /*
 }
 
 //-------------------------------------------------------------------------------------------------
-/*static*/ void StructureCollapseUpdateModuleData::buildFieldParse(MultiIniFieldParse& p)
+ void StructureCollapseUpdateModuleData::buildFieldParse(MultiIniFieldParse& p)
 {
   UpdateModuleData::buildFieldParse(p);
 

@@ -57,7 +57,7 @@ CleanupHazardUpdateModuleData::CleanupHazardUpdateModuleData()
 }
 
 //-------------------------------------------------------------------------------------------------
-/*static*/ void CleanupHazardUpdateModuleData::buildFieldParse(MultiIniFieldParse& p)
+ void CleanupHazardUpdateModuleData::buildFieldParse(MultiIniFieldParse& p)
 {
 	ModuleData::buildFieldParse(p);
 

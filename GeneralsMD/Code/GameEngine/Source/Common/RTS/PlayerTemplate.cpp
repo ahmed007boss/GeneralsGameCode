@@ -63,7 +63,7 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 //-------------------------------------------------------------------------------------------------
-/*static*/ const FieldParse* PlayerTemplate::getFieldParse()
+ const FieldParse* PlayerTemplate::getFieldParse()
 {
 	static const FieldParse TheFieldParseTable[] =
 	{
@@ -134,7 +134,7 @@ AsciiString PlayerTemplate::getStartingUnit( Int i ) const
 
 //-------------------------------------------------------------------------------------------------
 // This is is a Template, and a percent change to the cost of producing it.
-/*static*/ void PlayerTemplate::parseProductionCostChange( INI* ini, void *instance, void *store, const void* /*userData*/ )
+ void PlayerTemplate::parseProductionCostChange( INI* ini, void *instance, void *store, const void* /*userData*/ )
 {
 	PlayerTemplate* self = (PlayerTemplate*)instance;
 
@@ -145,7 +145,7 @@ AsciiString PlayerTemplate::getStartingUnit( Int i ) const
 }
 
 //-------------------------------------------------------------------------------------------------
-/*static*/ void PlayerTemplate::parseProductionTimeChange( INI* ini, void *instance, void *store, const void* /*userData*/ )
+ void PlayerTemplate::parseProductionTimeChange( INI* ini, void *instance, void *store, const void* /*userData*/ )
 {
 	PlayerTemplate* self = (PlayerTemplate*)instance;
 
@@ -156,7 +156,7 @@ AsciiString PlayerTemplate::getStartingUnit( Int i ) const
 }
 
 //-------------------------------------------------------------------------------------------------
-/*static*/ void PlayerTemplate::parseProductionVeterancyLevel( INI* ini, void *instance, void *store, const void* /*userData*/ )
+ void PlayerTemplate::parseProductionVeterancyLevel( INI* ini, void *instance, void *store, const void* /*userData*/ )
 {
 	PlayerTemplate* self = (PlayerTemplate*)instance;
 
@@ -171,7 +171,7 @@ AsciiString PlayerTemplate::getStartingUnit( Int i ) const
 //-------------------------------------------------------------------------------------------------
 /** Parse integer money and deposit in the m_money */
 //-------------------------------------------------------------------------------------------------
-/*static*/ void PlayerTemplate::parseStartMoney( INI* ini, void *instance, void *store, const void* /*userData*/ )
+ void PlayerTemplate::parseStartMoney( INI* ini, void *instance, void *store, const void* /*userData*/ )
 {
 	Int money = 0;
 
@@ -400,7 +400,7 @@ void PlayerTemplateStore::getAllSideStrings(AsciiStringList *outStringList)
 }
 
 //-------------------------------------------------------------------------------------------------
-/*static*/ void PlayerTemplateStore::parsePlayerTemplateDefinition( INI* ini )
+ void PlayerTemplateStore::parsePlayerTemplateDefinition( INI* ini )
 {
 	const char* c = ini->getNextToken();
 	NameKeyType namekey = NAMEKEY(c);

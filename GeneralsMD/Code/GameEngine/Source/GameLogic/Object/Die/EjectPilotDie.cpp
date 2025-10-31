@@ -81,7 +81,7 @@ EjectPilotDie::~EjectPilotDie( void )
 
 //-------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------
-/*static*/ void EjectPilotDie::ejectPilot(const ObjectCreationList* ocl, const Object* dyingObject, const Object* damageDealer)
+ void EjectPilotDie::ejectPilot(const ObjectCreationList* ocl, const Object* dyingObject, const Object* damageDealer)
 {
 	if (!ocl || !dyingObject)
 		return;	// it's OK for damageDealer to be null

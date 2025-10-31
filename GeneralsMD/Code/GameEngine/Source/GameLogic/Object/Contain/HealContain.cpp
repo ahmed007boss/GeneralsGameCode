@@ -52,7 +52,7 @@ HealContainModuleData::HealContainModuleData( void )
 
 // ------------------------------------------------------------------------------------------------
 // ------------------------------------------------------------------------------------------------
-/*static*/ void HealContainModuleData::buildFieldParse(MultiIniFieldParse& p)
+ void HealContainModuleData::buildFieldParse(MultiIniFieldParse& p)
 {
 
   OpenContainModuleData::buildFieldParse( p );

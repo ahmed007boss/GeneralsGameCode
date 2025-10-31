@@ -61,7 +61,7 @@ AutoFindHealingUpdateModuleData::AutoFindHealingUpdateModuleData()
 }
 
 //-------------------------------------------------------------------------------------------------
-/*static*/ void AutoFindHealingUpdateModuleData::buildFieldParse(MultiIniFieldParse& p)
+ void AutoFindHealingUpdateModuleData::buildFieldParse(MultiIniFieldParse& p)
 {
 	ModuleData::buildFieldParse(p);
 

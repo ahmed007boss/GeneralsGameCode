@@ -648,7 +648,7 @@ MetaMapRec *MetaMap::getMetaMapRec(GameMessage::Type t)
 }
 
 //-------------------------------------------------------------------------------------------------
-/*static */ void MetaMap::parseMetaMap(INI* ini)
+ void MetaMap::parseMetaMap(INI* ini)
 {
 	// read and ignore the meta-map name
 	const char *c = ini->getNextToken();
@@ -665,7 +665,7 @@ MetaMapRec *MetaMap::getMetaMapRec(GameMessage::Type t)
 }
 
 //-------------------------------------------------------------------------------------------------
-/*static */ void MetaMap::generateMetaMap()
+ void MetaMap::generateMetaMap()
 {
 	// TheSuperHackers @info A default mapping for MSG_META_SELECT_ALL_AIRCRAFT would be useful for Generals
 	// but is not recommended, because it will cause key mapping conflicts with original game languages.

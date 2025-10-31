@@ -1800,7 +1800,7 @@ JetAIUpdateModuleData::JetAIUpdateModuleData()
 }
 
 //-------------------------------------------------------------------------------------------------
-/*static*/ void JetAIUpdateModuleData::buildFieldParse(MultiIniFieldParse& p)
+ void JetAIUpdateModuleData::buildFieldParse(MultiIniFieldParse& p)
 {
   AIUpdateModuleData::buildFieldParse(p);
 

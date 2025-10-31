@@ -819,7 +819,7 @@ void DictItemUndoable::Undo(void)
 	}
 }
 
-/*static*/ Dict DictItemUndoable::buildSingleItemDict(AsciiString k, Dict::DataType t, AsciiString v)
+ Dict DictItemUndoable::buildSingleItemDict(AsciiString k, Dict::DataType t, AsciiString v)
 {
 	Dict d;
 	NameKeyType key = TheNameKeyGenerator->nameToKey(k);

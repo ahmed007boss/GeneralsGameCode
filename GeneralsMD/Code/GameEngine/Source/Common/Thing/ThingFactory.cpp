@@ -368,7 +368,7 @@ AsciiString TheThingTemplateBeingParsedName;
 //-------------------------------------------------------------------------------------------------
 /** Parse Object entry */
 //-------------------------------------------------------------------------------------------------
-/*static*/ void ThingFactory::parseObjectDefinition( INI* ini, const AsciiString& name, const AsciiString& reskinFrom )
+ void ThingFactory::parseObjectDefinition( INI* ini, const AsciiString& name, const AsciiString& reskinFrom )
 {
 #if defined(RTS_DEBUG) || defined(DEBUG_CRASHING)
 	TheThingTemplateBeingParsedName = name;

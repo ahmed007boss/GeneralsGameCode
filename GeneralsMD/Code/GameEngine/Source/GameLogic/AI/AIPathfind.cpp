@@ -4483,7 +4483,7 @@ Locomotor* Pathfinder::chooseBestLocomotorForPosition(PathfindLayerEnum layer, L
 	return locomotorSet->findLocomotor(acceptableSurfaces);
 }
 
-/*static*/ LocomotorSurfaceTypeMask Pathfinder::validLocomotorSurfacesForCellType(PathfindCell::CellType t)
+ LocomotorSurfaceTypeMask Pathfinder::validLocomotorSurfacesForCellType(PathfindCell::CellType t)
 {
 	switch (t)
 	{
@@ -5706,7 +5706,7 @@ struct ExamineCellsStruct
 	PathfindCell				*goalCell;
 };
 
-/*static*/ Int Pathfinder::examineCellsCallback(Pathfinder* pathfinder, PathfindCell* from, PathfindCell* to, Int to_x, Int to_y, void* userData)
+ Int Pathfinder::examineCellsCallback(Pathfinder* pathfinder, PathfindCell* from, PathfindCell* to, Int to_x, Int to_y, void* userData)
 {
 	ExamineCellsStruct* d = (ExamineCellsStruct*)userData;
 	Bool isCrusher = d->obj ? d->obj->getCrusherLevel() > 0 : false;
@@ -6529,7 +6529,7 @@ struct MADStruct
 	ObjectID						ignoreID;
 };
 
-/*static*/ Int Pathfinder::moveAlliesDestinationCallback(Pathfinder* pathfinder, PathfindCell* from, PathfindCell* to, Int to_x, Int to_y, void* userData)
+ Int Pathfinder::moveAlliesDestinationCallback(Pathfinder* pathfinder, PathfindCell* from, PathfindCell* to, Int to_x, Int to_y, void* userData)
 {
 	MADStruct* d = (MADStruct*)userData;
 	if (to) {
@@ -6587,7 +6587,7 @@ struct GroundCellsStruct
 	Bool								crusher;
 };
 
-/*static*/ Int Pathfinder::groundCellsCallback(Pathfinder* pathfinder, PathfindCell* from, PathfindCell* to, Int to_x, Int to_y, void* userData)
+ Int Pathfinder::groundCellsCallback(Pathfinder* pathfinder, PathfindCell* from, PathfindCell* to, Int to_x, Int to_y, void* userData)
 {
 	GroundCellsStruct* d = (GroundCellsStruct*)userData;
 	if (from && to) {
@@ -8164,7 +8164,7 @@ struct TightenPathStruct
 };
 
 
-/*static*/ Int Pathfinder::tightenPathCallback(Pathfinder* pathfinder, PathfindCell* from, PathfindCell* to, Int to_x, Int to_y, void* userData)
+ Int Pathfinder::tightenPathCallback(Pathfinder* pathfinder, PathfindCell* from, PathfindCell* to, Int to_x, Int to_y, void* userData)
 {
 	TightenPathStruct* d = (TightenPathStruct*)userData;
 	if (from == NULL || to==NULL) return 0;
@@ -9081,7 +9081,7 @@ struct segmentIntersectsStruct
 	ObjectID ignoreBuilding;
 };
 
-/*static*/ Int Pathfinder::segmentIntersectsBuildingCallback(Pathfinder* pathfinder, PathfindCell* from, PathfindCell* to, Int to_x, Int to_y, void* userData)
+ Int Pathfinder::segmentIntersectsBuildingCallback(Pathfinder* pathfinder, PathfindCell* from, PathfindCell* to, Int to_x, Int to_y, void* userData)
 {
 	segmentIntersectsStruct* d = (segmentIntersectsStruct*)userData;
 
@@ -9109,7 +9109,7 @@ struct ViewBlockedStruct
 };
 
 
-/*static*/ Int Pathfinder::lineBlockedByObstacleCallback(Pathfinder* pathfinder, PathfindCell* from, PathfindCell* to, Int to_x, Int to_y, void* userData)
+ Int Pathfinder::lineBlockedByObstacleCallback(Pathfinder* pathfinder, PathfindCell* from, PathfindCell* to, Int to_x, Int to_y, void* userData)
 {
 	const ViewBlockedStruct* d = (const ViewBlockedStruct*)userData;
 
@@ -9156,7 +9156,7 @@ struct ViewAttackBlockedStruct
 	Int		skipCount;
 };
 
-/*static*/ Int Pathfinder::attackBlockedByObstacleCallback(Pathfinder* pathfinder, PathfindCell* from, PathfindCell* to, Int to_x, Int to_y, void* userData)
+ Int Pathfinder::attackBlockedByObstacleCallback(Pathfinder* pathfinder, PathfindCell* from, PathfindCell* to, Int to_x, Int to_y, void* userData)
 {
 	ViewAttackBlockedStruct* d = (ViewAttackBlockedStruct*)userData;
 
@@ -9423,7 +9423,7 @@ struct LinePassableStruct
 	Bool allowPinched;
 };
 
-/*static*/ Int Pathfinder::linePassableCallback(Pathfinder* pathfinder, PathfindCell* from, PathfindCell* to, Int to_x, Int to_y, void* userData)
+ Int Pathfinder::linePassableCallback(Pathfinder* pathfinder, PathfindCell* from, PathfindCell* to, Int to_x, Int to_y, void* userData)
 {
 	const LinePassableStruct* d = (const LinePassableStruct*)userData;
 
@@ -9472,7 +9472,7 @@ struct GroundPathPassableStruct
 	Bool	crusher;
 };
 
-/*static*/ Int Pathfinder::groundPathPassableCallback(Pathfinder* pathfinder, PathfindCell* from, PathfindCell* to, Int to_x, Int to_y, void* userData)
+ Int Pathfinder::groundPathPassableCallback(Pathfinder* pathfinder, PathfindCell* from, PathfindCell* to, Int to_x, Int to_y, void* userData)
 {
 	const GroundPathPassableStruct* d = (const GroundPathPassableStruct*)userData;
 

@@ -917,7 +917,7 @@ ChinookAIUpdateModuleData::ChinookAIUpdateModuleData()
 }
 
 //-------------------------------------------------------------------------------------------------
-/*static*/ void ChinookAIUpdateModuleData::buildFieldParse(MultiIniFieldParse& p)
+ void ChinookAIUpdateModuleData::buildFieldParse(MultiIniFieldParse& p)
 {
   SupplyTruckAIUpdateModuleData::buildFieldParse(p);
 

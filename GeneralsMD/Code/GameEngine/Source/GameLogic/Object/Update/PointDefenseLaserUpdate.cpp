@@ -58,7 +58,7 @@ PointDefenseLaserUpdateModuleData::PointDefenseLaserUpdateModuleData()
 }
 
 //-------------------------------------------------------------------------------------------------
-/*static*/ void PointDefenseLaserUpdateModuleData::buildFieldParse(MultiIniFieldParse& p)
+ void PointDefenseLaserUpdateModuleData::buildFieldParse(MultiIniFieldParse& p)
 {
 	ModuleData::buildFieldParse(p);
 

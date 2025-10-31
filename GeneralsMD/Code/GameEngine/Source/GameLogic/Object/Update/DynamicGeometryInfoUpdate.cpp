@@ -55,7 +55,7 @@ DynamicGeometryInfoUpdateModuleData::DynamicGeometryInfoUpdateModuleData()
 }
 
 //-------------------------------------------------------------------------------------------------
-/*static*/ void DynamicGeometryInfoUpdateModuleData::buildFieldParse(MultiIniFieldParse& p)
+ void DynamicGeometryInfoUpdateModuleData::buildFieldParse(MultiIniFieldParse& p)
 {
 	ModuleData::buildFieldParse(p);
 

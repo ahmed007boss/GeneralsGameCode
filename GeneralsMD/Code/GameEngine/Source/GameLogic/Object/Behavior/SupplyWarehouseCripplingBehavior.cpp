@@ -45,7 +45,7 @@ SupplyWarehouseCripplingBehaviorModuleData::SupplyWarehouseCripplingBehaviorModu
 }
 
 //-------------------------------------------------------------------------------------------------
-/*static*/ void SupplyWarehouseCripplingBehaviorModuleData::buildFieldParse(MultiIniFieldParse& p)
+ void SupplyWarehouseCripplingBehaviorModuleData::buildFieldParse(MultiIniFieldParse& p)
 {
 
 	static const FieldParse dataFieldParse[] =

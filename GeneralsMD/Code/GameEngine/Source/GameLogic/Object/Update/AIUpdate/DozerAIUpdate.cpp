@@ -1870,7 +1870,7 @@ void DozerAIUpdate::privateResumeConstruction( Object *obj, CommandSourceType cm
 
 //-------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------
-/*static*/ Bool DozerAIUpdate::findGoodBuildOrRepairPosition(const Object* me, const Object* target, Coord3D& positionOut)
+ Bool DozerAIUpdate::findGoodBuildOrRepairPosition(const Object* me, const Object* target, Coord3D& positionOut)
 {
 	// The place we go to build or repair is the closest spot from us to them
 	Coord3D ourPosition = *me->getPosition();
@@ -1915,7 +1915,7 @@ void DozerAIUpdate::privateResumeConstruction( Object *obj, CommandSourceType cm
 
 //-------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------
-/*static*/ Object* DozerAIUpdate::findGoodBuildOrRepairPositionAndTarget(Object* me, Object* target, Coord3D& positionOut)
+ Object* DozerAIUpdate::findGoodBuildOrRepairPositionAndTarget(Object* me, Object* target, Coord3D& positionOut)
 {
 	if (target->isKindOf(KINDOF_BRIDGE))
 	{

@@ -83,7 +83,7 @@ BattlePlanUpdateModuleData::BattlePlanUpdateModuleData()
 }
 
 //-------------------------------------------------------------------------------------------------
-/*static*/ void BattlePlanUpdateModuleData::buildFieldParse(MultiIniFieldParse& p)
+ void BattlePlanUpdateModuleData::buildFieldParse(MultiIniFieldParse& p)
 {
 	ModuleData::buildFieldParse(p);
 

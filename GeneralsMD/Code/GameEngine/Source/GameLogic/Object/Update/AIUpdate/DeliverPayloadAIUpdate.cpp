@@ -563,7 +563,7 @@ void DeliverPayloadStateMachine::loadPostProcess( void )
 }
 
 //-------------------------------------------------------------------------------------------------
-/*static*/ Bool DeliverPayloadStateMachine::isOffMap( State *thisState, void* userData )
+ Bool DeliverPayloadStateMachine::isOffMap( State *thisState, void* userData )
 {
 	Object *owner = thisState->getMachineOwner();
 	DeliverPayloadAIUpdate *ai = (DeliverPayloadAIUpdate*)owner->getAIUpdateInterface();

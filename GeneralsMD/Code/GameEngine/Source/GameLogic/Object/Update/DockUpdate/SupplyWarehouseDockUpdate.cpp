@@ -48,7 +48,7 @@ SupplyWarehouseDockUpdateModuleData::SupplyWarehouseDockUpdateModuleData( void )
 
 // ------------------------------------------------------------------------------------------------
 // ------------------------------------------------------------------------------------------------
-/*static*/ void SupplyWarehouseDockUpdateModuleData::buildFieldParse(MultiIniFieldParse& p)
+ void SupplyWarehouseDockUpdateModuleData::buildFieldParse(MultiIniFieldParse& p)
 {
 
 	DockUpdateModuleData::buildFieldParse( p );

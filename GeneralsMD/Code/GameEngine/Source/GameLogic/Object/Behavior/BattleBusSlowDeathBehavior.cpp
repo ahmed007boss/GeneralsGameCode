@@ -74,7 +74,7 @@ BattleBusSlowDeathBehaviorModuleData::BattleBusSlowDeathBehaviorModuleData( void
 
 // ------------------------------------------------------------------------------------------------
 // ------------------------------------------------------------------------------------------------
-/*static*/ void BattleBusSlowDeathBehaviorModuleData::buildFieldParse( MultiIniFieldParse &p )
+ void BattleBusSlowDeathBehaviorModuleData::buildFieldParse( MultiIniFieldParse &p )
 {
   SlowDeathBehaviorModuleData::buildFieldParse( p );
 

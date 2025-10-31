@@ -47,7 +47,7 @@ FireWeaponUpdateModuleData::FireWeaponUpdateModuleData()
 }
 
 //-------------------------------------------------------------------------------------------------
-/*static*/ void FireWeaponUpdateModuleData::buildFieldParse(MultiIniFieldParse& p)
+ void FireWeaponUpdateModuleData::buildFieldParse(MultiIniFieldParse& p)
 {
   UpdateModuleData::buildFieldParse(p);
 

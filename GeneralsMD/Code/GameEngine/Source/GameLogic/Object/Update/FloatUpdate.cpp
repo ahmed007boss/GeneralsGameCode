@@ -53,7 +53,7 @@ FloatUpdateModuleData::FloatUpdateModuleData( void )
 
 // ------------------------------------------------------------------------------------------------
 // ------------------------------------------------------------------------------------------------
-/*static*/ void FloatUpdateModuleData::buildFieldParse(MultiIniFieldParse& p)
+ void FloatUpdateModuleData::buildFieldParse(MultiIniFieldParse& p)
 {
 
 	UpdateModuleData::buildFieldParse( p );

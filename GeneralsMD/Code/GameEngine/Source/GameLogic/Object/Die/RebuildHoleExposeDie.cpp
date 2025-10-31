@@ -58,7 +58,7 @@ RebuildHoleExposeDieModuleData::RebuildHoleExposeDieModuleData()
 
 // ------------------------------------------------------------------------------------------------
 // ------------------------------------------------------------------------------------------------
-/*static*/ void RebuildHoleExposeDieModuleData::buildFieldParse( MultiIniFieldParse &p )
+ void RebuildHoleExposeDieModuleData::buildFieldParse( MultiIniFieldParse &p )
 {
 	DieModuleData::buildFieldParse(p);
 

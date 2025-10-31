@@ -206,7 +206,7 @@ void InitPrecisionTimer()
 //-------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------
 
-/*static*/ Bool AutoPerfGatherIgnore::s_ignoring = false;
+ Bool AutoPerfGatherIgnore::s_ignoring = false;
 
 //-------------------------------------------------------------------------------------------------
 typedef std::vector< std::pair< AsciiString, AsciiString > > StringPairVec;
@@ -267,7 +267,7 @@ Int64					PerfGather::s_stopStartOverhead = -1;
 //-------------------------------------------------------------------------------------------------
 
 //-------------------------------------------------------------------------------------------------
-/*static*/ PerfGather*& PerfGather::getHeadPtr()
+ PerfGather*& PerfGather::getHeadPtr()
 {
 	// funky technique for order-of-init problem. trust me. (srj)
 	static PerfGather* s_head = NULL;
@@ -336,7 +336,7 @@ void PerfGather::reset()
 }
 
 //-------------------------------------------------------------------------------------------------
-/*static*/ void PerfGather::resetAll()
+ void PerfGather::resetAll()
 {
 	for (PerfGather* head = getHeadPtr(); head != NULL; head = head->m_next)
 	{
@@ -345,7 +345,7 @@ void PerfGather::reset()
 }
 
 //-------------------------------------------------------------------------------------------------
-/*static*/ void PerfGather::initPerfDump(const char* fname, Int options)
+ void PerfGather::initPerfDump(const char* fname, Int options)
 {
 	PerfGather::termPerfDump();
 
@@ -388,7 +388,7 @@ void PerfGather::reset()
 }
 
 //-------------------------------------------------------------------------------------------------
-/*static*/ void PerfGather::dumpAll(UnsignedInt frame)
+ void PerfGather::dumpAll(UnsignedInt frame)
 {
 	if (frame < s_lastDumpedFrame)
 	{
@@ -485,7 +485,7 @@ void PerfGather::reset()
 //-------------------------------------------------------------------------------------------------
 // This function will queue up stuff to draw on the next frame. We also need to adjust the
 // perf timers to not include time spent paused by the script engine.
-/*static*/ void PerfGather::displayGraph(UnsignedInt frame)
+ void PerfGather::displayGraph(UnsignedInt frame)
 {
 	if (!TheGraphDraw) {
 		return;
@@ -536,7 +536,7 @@ void PerfGather::reset()
 }
 
 //-------------------------------------------------------------------------------------------------
-/*static*/ void PerfGather::termPerfDump()
+ void PerfGather::termPerfDump()
 {
 	if (s_perfStatsFile)
 	{

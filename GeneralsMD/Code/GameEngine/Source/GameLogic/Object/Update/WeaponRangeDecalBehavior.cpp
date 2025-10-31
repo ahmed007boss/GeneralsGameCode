@@ -78,7 +78,7 @@ WeaponRangeDecalBehaviorModuleData::WeaponRangeDecalBehaviorModuleData()
 
 //-------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------
-/*static*/ void WeaponRangeDecalBehaviorModuleData::buildFieldParse(MultiIniFieldParse& p)
+ void WeaponRangeDecalBehaviorModuleData::buildFieldParse(MultiIniFieldParse& p)
 {
 	UpdateModuleData::buildFieldParse(p);
 	static const FieldParse dataFieldParse[] =

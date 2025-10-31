@@ -56,7 +56,7 @@ OverchargeBehaviorModuleData::OverchargeBehaviorModuleData( void )
 
 //-------------------------------------------------------------------------------------------------
 // ------------------------------------------------------------------------------------------------
-/*static*/ void OverchargeBehaviorModuleData::buildFieldParse( MultiIniFieldParse &p )
+ void OverchargeBehaviorModuleData::buildFieldParse( MultiIniFieldParse &p )
 {
 
   UpdateModuleData::buildFieldParse( p );

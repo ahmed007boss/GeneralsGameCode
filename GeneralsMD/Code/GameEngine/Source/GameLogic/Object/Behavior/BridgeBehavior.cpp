@@ -79,7 +79,7 @@ BridgeBehaviorModuleData::~BridgeBehaviorModuleData( void )
 
 // ------------------------------------------------------------------------------------------------
 // ------------------------------------------------------------------------------------------------
-/*static*/ void BridgeBehaviorModuleData::buildFieldParse( MultiIniFieldParse &p )
+ void BridgeBehaviorModuleData::buildFieldParse( MultiIniFieldParse &p )
 {
   BehaviorModuleData::buildFieldParse( p );
 
@@ -140,7 +140,7 @@ static void parseTimeAndLocationInfo( INI *ini, void *instance,
 
 //-------------------------------------------------------------------------------------------------
 // ------------------------------------------------------------------------------------------------
-/*static*/ void BridgeBehaviorModuleData::parseFX( INI *ini,
+ void BridgeBehaviorModuleData::parseFX( INI *ini,
 											 														 void *instance,
 																									 void *store,
 																									 const void *userData )
@@ -181,7 +181,7 @@ static void parseTimeAndLocationInfo( INI *ini, void *instance,
 
 // ------------------------------------------------------------------------------------------------
 // ------------------------------------------------------------------------------------------------
-/*static*/ void BridgeBehaviorModuleData::parseOCL( INI *ini,
+ void BridgeBehaviorModuleData::parseOCL( INI *ini,
 																										void *instance,
 																										void *store,
 																										const void *userData )
@@ -287,7 +287,7 @@ BridgeBehavior::~BridgeBehavior( void )
 // ------------------------------------------------------------------------------------------------
 /** Get bridge behavior interface */
 // ------------------------------------------------------------------------------------------------
-/*static */BridgeBehaviorInterface *BridgeBehavior::getBridgeBehaviorInterfaceFromObject( Object *obj )
+BridgeBehaviorInterface *BridgeBehavior::getBridgeBehaviorInterfaceFromObject( Object *obj )
 {
 
 	// sanity

@@ -55,7 +55,7 @@ PropagandaCenterBehaviorModuleData::PropagandaCenterBehaviorModuleData( void )
 
 // ------------------------------------------------------------------------------------------------
 // ------------------------------------------------------------------------------------------------
-/*static*/ void PropagandaCenterBehaviorModuleData::buildFieldParse( MultiIniFieldParse &p )
+ void PropagandaCenterBehaviorModuleData::buildFieldParse( MultiIniFieldParse &p )
 {
   PrisonBehaviorModuleData::buildFieldParse( p );
 

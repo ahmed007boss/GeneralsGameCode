@@ -110,7 +110,7 @@ void RadiusDecalTemplate::xferRadiusDecalTemplate( Xfer *xfer )
 }
 
 // ------------------------------------------------------------------------------------------------
-/*static*/ void RadiusDecalTemplate::parseRadiusDecalTemplate(INI* ini, void *instance, void * store, const void* /*userData*/)
+ void RadiusDecalTemplate::parseRadiusDecalTemplate(INI* ini, void *instance, void * store, const void* /*userData*/)
 {
 	static const FieldParse dataFieldParse[] = 
 	{

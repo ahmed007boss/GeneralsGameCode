@@ -45,4 +45,11 @@ void INI::parseWeaponTemplateDefinition( INI* ini )
 	WeaponStore::parseWeaponTemplateDefinition(ini);
 }
 
+//-------------------------------------------------------------------------------------------------
+// TheSuperHackers @feature AhmedSalah 02/02/2025 WeaponExtend support
+void INI::parseWeaponExtendDefinition( INI* ini )
+{
+	WeaponStore::parseWeaponExtendDefinition(ini);
+}
+
 

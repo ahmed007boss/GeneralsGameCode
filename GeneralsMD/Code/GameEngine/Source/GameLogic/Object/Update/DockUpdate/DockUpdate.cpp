@@ -46,7 +46,7 @@ DockUpdateModuleData::DockUpdateModuleData( void )
 	m_isAllowPassthrough = TRUE;
 }
 
-/*static*/ void DockUpdateModuleData::buildFieldParse(MultiIniFieldParse& p)
+ void DockUpdateModuleData::buildFieldParse(MultiIniFieldParse& p)
 {
 
 	UpdateModuleData::buildFieldParse( p );

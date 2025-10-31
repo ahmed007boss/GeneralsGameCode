@@ -45,7 +45,7 @@ RadiusDecalBehaviorModuleData::RadiusDecalBehaviorModuleData()
 }
 //-------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------
-/*static*/ void RadiusDecalBehaviorModuleData::buildFieldParse(MultiIniFieldParse& p)
+ void RadiusDecalBehaviorModuleData::buildFieldParse(MultiIniFieldParse& p)
 {
 	UpdateModuleData::buildFieldParse(p);
 	static const FieldParse dataFieldParse[] =

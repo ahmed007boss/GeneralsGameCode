@@ -206,7 +206,7 @@ Bool AIGuardRetaliateMachine::isIdle() const
 }
 
 //--------------------------------------------------------------------------------------
-/*static*/ Real AIGuardRetaliateMachine::getStdGuardRange(const Object* obj)
+ Real AIGuardRetaliateMachine::getStdGuardRange(const Object* obj)
 {
 	Real visionRange = TheAI->getAdjustedVisionRangeForObject(obj,
 		AI_VISIONFACTOR_OWNERTYPE | AI_VISIONFACTOR_MOOD | AI_VISIONFACTOR_GUARDINNER);

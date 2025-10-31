@@ -618,7 +618,7 @@ ModuleData* ModuleFactory::newModuleDataFromINI(INI* ini, const AsciiString& nam
 // PRIVATE FUNCTIONS //////////////////////////////////////////////////////////////////////////////
 
 //-------------------------------------------------------------------------------------------------
-/*static*/ NameKeyType ModuleFactory::makeDecoratedNameKey(const AsciiString& name, ModuleType type)
+ NameKeyType ModuleFactory::makeDecoratedNameKey(const AsciiString& name, ModuleType type)
 {
 	char tmp[256];
 	tmp[0] = '0' + (int)type;

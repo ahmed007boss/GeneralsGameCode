@@ -85,7 +85,7 @@ OpenContainModuleData::OpenContainModuleData( void )
 
 // ------------------------------------------------------------------------------------------------
 // ------------------------------------------------------------------------------------------------
-/*static*/ void OpenContainModuleData::buildFieldParse(MultiIniFieldParse& p)
+ void OpenContainModuleData::buildFieldParse(MultiIniFieldParse& p)
 {
   UpdateModuleData::buildFieldParse(p);
 

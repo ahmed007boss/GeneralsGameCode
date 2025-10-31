@@ -61,7 +61,7 @@ DemoTrapUpdateModuleData::DemoTrapUpdateModuleData()
 }
 
 //-------------------------------------------------------------------------------------------------
-/*static*/ void DemoTrapUpdateModuleData::buildFieldParse(MultiIniFieldParse& p)
+ void DemoTrapUpdateModuleData::buildFieldParse(MultiIniFieldParse& p)
 {
 	ModuleData::buildFieldParse(p);
 

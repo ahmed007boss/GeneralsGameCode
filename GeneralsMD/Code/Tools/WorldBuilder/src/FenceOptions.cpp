@@ -91,7 +91,7 @@ END_MESSAGE_MAP()
 /////////////////////////////////////////////////////////////////////////////
 // FenceOptions data access method.
 
-/*static*/ void FenceOptions::update()
+ void FenceOptions::update()
 {
 	if (m_staticThis) {
 		m_staticThis->updateObjectOptions();

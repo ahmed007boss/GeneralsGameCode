@@ -692,7 +692,7 @@ LocomotorTemplate *LocomotorStore::newOverride( LocomotorTemplate *locoTemplate 
 }
 
 //-------------------------------------------------------------------------------------------------
-/*static*/ void LocomotorStore::parseLocomotorTemplateDefinition(INI* ini)
+ void LocomotorStore::parseLocomotorTemplateDefinition(INI* ini)
 {
 	if (!TheLocomotorStore)
 		throw INI_INVALID_DATA;
@@ -726,7 +726,7 @@ LocomotorTemplate *LocomotorStore::newOverride( LocomotorTemplate *locoTemplate 
 }
 
 //-------------------------------------------------------------------------------------------------
-/*static*/ void INI::parseLocomotorTemplateDefinition( INI* ini )
+ void INI::parseLocomotorTemplateDefinition( INI* ini )
 {
 	LocomotorStore::parseLocomotorTemplateDefinition(ini);
 }

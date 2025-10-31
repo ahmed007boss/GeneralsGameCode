@@ -90,7 +90,7 @@ static_assert(ARRAY_SIZE(TheGunshipCreateLocTypeNames) == GUNSHIP_CREATE_LOC_COU
 
 static Real zero = 0.0f;
 //-------------------------------------------------------------------------------------------------
-/*static*/ void SpectreGunshipDeploymentUpdateModuleData::buildFieldParse(MultiIniFieldParse& p)
+ void SpectreGunshipDeploymentUpdateModuleData::buildFieldParse(MultiIniFieldParse& p)
 {
 	ModuleData::buildFieldParse(p);
 

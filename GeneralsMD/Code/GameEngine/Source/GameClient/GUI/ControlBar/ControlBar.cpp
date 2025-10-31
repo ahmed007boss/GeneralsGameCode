@@ -2904,7 +2904,7 @@ CommandButton *ControlBar::newCommandButtonOverride( CommandButton *buttonToOver
 //-------------------------------------------------------------------------------------------------
 /** Parse a command set */
 //-------------------------------------------------------------------------------------------------
-/*static*/ void ControlBar::parseCommandSetDefinition( INI *ini )
+ void ControlBar::parseCommandSetDefinition( INI *ini )
 {
 	AsciiString name;
 	CommandSet *commandSet;

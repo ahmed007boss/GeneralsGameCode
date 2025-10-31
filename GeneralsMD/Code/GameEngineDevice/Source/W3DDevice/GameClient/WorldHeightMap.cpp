@@ -81,8 +81,8 @@ public:
 
 
 /* ********* MapObject class ****************************/
-/*static*/ MapObject *MapObject::TheMapObjectListPtr = NULL;
-/*static*/ Dict MapObject::TheWorldDict;
+ MapObject *MapObject::TheMapObjectListPtr = NULL;
+ Dict MapObject::TheWorldDict;
 
 MapObject::MapObject(Coord3D loc, AsciiString name, Real angle, Int flags, const Dict* props,
 										 const ThingTemplate *thingTemplate )
@@ -344,7 +344,7 @@ AsciiString MapObject::getWaypointName() { return getProperties()->getAsciiStrin
 void MapObject::setWaypointID(Int i) { getProperties()->setInt(TheKey_waypointID, i); }
 void MapObject::setWaypointName(AsciiString n) { getProperties()->setAsciiString(TheKey_waypointName, n); }
 
-/*static */ Int MapObject::countMapObjectsWithOwner(const AsciiString& n)
+ Int MapObject::countMapObjectsWithOwner(const AsciiString& n)
 {
 	Int count = 0;
 	for (MapObject *pMapObj = MapObject::getFirstMapObject(); pMapObj; pMapObj = pMapObj->getNext())

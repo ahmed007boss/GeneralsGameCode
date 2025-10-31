@@ -126,7 +126,7 @@ HordeUpdateModuleData::HordeUpdateModuleData() :
 }
 
 //-------------------------------------------------------------------------------------------------
-/*static*/ void HordeUpdateModuleData::buildFieldParse(MultiIniFieldParse& p)
+ void HordeUpdateModuleData::buildFieldParse(MultiIniFieldParse& p)
 {
 	ModuleData::buildFieldParse(p);
 

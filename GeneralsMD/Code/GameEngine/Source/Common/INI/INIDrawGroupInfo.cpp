@@ -80,7 +80,7 @@ const FieldParse DrawGroupInfo::s_fieldParseTable[] =
 	{ 0, 0, 0, 0 }
 };
 
-/*static */ void INI::parseDrawGroupNumberDefinition(INI* ini)
+ void INI::parseDrawGroupNumberDefinition(INI* ini)
 {
 	if (!TheDrawGroupInfo) {
 		throw INI_UNKNOWN_ERROR;

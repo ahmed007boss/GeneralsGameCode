@@ -60,7 +60,7 @@ PilotFindVehicleUpdateModuleData::PilotFindVehicleUpdateModuleData()
 }
 
 //-------------------------------------------------------------------------------------------------
-/*static*/ void PilotFindVehicleUpdateModuleData::buildFieldParse(MultiIniFieldParse& p)
+ void PilotFindVehicleUpdateModuleData::buildFieldParse(MultiIniFieldParse& p)
 {
 	ModuleData::buildFieldParse(p);
 

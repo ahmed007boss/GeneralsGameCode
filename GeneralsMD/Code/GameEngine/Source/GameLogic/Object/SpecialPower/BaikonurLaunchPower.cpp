@@ -58,7 +58,7 @@ BaikonurLaunchPowerModuleData::BaikonurLaunchPowerModuleData( void )
 
 // ------------------------------------------------------------------------------------------------
 // ------------------------------------------------------------------------------------------------
-/*static*/ void BaikonurLaunchPowerModuleData::buildFieldParse(MultiIniFieldParse& p)
+ void BaikonurLaunchPowerModuleData::buildFieldParse(MultiIniFieldParse& p)
 {
 	SpecialPowerModuleData::buildFieldParse( p );
 

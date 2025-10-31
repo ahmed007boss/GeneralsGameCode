@@ -65,7 +65,7 @@ FireWeaponPowerModuleData::FireWeaponPowerModuleData( void )
 
 // ------------------------------------------------------------------------------------------------
 // ------------------------------------------------------------------------------------------------
-/*static*/ void FireWeaponPowerModuleData::buildFieldParse(MultiIniFieldParse& p)
+ void FireWeaponPowerModuleData::buildFieldParse(MultiIniFieldParse& p)
 {
 	SpecialPowerModuleData::buildFieldParse( p );
 

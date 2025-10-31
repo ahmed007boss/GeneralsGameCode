@@ -153,7 +153,7 @@ const ScienceInfo* ScienceStore::findScienceInfo(ScienceType st) const
 }
 
 //-----------------------------------------------------------------------------
-/*static*/ void ScienceStore::friend_parseScienceDefinition( INI* ini )
+ void ScienceStore::friend_parseScienceDefinition( INI* ini )
 {
 	const char* c = ini->getNextToken();
 	NameKeyType nkt = NAMEKEY(c);

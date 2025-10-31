@@ -132,7 +132,7 @@ const ArmorTemplate* ArmorStore::findArmorTemplate(AsciiString name) const
 }
 
 //-------------------------------------------------------------------------------------------------
-/*static */ void ArmorStore::parseArmorDefinition(INI *ini)
+ void ArmorStore::parseArmorDefinition(INI *ini)
 {
 	static const FieldParse myFieldParse[] =
 	{

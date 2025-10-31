@@ -92,7 +92,7 @@ TensileFormationUpdateModuleData::TensileFormationUpdateModuleData( void )
 
 // ------------------------------------------------------------------------------------------------
 // ------------------------------------------------------------------------------------------------
-/*static*/ void TensileFormationUpdateModuleData::buildFieldParse(MultiIniFieldParse& p)
+ void TensileFormationUpdateModuleData::buildFieldParse(MultiIniFieldParse& p)
 {
 
 	UpdateModuleData::buildFieldParse( p );

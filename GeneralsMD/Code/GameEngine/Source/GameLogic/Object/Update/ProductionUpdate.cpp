@@ -106,7 +106,7 @@ ProductionUpdateModuleData::ProductionUpdateModuleData( void )
 }
 
 //-------------------------------------------------------------------------------------------------
-/*static*/ void ProductionUpdateModuleData::parseAppendQuantityModifier( INI* ini, void *instance, void *store, const void* /*userData*/ )
+ void ProductionUpdateModuleData::parseAppendQuantityModifier( INI* ini, void *instance, void *store, const void* /*userData*/ )
 {
 	ProductionUpdateModuleData* data = (ProductionUpdateModuleData*)instance;
 	const char* name = ini->getNextToken();
@@ -121,7 +121,7 @@ ProductionUpdateModuleData::ProductionUpdateModuleData( void )
 
 //-------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------
-/*static*/ void ProductionUpdateModuleData::buildFieldParse(MultiIniFieldParse& p)
+ void ProductionUpdateModuleData::buildFieldParse(MultiIniFieldParse& p)
 {
   UpdateModuleData::buildFieldParse( p );
 
@@ -1181,7 +1181,7 @@ void ProductionUpdate::setHoldDoorOpen(ExitDoorType exitDoor, Bool holdIt)
 // ------------------------------------------------------------------------------------------------
 /** Helper method to retrieve a production update interface from an object if one is present */
 // ------------------------------------------------------------------------------------------------
-/*static*/ ProductionUpdateInterface *ProductionUpdate::getProductionUpdateInterfaceFromObject( Object *obj )
+ ProductionUpdateInterface *ProductionUpdate::getProductionUpdateInterfaceFromObject( Object *obj )
 {
 
 	// sanity

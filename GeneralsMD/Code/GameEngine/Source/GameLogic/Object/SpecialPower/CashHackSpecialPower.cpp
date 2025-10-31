@@ -62,7 +62,7 @@ static void parseCashHackUpgradePair( INI* ini, void * /*instance*/, void *store
 
 // ------------------------------------------------------------------------------------------------
 // ------------------------------------------------------------------------------------------------
-/*static*/ void CashHackSpecialPowerModuleData::buildFieldParse(MultiIniFieldParse& p)
+ void CashHackSpecialPowerModuleData::buildFieldParse(MultiIniFieldParse& p)
 {
 	SpecialPowerModuleData::buildFieldParse( p );
 

@@ -123,7 +123,7 @@ const LocomotorTemplateVector* AIUpdateModuleData::findLocomotorTemplateVector(L
 }
 
 //-------------------------------------------------------------------------------------------------
-/*static*/ void AIUpdateModuleData::buildFieldParse(MultiIniFieldParse& p)
+ void AIUpdateModuleData::buildFieldParse(MultiIniFieldParse& p)
 {
   ModuleData::buildFieldParse(p);
 
@@ -152,7 +152,7 @@ const LocomotorTemplateVector* AIUpdateModuleData::findLocomotorTemplateVector(L
 }
 
 //-------------------------------------------------------------------------------------------------
-/*static*/ void AIUpdateModuleData::parseTurret(INI* ini, void *instance, void * store, const void* /*userData*/)
+ void AIUpdateModuleData::parseTurret(INI* ini, void *instance, void * store, const void* /*userData*/)
 {
 	if (*(TurretAIData**)store)
 	{
@@ -166,7 +166,7 @@ const LocomotorTemplateVector* AIUpdateModuleData::findLocomotorTemplateVector(L
 }
 
 //-------------------------------------------------------------------------------------------------
-/*static*/ void AIUpdateModuleData::parseLocomotorSet(INI* ini, void *instance, void * /*store*/, const void* /*userData*/)
+ void AIUpdateModuleData::parseLocomotorSet(INI* ini, void *instance, void * /*store*/, const void* /*userData*/)
 {
 	ThingTemplate *tt = (ThingTemplate *)instance;
 	AIUpdateModuleData *self = tt->friend_getAIModuleInfo();

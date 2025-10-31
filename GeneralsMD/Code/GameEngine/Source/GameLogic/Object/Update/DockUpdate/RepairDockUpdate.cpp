@@ -46,7 +46,7 @@ RepairDockUpdateModuleData::RepairDockUpdateModuleData( void )
 
 // ------------------------------------------------------------------------------------------------
 // ------------------------------------------------------------------------------------------------
-/*static*/ void RepairDockUpdateModuleData::buildFieldParse(MultiIniFieldParse& p)
+ void RepairDockUpdateModuleData::buildFieldParse(MultiIniFieldParse& p)
 {
 
 	DockUpdateModuleData::buildFieldParse( p );

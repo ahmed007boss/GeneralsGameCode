@@ -52,7 +52,7 @@ CreateObjectDieModuleData::CreateObjectDieModuleData()
 
 // ------------------------------------------------------------------------------------------------
 // ------------------------------------------------------------------------------------------------
-/*static*/ void CreateObjectDieModuleData::buildFieldParse(MultiIniFieldParse& p)
+ void CreateObjectDieModuleData::buildFieldParse(MultiIniFieldParse& p)
 {
 	DieModuleData::buildFieldParse(p);
 

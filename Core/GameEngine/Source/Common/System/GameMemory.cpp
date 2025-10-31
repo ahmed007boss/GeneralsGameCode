@@ -555,7 +555,7 @@ inline void* MemoryPoolSingleBlock::getUserData()
 	given a desired logical block size, calculate the physical size needed for each
 	MemoryPoolSingleBlock (including overhead, etc.)
 */
-inline /*static*/ Int MemoryPoolSingleBlock::calcRawBlockSize(Int logicalSize)
+inline  Int MemoryPoolSingleBlock::calcRawBlockSize(Int logicalSize)
 {
 	Int s = ::roundUpMemBound(logicalSize) + sizeof(MemoryPoolSingleBlock);
 	#ifdef MEMORYPOOL_BOUNDINGWALL
@@ -754,7 +754,7 @@ Bool BlockCheckpointInfo::shouldBeInReport(Int flags, Int startCheckpoint, Int e
 //-----------------------------------------------------------------------------
 #ifdef MEMORYPOOL_CHECKPOINTING
 /// print a checkpointreport for the given checkpointinfo. if checkpointinfo is null, print column headers.
-/*static*/ void BlockCheckpointInfo::doBlockCheckpointReport(BlockCheckpointInfo *bi,
+ void BlockCheckpointInfo::doBlockCheckpointReport(BlockCheckpointInfo *bi,
 			const char *poolName, Int flags, Int startCheckpoint, Int endCheckpoint )
 {
 	const char *PREPEND = "BLOCKINFO";	// allows grepping more easily
@@ -786,7 +786,7 @@ Bool BlockCheckpointInfo::shouldBeInReport(Int flags, Int startCheckpoint, Int e
 // ----------------------------------------------------------------------------
 #ifdef MEMORYPOOL_CHECKPOINTING
 /// free an entire list of checkpointinfos.
-/*static*/ void BlockCheckpointInfo::freeList(BlockCheckpointInfo **pHead)
+ void BlockCheckpointInfo::freeList(BlockCheckpointInfo **pHead)
 {
 	BlockCheckpointInfo *p = *pHead;
 	while (p)
@@ -806,7 +806,7 @@ Bool BlockCheckpointInfo::shouldBeInReport(Int flags, Int startCheckpoint, Int e
 	linked list, and return the checkpointinfo. (note that this will NOT throw an exception;
 	if there is not enough memory to allocate a new checkpointinfo, it will quietly return null.)
 */
-/*static*/ BlockCheckpointInfo *BlockCheckpointInfo::addToList(
+ BlockCheckpointInfo *BlockCheckpointInfo::addToList(
 	BlockCheckpointInfo **pHead,
 	const char *debugLiteralTagString,
 	Int allocCheckpoint,
@@ -920,7 +920,7 @@ void MemoryPoolSingleBlock::initBlock(Int logicalSize, MemoryPoolBlob *owningBlo
 	allocate and initialize a single block. this should only used by DynamicMemoryAllocator
 	when allocating an extraordinarily large block.
 */
-/*static*/ MemoryPoolSingleBlock *MemoryPoolSingleBlock::rawAllocateSingleBlock(
+ MemoryPoolSingleBlock *MemoryPoolSingleBlock::rawAllocateSingleBlock(
 	MemoryPoolSingleBlock **pRawListHead,
 	Int logicalSize,
 	MemoryPoolFactory *owningFactory
@@ -1852,7 +1852,7 @@ void MemoryPool::removeFromList(MemoryPool **pHead)
 	print a report about per-pool allocation statistics to the debug log.
 	if the pool is null, print column headers.
 */
-/*static*/ void MemoryPool::debugPoolInfoReport( MemoryPool *pool, FILE *fp )
+ void MemoryPool::debugPoolInfoReport( MemoryPool *pool, FILE *fp )
 {
 	//USE_PERF_TIMER(MemoryPoolDebugging) skip end-of-run reporting stuff
 

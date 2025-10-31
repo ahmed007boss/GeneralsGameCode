@@ -173,7 +173,7 @@ void Anim2DTemplate::parseImage( INI *ini, void *instance, void *store, const vo
 	* animation.  NOTE: That the number images *must* have already been specified before
 	* we can parse this entry so we know how many images to allocate and look for */
 // ------------------------------------------------------------------------------------------------
-/*static*/ void Anim2DTemplate::parseImageSequence( INI *ini, void *instance,
+ void Anim2DTemplate::parseImageSequence( INI *ini, void *instance,
 																										void *store, const void *userData )
 {
 

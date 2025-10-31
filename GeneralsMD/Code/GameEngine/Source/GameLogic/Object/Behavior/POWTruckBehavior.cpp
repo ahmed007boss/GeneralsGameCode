@@ -52,7 +52,7 @@ POWTruckBehaviorModuleData::POWTruckBehaviorModuleData( void )
 
 // ------------------------------------------------------------------------------------------------
 // ------------------------------------------------------------------------------------------------
-/*static*/ void POWTruckBehaviorModuleData::buildFieldParse( MultiIniFieldParse &p )
+ void POWTruckBehaviorModuleData::buildFieldParse( MultiIniFieldParse &p )
 {
   OpenContainModuleData::buildFieldParse( p );
 

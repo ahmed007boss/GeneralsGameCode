@@ -156,7 +156,7 @@ static void parseFrictionPerSec( INI* ini, void * /*instance*/, void *store, con
 }
 
 //-------------------------------------------------------------------------------------------------
-/*static*/ void PhysicsBehaviorModuleData::buildFieldParse(MultiIniFieldParse& p)
+ void PhysicsBehaviorModuleData::buildFieldParse(MultiIniFieldParse& p)
 {
   UpdateModuleData::buildFieldParse(p);
 
