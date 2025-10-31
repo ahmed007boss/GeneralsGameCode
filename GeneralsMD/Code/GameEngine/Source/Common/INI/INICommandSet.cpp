@@ -41,3 +41,11 @@ void INI::parseCommandSetDefinition( INI *ini )
 {
 	ControlBar::parseCommandSetDefinition(ini);
 }
+
+//-------------------------------------------------------------------------------------------------
+/** Parse a command set extend definition */
+//-------------------------------------------------------------------------------------------------
+void INI::parseCommandSetExtendDefinition( INI *ini )
+{
+	ControlBar::parseCommandSetExtendDefinition(ini);
+}

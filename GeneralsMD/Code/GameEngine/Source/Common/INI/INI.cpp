@@ -91,6 +91,7 @@ static const BlockParse theTypeTable[] =
 	{ "CommandButton",			INI::parseCommandButtonDefinition },
 	{ "CommandMap",					INI::parseMetaMapDefinition },
 	{ "CommandSet",					INI::parseCommandSetDefinition },
+	{ "CommandSetExtend",			INI::parseCommandSetExtendDefinition },
 	{ "ControlBarScheme",		INI::parseControlBarSchemeDefinition },
 	{ "ControlBarResizer",	INI::parseControlBarResizerDefinition },
 	{ "CrateData",					INI::parseCrateTemplateDefinition },

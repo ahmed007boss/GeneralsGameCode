@@ -637,6 +637,8 @@ public:
 
 	// only for the control bar.
 	CommandSet* friend_getNext() { return m_next; }
+	void friend_setNext(CommandSet* next) { m_next = next; }
+	void friend_setName(const AsciiString& name) { m_name = name; }
 	const FieldParse* friend_getFieldParse() const { return m_commandSetFieldParseTable; }
 	void friend_addToList(CommandSet** listHead);
 
@@ -994,6 +996,7 @@ public:
 
 
 	static void parseCommandSetDefinition( INI *ini );
+	static void parseCommandSetExtendDefinition( INI *ini );
 	static void parseCommandButtonDefinition( INI *ini );
 
 	void drawTransitionHandler( void );

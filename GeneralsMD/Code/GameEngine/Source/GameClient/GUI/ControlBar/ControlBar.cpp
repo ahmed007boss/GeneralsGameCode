@@ -2949,6 +2949,60 @@ CommandButton *ControlBar::newCommandButtonOverride( CommandButton *buttonToOver
 }
 
 //-------------------------------------------------------------------------------------------------
+/** Parse a command set extend definition */
+//-------------------------------------------------------------------------------------------------
+// TheSuperHackers @feature AhmedSalah 02/02/2025 CommandSetExtend - allow CommandSet templates to inherit from parent
+void ControlBar::parseCommandSetExtendDefinition( INI *ini )
+{
+	const char* new_commandset_name = ini->getNextToken();
+	
+	const char* parent = ini->getNextToken();
+	const CommandSet* parentCommandSet = TheControlBar->findCommandSet(parent);
+	if (parentCommandSet == NULL) {
+		DEBUG_CRASH(("CommandSetExtend must extend a previously defined CommandSet (%s).\n", parent));
+		throw INI_INVALID_DATA;
+	}
+
+	// Check if command set already exists
+	CommandSet* commandSet = TheControlBar->findNonConstCommandSet(new_commandset_name);
+	if (commandSet)
+	{
+		if (ini->getLoadType() == INI_LOAD_CREATE_OVERRIDES)
+			commandSet = TheControlBar->newCommandSetOverride(commandSet);
+		else
+		{
+			DEBUG_CRASH(("CommandSet '%s' already exists, but OVERRIDE not specified", new_commandset_name));
+			return;
+		}
+	}
+	else
+	{
+		// Create new command set
+		commandSet = TheControlBar->newCommandSet(new_commandset_name);
+	}
+
+	// Save the new command set's name and next pointer before copying
+	AsciiString new_commandset_name_saved = commandSet->getName();
+	CommandSet* new_commandset_next_saved = commandSet->friend_getNext();
+
+	// Copy from parent command set
+	(*commandSet) = (*parentCommandSet);
+
+	// Restore the new command set's name and next pointer (should not be copied from parent)
+	commandSet->friend_setName(new_commandset_name_saved);
+	commandSet->friend_setNext(new_commandset_next_saved);
+
+	// Reset override chain since this is not an override (unless it was explicitly marked)
+	if (ini->getLoadType() != INI_LOAD_CREATE_OVERRIDES)
+	{
+		commandSet->setNextOverride(NULL);
+	}
+
+	// Parse the ini command set definition (allows all fields to be overridden)
+	ini->initFromINI( commandSet, commandSet->friend_getFieldParse() );
+}
+
+//-------------------------------------------------------------------------------------------------
 /** Find existing command set by name */
 //-------------------------------------------------------------------------------------------------
 CommandSet* ControlBar::findNonConstCommandSet( const AsciiString& name )

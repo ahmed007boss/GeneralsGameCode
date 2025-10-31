@@ -237,6 +237,7 @@ public:
 	static void parseVideoDefinition( INI* ini );
 	static void parseCommandButtonDefinition( INI *ini );
 	static void parseCommandSetDefinition( INI *ini );
+	static void parseCommandSetExtendDefinition( INI *ini );
 	static void parseUpgradeDefinition( INI *ini );
 	static void parseMouseDefinition( INI* ini );
 	static void parseMouseCursorDefinition( INI* ini );
