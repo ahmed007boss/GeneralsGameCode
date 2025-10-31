@@ -321,7 +321,7 @@ void GameTextManager::init( void )
 	
 	// Determine file format and get initial text count
 	Int format;
-	if ( m_useStringFile && m_textCount > 0 )
+	if ( m_useStringFile && m_textCount > 20  )
 	{
 		format = STRING_FILE;
 	}
