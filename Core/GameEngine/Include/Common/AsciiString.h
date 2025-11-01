@@ -644,4 +644,3 @@ inline AsciiString& operator+=(AsciiString& s1, const char* s2)
 	return s1;
 }
 
-#endif // ASCIISTRING_H

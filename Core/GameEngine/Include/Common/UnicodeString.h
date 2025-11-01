@@ -550,5 +550,3 @@ inline UnicodeString& operator+=(UnicodeString& s1, const WideChar* s2)
 	s1.concat(s2);
 	return s1;
 }
-
-#endif // UNICODESTRING_H
