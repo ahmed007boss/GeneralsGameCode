@@ -24,7 +24,7 @@
 #include "dx8wrapper.h"
 #include "bitmaphandler.h"
 #include "colorspace.h"
-#include "texture.h"  // TheSuperHackers @feature author 15/01/2025 For Get_Current_Thing_Config_Directory
+#include "texture.h"
 #include <string.h>
 #include <ddraw.h>
 

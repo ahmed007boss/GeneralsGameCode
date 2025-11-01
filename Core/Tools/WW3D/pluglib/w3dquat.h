@@ -23,7 +23,7 @@
  *                                                                         *
  *                 Project Name : Voxel Technology                         *
  *                                                                         *
- *                    File Name : QUAT.H                                   *
+ *                    File Name : QUAT.h                                   *
  *                                                                         *
  *                   Programmer : Greg Hjelstrom                           *
  *                                                                         *
@@ -36,9 +36,6 @@
  * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
 #pragma once
-
-#ifndef QUAT_H
-#define QUAT_H
 
 #include "always.h"
 #include "wwmath.h"
@@ -253,8 +250,3 @@ inline bool Quaternion::Is_Valid(void) const
 				WWMath::Is_Valid_Float(Z) &&
 				WWMath::Is_Valid_Float(W) );
 }
-
-#endif /* QUAT_H */
-
-
-

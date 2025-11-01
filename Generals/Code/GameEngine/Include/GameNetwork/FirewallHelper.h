@@ -29,7 +29,7 @@
  *                                                                                             *
  *                 Project Name : Command & Conquer                                            *
  *                                                                                             *
- *                     $Archive:: /RedAlert2/NAT.CPP                                          $*
+ *                     $Archive:: /RedAlert2/NAT.cpp                                          $*
  *                                                                                             *
  *                      $Author:: Steve_t                                                     $*
  *                                                                                             *
@@ -47,9 +47,6 @@
  * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
 #pragma once
-
-#ifndef __FIREWALLHELPER_H
-#define __FIREWALLHELPER_H
 
 class UDP;
 
@@ -308,7 +305,3 @@ class FirewallHelperClass {
 
 extern FirewallHelperClass *TheFirewallHelper;
 FirewallHelperClass * createFirewallHelper();
-
-
-#endif	// __FIREWALLHELPER_H
-

@@ -22,11 +22,7 @@
 //																																						//
 ////////////////////////////////////////////////////////////////////////////////
 
-
 #pragma once
-
-#ifndef __DISCONNECTMANAGER_H
-#define __DISCONNECTMANAGER_H
 
 #include "GameNetwork/NetCommandRef.h"
 #include "Lib/BaseType.h"
@@ -123,11 +119,7 @@ protected:
 	Bool m_haveNotifiedOtherPlayersOfCurrentFrame;
 
 	time_t m_timeOfDisconnectScreenOn;
-
 	Int m_pingsSent;
 	Int m_pingsRecieved;
 	UnsignedInt m_pingFrame;
 };
-
-
-#endif // #ifndef __DISCONNECTMANAGER_H

@@ -55,12 +55,11 @@
 #include "wwdebug.h"
 //#include "systimer.h"
 #include "systimer.h"
-#include "RAWFILE.H"
+#include "RAWFILE.h"
 #include "ffactory.h"
 #include "simplevec.h"
 #include "cpudetect.h"
 #include "hashtemplate.h"
-#include <stdio.h>
 #include <Utility/intrin_compat.h>
 
 static SimpleDynVecClass<WWProfileHierachyNodeClass*> ProfileCollectVector;

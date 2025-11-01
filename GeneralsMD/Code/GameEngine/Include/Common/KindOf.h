@@ -29,9 +29,6 @@
 
 #pragma once
 
-#ifndef __KINDOF_H_
-#define __KINDOF_H_
-
 // INCLUDES ///////////////////////////////////////////////////////////////////////////////////////
 #include "Lib/BaseType.h"
 #include "Common/BitFlags.h"
@@ -40,7 +37,7 @@
 //-------------------------------------------------------------------------------------------------
 /** Kind of flags for determining groups of things that belong together
 	* NOTE: You *MUST* keep this in the same order as the KindOfNames[] below */
-	//-------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------
 enum KindOfType CPP_11(: Int)
 {
 	KINDOF_INVALID = -1,
@@ -311,5 +308,3 @@ inline void FLIP_KINDOFMASK(KindOfMaskType& m)
 extern KindOfMaskType KINDOFMASK_NONE;	// inits to all zeroes
 extern KindOfMaskType KINDOFMASK_FS;		// Initializes all FS types for faction structures.
 void initKindOfMasks();
-
-#endif	// __KINDOF_H_

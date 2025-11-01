@@ -23,7 +23,7 @@
  *                                                                                             *
  *                 Project Name : Voxel Technology                                             *
  *                                                                                             *
- *                    File Name : MATRIX3D.H                                                   *
+ *                    File Name : MATRIX3D.h                                                   *
  *                                                                                             *
  *                   Programmer : Greg Hjelstrom                                               *
  *                                                                                             *
@@ -71,9 +71,6 @@
  * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
 #pragma once
-
-#ifndef MATRIX3D_H
-#define MATRIX3D_H
 
 #ifdef _UNIX
 #include "osdep.h"
@@ -1510,5 +1507,3 @@ inline void	Matrix3D::Inverse_Rotate_Vector(const Matrix3D & A,const Vector3 & i
 	out->Y = (A[0][1] * v->X + A[1][1] * v->Y + A[2][1] * v->Z);
 	out->Z = (A[0][2] * v->X + A[1][2] * v->Y + A[2][2] * v->Z);
 }
-
-#endif /* MATRIX3D_H */

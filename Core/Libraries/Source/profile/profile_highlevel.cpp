@@ -26,11 +26,10 @@
 //
 // High level profiling
 //////////////////////////////////////////////////////////////////////////////
-#include "_pch.h"
-#include "stringex.h"
+#include "profile.h"
+#include "internal.h"
 #include <new>
 #include <WWCommon.h>
-#include <Utility/stdio_adapter.h>
 
 // our own fast critical section
 static ProfileFastCS cs;

@@ -27,9 +27,6 @@
 
 #pragma once
 
-#ifndef _RadiusDecal_H_
-#define _RadiusDecal_H_
-
 #include "Common/GameCommon.h"
 #include "Common/GameType.h"
 #include "GameClient/Color.h"
@@ -106,5 +103,3 @@ public:
 		DEBUG_LOG(("-- m_onlyVisibleToOwningPlayer = %d\n", m_onlyVisibleToOwningPlayer));
 	};*/
 };
-
-#endif

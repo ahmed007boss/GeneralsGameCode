@@ -29,9 +29,6 @@
 
 #pragma once
 
-#ifndef __MAINMENUUTILS_H__
-#define __MAINMENUUTILS_H__
-
 void HTTPThinkWrapper( void );
 void StopAsyncDNSCheck( void );
 void StartPatchCheck( void );
@@ -39,10 +36,30 @@ void CancelPatchCheckCallback( void );
 void StartDownloadingPatches( void );
 void HandleCanceledDownload( Bool resetDropDown = TRUE );
 
+#if RTS_GENERALS
+enum OverallStatsPeriod CPP_11(: Int)
+{
+	STATS_TODAY = 0,
+	STATS_YESTERDAY,
+	STATS_ALLTIME,
+	STATS_LASTWEEK,
+	STATS_MAX
+};
+
+struct OverallStats
+{
+	OverallStats();
+	Int wins[STATS_MAX];
+	Int losses[STATS_MAX];
+};
+#endif
+
 void CheckOverallStats( void );
+#if RTS_GENERALS
+void HandleOverallStats( const OverallStats& USA, const OverallStats& China, const OverallStats& GLA );
+#else
 void HandleOverallStats( const char* szHTTPStats, unsigned len );
+#endif
 
 void CheckNumPlayersOnline( void );
 void HandleNumPlayersOnline( Int numPlayersOnline );
-
-#endif // __MAINMENUUTILS_H__

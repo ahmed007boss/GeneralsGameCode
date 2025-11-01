@@ -23,7 +23,7 @@
  *                                                                                             *
  *                 Project Name : Westwood 3D                                                  *
  *                                                                                             *
- *                    File Name : VECTOR3.H                                                    *
+ *                    File Name : VECTOR3.h                                                    *
  *                                                                                             *
  *                   Programmer : Greg Hjelstrom                                               *
  *                                                                                             *
@@ -64,9 +64,6 @@
  * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
 #pragma once
-
-#ifndef VECTOR3_H
-#define VECTOR3_H
 
 #include "always.h"
 #include "wwmath.h"
@@ -932,6 +929,3 @@ WWINLINE unsigned long Vector3::Convert_To_ARGB( float alpha ) const
         (unsigned(Y*255.0f)<<8) |
         (unsigned(Z*255.0f));
 }
-
-#endif /* Vector3_H */
-

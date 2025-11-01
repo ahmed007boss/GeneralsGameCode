@@ -28,9 +28,6 @@
 
 #pragma once
 
-#ifndef _GAME_TYPE_H_
-#define _GAME_TYPE_H_
-
 #include "Lib/BaseType.h"
 
 // the default size of the world map
@@ -212,8 +209,3 @@ enum ValueType CPP_11(: Int)
 // Value type names for INI parsing
 //-------------------------------------------------------------------------------------------------
 extern const char *const TheValueTypeNames[];
-
-//-------------------------------------------------------------------------------------------------
-
-#endif // _GAME_TYPE_H_
-

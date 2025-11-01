@@ -43,11 +43,9 @@
 
 #include <assert.h>
 #include <ctype.h>
-#include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include "ffactory.h"
-#include "RAWFILE.H"
+#include "RAWFILE.h"
 int   	 ArgvClass::Argc = 0;
 char 		*ArgvClass::Argv[MAX_ARGC];
 

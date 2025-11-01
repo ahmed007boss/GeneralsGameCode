@@ -16,13 +16,10 @@
 **	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef THREAD_H
-#define THREAD_H
-
 #pragma once
 
 #include "always.h"
-#include "Vector.H"
+#include "Vector.h"
 
 struct _EXCEPTION_POINTERS;
 
@@ -97,5 +94,3 @@ private:
 	volatile unsigned long handle;
 	int thread_priority;
 };
-
-#endif

@@ -29,9 +29,6 @@
 
 #pragma once
 
-#ifndef EXPERIENCE_TRACKER_H
-#define EXPERIENCE_TRACKER_H
-
 #include "Common/GameCommon.h"
 #include "Common/GameType.h"
 #include "Common/GameMemory.h"
@@ -78,5 +75,3 @@ private:
 	Real							m_experienceScalar;									///< Scales any experience gained by this multiplier.
 	Real							m_experienceValueScalar;									///< Scales any experience given by this multiplier.
 };
-
-#endif

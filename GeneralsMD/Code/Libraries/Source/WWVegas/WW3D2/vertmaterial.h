@@ -34,11 +34,7 @@
  * Functions:                                                                                  *
  * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
-
 #pragma once
-
-#ifndef VERTMATERIAL_H
-#define VERTMATERIAL_H
 
 #include "always.h"
 
@@ -49,8 +45,6 @@
 #include "w3derr.h"
 #include "mapper.h"
 #include "wwstring.h"
-
-#include <string.h>
 
 class ChunkLoadClass;
 class ChunkSaveClass;
@@ -317,6 +311,3 @@ inline bool VertexMaterialClass::Are_Mappers_Time_Variant(void) const
 	}
 	return false;
 }
-
-#endif //VERTMATERIAL_H
-

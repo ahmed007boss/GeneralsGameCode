@@ -32,10 +32,7 @@
 
 #pragma once
 
-#ifndef __PRIORITY_VECTOR_H
-#define __PRIORITY_VECTOR_H
-
-#include "Vector.H"
+#include "Vector.h"
 
 ////////////////////////////////////////////////////////////////////
 //
@@ -113,6 +110,3 @@ __inline bool PriorityVectorClass<T>::Add_High (T const &object)
 {
 	return DynamicVectorClass<T>::Add_Head (object);
 }
-
-#endif //__PRIORITY_VECTOR_H
-

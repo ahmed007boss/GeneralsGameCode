@@ -29,9 +29,6 @@
 
 #pragma once
 
-#ifndef __INI_H_
-#define __INI_H_
-
 // INCLUDES ///////////////////////////////////////////////////////////////////////////////////////
 #include <stddef.h>	// for offsetof, which we don't use but everyone who includes us does
 #include <map>
@@ -444,6 +441,3 @@ protected:
 	// TheSuperHackers @feature Ahmed Salah 15/01/2025 Parameter storage for cascading to nested parsing operations
 	std::map<AsciiString, AsciiString> m_parameters;					///< parameters for parameter substitution (key-value pairs)
 };
-
-#endif // __INI_H_
-

@@ -37,17 +37,13 @@
  * Functions:                                                                                  *
  * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
-
 #pragma once
-
-#ifndef DX8_RENDERER_H
-#define DX8_RENDERER_H
 
 #include "always.h"
 #include "wwstring.h"
 #include "simplevec.h"
 #include "refcount.h"
-#include "Vector.H"
+#include "Vector.h"
 #include "dx8list.h"
 #include "shader.h"
 #include "dx8wrapper.h"
@@ -354,5 +350,3 @@ protected:
 };
 
 extern DX8MeshRendererClass TheDX8MeshRenderer;
-
-#endif

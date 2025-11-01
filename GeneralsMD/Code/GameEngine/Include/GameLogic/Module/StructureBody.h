@@ -30,9 +30,6 @@
 
 #pragma once
 
-#ifndef __STRUCTUREBODY_H_
-#define __STRUCTUREBODY_H_
-
 // INCLUDES ///////////////////////////////////////////////////////////////////////////////////////
 #include "GameLogic/Module/ActiveBody.h"
 #include "Common/UnicodeString.h"
@@ -86,6 +83,3 @@ protected:
 	ObjectID m_constructorObjectID;					///< object that built this structure
 
 };
-
-#endif // __STRUCTUREBODY_H_
-

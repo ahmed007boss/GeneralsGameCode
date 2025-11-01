@@ -29,9 +29,6 @@
 
 #pragma once
 
-#ifndef _GLOBALDATA_H_
-#define _GLOBALDATA_H_
-
 #include "Common/GameCommon.h"	// ensure we get DUMP_PERF_STATS, or not
 #include "Common/AsciiString.h"
 #include "Common/GameType.h"
@@ -39,6 +36,7 @@
 #include "Common/SubsystemInterface.h"
 #include "GameClient/Color.h"
 #include "Common/STLTypedefs.h"
+#include "Common/Money.h"
 
 // FORWARD DECLARATIONS ///////////////////////////////////////////////////////////////////////////
 struct FieldParse;
@@ -441,8 +439,8 @@ public:
 	Real m_standardMinefieldDistance;
 
 
-	Bool m_showMetrics;								///< whether or not to show the metrics.
-	Int m_defaultStartingCash;				///< The amount of cash a player starts with by default.
+	Bool  m_showMetrics;								///< whether or not to show the metrics.
+	Money m_defaultStartingCash;				///< The amount of cash a player starts with by default.
 
 	Bool m_debugShowGraphicalFramerate;		///< Whether or not to show the graphical framerate bar.
 
@@ -585,6 +583,4 @@ extern GlobalData* TheWritableGlobalData;
 inline const GlobalData* const& TheGlobalData = TheWritableGlobalData;
 #else
 #define TheGlobalData ((const GlobalData*)TheWritableGlobalData)
-#endif
-
 #endif

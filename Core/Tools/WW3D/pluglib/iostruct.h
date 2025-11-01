@@ -33,16 +33,14 @@
  *---------------------------------------------------------------------------------------------*
  * Functions:                                                                                  *
  * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
-#pragma once
-
 
 #pragma once
 
-#ifndef IOSTRUCT_H
-#define IOSTRUCT_H
+#pragma once
 
 #ifndef BITTYPE_H
-#include "BITTYPE.H"
+
+#include "BITTYPE.h"
 #endif
 
 /*
@@ -74,8 +72,3 @@ struct IOQuaternionStruct
 {
 	float32		Q[4];
 };
-
-
-
-#endif
-

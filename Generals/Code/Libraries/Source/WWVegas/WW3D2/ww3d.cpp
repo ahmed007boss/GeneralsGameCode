@@ -100,7 +100,7 @@
 #include "statistics.h"
 #include "pointgr.h"
 #include "ffactory.h"
-#include "INI.H"
+#include "INI.h"
 #include "dazzle.h"
 #include "meshmdl.h"
 #include "dx8renderer.h"
@@ -108,9 +108,8 @@
 #include "bound.h"
 #include "rddesc.h"
 #include "Vector3i.h"
-#include <cstdio>
 #include "dx8wrapper.h"
-#include "TARGA.H"
+#include "TARGA.h"
 #include "sortingrenderer.h"
 #include "thread.h"
 #include "cpudetect.h"
@@ -118,11 +117,7 @@
 #include "formconv.h"
 #include "animatedsoundmgr.h"
 #include "static_sort_list.h"
-
-
-#ifndef _UNIX
 #include "framgrab.h"
-#endif
 
 
 const char* DAZZLE_INI_FILENAME="DAZZLE.INI";

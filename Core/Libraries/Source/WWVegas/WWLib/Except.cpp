@@ -55,7 +55,7 @@
 #include "cpudetect.h"
 #include	"Except.h"
 //#include "debug.h"
-#include "MPU.H"
+#include "MPU.h"
 //#include "commando\nat.h"
 #include "thread.h"
 #include "wwdebug.h"
@@ -64,7 +64,6 @@
 #include	<conio.h>
 #include	<imagehlp.h>
 #include <crtdbg.h>
-#include	<stdio.h>
 
 #ifdef WWDEBUG
 #define DebugString 	WWDebug_Printf

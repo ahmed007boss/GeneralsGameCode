@@ -36,12 +36,9 @@
 
 #pragma once
 
-#ifndef COLLECT_H
-#define COLLECT_H
-
 #include "rendobj.h"
 #include "composite.h"
-#include "Vector.H"
+#include "Vector.h"
 #include "proto.h"
 #include "w3d_file.h"
 #include "wwstring.h"
@@ -143,5 +140,3 @@ public:
 };
 
 extern CollectionLoaderClass _CollectionLoader;
-
-#endif

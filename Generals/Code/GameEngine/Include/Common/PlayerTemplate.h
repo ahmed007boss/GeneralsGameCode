@@ -44,9 +44,6 @@
 
 #pragma once
 
-#ifndef _PLAYERTEMPLATE_H_
-#define _PLAYERTEMPLATE_H_
-
 #include "Common/SubsystemInterface.h"
 #include "Common/GameMemory.h"
 #include "Common/Debug.h"
@@ -114,6 +111,7 @@ public:
 	//const Image *getHiliteImage( void ) const;
 	//const Image *getPushedImage( void ) const;
 	const Image *getSideIconImage( void ) const;
+	inline const AsciiString getTooltip() const { return m_tooltip; }
 
 	const ScienceVec& getIntrinsicSciences() const { return m_intrinsicSciences; }
 	Int getIntrinsicSciencePurchasePoints() const { return m_intrinsicSPP; }
@@ -161,6 +159,7 @@ private:
 	AsciiString				m_specialPowerShortcutWinName;			///< The name of the window we'll be using for the shortcut bar
 	Int								m_specialPowerShortcutButtonCount;	///< The number of buttons located on the shortcut bar
 	AsciiString				m_loadScreenMusic;									///< the load screen music we want to play
+	AsciiString				m_tooltip;								///< The tooltip describing this player template
 	Bool							m_observer;
 	Bool							m_playableSide;
 
@@ -214,5 +213,3 @@ private:
 
 // ----------------------------------------------------------------------------------------------
 extern PlayerTemplateStore *ThePlayerTemplateStore;	///< singleton instance of PlayerTemplateStore
-
-#endif // _PLAYERTEMPLATE_H_

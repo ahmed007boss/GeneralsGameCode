@@ -28,11 +28,6 @@
 
 #pragma once
 
-#ifndef TileData_H
-#define TileData_H
-
-#include <stdio.h>
-
 #include "Lib/BaseType.h"
 #include "WWLib/refcount.h"
 #include "Common/AsciiString.h"
@@ -104,5 +99,3 @@ public:
 	Bool hasRGBDataForWidth(Int width);
 	UnsignedByte *getRGBDataForWidth(Int width);
 };
-
-#endif

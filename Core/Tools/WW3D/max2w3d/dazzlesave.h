@@ -38,13 +38,10 @@
 
 #pragma once
 
-#ifndef DAZZLESAVE_H
-#define DAZZLESAVE_H
-
 #include <max.h>
 #include "w3d_file.h"
 #include "chunkio.h"
-#include "PROGRESS.H"
+#include "PROGRESS.h"
 
 
 /*******************************************************************************************
@@ -77,12 +74,3 @@ private:
 	char						DazzleType[128];
 
 };
-
-
-
-
-
-
-
-#endif //DAZZLESAVE_H
-

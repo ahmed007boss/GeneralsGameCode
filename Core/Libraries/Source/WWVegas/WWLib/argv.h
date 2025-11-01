@@ -37,13 +37,7 @@
 
 #pragma once
 
-
-#ifndef ARGV_H
-#define ARGV_H
-
-#ifndef ALWAYS_H
 #include "always.h"
-#endif
 
 // Used to parse command line that is passed into WinMain.
 // It also has the ability to load a file with values to append to the command line.
@@ -155,6 +149,3 @@ class ArgvClass
 		enum {MAX_ARGC = 256};
 		static char  *Argv[MAX_ARGC];
 };
-
-
-#endif

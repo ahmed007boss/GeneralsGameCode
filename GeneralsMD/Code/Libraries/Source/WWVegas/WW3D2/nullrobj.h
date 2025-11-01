@@ -34,16 +34,9 @@
  * Functions:                                                                                  *
  * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
-
 #pragma once
 
-#ifndef NULL_H
-#define NULL_H
-
-#ifndef RENDOBJ_H
 #include "rendobj.h"
-#endif
-
 #include "proto.h"
 
 class Null3DObjClass : public RenderObjClass
@@ -97,7 +90,3 @@ public:
 ** automatically install at creation time
 */
 extern NullLoaderClass _NullLoader;
-
-
-#endif
-

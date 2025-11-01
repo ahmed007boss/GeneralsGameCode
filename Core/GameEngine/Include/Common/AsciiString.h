@@ -45,12 +45,7 @@
 
 #pragma once
 
-#ifndef ASCIISTRING_H
-#define ASCIISTRING_H
-
 #include <stdarg.h>
-#include <stdio.h>
-#include <string.h>
 #include "Lib/BaseType.h"
 #include "Common/Debug.h"
 #include "Common/Errors.h"

@@ -22,7 +22,7 @@
  *                                                                                             *
  *                 Project Name : Command & Conquer                                            *
  *                                                                                             *
- *                     $Archive:: /G/wwlib/WATCOM.H                                           $*
+ *                     $Archive:: /G/wwlib/WATCOM.h                                           $*
  *                                                                                             *
  *                      $Author:: Eric_c                                                      $*
  *                                                                                             *
@@ -33,6 +33,7 @@
  *---------------------------------------------------------------------------------------------*
  * Functions:                                                                                  *
  * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+
 #pragma once
 
 #if !defined(WATCOM_H) && defined(__WATCOMC__)

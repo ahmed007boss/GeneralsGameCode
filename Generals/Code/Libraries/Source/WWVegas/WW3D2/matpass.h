@@ -38,20 +38,9 @@
 
 #pragma once
 
-#ifndef MATPASS_H
-#define MATPASS_H
-
-#ifndef REFCOUNT_H
 #include "refcount.h"
-#endif
-
-#ifndef SHADER_H
 #include "shader.h"
-#endif
-
-#ifndef WWDEBUG_H
 #include "wwdebug.h"
-#endif
 
 
 class TextureClass;
@@ -124,6 +113,3 @@ inline TextureClass * MaterialPassClass::Peek_Texture(int stage) const
 	WWASSERT(stage < MAX_TEX_STAGES);
 	return Texture[stage];
 }
-
-
-#endif // MATPASS_H

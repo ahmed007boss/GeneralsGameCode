@@ -29,7 +29,7 @@
  *                                                                                             *
  *                 Project Name : Command & Conquer                                            *
  *                                                                                             *
- *                     $Archive:: /RedAlert2/NAT.CPP                                          $*
+ *                     $Archive:: /RedAlert2/NAT.cpp                                          $*
  *                                                                                             *
  *                      $Author:: Steve_t                                                     $*
  *                                                                                             *
@@ -448,7 +448,6 @@ UnsignedShort FirewallHelperClass::getManglerResponse(UnsignedShort packetID, In
 			}
 			Int retval = m_spareSockets[i].udp->Read((unsigned char *)message, sizeof(ManglerData), &addr);
 			if (retval > 0) {
-
 				CRC crc;
 				crc.computeCRC((unsigned char *)(&(message->data.magic)), sizeof(ManglerData) - sizeof(unsigned int));
 				if (crc.get() != htonl(message->data.CRC)) {

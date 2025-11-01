@@ -45,9 +45,6 @@
 
 #pragma once
 
-#ifndef __GADGET_H_
-#define __GADGET_H_
-
 // SYSTEM INCLUDES ////////////////////////////////////////////////////////////
 
 // USER INCLUDES //////////////////////////////////////////////////////////////
@@ -541,5 +538,3 @@ extern void InformEntry( WideChar c );
 
 // list box stuff
 extern Int GetListboxTopEntry( ListboxData list );
-
-#endif // __GADGET_H_

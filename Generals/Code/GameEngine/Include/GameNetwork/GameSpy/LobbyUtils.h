@@ -28,9 +28,6 @@
 
 #pragma once
 
-#ifndef __LOBBYUTILS_H__
-#define __LOBBYUTILS_H__
-
 class GameWindow;
 
 GameWindow *GetGameListBox( void );
@@ -43,6 +40,9 @@ void RefreshGameInfoListBox( GameWindow *mainWin, GameWindow *win );
 void RefreshGameListBoxes( void );
 void ToggleGameListType( void );
 
+void playerTemplateComboBoxTooltip(GameWindow *wndComboBox, WinInstanceData *instData, UnsignedInt mouse);
+void playerTemplateListBoxTooltip(GameWindow *wndListBox, WinInstanceData *instData, UnsignedInt mouse);
+
 enum GameSortType CPP_11(: Int)
 {
 	GAMESORT_ALPHA_ASCENDING = 0,
@@ -53,5 +53,3 @@ enum GameSortType CPP_11(: Int)
 
 Bool HandleSortButton( NameKeyType sortButton );
 void PopulateLobbyPlayerListbox(void);
-
-#endif // __LOBBYUTILS_H__

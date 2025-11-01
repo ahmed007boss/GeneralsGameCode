@@ -23,7 +23,7 @@
  *                                                                                             *
  *                 Project Name : Voxel Technology                                             *
  *                                                                                             *
- *                    File Name : MATRIX3D.H                                                   *
+ *                    File Name : MATRIX3D.h                                                   *
  *                                                                                             *
  *                Org Programmer : Greg Hjelstrom                                               *
  *                                                                                             *
@@ -79,9 +79,6 @@
 #define NO_ALLOW_TEMPORARIES
 
 #pragma once
-
-#ifndef MATRIX3D_H
-#define MATRIX3D_H
 
 #ifdef _UNIX
 #include "osdep.h"
@@ -1813,4 +1810,3 @@ class DynamicMatrix3D : public W3DMPO
 public:
 	Matrix3D Mat;
 };
-#endif /* MATRIX3D_H */

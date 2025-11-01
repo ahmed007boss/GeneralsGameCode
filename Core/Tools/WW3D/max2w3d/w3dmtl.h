@@ -36,12 +36,9 @@
 
 #pragma once
 
-#ifndef W3DMTL_H
-#define W3DMTL_H
-
 #include "always.h"
 #include "w3d_file.h"
-#include "Vector.H"
+#include "Vector.h"
 
 class GameMtl;
 class Mtl;
@@ -305,7 +302,3 @@ private:
 	DynamicVectorClass < TexClass >							Textures;
 
 };
-
-
-
-#endif

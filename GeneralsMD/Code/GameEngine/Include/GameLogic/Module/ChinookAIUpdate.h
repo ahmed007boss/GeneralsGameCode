@@ -27,9 +27,6 @@
 
 #pragma once
 
-#ifndef _ChinookAIUpdate_H_
-#define _ChinookAIUpdate_H_
-
 #include "GameLogic/AIStateMachine.h"
 #include "GameLogic/Module/SupplyTruckAIUpdate.h"
 
@@ -145,6 +142,3 @@ private:
 	Bool										m_hasPendingCommand;
 	Bool										m_landedDueToIdle;						///< TheSuperHackers @feature Ahmed Salah 28/10/2025 Track if landed due to idle state
 };
-
-#endif
-

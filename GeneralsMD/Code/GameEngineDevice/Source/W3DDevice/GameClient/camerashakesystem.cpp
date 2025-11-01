@@ -36,9 +36,7 @@
  * Functions:                                                                                  *
  * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
-#include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include <assetmgr.h>
 #include <texture.h>
 #include <tri.h>

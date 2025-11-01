@@ -35,14 +35,8 @@
 
 #pragma once
 
-#ifndef REGISTRY_H
-#define REGISTRY_H
-
-#ifndef ALWAYS_H
 #include "always.h"
-#endif
-
-#include "Vector.H"
+#include "Vector.h"
 #include "wwstring.h"
 #include "widestring.h"
 
@@ -121,5 +115,3 @@ private:
 	//
 	static bool IsLocked;
 };
-
-#endif // REGISTRY_H

@@ -30,9 +30,6 @@
 
 #pragma once
 
-#ifndef SALVAGE_CRATE_COLLIDE_H_
-#define SALVAGE_CRATE_COLLIDE_H_
-
 // INCLUDES ///////////////////////////////////////////////////////////////////////////////////////
 #include "Common/Module.h"
 #include "Common/STLTypedefs.h"
@@ -147,5 +144,3 @@ private:
 	void doMoney( Object *other );
 
 };
-
-#endif

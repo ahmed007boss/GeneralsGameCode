@@ -36,12 +36,7 @@
 
 #pragma once
 
-#ifndef IOSTRUCT_H
-#define IOSTRUCT_H
-
-#ifndef BITTYPE_H
 #include "bittype.h"
-#endif
 
 /*
 ** Some useful structures for writing/writing (safe from changes).
@@ -72,8 +67,3 @@ struct IOQuaternionStruct
 {
 	float32		Q[4];
 };
-
-
-
-#endif
-

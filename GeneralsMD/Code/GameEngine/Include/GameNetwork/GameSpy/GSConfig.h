@@ -29,9 +29,6 @@
 
 #pragma once
 
-#ifndef __GSCONFIG_H__
-#define __GSCONFIG_H__
-
 #include "Common/AsciiString.h"
 #include "Common/STLTypedefs.h"
 
@@ -45,7 +42,7 @@ public:
 	virtual Int getNumPingRepetitions(void) = 0;
 	virtual Int getPingTimeoutInMs(void) = 0;
 	virtual Int getPingCutoffGood( void ) = 0;
-	virtual Int getPingCutoffBad( void ) = 0; //Bryan sez, Maybe
+	virtual Int getPingCutoffBad( void ) = 0;
 
 	// QM
 	virtual std::list<AsciiString> getQMMaps(void) = 0;
@@ -63,11 +60,18 @@ public:
 	// Ladder / Any other external parsing
 	virtual AsciiString getLeftoverConfig(void) = 0;
 
+	// NAT Timeouts
+	virtual Int getTimeBetweenRetries() = 0;
+	virtual Int getMaxManglerRetries() = 0;
+	virtual time_t getRetryInterval() = 0;
+	virtual time_t getKeepaliveInterval() = 0;
+	virtual time_t getPortTimeout() = 0;
+	virtual time_t getRoundTimeout() = 0;
+
 	// Custom match
 	virtual Bool restrictGamesToLobby() = 0;
+
 	static GameSpyConfigInterface* create(AsciiString config);
 };
 
 extern GameSpyConfigInterface *TheGameSpyConfig;
-
-#endif // __GSCONFIG_H__

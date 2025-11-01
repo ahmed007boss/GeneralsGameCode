@@ -41,15 +41,13 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 // SYSTEM INCLUDES ////////////////////////////////////////////////////////////
-#include <stdio.h>
 #include <io.h>
 #include <assert.h>
 #include <WWCommon.h>
 
 // USER INCLUDES //////////////////////////////////////////////////////////////
-#include "stringex.h"
 #include "Common/Debug.h"
-#include "WWLib/TARGA.H"
+#include "WWLib/TARGA.h"
 #include "Resource.h"
 #include "ImagePacker.h"
 #include "WinMain.h"

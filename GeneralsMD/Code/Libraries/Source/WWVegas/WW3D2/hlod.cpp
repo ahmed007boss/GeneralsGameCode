@@ -128,12 +128,11 @@
 
 #include "hlod.h"
 #include "assetmgr.h"
-#include "hmdldef.H"
+#include "hmdldef.h"
 #include "w3derr.h"
 #include "chunkio.h"
 #include "predlod.h"
 #include "rinfo.h"
-#include <string.h>
 #include <win.h>
 #include "sphere.h"
 #include "boxrobj.h"

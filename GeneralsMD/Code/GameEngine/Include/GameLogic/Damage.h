@@ -29,9 +29,6 @@
 
 #pragma once
 
-#ifndef __DAMAGE_H_
-#define __DAMAGE_H_
-
 // INCLUDES ///////////////////////////////////////////////////////////////////////////////////////
 #include "Common/BitFlags.h"
 #include "Common/GameType.h"
@@ -465,5 +462,3 @@ protected:
 	virtual void loadPostProcess( void ){ }
 
 };
-
-#endif // __DAMAGE_H_

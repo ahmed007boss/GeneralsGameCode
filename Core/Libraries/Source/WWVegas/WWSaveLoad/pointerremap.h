@@ -34,19 +34,14 @@
  * Functions:                                                                                  *
  * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
-
 #pragma once
-
-
-#ifndef POINTERREMAP_H
-#define POINTERREMAP_H
 
 #ifdef _UNIX
 #include "osdep/osdep.h"
 #endif
 
 #include "always.h"
-#include "Vector.H"
+#include "Vector.h"
 
 class RefCountClass;
 
@@ -108,6 +103,3 @@ class PointerRemapClass
 		DynamicVectorClass<PtrRemapStruct>	PointerRequestTable;
 		DynamicVectorClass<PtrRemapStruct>	RefCountRequestTable;
 };
-
-
-#endif

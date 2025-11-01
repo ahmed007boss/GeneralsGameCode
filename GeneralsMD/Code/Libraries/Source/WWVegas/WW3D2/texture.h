@@ -39,11 +39,7 @@
  * Functions:                                                                                  *
  * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
-
 #pragma once
-
-#ifndef TEXTURE_H
-#define TEXTURE_H
 
 #include "always.h"
 #include "refcount.h"
@@ -484,5 +480,3 @@ void Set_Current_Thing_Config_Directory(const char* thingConfigDirectory);
 
 // TheSuperHackers @feature author 15/01/2025 Function to get the current thing config directory for texture loading
 const char* Get_Current_Thing_Config_Directory(void);
-
-#endif //TEXTURE_H

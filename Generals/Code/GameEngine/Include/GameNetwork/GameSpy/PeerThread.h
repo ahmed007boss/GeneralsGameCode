@@ -28,9 +28,6 @@
 
 #pragma once
 
-#ifndef __PEERTHREAD_H__
-#define __PEERTHREAD_H__
-
 #include "gamespy/peer/peer.h"
 #include "GameNetwork/NetworkDefs.h"
 
@@ -119,6 +116,7 @@ public:
 			UnsignedInt iniCRC;
 			UnsignedInt gameVersion;
 			Bool allowObservers;
+      Bool useStats;
 			UnsignedShort ladPort;
 			UnsignedInt ladPassCRC;
 			Bool restrictGameList;
@@ -331,6 +329,7 @@ public:
 			Bool isStaging;
 			Bool requiresPassword;
 			Bool allowObservers;
+      Bool useStats;
 			UnsignedInt version;
 			UnsignedInt exeCRC;
 			UnsignedInt iniCRC;
@@ -385,5 +384,3 @@ public:
 };
 
 extern GameSpyPeerMessageQueueInterface *TheGameSpyPeerMessageQueue;
-
-#endif // __PEERTHREAD_H__

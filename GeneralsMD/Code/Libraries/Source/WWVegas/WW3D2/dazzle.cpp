@@ -48,12 +48,12 @@
 #include "assetmgr.h"
 #include "Vector3i.h"
 #include "quat.h"
-#include "INI.H"
+#include "INI.h"
 #include "Point.h"
 #include "rinfo.h"
 #include "vertmaterial.h"
 #include "chunkio.h"
-#include "WWFILE.H"
+#include "WWFILE.h"
 #include "inisup.h"
 #include "persistfactory.h"
 #include "ww3dids.h"
@@ -65,7 +65,6 @@
 #include "scene.h"
 #include "wwprofile.h"
 #include "visrasterizer.h"
-#include <cstdio>
 #include <limits.h>
 #include <wwprofile.h>
 

@@ -32,11 +32,8 @@
 
 #pragma once
 
-#ifndef __WWAUDIO_THREADS_H
-#define __WWAUDIO_THREADS_H
-
 #include "windows.h"
-#include "Vector.H"
+#include "Vector.h"
 #include "mutex.h"
 
 // Forward declarations
@@ -105,6 +102,3 @@ class WWAudioThreadsClass
 		static CriticalSectionClass	m_ListMutex;
 		static bool							m_IsShuttingDown;
 };
-
-#endif //__WWAUDIO_THREADS_H
-

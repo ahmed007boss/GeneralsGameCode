@@ -27,9 +27,6 @@
 
 #pragma once
 
-#ifndef _RadiusDecal_H_
-#define _RadiusDecal_H_
-
 #include "Common/GameCommon.h"
 #include "Common/GameType.h"
 #include "GameClient/Color.h"
@@ -95,5 +92,3 @@ public:
 	void setColor(Color color);
 	Color getColor() const { return m_color; }
 };
-
-#endif

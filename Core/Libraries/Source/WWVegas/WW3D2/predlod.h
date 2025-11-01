@@ -36,9 +36,6 @@
 
 #pragma once
 
-#ifndef PREDLOD_H
-#define PREDLOD_H
-
 // This file contains the classes which support predictive LOD management
 // similar to that outlined in "Adaptive Display Algorithm for Interactive
 // Frame Rates During Visualization of Complex Virtual Environments",
@@ -48,7 +45,7 @@
 
 #include "rendobj.h"
 #include "float.h"
-#include "Vector.H"
+#include "Vector.h"
 
 class LODHeapNode;
 
@@ -80,5 +77,3 @@ class PredictiveLODOptimizerClass {
 		static int VisibleObjArraySize;
 
 };
-
-#endif

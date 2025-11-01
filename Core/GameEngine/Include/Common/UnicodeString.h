@@ -45,12 +45,7 @@
 
 #pragma once
 
-#ifndef UNICODESTRING_H
-#define UNICODESTRING_H
-
 #include <stdarg.h>
-#include <stdio.h>
-#include <string.h>
 #include "Lib/BaseType.h"
 #include "Common/Debug.h"
 #include "Common/Errors.h"
