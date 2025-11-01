@@ -49,7 +49,7 @@ ObjectCreationUpgradeModuleData::ObjectCreationUpgradeModuleData( void )
 
 //-------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------
-/* static */ void ObjectCreationUpgradeModuleData::buildFieldParse(MultiIniFieldParse& p)
+void ObjectCreationUpgradeModuleData::buildFieldParse(MultiIniFieldParse& p)
 {
 	UpgradeModuleData::buildFieldParse( p );
 

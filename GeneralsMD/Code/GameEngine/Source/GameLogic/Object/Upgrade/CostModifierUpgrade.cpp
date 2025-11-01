@@ -82,7 +82,7 @@ CostModifierUpgradeModuleData::CostModifierUpgradeModuleData( void )
 
 //-------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------
-/* static */ void CostModifierUpgradeModuleData::buildFieldParse(MultiIniFieldParse& p)
+void CostModifierUpgradeModuleData::buildFieldParse(MultiIniFieldParse& p)
 {
 	UpgradeModuleData::buildFieldParse( p );
 

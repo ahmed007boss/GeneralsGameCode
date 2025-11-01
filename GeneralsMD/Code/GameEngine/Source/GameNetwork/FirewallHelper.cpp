@@ -79,7 +79,7 @@ FirewallHelperClass * createFirewallHelper()
  * HISTORY:                                                                                    *
  *   3/15/01 5:03PM ST : Created                                                               *
  *=============================================================================================*/
-/* static */ Int FirewallHelperClass::m_sourcePortPool = 4096;
+Int FirewallHelperClass::m_sourcePortPool = 4096;
 
 FirewallHelperClass::FirewallHelperClass(void)
 {
@@ -608,7 +608,7 @@ Short FirewallHelperClass::getSourcePortAllocationDelta() {
 	return m_sourcePortAllocationDelta;
 }
 
-/* static */ void FirewallHelperClass::getManglerName(Int manglerIndex, Char *nameBuf)
+void FirewallHelperClass::getManglerName(Int manglerIndex, Char *nameBuf)
 {
 	AsciiString host;
 	UnsignedShort port;

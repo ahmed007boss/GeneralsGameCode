@@ -88,7 +88,7 @@ static void parseOCLUpgradePair( INI* ini, void * /*instance*/, void *store, con
 
 //-------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------
-/* static */ void OCLSpecialPowerModuleData::buildFieldParse(MultiIniFieldParse& p)
+void OCLSpecialPowerModuleData::buildFieldParse(MultiIniFieldParse& p)
 {
 	SpecialPowerModuleData::buildFieldParse( p );
 

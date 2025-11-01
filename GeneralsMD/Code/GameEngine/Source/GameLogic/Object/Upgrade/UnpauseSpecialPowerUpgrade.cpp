@@ -46,7 +46,7 @@ UnpauseSpecialPowerUpgradeModuleData::UnpauseSpecialPowerUpgradeModuleData( void
 
 //-------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------
-/* static */ void UnpauseSpecialPowerUpgradeModuleData::buildFieldParse(MultiIniFieldParse& p)
+void UnpauseSpecialPowerUpgradeModuleData::buildFieldParse(MultiIniFieldParse& p)
 {
 	UpgradeModuleData::buildFieldParse( p );
 

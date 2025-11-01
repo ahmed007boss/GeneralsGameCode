@@ -117,7 +117,7 @@ void AIDockMachine::loadPostProcess( void )
 
 // State transition conditions ----------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------
-/* static */ Bool AIDockMachine::ableToAdvance( State *thisState, void* userData )
+Bool AIDockMachine::ableToAdvance( State *thisState, void* userData )
 {
 	Object *goalObject = thisState->getMachineGoalObject();
 	AIDockMachine *myMachine = (AIDockMachine *)thisState->getMachine();

@@ -45,7 +45,7 @@ ActiveShroudUpgradeModuleData::ActiveShroudUpgradeModuleData( void )
 
 //-------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------
-/* static */ void ActiveShroudUpgradeModuleData::buildFieldParse(MultiIniFieldParse& p)
+void ActiveShroudUpgradeModuleData::buildFieldParse(MultiIniFieldParse& p)
 {
 	UpgradeModuleData::buildFieldParse( p );
 

@@ -867,7 +867,7 @@ void INI::parseAsciiStringVectorAppend( INI* ini, void * /*instance*/, void *sto
 
 //-------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------
-/* static */void INI::parseScienceVector( INI *ini, void * /*instance*/, void *store, const void *userData )
+void INI::parseScienceVector( INI *ini, void * /*instance*/, void *store, const void *userData )
 {
 	ScienceVec* asv = (ScienceVec*)store;
 	asv->clear();
@@ -1579,7 +1579,7 @@ void INI::parseSpecialPowerTemplate( INI* ini, void * /*instance*/, void *store,
 //-------------------------------------------------------------------------------------------------
 /** Parse a science string and store as science type */
 //-------------------------------------------------------------------------------------------------
-/* static */void INI::parseScience( INI *ini, void * /*instance*/, void *store, const void *userData )
+void INI::parseScience( INI *ini, void * /*instance*/, void *store, const void *userData )
 {
 	const char *token = ini->getNextToken();
 

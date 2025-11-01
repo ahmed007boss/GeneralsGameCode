@@ -29,7 +29,7 @@ ResetSpecialPowerTimerWhileAliveUpdateModuleData::ResetSpecialPowerTimerWhileAli
 }
 
 //-------------------------------------------------------------------------------------------------
-/*static*/ void ResetSpecialPowerTimerWhileAliveUpdateModuleData::buildFieldParse(MultiIniFieldParse& p)
+void ResetSpecialPowerTimerWhileAliveUpdateModuleData::buildFieldParse(MultiIniFieldParse& p)
 {
 	ModuleData::buildFieldParse(p);
 

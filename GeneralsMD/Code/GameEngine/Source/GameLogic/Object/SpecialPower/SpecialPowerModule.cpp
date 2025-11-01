@@ -69,7 +69,7 @@ SpecialPowerModuleData::SpecialPowerModuleData()
 
 //-------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------
-/* static */ void SpecialPowerModuleData::buildFieldParse(MultiIniFieldParse& p)
+void SpecialPowerModuleData::buildFieldParse(MultiIniFieldParse& p)
 {
 	BehaviorModuleData::buildFieldParse( p );
 

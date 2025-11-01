@@ -33,7 +33,7 @@ FireWeaponAdvancedUpdateModuleData::FireWeaponAdvancedUpdateModuleData()
 }
 
 //-------------------------------------------------------------------------------------------------
-/*static*/ void FireWeaponAdvancedUpdateModuleData::buildFieldParse(MultiIniFieldParse& p)
+void FireWeaponAdvancedUpdateModuleData::buildFieldParse(MultiIniFieldParse& p)
 {
   UpdateModuleData::buildFieldParse(p);
 
@@ -60,7 +60,7 @@ FireWeaponAdvancedUpdateModuleData::FireWeaponAdvancedUpdateModuleData()
   p.add(dataFieldParse);
 }
 
-/*static*/ void FireWeaponAdvancedUpdateModuleData::parseScatterTarget(INI* ini, void* instance, void* /*store*/, const void* /*userData*/)
+void FireWeaponAdvancedUpdateModuleData::parseScatterTarget(INI* ini, void* instance, void* /*store*/, const void* /*userData*/)
 {
 	// Accept multiple listings of Coord2D's.
 	FireWeaponAdvancedUpdateModuleData* self = (FireWeaponAdvancedUpdateModuleData*)instance;

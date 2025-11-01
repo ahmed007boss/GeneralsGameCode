@@ -59,7 +59,7 @@
  * his own choice.
  */
 //										m_connectionPairs[num nodes]	[round]			 [node index]
-/* static */ Int NAT::m_connectionPairs[MAX_SLOTS-1][MAX_SLOTS-1][MAX_SLOTS] =
+Int NAT::m_connectionPairs[MAX_SLOTS-1][MAX_SLOTS-1][MAX_SLOTS] =
 {
 	{	// 2 nodes
 		//	node 0	node 1	node 2	node 3	node 4	node 5	node 6	node 7
@@ -133,12 +133,12 @@
 	}
 };
 
-/* static */ Int NAT::m_timeBetweenRetries = 500; // .5 seconds between retries sounds good to me.
-/* static */ time_t NAT::m_manglerRetryTimeInterval = 300; // sounds good to me.
-/* static */ Int NAT::m_maxAllowedManglerRetries = 25; // works for me.
-/* static */ time_t NAT::m_keepaliveInterval = 15000; // 15 seconds between keepalive packets seems good.
-/* static */ time_t NAT::m_timeToWaitForPort = 15000; // wait for 15 seconds for the other player's port number.
-/* static */ time_t NAT::m_timeForRoundTimeout = 15000; // wait for at most 15 seconds for each connection round to finish.
+Int NAT::m_timeBetweenRetries = 500; // .5 seconds between retries sounds good to me.
+time_t NAT::m_manglerRetryTimeInterval = 300; // sounds good to me.
+Int NAT::m_maxAllowedManglerRetries = 25; // works for me.
+time_t NAT::m_keepaliveInterval = 15000; // 15 seconds between keepalive packets seems good.
+time_t NAT::m_timeToWaitForPort = 15000; // wait for 15 seconds for the other player's port number.
+time_t NAT::m_timeForRoundTimeout = 15000; // wait for at most 15 seconds for each connection round to finish.
 
 NAT *TheNAT = NULL;
 

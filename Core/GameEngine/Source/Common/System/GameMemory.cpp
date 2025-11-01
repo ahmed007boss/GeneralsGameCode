@@ -898,7 +898,7 @@ void MemoryPoolSingleBlock::initBlock(Int logicalSize, MemoryPoolBlob *owningBlo
 	given a 'public' ptr to a block (ie, the ptr returned by the MemoryPool::allocateBlock),
 	recover the ptr to the MemoryPoolSingleBlock, so we can access the hidden fields.
 */
-/* static */ MemoryPoolSingleBlock *MemoryPoolSingleBlock::recoverBlockFromUserData(void* pUserData)
+MemoryPoolSingleBlock *MemoryPoolSingleBlock::recoverBlockFromUserData(void* pUserData)
 {
 	DEBUG_ASSERTCRASH(pUserData, ("null pUserData"));
 	if (!pUserData)

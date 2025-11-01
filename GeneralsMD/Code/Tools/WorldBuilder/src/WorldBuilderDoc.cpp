@@ -1188,7 +1188,7 @@ void CWorldBuilderDoc::OnTsRemap()
 	}
 }
 
-/* static */ CWorldBuilderDoc *CWorldBuilderDoc::GetActiveDoc()
+CWorldBuilderDoc *CWorldBuilderDoc::GetActiveDoc()
 {
 #ifdef MDI
 	CMDIFrameWnd *pFrame = (CMDIFrameWnd*)AfxGetApp()->m_pMainWnd;
@@ -1213,7 +1213,7 @@ void CWorldBuilderDoc::OnTsRemap()
 	return NULL;
 }
 
-/* static */ CWorldBuilderView *CWorldBuilderDoc::GetActive2DView()
+CWorldBuilderView *CWorldBuilderDoc::GetActive2DView()
 {
 	CWorldBuilderDoc* pDoc = GetActiveDoc();
 	if (pDoc) {
@@ -1222,7 +1222,7 @@ void CWorldBuilderDoc::OnTsRemap()
 	return NULL;
 }
 
-/* static */ WbView3d *CWorldBuilderDoc::GetActive3DView()
+WbView3d *CWorldBuilderDoc::GetActive3DView()
 {
 	CWorldBuilderDoc* pDoc = GetActiveDoc();
 	if (pDoc) {
