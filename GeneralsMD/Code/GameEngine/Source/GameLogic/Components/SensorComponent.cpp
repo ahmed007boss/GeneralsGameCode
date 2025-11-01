@@ -59,6 +59,39 @@ void SensorComponent::updateJammingDamageHealing()
 }
 
 //-------------------------------------------------------------------------------------------------
+// TheSuperHackers @feature Ahmed Salah 15/01/2025 Override getStatus to include jamming damage
+//-------------------------------------------------------------------------------------------------
+ComponentStatus SensorComponent::getStatus() const
+{
+	// Get base status first
+	ComponentStatus baseStatus = Component::getStatus();
+	
+	// If user disabled or already downed, jamming doesn't change that
+	if (baseStatus == COMPONENT_STATUS_USER_DISABLED || baseStatus == COMPONENT_STATUS_DOWNED)
+		return baseStatus;
+	
+	// Check jamming damage against max health
+	Real maxHealth = getCurrentMaxHealth();
+	if (maxHealth > 0.0f && m_currentJammingDamage > 0.0f)
+	{
+		// Component is fully jammed if jamming damage >= max health
+		if (m_currentJammingDamage >= maxHealth)
+			return COMPONENT_STATUS_DOWNED;
+		
+		// Component is partially jammed if jamming damage >= 50% of max health
+		if (m_currentJammingDamage >= (maxHealth * 0.5f))
+		{
+			// Downgrade to partially functional if base status was fully functional
+			if (baseStatus == COMPONENT_STATUS_FULLY_FUNCTIONAL)
+				return COMPONENT_STATUS_PARTIALLY_FUNCTIONAL;
+		}
+	}
+	
+	// Return base status (jamming didn't affect it)
+	return baseStatus;
+}
+
+//-------------------------------------------------------------------------------------------------
 // TheSuperHackers @feature Ahmed Salah 30/10/2025 Static parse method for SensorComponent
 //-------------------------------------------------------------------------------------------------
 void SensorComponent::parseSensorComponent(INI* ini, void* instance, void* /*store*/, const void* /*userData*/)
@@ -103,7 +136,7 @@ void SensorComponent::buildFieldParse(MultiIniFieldParse& p)
 	// Electronics-equivalent fields
 	static const FieldParse sensorElectronicsFieldParse[] = {
 		{ "JammingDamageCap", INI::parseReal, NULL, offsetof(SensorComponent, m_jammingDamageCap) },
-		{ "JammingDamageHealRate", INI::parseUnsignedInt, NULL, offsetof(SensorComponent, m_jammingDamageHealRate) },
+		{ "JammingDamageHealRate", INI::parseDurationUnsignedInt, NULL, offsetof(SensorComponent, m_jammingDamageHealRate) },
 		{ "JammingDamageHealAmount", INI::parseReal, NULL, offsetof(SensorComponent, m_jammingDamageHealAmount) },
 		{ "CanBeJammedByDirectJammers", INI::parseBool, NULL, offsetof(SensorComponent, m_canBeJammedByDirectJammers) },
 		{ "CanBeJammedByAreaJammers", INI::parseBool, NULL, offsetof(SensorComponent, m_canBeJammedByAreaJammers) },

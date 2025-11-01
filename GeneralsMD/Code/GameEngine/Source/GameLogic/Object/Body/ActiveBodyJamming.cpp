@@ -195,19 +195,27 @@ Bool ActiveBody::isJammingJammed() const
 	if (m_maxHealth <= m_currentJammingDamage)
 		return true;
 	
-	// TheSuperHackers @feature Ahmed Salah 15/01/2025 Check if any components are Jamming jammed
+	// TheSuperHackers @feature Ahmed Salah 15/01/2025 Check if any components are Jamming jammed using getStatus()
 	{
 		std::vector<Component*> components = GetComponentsOfType<Component>();
 		for (std::vector<Component*>::const_iterator it = components.begin(); it != components.end(); ++it)
-	{
+		{
 			IElectronicsComponent* ec = dynamic_cast<IElectronicsComponent*>(*it);
 			if (!ec) continue;
+			
 			const Component* comp = *it;
-			Real componentMaxHealth = comp->getCurrentMaxHealth();
-			Real componentJammingDamage = ec->getCurrentJammingDamage();
-		// Component is Jamming jammed if its Jamming damage reaches its max health
-		if (componentMaxHealth > 0.0f && componentMaxHealth <= componentJammingDamage)
-			return true;
+			ComponentStatus status = comp->getStatus();
+			
+			// Component is Jamming jammed if its status is DOWNED and jamming damage >= max health
+			// (getStatus() already checks this internally for electronics components)
+			if (status == COMPONENT_STATUS_DOWNED)
+			{
+				Real componentMaxHealth = comp->getCurrentMaxHealth();
+				Real componentJammingDamage = ec->getCurrentJammingDamage();
+				// Verify jamming damage is sufficient (status could be DOWNED from health damage)
+				if (componentMaxHealth > 0.0f && componentJammingDamage >= componentMaxHealth)
+					return true;
+			}
 		}
 	}
 	

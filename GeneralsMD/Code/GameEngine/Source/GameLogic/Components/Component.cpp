@@ -244,7 +244,7 @@ ComponentStatus Component::getStatus() const
 		return COMPONENT_STATUS_NONE;
 	
 	// Get current health percentage
-	Real healthPercentage = (m_currentHealth / m_currentMaxHealth) * 100.0f;
+	Real healthPercentage = (getCurrentHealth() / m_currentMaxHealth) * 100.0f;
 	
 	// Determine status based on health percentage
 	if (healthPercentage >= 50.0f)

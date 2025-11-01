@@ -49,7 +49,7 @@ void ElectronicsComponent::buildFieldParse(MultiIniFieldParse& p)
 	// Add ElectronicsComponent-specific properties (EW moved here)
 	static const FieldParse electronicsComponentFieldParse[] = {
 		{ "JammingDamageCap", INI::parseReal, NULL, offsetof(ElectronicsComponent, m_jammingDamageCap) },
-		{ "JammingDamageHealRate", INI::parseUnsignedInt, NULL, offsetof(ElectronicsComponent, m_jammingDamageHealRate) },
+		{ "JammingDamageHealRate", INI::parseDurationUnsignedInt, NULL, offsetof(ElectronicsComponent, m_jammingDamageHealRate) },
 		{ "JammingDamageHealAmount", INI::parseReal, NULL, offsetof(ElectronicsComponent, m_jammingDamageHealAmount) },
 		{ "CanBeJammedByDirectJammers", INI::parseBool, NULL, offsetof(ElectronicsComponent, m_canBeJammedByDirectJammers) },
 		{ "CanBeJammedByAreaJammers", INI::parseBool, NULL, offsetof(ElectronicsComponent, m_canBeJammedByAreaJammers) },
@@ -57,6 +57,39 @@ void ElectronicsComponent::buildFieldParse(MultiIniFieldParse& p)
 	};
 
 	p.add(electronicsComponentFieldParse);
+}
+
+//-------------------------------------------------------------------------------------------------
+// TheSuperHackers @feature Ahmed Salah 15/01/2025 Override getStatus to include jamming damage
+//-------------------------------------------------------------------------------------------------
+ComponentStatus ElectronicsComponent::getStatus() const
+{
+	// Get base status first
+	ComponentStatus baseStatus = Component::getStatus();
+	
+	// If user disabled or already downed, jamming doesn't change that
+	if (baseStatus == COMPONENT_STATUS_USER_DISABLED || baseStatus == COMPONENT_STATUS_DOWNED)
+		return baseStatus;
+	
+	// Check jamming damage against max health
+	Real maxHealth = getCurrentMaxHealth();
+	if (maxHealth > 0.0f && m_currentJammingDamage > 0.0f)
+	{
+		// Component is fully jammed if jamming damage >= max health
+		if (m_currentJammingDamage >= maxHealth)
+			return COMPONENT_STATUS_DOWNED;
+		
+		// Component is partially jammed if jamming damage >= 50% of max health
+		if (m_currentJammingDamage >= (maxHealth * 0.5f))
+		{
+			// Downgrade to partially functional if base status was fully functional
+			if (baseStatus == COMPONENT_STATUS_FULLY_FUNCTIONAL)
+				return COMPONENT_STATUS_PARTIALLY_FUNCTIONAL;
+		}
+	}
+	
+	// Return base status (jamming didn't affect it)
+	return baseStatus;
 }
 
 //-------------------------------------------------------------------------------------------------

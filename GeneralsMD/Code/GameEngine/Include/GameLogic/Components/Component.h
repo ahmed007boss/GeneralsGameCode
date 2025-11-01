@@ -93,6 +93,7 @@ protected:
 	// Runtime component health tracking
 	Real m_currentHealth;						///< Current health of this component
 	Real m_currentMaxHealth;					///< Current maximum health of this component (calculated from maxHealth)
+	Bool m_userDisabled;
 
 	// TheSuperHackers @feature author 15/01/2025 Component status icons
 	AsciiString m_partiallyFunctionalIconName;	///< Animation icon template name for partially functional status (resolved lazily)
@@ -101,7 +102,7 @@ protected:
 	Anim2DTemplate* m_partiallyFunctionalIcon;	///< Animation icon template for partially functional status (lazy loaded)
 	Anim2DTemplate* m_downedIcon;				///< Animation icon template for downed status (lazy loaded)
 	Anim2DTemplate* m_userDisabledIcon;			///< Animation icon template for user disabled status (lazy loaded)
-
+	
 
 public:
 	Component() : m_maxHealth(0.0f), m_initialHealth(0.0f), m_healingType(COMPONENT_HEALING_NORMAL), m_damageOnSides(), m_replacementCost(0), m_forceReturnOnDestroy(FALSE), m_maxHealthValueType(VALUE_TYPE_ABSOLUTE), m_initialHealthValueType(VALUE_TYPE_ABSOLUTE), m_destroyedDamageType((BodyDamageType)0), m_currentHealth(0.0f), m_currentMaxHealth(0.0f), m_partiallyFunctionalIcon(NULL), m_downedIcon(NULL), m_userDisabledIcon(NULL), m_userDisabled(FALSE) {}
@@ -177,10 +178,7 @@ public:
 	static Real getEffectiveJammingDamageCap(Real globalCap, const std::vector<Component>& components);
 	static UnsignedInt getFastestComponentJammingHealRate(const std::vector<Component>& components, UnsignedInt globalRate);
   static Real getTotalComponentJammingHealAmount(const std::vector<Component>& components, Real globalAmount);
-	
-private:
-	// TheSuperHackers @feature author 15/01/2025 User disabled state (per-component instance)
-	mutable Bool m_userDisabled;
+
 };
 
 #endif

@@ -467,8 +467,7 @@ public:
 	// Only Object can ask this.  Everyone else should ask the Object.  In fact, you really should ask the Object everything.
 	Real friend_calcVisionRange() const { return m_visionRange; }  ///< get vision range
 	Real friend_calcShroudClearingRange() const { return m_shroudClearingRange; }  ///< get vision range for Shroud ONLY (Design requested split)
-  Real friend_calcShroudClearingDisabledRange() const { return m_shroudClearingDisabledRange; }  ///< get vision range for Shroud ONLY when disabled (Design requested split)
-
+  
 	//This one is okay to check directly... because it doesn't get effected by bonuses.
 	Real getShroudRevealToAllRange() const { return m_shroudRevealToAllRange; }
 

@@ -332,11 +332,9 @@ Object::Object(const ThingTemplate* tt, const ObjectStatusMaskType& objectStatus
 	m_visionRange = tt->friend_calcVisionRange();
 	m_shroudClearingRange = tt->friend_calcShroudClearingRange();
 
-	m_shroudClearingDisabledRange = tt->friend_calcShroudClearingDisabledRange();
 	if (m_shroudClearingRange == -1.0f)
 		m_shroudClearingRange = m_visionRange;// Backwards compatible, and perfectly logical default to assign
 	m_shroudRange = 0.0f;
-	m_shroudClearingOriginalRange = m_shroudClearingRange;
 	m_singleUseCommandUsed = false;
 
 	// assign unique object id
@@ -5468,11 +5466,7 @@ Real Object::getShroudClearingRange() const
 //-------------------------------------------------------------------------------------------------
 void Object::setShroudClearingRange(Real newShroudClearingRange)
 {
-	if (getDisabledFlags().test(DISABLED_JAMMING) && m_shroudClearingDisabledRange >= 0)
-	{
-		newShroudClearingRange = m_shroudClearingDisabledRange;
-	}
-
+	
 	if (newShroudClearingRange != m_shroudClearingRange)
 	{
 		// The partition cell refresh is a slow operation, so only do it if you really have to.
@@ -5596,17 +5590,7 @@ void Object::notifySubdualDamage(Real amount)
 		else
 			getDrawable()->clearTintStatus(TINT_STATUS_GAINING_SUBDUAL_DAMAGE);
 	}
-	if (m_shroudClearingDisabledRange >= 0)
-	{
-		if (getDisabledFlags().test(DISABLED_SUBDUED))
-		{
-			setShroudClearingRange(m_shroudClearingDisabledRange);
-		}
-		else
-		{
-			setShroudClearingRange(m_shroudClearingOriginalRange);
-		}
-	}
+	
 
 }
 //-------------------------------------------------------------------------------------------------
@@ -5623,18 +5607,6 @@ void Object::notifyJammingDamage(Real amount)
 		else
 			getDrawable()->clearTintStatus(TINT_STATUS_GAINING_JAMMING_DAMAGE);
 	}
-	if (m_shroudClearingDisabledRange >= 0)
-	{
-		if (getDisabledFlags().test(DISABLED_SUBDUED))
-		{
-			setShroudClearingRange(m_shroudClearingDisabledRange);
-		}
-		else
-		{
-			setShroudClearingRange(m_shroudClearingOriginalRange);
-		}
-	}
-
 }
 //-------------------------------------------------------------------------------------------------
 /** Given a special power template, find the module in the object that can implement it.

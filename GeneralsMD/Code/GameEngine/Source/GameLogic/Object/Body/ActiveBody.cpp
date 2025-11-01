@@ -68,6 +68,7 @@
 #include "GameLogic/Components/WeaponComponent.h"
 #include "GameLogic/Components/TurretComponent.h"
 #include "GameLogic/Components/ElectronicsComponent.h"
+#include "GameLogic/Components/ElectronicsComponentInterface.h"
 #include "GameLogic/Components/InventoryStorageComponent.h"
 #include "GameLogic/Components/PowerComponent.h"
 #include "GameLogic/Components/CommunicationComponent.h"
@@ -709,11 +710,15 @@ void ActiveBody::attemptDamage( DamageInfo *damageInfo )
 				const AsciiString& componentName = it->first;
 				Real componentJammingDamage = it->second;
 				
-				// Apply Jamming damage to this component
-				ElectronicsComponent* component = GetComponent<ElectronicsComponent>(componentName);
+				// Apply Jamming damage to this component using interface
+				Component* component = GetComponent<Component>(componentName);
 				if (component)
-				{					
-					component->addJammingDamage(componentJammingDamage);					
+				{
+					IElectronicsComponent* ec = dynamic_cast<IElectronicsComponent*>(component);
+					if (ec)
+					{
+						ec->addJammingDamage(componentJammingDamage);
+					}
 				}
 				
 				// Notify the JammingDamageHelper about component Jamming damage
@@ -776,7 +781,8 @@ void ActiveBody::attemptDamage( DamageInfo *damageInfo )
 #endif
 
 		// TheSuperHackers @feature author 15/01/2025 Apply component damage from DamageInfo with same modifiers as main damage
-		if (!damageInfo->in.m_componentDamage.empty())
+		// Skip regular component damage for jamming damage (handled separately above)
+		if (!IsJammingDamage(damageInfo->in.m_damageType) && !damageInfo->in.m_componentDamage.empty())
 		{
 			// Get components from the module data for hit side checking
 			const ActiveBodyModuleData* moduleData = static_cast<const ActiveBodyModuleData*>(getModuleData());

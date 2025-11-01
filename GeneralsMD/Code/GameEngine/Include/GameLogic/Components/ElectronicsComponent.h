@@ -85,6 +85,9 @@ public:
 	virtual Bool isJammableByArea() const { return m_canBeJammedByAreaJammers; }
 	virtual void setJammableByArea(Bool v) { m_canBeJammedByAreaJammers = v; }
 
+	// TheSuperHackers @feature Ahmed Salah 15/01/2025 Override getStatus to include jamming damage
+	virtual ComponentStatus getStatus() const;
+
 	static void parseElectronicsComponent(INI* ini, void* instance, void* /*store*/, const void* /*userData*/);
 	static void buildFieldParse(MultiIniFieldParse& p);
 

@@ -63,20 +63,20 @@ static void parseItem(INI* ini, void* instance, void* /*store*/, const void* /*u
 	InventoryItemConfig config;
 	
 	static const FieldParse itemFieldParse[] =
-	{
+            {
 		{ "DisplayName", INI::parseAndTranslateLabel, NULL, offsetof(InventoryItemConfig, displayName) },
 		{ "MaxStorageCount", INI::parseReal, NULL, offsetof(InventoryItemConfig, maxStorageCount) },
 		{ "InitialAvailableAmount", INI::parseReal, NULL, offsetof(InventoryItemConfig, initialAvailableAmount) },
 		{ "CostPerItem", INI::parseInt, NULL, offsetof(InventoryItemConfig, costPerItem) },
 		{ "EmptyIconAnimation", INI::parseAsciiString, NULL, offsetof(InventoryItemConfig, emptyIconAnimationName) },
 		{ "EmptyThreshold", INI::parseReal, NULL, offsetof(InventoryItemConfig, emptyThreshold) },
-		{ 0, 0, 0, 0 }
-	};
+                { 0, 0, 0, 0 }
+            };
 	
 	ini->initFromINI(&config, itemFieldParse);
 	
-	// Store the parsed data in the module data
-	data->m_inventoryItems[itemKey] = config;
+            // Store the parsed data in the module data
+                data->m_inventoryItems[itemKey] = config;
 }
 
 //-------------------------------------------------------------------------------------------------
