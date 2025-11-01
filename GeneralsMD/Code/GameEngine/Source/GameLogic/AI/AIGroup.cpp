@@ -3339,10 +3339,18 @@ void AIGroup::groupRaidArea( const Coord3D *pos, KindOfType targetKindOf, Comman
 		// Check if this is an enemy using relationship
 		Relationship relationship = firstUnit->getRelationship(obj);
 		if (relationship == ENEMIES) {
+			if (obj->testStatus(OBJECT_STATUS_NO_ATTACK_FROM_AI))
+				continue;
+			if (obj->testStatus(OBJECT_STATUS_MASKED))
+				continue;
+			if (obj->isKindOf(KINDOF_UNATTACKABLE))
+				continue;
 			// If a target kind filter is provided, enforce it
 			if (targetKindOf != KINDOF_INVALID && !obj->isKindOf(targetKindOf)) {
 				continue;
 			}
+			
+
 			// Check if the object can be attacked
 			if (obj->isAbleToAttack() || obj->isKindOf(KINDOF_CAN_ATTACK)) {
 				enemies.push_back(obj);
