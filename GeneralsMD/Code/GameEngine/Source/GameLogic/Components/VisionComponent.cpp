@@ -48,7 +48,7 @@ void VisionComponent::parseVisionComponent(INI* ini, void* instance, void* /*sto
 	ini->initFromINIMulti(component, p);
 	
 	// Add the parsed component to the module data
-	moduleData->m_components.push_back(component);
+	moduleData->m_componentsData.push_back(component);
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -68,6 +68,26 @@ void VisionComponent::buildFieldParse(MultiIniFieldParse& p)
 	};
 
 	p.add(visionComponentFieldParse);
+}
+
+//-------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------
+// TheSuperHackers @feature author 15/01/2025 Virtual clone method for polymorphic copying
+//-------------------------------------------------------------------------------------------------
+Component* VisionComponent::clone() const
+{
+	// Create a new VisionComponent
+	VisionComponent* copy = new VisionComponent();
+	
+	// Copy base Component members using helper method
+	copyBaseComponentMembers(copy);
+	
+	// Copy VisionComponent-specific members
+	copy->m_shroudClearingRange = m_shroudClearingRange;
+	copy->m_shroudClearingRangePartial = m_shroudClearingRangePartial;
+	copy->m_shroudClearingRangeDisabled = m_shroudClearingRangeDisabled;
+	
+	return copy;
 }
 
 //-------------------------------------------------------------------------------------------------

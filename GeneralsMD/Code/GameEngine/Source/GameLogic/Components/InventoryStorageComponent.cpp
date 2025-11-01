@@ -35,7 +35,7 @@ void InventoryStorageComponent::parseInventoryStorageComponent(INI* ini, void* i
 	ini->initFromINIMulti(component, p);
 	
 	// Add the parsed component to the module data
-	moduleData->m_components.push_back(component);
+	moduleData->m_componentsData.push_back(component);
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -52,6 +52,21 @@ void InventoryStorageComponent::buildFieldParse(MultiIniFieldParse& p)
 	};
 
 	p.add(inventoryStorageComponentFieldParse);
+}
+
+//-------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------
+// TheSuperHackers @feature author 15/01/2025 Virtual clone method for polymorphic copying
+//-------------------------------------------------------------------------------------------------
+Component* InventoryStorageComponent::clone() const
+{
+	// Create a new InventoryStorageComponent
+	InventoryStorageComponent* copy = new InventoryStorageComponent();
+	
+	// Copy base Component members using helper method (InventoryStorageComponent has no additional members)
+	copyBaseComponentMembers(copy);
+	
+	return copy;
 }
 
 //-------------------------------------------------------------------------------------------------

@@ -59,7 +59,7 @@ void WeaponComponent::parseWeaponComponent(INI* ini, void* instance, void* /*sto
 	ini->initFromINIMulti(component, p);
 	
 	// Add the parsed component to the module data
-	moduleData->m_components.push_back(component);
+	moduleData->m_componentsData.push_back(component);
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -76,6 +76,21 @@ void WeaponComponent::buildFieldParse(MultiIniFieldParse& p)
 	};
 	
 	p.add(weaponComponentFieldParse);
+}
+
+//-------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------
+// TheSuperHackers @feature author 15/01/2025 Virtual clone method for polymorphic copying
+//-------------------------------------------------------------------------------------------------
+Component* WeaponComponent::clone() const
+{
+	// Create a new WeaponComponent
+	WeaponComponent* copy = new WeaponComponent();
+	
+	// Copy base Component members using helper method (WeaponComponent has no additional members)
+	copyBaseComponentMembers(copy);
+	
+	return copy;
 }
 
 //-------------------------------------------------------------------------------------------------

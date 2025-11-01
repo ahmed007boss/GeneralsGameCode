@@ -73,7 +73,7 @@ void ParkingPlaceBehaviorModuleData::parseRestoreComponents(INI* ini, void* inst
 {
 	ParkingPlaceBehaviorModuleData* data = static_cast<ParkingPlaceBehaviorModuleData*>(instance);
 	
-	// Parse each component separately (e.g., "ENGINE", "FUEL_TANK")
+	// Parse each component separately (e.g., "MainEngine", "FUEL_TANK")
 	const char* token = ini->getNextToken();
 	while (token && strlen(token) > 0)
 	{

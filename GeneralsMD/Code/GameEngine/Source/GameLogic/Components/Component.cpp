@@ -35,6 +35,7 @@
 #include "GameLogic/Module/BodyModule.h"
 #include "GameLogic/Module/ActiveBody.h"
 #include "GameLogic/Components/ElectronicsComponent.h"
+#include "GameClient/Anim2D.h"
 
 //-------------------------------------------------------------------------------------------------
 // TheSuperHackers @feature author 15/01/2025 Parse Component max health from INI
@@ -187,7 +188,7 @@ void Component::parseComponent(INI* ini, void* instance, void* /*store*/, const 
 	// Create a new Component object
 	
 	
-	// Get component name from the first token (e.g., "Engine", "Turret", etc.)
+	// Get component name from the first token (e.g., "MainEngine", "Turret", etc.)
 	AsciiString componentName = ini->getNextToken();
 	if (componentName.isEmpty()) return;
 	
@@ -201,7 +202,7 @@ void Component::parseComponent(INI* ini, void* instance, void* /*store*/, const 
 	ini->initFromINIMulti(component, p);
 	
 	// Add the parsed component to the module data
-	moduleData->m_components.push_back(component);
+	moduleData->m_componentsData.push_back(component);
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -219,6 +220,9 @@ void Component::buildFieldParse(MultiIniFieldParse& p)
 		{ "DestroyedDamageType", INI::parseIndexList, TheBodyDamageTypeNames, offsetof(Component, m_destroyedDamageType) },
 		{ "MaxHealthValueType", INI::parseIndexList, TheValueTypeNames, offsetof(Component, m_maxHealthValueType) },
 		{ "InitialHealthValueType", INI::parseIndexList, TheValueTypeNames, offsetof(Component, m_initialHealthValueType) },
+		{ "PartiallyFunctionalIcon", INI::parseAsciiString, NULL, offsetof(Component, m_partiallyFunctionalIconName) },
+		{ "DownedIcon", INI::parseAsciiString, NULL, offsetof(Component, m_downedIconName) },
+		{ "UserDisabledIcon", INI::parseAsciiString, NULL, offsetof(Component, m_userDisabledIconName) },
 		
 		{ 0, 0, 0, 0 }
 	};
@@ -264,6 +268,133 @@ Bool Component::isUserDisabled() const
 void Component::setUserDisabled(Bool disabled)
 {
 	m_userDisabled = disabled;
+}
+
+//-------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------
+// TheSuperHackers @feature author 15/01/2025 Lazy loading helper for partially functional icon
+//-------------------------------------------------------------------------------------------------
+Anim2DTemplate* Component::getPartiallyFunctionalIcon() const
+{
+	// Lazy resolution: if not resolved yet, resolve it now
+	if (m_partiallyFunctionalIcon == NULL && !m_partiallyFunctionalIconName.isEmpty() && TheAnim2DCollection)
+	{
+		// Need non-const access to resolve, so cast away const (safe here as we're just caching)
+		Component* nonConstThis = const_cast<Component*>(this);
+		nonConstThis->m_partiallyFunctionalIcon = TheAnim2DCollection->findTemplate(m_partiallyFunctionalIconName);
+		if (nonConstThis->m_partiallyFunctionalIcon)
+		{
+			nonConstThis->m_partiallyFunctionalIconName = AsciiString(); // Clear name after successful resolution
+		}
+	}
+	
+	return m_partiallyFunctionalIcon;
+}
+
+//-------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------
+// TheSuperHackers @feature author 15/01/2025 Lazy loading helper for downed icon
+//-------------------------------------------------------------------------------------------------
+Anim2DTemplate* Component::getDownedIcon() const
+{
+	// Lazy resolution: if not resolved yet, resolve it now
+	if (m_downedIcon == NULL && !m_downedIconName.isEmpty() && TheAnim2DCollection)
+	{
+		// Need non-const access to resolve, so cast away const (safe here as we're just caching)
+		Component* nonConstThis = const_cast<Component*>(this);
+		nonConstThis->m_downedIcon = TheAnim2DCollection->findTemplate(m_downedIconName);
+		if (nonConstThis->m_downedIcon)
+		{
+			nonConstThis->m_downedIconName = AsciiString(); // Clear name after successful resolution
+		}
+	}
+	
+	return m_downedIcon;
+}
+
+//-------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------
+// TheSuperHackers @feature author 15/01/2025 Lazy loading helper for user disabled icon
+//-------------------------------------------------------------------------------------------------
+Anim2DTemplate* Component::getUserDisabledIcon() const
+{
+	// Lazy resolution: if not resolved yet, resolve it now
+	if (m_userDisabledIcon == NULL && !m_userDisabledIconName.isEmpty() && TheAnim2DCollection)
+	{
+		// Need non-const access to resolve, so cast away const (safe here as we're just caching)
+		Component* nonConstThis = const_cast<Component*>(this);
+		nonConstThis->m_userDisabledIcon = TheAnim2DCollection->findTemplate(m_userDisabledIconName);
+		if (nonConstThis->m_userDisabledIcon)
+		{
+			nonConstThis->m_userDisabledIconName = AsciiString(); // Clear name after successful resolution
+		}
+	}
+	
+	return m_userDisabledIcon;
+}
+
+//-------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------
+// TheSuperHackers @feature author 15/01/2025 Helper method to copy base Component members
+//-------------------------------------------------------------------------------------------------
+void Component::copyBaseComponentMembers(Component* dest) const
+{
+	if (!dest)
+		return;
+	
+	dest->m_name = m_name;
+	dest->m_maxHealth = m_maxHealth;
+	dest->m_initialHealth = m_initialHealth;
+	dest->m_healingType = m_healingType;
+	dest->m_damageOnSides = m_damageOnSides;
+	dest->m_replacementCost = m_replacementCost;
+	dest->m_forceReturnOnDestroy = m_forceReturnOnDestroy;
+	dest->m_maxHealthValueType = m_maxHealthValueType;
+	dest->m_initialHealthValueType = m_initialHealthValueType;
+	dest->m_destroyedDamageType = m_destroyedDamageType;
+	dest->m_currentHealth = m_currentHealth;
+	dest->m_currentMaxHealth = m_currentMaxHealth;
+	dest->m_partiallyFunctionalIconName = m_partiallyFunctionalIconName;
+	dest->m_downedIconName = m_downedIconName;
+	dest->m_userDisabledIconName = m_userDisabledIconName;
+	dest->m_partiallyFunctionalIcon = m_partiallyFunctionalIcon;
+	dest->m_downedIcon = m_downedIcon;
+	dest->m_userDisabledIcon = m_userDisabledIcon;
+	dest->setUserDisabled(isUserDisabled());
+}
+
+//-------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------
+// TheSuperHackers @feature author 15/01/2025 Virtual clone method for polymorphic copying
+//-------------------------------------------------------------------------------------------------
+Component* Component::clone() const
+{
+	// Create a new Component with the same data
+	Component* copy = new Component();
+	copyBaseComponentMembers(copy);
+	return copy;
+}
+
+//-------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------
+// TheSuperHackers @feature author 15/01/2025 Get icon template for component status (lazy loading)
+//-------------------------------------------------------------------------------------------------
+Anim2DTemplate* Component::getStatusIcon() const
+{
+	ComponentStatus status = getStatus();
+	
+	// Get the appropriate icon based on status (lazy loading handled in helper methods)
+	switch (status)
+	{
+		case COMPONENT_STATUS_USER_DISABLED:
+			return getUserDisabledIcon();
+		case COMPONENT_STATUS_DOWNED:
+			return getDownedIcon();
+		case COMPONENT_STATUS_PARTIALLY_FUNCTIONAL:
+			return getPartiallyFunctionalIcon();
+		default:
+			return NULL; // No icon for other statuses
+	}
 }
 
 //-------------------------------------------------------------------------------------------------

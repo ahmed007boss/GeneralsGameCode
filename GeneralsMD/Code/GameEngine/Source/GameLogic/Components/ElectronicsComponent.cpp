@@ -35,7 +35,7 @@ void ElectronicsComponent::parseElectronicsComponent(INI* ini, void* instance, v
 	ini->initFromINIMulti(component, p);
 	
 	// Add the parsed component to the module data
-	moduleData->m_components.push_back(component);
+	moduleData->m_componentsData.push_back(component);
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -57,6 +57,30 @@ void ElectronicsComponent::buildFieldParse(MultiIniFieldParse& p)
 	};
 
 	p.add(electronicsComponentFieldParse);
+}
+
+//-------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------
+// TheSuperHackers @feature author 15/01/2025 Virtual clone method for polymorphic copying
+//-------------------------------------------------------------------------------------------------
+Component* ElectronicsComponent::clone() const
+{
+	// Create a new ElectronicsComponent
+	ElectronicsComponent* copy = new ElectronicsComponent();
+	
+	// Copy base Component members using helper method
+	copyBaseComponentMembers(copy);
+	
+	// Copy ElectronicsComponent-specific members
+	copy->m_jammingDamageCap = m_jammingDamageCap;
+	copy->m_jammingDamageHealRate = m_jammingDamageHealRate;
+	copy->m_jammingDamageHealAmount = m_jammingDamageHealAmount;
+	copy->m_currentJammingDamage = m_currentJammingDamage;
+	copy->m_jammingHealCountdown = m_jammingHealCountdown;
+	copy->m_canBeJammedByDirectJammers = m_canBeJammedByDirectJammers;
+	copy->m_canBeJammedByAreaJammers = m_canBeJammedByAreaJammers;
+	
+	return copy;
 }
 
 //-------------------------------------------------------------------------------------------------

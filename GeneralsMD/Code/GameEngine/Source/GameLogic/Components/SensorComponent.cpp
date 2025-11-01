@@ -80,7 +80,7 @@ void SensorComponent::parseSensorComponent(INI* ini, void* instance, void* /*sto
 	ini->initFromINIMulti(sensor, p);
 	
 	// Add the parsed component to the module data
-	moduleData->m_components.push_back(sensor);
+	moduleData->m_componentsData.push_back(sensor);
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -110,6 +110,33 @@ void SensorComponent::buildFieldParse(MultiIniFieldParse& p)
 		{ 0, 0, 0, 0 }
 	};
 	p.add(sensorElectronicsFieldParse);
+}
+
+//-------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------
+// TheSuperHackers @feature author 15/01/2025 Virtual clone method for polymorphic copying
+//-------------------------------------------------------------------------------------------------
+Component* SensorComponent::clone() const
+{
+	// Create a new SensorComponent
+	SensorComponent* copy = new SensorComponent();
+	
+	// Copy base Component members using helper method
+	copyBaseComponentMembers(copy);
+	
+	// Copy SensorComponent-specific members (vision and electronics data)
+	copy->m_shroudClearingRange = m_shroudClearingRange;
+	copy->m_shroudClearingRangePartial = m_shroudClearingRangePartial;
+	copy->m_shroudClearingRangeDisabled = m_shroudClearingRangeDisabled;
+	copy->m_jammingDamageCap = m_jammingDamageCap;
+	copy->m_jammingDamageHealRate = m_jammingDamageHealRate;
+	copy->m_jammingDamageHealAmount = m_jammingDamageHealAmount;
+	copy->m_currentJammingDamage = m_currentJammingDamage;
+	copy->m_jammingHealCountdown = m_jammingHealCountdown;
+	copy->m_canBeJammedByDirectJammers = m_canBeJammedByDirectJammers;
+	copy->m_canBeJammedByAreaJammers = m_canBeJammedByAreaJammers;
+	
+	return copy;
 }
 
 //-------------------------------------------------------------------------------------------------

@@ -420,7 +420,7 @@ void EngineComponent::parseEngineComponent(INI* ini, void* instance, void* /*sto
 	ini->initFromINIMulti(component, p);
 	
 	// Add the parsed component to the module data
-	moduleData->m_components.push_back(component);
+	moduleData->m_componentsData.push_back(component);
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -449,6 +449,43 @@ void EngineComponent::buildFieldParse(MultiIniFieldParse& p)
 	};
 
 	p.add(engineComponentFieldParse);
+}
+
+//-------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------
+// TheSuperHackers @feature author 15/01/2025 Virtual clone method for polymorphic copying
+//-------------------------------------------------------------------------------------------------
+Component* EngineComponent::clone() const
+{
+	// Create a new EngineComponent
+	EngineComponent* copy = new EngineComponent();
+	
+	// Copy base Component members using helper method
+	copyBaseComponentMembers(copy);
+	
+	// Copy EngineComponent-specific members
+	copy->m_maxSpeedDamaged = m_maxSpeedDamaged;
+	copy->m_maxSpeedDamagedValueType = m_maxSpeedDamagedValueType;
+	copy->m_hasMaxSpeedDamaged = m_hasMaxSpeedDamaged;
+	copy->m_maxTurnRateDamaged = m_maxTurnRateDamaged;
+	copy->m_maxTurnRateDamagedValueType = m_maxTurnRateDamagedValueType;
+	copy->m_hasMaxTurnRateDamaged = m_hasMaxTurnRateDamaged;
+	copy->m_maxAccelerationDamaged = m_maxAccelerationDamaged;
+	copy->m_maxAccelerationDamagedValueType = m_maxAccelerationDamagedValueType;
+	copy->m_hasMaxAccelerationDamaged = m_hasMaxAccelerationDamaged;
+	copy->m_maxLiftDamaged = m_maxLiftDamaged;
+	copy->m_maxLiftDamagedValueType = m_maxLiftDamagedValueType;
+	copy->m_hasMaxLiftDamaged = m_hasMaxLiftDamaged;
+	copy->m_maxSpeedDestroyed = m_maxSpeedDestroyed;
+	copy->m_maxSpeedDestroyedValueType = m_maxSpeedDestroyedValueType;
+	copy->m_maxTurnRateDestroyed = m_maxTurnRateDestroyed;
+	copy->m_maxTurnRateDestroyedValueType = m_maxTurnRateDestroyedValueType;
+	copy->m_maxAccelerationDestroyed = m_maxAccelerationDestroyed;
+	copy->m_maxAccelerationDestroyedValueType = m_maxAccelerationDestroyedValueType;
+	copy->m_maxLiftDestroyed = m_maxLiftDestroyed;
+	copy->m_maxLiftDestroyedValueType = m_maxLiftDestroyedValueType;
+	
+	return copy;
 }
 
 //-------------------------------------------------------------------------------------------------

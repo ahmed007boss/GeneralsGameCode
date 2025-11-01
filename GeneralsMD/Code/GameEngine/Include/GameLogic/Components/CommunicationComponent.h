@@ -26,6 +26,9 @@ public:
 	static void parseCommunicationComponent(INI* ini, void* instance, void* /*store*/, const void* /*userData*/);
 	static void buildFieldParse(MultiIniFieldParse& p);
 
+	// TheSuperHackers @feature author 15/01/2025 Virtual clone method for polymorphic copying
+	virtual Component* clone() const;
+
 	// Save/Load/CRC hooks
 	virtual void crc( Xfer *xfer );
 	virtual void xfer( Xfer *xfer );

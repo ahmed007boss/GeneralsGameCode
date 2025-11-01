@@ -2830,6 +2830,7 @@ void Drawable::drawIconUI( void )
 		drawVeterancy( healthBarRegion );
 		
 		drawInventoryIcons( healthBarRegion );
+		drawComponentIcons( healthBarRegion );
 
 #ifdef KRIS_BRUTAL_HACK_FOR_AIRCRAFT_CARRIER_DEBUGGING
 		drawUIText();
@@ -3907,6 +3908,48 @@ void Drawable::drawInventoryIcons(const IRegion2D* healthBarRegion)
 		// Delete the icon after drawing (created on the fly, not stored)
 		deleteInstance(icon);
 	}
+}
+
+//-------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------
+// TheSuperHackers @feature author 15/01/2025 Draw icons for component status
+//-------------------------------------------------------------------------------------------------
+void Drawable::drawComponentIcons(const IRegion2D* healthBarRegion)
+{
+	const Object* obj = getObject();
+	if (!obj || !healthBarRegion)
+		return;
+
+	// Get BodyModule to access component icons
+	BodyModuleInterface* body = obj->getBodyModule();
+	if (!body)
+		return;
+
+	// Get icon from BodyModule (iterates components internally, returns first icon found)
+	Anim2D* icon = body->getComponentStatusIcon();
+	if (!icon)
+		return;
+
+	Int barHeight = healthBarRegion->hi.y - healthBarRegion->lo.y;
+
+	Int frameWidth = icon->getCurrentFrameWidth();
+	Int frameHeight = icon->getCurrentFrameHeight();
+
+#ifdef SCALE_ICONS_WITH_ZOOM_ML
+	// adjust the width to be a % of the health bar region size
+	Int barWidth = healthBarRegion->hi.x - healthBarRegion->lo.x;
+	Int size = REAL_TO_INT( barWidth * 0.3f );
+	frameHeight = REAL_TO_INT((INT_TO_REAL(size) / INT_TO_REAL(frameWidth)) * frameHeight);
+	frameWidth = size;
+#endif
+	// given our scaled width and height we need to find the top left point to draw the image at
+	ICoord2D screen;
+	screen.x = healthBarRegion->lo.x;
+	screen.y = healthBarRegion->hi.y - (frameHeight + barHeight);
+	icon->draw( screen.x, screen.y, frameWidth, frameHeight );
+	
+	// Delete the icon after drawing (created on the fly, not stored)
+	deleteInstance(icon);
 }
 
 //-------------------------------------------------------------------------------------------------

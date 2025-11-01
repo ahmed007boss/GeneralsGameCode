@@ -60,6 +60,7 @@
 #include "GameLogic/Module/DamageModule.h"
 #include "GameClient/GameText.h"
 #include "GameLogic/Module/ActiveBody.h"
+#include "GameClient/Anim2D.h"
 #include "GameLogic/Module/JammingDamageHelper.h"
 #include "GameLogic/Components/Component.h"
 #include "GameLogic/Components/EngineComponent.h"
@@ -161,11 +162,11 @@ ActiveBodyModuleData::ActiveBodyModuleData()
 
 ActiveBodyModuleData::~ActiveBodyModuleData()
 {
-	for (std::vector<Component*>::iterator it = m_components.begin(); it != m_components.end(); ++it)
+	for (std::vector<Component*>::iterator it = m_componentsData.begin(); it != m_componentsData.end(); ++it)
 	{
 		delete *it;
 	}
-	m_components.clear();
+	m_componentsData.clear();
 }
 
 
@@ -240,6 +241,24 @@ ActiveBody::ActiveBody( Thing *thing, const ModuleData* moduleData ) :
 	// start us in the right state
 	setCorrectDamageState();
 
+	// TheSuperHackers @feature author 15/01/2025 Copy components from ModuleData to instance
+	// Components have runtime state, so each ActiveBody needs its own copies
+	// Use virtual clone() to preserve derived types (EngineComponent, VisionComponent, etc.)
+	const ActiveBodyModuleData* data = getActiveBodyModuleData();
+	if (data)
+	{
+		for (std::vector<Component*>::const_iterator it = data->m_componentsData.begin();
+			 it != data->m_componentsData.end(); ++it)
+		{
+			if (*it)
+			{
+				// Use virtual clone() to preserve the actual component type
+				Component* componentCopy = (*it)->clone();
+				m_components.push_back(componentCopy);
+			}
+		}
+	}
+	
 	// TheSuperHackers @feature author 15/01/2025 Initialize component health from module data
 	initializeComponentHealth();
 	
@@ -249,6 +268,12 @@ ActiveBody::ActiveBody( Thing *thing, const ModuleData* moduleData ) :
 //-------------------------------------------------------------------------------------------------
 ActiveBody::~ActiveBody( void )
 {
+	// TheSuperHackers @feature author 15/01/2025 Clean up per-instance components
+	for (std::vector<Component*>::iterator it = m_components.begin(); it != m_components.end(); ++it)
+	{
+		delete *it;
+	}
+	m_components.clear();
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -269,25 +294,21 @@ void ActiveBody::setCorrectDamageState()
 	BodyDamageType componentDamageState = BODY_PRISTINE;
 	
 	// Check all components for damage states
-	const ActiveBodyModuleData* data = static_cast<const ActiveBodyModuleData*>(getModuleData());
-	if (data)
+	for (std::vector<Component*>::const_iterator it = m_components.begin();
+		 it != m_components.end(); ++it)
 	{
-		for (std::vector<Component*>::const_iterator it = data->m_components.begin();
-			 it != data->m_components.end(); ++it)
-	{
-			const Component* component = *it;
-			if (!component->getName().isEmpty())
-			{
-				Real componentHealth = component->getCurrentHealth();
-				Real componentMaxHealth = component->getCurrentMaxHealth();
-				
-				BodyDamageType compState = component->calcDamageState(componentHealth, componentMaxHealth);			
+		const Component* component = *it;
+		if (component && !component->getName().isEmpty())
+		{
+			Real componentHealth = component->getCurrentHealth();
+			Real componentMaxHealth = component->getCurrentMaxHealth();
+			
+			BodyDamageType compState = component->calcDamageState(componentHealth, componentMaxHealth);
 			// Use the most severe component damage state
 			if (compState != BODY_PRISTINE)
 			{
 				componentDamageState = compState;
 				break; // Use the first destroyed component found
-				}
 			}
 		}
 	}
@@ -769,10 +790,10 @@ void ActiveBody::attemptDamage( DamageInfo *damageInfo )
 					// Find the component to check its damageOnSides
 					Bool canDamageFromThisSide = TRUE; // Default: can be damaged from any side
 					
-				for (std::vector<Component*>::const_iterator compIt = moduleData->m_components.begin();
-						 compIt != moduleData->m_components.end(); ++compIt)
+					for (std::vector<Component*>::const_iterator compIt = m_components.begin();
+						 compIt != m_components.end(); ++compIt)
 					{
-					if ((*compIt)->getName() == it->first)
+						if (*compIt && (*compIt)->getName() == it->first)
 						{
 							// If component has specific damage sides defined, check if this hit side is allowed
 						if ((*compIt)->getDamageOnSides().any())
@@ -1814,17 +1835,13 @@ void ActiveBody::crc( Xfer *xfer )
 	BodyModule::crc( xfer );
 
 	// TheSuperHackers @feature Ahmed Salah 31/10/2025 Include components in body CRC
-	const ActiveBodyModuleData* data_crc = static_cast<const ActiveBodyModuleData*>(getModuleData());
-	if (data_crc)
+	AsciiString marker = "MARKER:Components";
+	xfer->xferAsciiString(&marker);
+	for (std::vector<Component*>::const_iterator it = m_components.begin(); it != m_components.end(); ++it)
 	{
-		AsciiString marker = "MARKER:Components";
-		xfer->xferAsciiString(&marker);
-		for (std::vector<Component*>::const_iterator it = data_crc->m_components.begin(); it != data_crc->m_components.end(); ++it)
+		if (*it)
 		{
-			if (*it)
-			{
-				(*it)->crc(xfer);
-			}
+			(*it)->crc(xfer);
 		}
 	}
 
@@ -1948,12 +1965,11 @@ void ActiveBody::xfer( Xfer *xfer )
 	m_curArmorSetFlags.xfer( xfer );
 
 	// TheSuperHackers @feature Ahmed Salah 31/10/2025 Include components in save/load
-	ActiveBodyModuleData* data_xfer = const_cast<ActiveBodyModuleData*>(getActiveBodyModuleData());
-	if (data_xfer && version >= 2)
+	if (version >= 2)
 	{
-		UnsignedInt compCount = static_cast<UnsignedInt>(data_xfer->m_components.size());
+		UnsignedInt compCount = static_cast<UnsignedInt>(m_components.size());
 		xfer->xferUnsignedInt(&compCount);
-		for (std::vector<Component*>::iterator it = data_xfer->m_components.begin(); it != data_xfer->m_components.end(); ++it)
+		for (std::vector<Component*>::iterator it = m_components.begin(); it != m_components.end(); ++it)
 		{
 			if (*it)
 			{
@@ -1974,15 +1990,11 @@ void ActiveBody::loadPostProcess( void )
 	BodyModule::loadPostProcess();
 
 	// TheSuperHackers @feature Ahmed Salah 31/10/2025 Forward load post process to components
-	ActiveBodyModuleData* data_lpp = const_cast<ActiveBodyModuleData*>(getActiveBodyModuleData());
-	if (data_lpp)
+	for (std::vector<Component*>::iterator it = m_components.begin(); it != m_components.end(); ++it)
 	{
-		for (std::vector<Component*>::iterator it = data_lpp->m_components.begin(); it != data_lpp->m_components.end(); ++it)
+		if (*it)
 		{
-			if (*it)
-			{
-				(*it)->loadPostProcess();
-			}
+			(*it)->loadPostProcess();
 		}
 	}
 
@@ -2007,21 +2019,17 @@ UnicodeString ActiveBodyModuleData::getModuleDescription() const
 
 void ActiveBody::initializeComponentHealth()
 {
-	// Get component data from module data
-	const ActiveBodyModuleData* data = static_cast<const ActiveBodyModuleData*>(getModuleData());
-	if (!data) return;
-
-		// Initialize component health from module data
-	for (size_t i = 0; i < data->m_components.size(); i++)
+	// Initialize health for all instance components
+	for (size_t i = 0; i < m_components.size(); i++)
 	{
-		Component* component = data->m_components[i];
-		if (!component->getName().isEmpty())
+		Component* component = m_components[i];
+		if (component && !component->getName().isEmpty())
 		{
 			Real mainMaxHealth = getMaxHealth();
 			component->initializeHealth(mainMaxHealth);
-	}
 		}
 	}
+}
 
 //-------------------------------------------------------------------------------------------------
 // TheSuperHackers @feature author 15/01/2025 Get component definitions
@@ -2030,18 +2038,45 @@ std::vector<Component> ActiveBody::getComponents() const
 {
 	std::vector<Component> components;
 
-	// Get component data from module data
-	const ActiveBodyModuleData* data = static_cast<const ActiveBodyModuleData*>(getModuleData());
-	if (!data)
-		return components;
-	
-	// Build a copy of components by value from the stored pointers
-	for (std::vector<Component*>::const_iterator it = data->m_components.begin(); it != data->m_components.end(); ++it)
+	// Build a copy of components by value from instance component pointers
+	for (std::vector<Component*>::const_iterator it = m_components.begin(); it != m_components.end(); ++it)
 	{
 		if (*it)
 			components.push_back(**it);
 	}
 	return components;
+}
+
+//-------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------
+// TheSuperHackers @feature author 15/01/2025 Get icon to draw for component status
+//-------------------------------------------------------------------------------------------------
+Anim2D* ActiveBody::getComponentStatusIcon() const
+{
+	// Iterate through instance components and find the first one with a status icon
+	for (std::vector<Component*>::const_iterator it = m_components.begin();
+		 it != m_components.end(); ++it)
+	{
+		if (!*it)
+			continue;
+		
+		const Component* component = *it;
+		
+		// Get icon template for component status (lazy loading handled in getStatusIcon)
+		Anim2DTemplate* iconTemplate = component->getStatusIcon();
+		if (!iconTemplate)
+			continue;
+		
+		// Found component with icon - create Anim2D from template
+		if (TheAnim2DCollection)
+		{
+			Anim2D* icon = newInstance(Anim2D)(iconTemplate, TheAnim2DCollection);
+			return icon;
+		}
+	}
+	
+	// No component with icon found
+	return NULL;
 }
 
 // Explicit specializations to resolve BodyModuleInterface::GetComponent<T> calls

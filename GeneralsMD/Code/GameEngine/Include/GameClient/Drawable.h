@@ -772,6 +772,7 @@ private:
 	void drawJammed( const IRegion2D* healthBarRegion );					///< draw icons
 	void drawBattlePlans( const IRegion2D* healthBarRegion );				///< Icons rendering for active battle plan statii
 	void drawInventoryIcons( const IRegion2D* healthBarRegion );			///< TheSuperHackers @feature author 15/01/2025 Draw icons for empty inventory items
+	void drawComponentIcons( const IRegion2D* healthBarRegion );			///< TheSuperHackers @feature author 15/01/2025 Draw icons for component status
 
 	Bool drawsAnyUIText( void );
 

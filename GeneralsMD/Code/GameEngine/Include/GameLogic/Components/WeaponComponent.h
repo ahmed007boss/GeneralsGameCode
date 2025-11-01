@@ -48,6 +48,9 @@ public:
 	// TheSuperHackers @feature author 15/01/2025 Build field parse method for WeaponComponent inheritance support
 	static void buildFieldParse(MultiIniFieldParse& p);
 
+	// TheSuperHackers @feature author 15/01/2025 Virtual clone method for polymorphic copying
+	virtual Component* clone() const;
+
 	// Save/Load/CRC hooks
 	virtual void crc( Xfer *xfer );
 	virtual void xfer( Xfer *xfer );

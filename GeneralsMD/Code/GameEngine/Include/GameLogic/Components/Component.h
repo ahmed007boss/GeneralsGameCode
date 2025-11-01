@@ -38,6 +38,8 @@
 #include "GameLogic/Damage.h"
 #include "Common/INI.h"
 class Xfer;
+class Anim2DTemplate;
+class Anim2D;
 #include <map>
 #include <vector>
 
@@ -92,9 +94,17 @@ protected:
 	Real m_currentHealth;						///< Current health of this component
 	Real m_currentMaxHealth;					///< Current maximum health of this component (calculated from maxHealth)
 
+	// TheSuperHackers @feature author 15/01/2025 Component status icons
+	AsciiString m_partiallyFunctionalIconName;	///< Animation icon template name for partially functional status (resolved lazily)
+	AsciiString m_downedIconName;				///< Animation icon template name for downed status (resolved lazily)
+	AsciiString m_userDisabledIconName;			///< Animation icon template name for user disabled status (resolved lazily)
+	Anim2DTemplate* m_partiallyFunctionalIcon;	///< Animation icon template for partially functional status (lazy loaded)
+	Anim2DTemplate* m_downedIcon;				///< Animation icon template for downed status (lazy loaded)
+	Anim2DTemplate* m_userDisabledIcon;			///< Animation icon template for user disabled status (lazy loaded)
+
 
 public:
-	Component() : m_maxHealth(0.0f), m_initialHealth(0.0f), m_healingType(COMPONENT_HEALING_NORMAL), m_damageOnSides(), m_replacementCost(0), m_forceReturnOnDestroy(FALSE), m_maxHealthValueType(VALUE_TYPE_ABSOLUTE), m_initialHealthValueType(VALUE_TYPE_ABSOLUTE), m_destroyedDamageType((BodyDamageType)0), m_currentHealth(0.0f), m_currentMaxHealth(0.0f), m_userDisabled(FALSE) {}
+	Component() : m_maxHealth(0.0f), m_initialHealth(0.0f), m_healingType(COMPONENT_HEALING_NORMAL), m_damageOnSides(), m_replacementCost(0), m_forceReturnOnDestroy(FALSE), m_maxHealthValueType(VALUE_TYPE_ABSOLUTE), m_initialHealthValueType(VALUE_TYPE_ABSOLUTE), m_destroyedDamageType((BodyDamageType)0), m_currentHealth(0.0f), m_currentMaxHealth(0.0f), m_partiallyFunctionalIcon(NULL), m_downedIcon(NULL), m_userDisabledIcon(NULL), m_userDisabled(FALSE) {}
 
 	// Accessors for configuration/state
 	const AsciiString& getName() const { return m_name; }
@@ -141,7 +151,22 @@ public:
 	
 	// TheSuperHackers @feature Ahmed Salah 15/01/2025 Determine component-specific damage state by health ratio
 	BodyDamageType calcDamageState(Real componentHealth, Real componentMaxHealth) const;
+	
+	// TheSuperHackers @feature author 15/01/2025 Get icon template for component status (lazy loading)
+	Anim2DTemplate* getStatusIcon() const;
+	
+	// TheSuperHackers @feature author 15/01/2025 Lazy loading helper methods for icon templates
+	Anim2DTemplate* getPartiallyFunctionalIcon() const;
+	Anim2DTemplate* getDownedIcon() const;
+	Anim2DTemplate* getUserDisabledIcon() const;
 
+	// TheSuperHackers @feature author 15/01/2025 Virtual clone method for polymorphic copying
+	virtual Component* clone() const;
+	
+	// TheSuperHackers @feature author 15/01/2025 Helper method to copy base Component members to another Component instance
+	// Used by derived classes in their clone() implementations to avoid code duplication
+	void copyBaseComponentMembers(Component* dest) const;
+	
 	// TheSuperHackers @feature Ahmed Salah 31/10/2025 Component save/load/CRC hooks
 	virtual void crc( Xfer *xfer );
 	virtual void xfer( Xfer *xfer );

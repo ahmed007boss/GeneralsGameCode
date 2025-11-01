@@ -68,7 +68,7 @@ public:
 	Bool m_canBeJammedByDirectJammers;
 	Bool m_canBeJammedByAreaJammers;
 
-	std::vector<Component*> m_components;		///< List of components with individual health values
+	std::vector<Component*> m_componentsData;		///< TheSuperHackers @feature author 15/01/2025 Template component data (copied to instances on construction)
 
 	ActiveBodyModuleData();
 	virtual ~ActiveBodyModuleData();
@@ -170,21 +170,21 @@ public:
 	// TheSuperHackers @feature author 15/01/2025 Get component definitions - now inherited from BodyModule
 	virtual std::vector<Component> getComponents() const;
 	
+	// TheSuperHackers @feature author 15/01/2025 Get icon to draw for component status
+	// Call repeatedly to get all component icons (returns NULL when no more)
+	virtual Anim2D* getComponentStatusIcon() const;
+	
 	// TheSuperHackers @feature author 15/01/2025 Generic component getter method
 	template<typename TComponent>
 	TComponent* GetComponent(const AsciiString& componentName) const
 	{
 		static_assert(std::is_base_of<Component, TComponent>::value, "TComponent must inherit from Component");
 		
-		// Get component data from module data
-		const ActiveBodyModuleData* data = static_cast<const ActiveBodyModuleData*>(getModuleData());
-		if (!data) return nullptr;
-		
-		// Find the component by name
-		for (std::vector<Component*>::const_iterator it = data->m_components.begin();
-			 it != data->m_components.end(); ++it)
+		// Find the component by name in instance component list
+		for (std::vector<Component*>::const_iterator it = m_components.begin();
+			 it != m_components.end(); ++it)
 		{
-			if ((*it)->getName() == componentName)
+			if (*it && (*it)->getName() == componentName)
 			{
 				// Safe downcast
 				return dynamic_cast<TComponent*>(*it);
@@ -200,11 +200,11 @@ public:
 	{
 		static_assert(std::is_base_of<Component, TComponent>::value, "TComponent must inherit from Component");
 		std::vector<TComponent*> results;
-		const ActiveBodyModuleData* data = static_cast<const ActiveBodyModuleData*>(getModuleData());
-		if (!data) return results;
-		for (std::vector<Component*>::const_iterator it = data->m_components.begin();
-			 it != data->m_components.end(); ++it)
+		for (std::vector<Component*>::const_iterator it = m_components.begin();
+			 it != m_components.end(); ++it)
 		{
+			if (!*it)
+				continue;
 			// Use dynamic_cast for safety when RTTI is available
 			TComponent* derived = dynamic_cast<TComponent*>(*it);
 			if (derived)
@@ -268,5 +268,8 @@ private:
 	mutable const ArmorTemplateSet*		m_curArmorSet;
 	mutable Armor											m_curArmor;
 	mutable const DamageFX*						m_curDamageFX;
+
+	// TheSuperHackers @feature author 15/01/2025 Per-instance component list (copied from ModuleData on construction)
+	std::vector<Component*> m_components;		///< Instance-specific component copies with runtime state
 
 };

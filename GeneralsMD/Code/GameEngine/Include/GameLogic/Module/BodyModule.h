@@ -204,6 +204,10 @@ public:
 	// TheSuperHackers @feature author 15/01/2025 Get component definitions
 	virtual std::vector<Component> getComponents() const = 0;
 	
+	// TheSuperHackers @feature author 15/01/2025 Get icon to draw for component status
+	// Iterates through components internally and returns the next component's status icon found (NULL when no more)
+	virtual Anim2D* getComponentStatusIcon() const = 0;
+	
 	// TheSuperHackers @feature author 15/01/2025 Generic component getter method
 	template<typename TComponent>
 	TComponent* GetComponent(const AsciiString& componentName) const;
@@ -316,6 +320,9 @@ public:
 	
 	// TheSuperHackers @feature author 15/01/2025 Get component definitions - must be implemented by derived classes
 	virtual std::vector<Component> getComponents() const = 0;
+	
+	// TheSuperHackers @feature author 15/01/2025 Get icon to draw for component status - default implementation returns NULL
+	virtual Anim2D* getComponentStatusIcon() const { return NULL; }
 
 	// TheSuperHackers @feature author 15/01/2025 Update visual damage state based on component health - default implementation
 	virtual void setCorrectDamageState() { }
