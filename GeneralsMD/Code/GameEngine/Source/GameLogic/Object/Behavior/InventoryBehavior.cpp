@@ -35,6 +35,7 @@
 #include "GameLogic/Module/InventoryBehavior.h"
 #include "GameLogic/Object.h"
 #include "GameClient/GameText.h"
+#include "GameClient/Anim2D.h"
 
 //-------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------
@@ -55,36 +56,27 @@ static void parseItem(INI* ini, void* instance, void* /*store*/, const void* /*u
 	// Get the item key from the INI token (e.g., "Item = Ammo" -> "Ammo")
 	AsciiString itemKey = ini->getNextToken();
 	
-            // Create a temporary structure to hold the parsed values
-            struct TempItemData {
-                UnicodeString m_displayName;
-                Real m_maxStorageCount;
-                Real m_initialAvailableAmount;
-                Int m_costPerItem;
-            } tempData;
+	if (itemKey.isEmpty())
+		return;
+
+	// Parse directly into InventoryItemConfig
+	InventoryItemConfig config;
 	
-            static const FieldParse tempItemFieldParse[] =
-            {
-                { "DisplayName", INI::parseAndTranslateLabel, NULL, offsetof(TempItemData, m_displayName) },
-                { "MaxStorageCount", INI::parseReal, NULL, offsetof(TempItemData, m_maxStorageCount) },
-                { "InitialAvailableAmount", INI::parseReal, NULL, offsetof(TempItemData, m_initialAvailableAmount) },
-                { "CostPerItem", INI::parseInt, NULL, offsetof(TempItemData, m_costPerItem) },
-                { 0, 0, 0, 0 }
-            };
+	static const FieldParse itemFieldParse[] =
+	{
+		{ "DisplayName", INI::parseAndTranslateLabel, NULL, offsetof(InventoryItemConfig, displayName) },
+		{ "MaxStorageCount", INI::parseReal, NULL, offsetof(InventoryItemConfig, maxStorageCount) },
+		{ "InitialAvailableAmount", INI::parseReal, NULL, offsetof(InventoryItemConfig, initialAvailableAmount) },
+		{ "CostPerItem", INI::parseInt, NULL, offsetof(InventoryItemConfig, costPerItem) },
+		{ "EmptyIconAnimation", INI::parseAsciiString, NULL, offsetof(InventoryItemConfig, emptyIconAnimationName) },
+		{ "EmptyThreshold", INI::parseReal, NULL, offsetof(InventoryItemConfig, emptyThreshold) },
+		{ 0, 0, 0, 0 }
+	};
 	
-	ini->initFromINI(&tempData, tempItemFieldParse);
+	ini->initFromINI(&config, itemFieldParse);
 	
-            // Store the parsed data in the module data
-            if (!itemKey.isEmpty())
-            {
-                InventoryItemConfig config;
-                config.displayName = tempData.m_displayName;
-                config.maxStorageCount = tempData.m_maxStorageCount;
-                config.initialAvailableAmount = tempData.m_initialAvailableAmount;
-                config.costPerItem = tempData.m_costPerItem;
-                
-                data->m_inventoryItems[itemKey] = config;
-            }
+	// Store the parsed data in the module data
+	data->m_inventoryItems[itemKey] = config;
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -100,7 +92,6 @@ void InventoryBehaviorModuleData::buildFieldParse(MultiIniFieldParse& p)
 	p.add(inventoryFieldParse);
 }
 
-//-------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------
 // TheSuperHackers @feature author 15/01/2025 Helper methods for InventoryBehaviorModuleData
 //-------------------------------------------------------------------------------------------------
@@ -127,6 +118,29 @@ Int InventoryBehaviorModuleData::getCostPerItem(const AsciiString& itemKey) cons
 {
     std::map<AsciiString, InventoryItemConfig>::const_iterator it = m_inventoryItems.find(itemKey);
     return (it != m_inventoryItems.end()) ? it->second.costPerItem : 0;
+}
+
+Anim2DTemplate* InventoryBehaviorModuleData::getEmptyIconAnimation(const AsciiString& itemKey) const
+{
+    std::map<AsciiString, InventoryItemConfig>::const_iterator it = m_inventoryItems.find(itemKey);
+    if (it == m_inventoryItems.end())
+        return NULL;
+    
+    const InventoryItemConfig& config = it->second;
+    
+    // Lazy resolution: if not resolved yet, resolve it now
+    if (config.emptyIconAnimation == NULL && !config.emptyIconAnimationName.isEmpty() && TheAnim2DCollection)
+    {
+        // Need non-const access to resolve, so cast away const (safe here as we're just caching)
+        InventoryItemConfig& nonConstConfig = const_cast<InventoryItemConfig&>(config);
+        nonConstConfig.emptyIconAnimation = TheAnim2DCollection->findTemplate(config.emptyIconAnimationName);
+        if (nonConstConfig.emptyIconAnimation)
+        {
+            nonConstConfig.emptyIconAnimationName = AsciiString(); // Clear name after successful resolution
+        }
+    }
+    
+    return config.emptyIconAnimation;
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -174,6 +188,7 @@ UnicodeString InventoryBehaviorModuleData::getModuleDescription() const
 
 InventoryBehavior::InventoryBehavior(Thing* thing, const ModuleData* moduleData) : BehaviorModule(thing, moduleData)
 {
+	m_currentAmounts.clear();
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -375,6 +390,13 @@ void InventoryBehavior::loadPostProcess( void )
 {
 	// extend base class
 	BehaviorModule::loadPostProcess();
+
+	// Loop over m_inventoryItems and resolve Anim2DTemplate from names
+	InventoryBehaviorModuleData* moduleData = const_cast<InventoryBehaviorModuleData*>(getInventoryModuleData());
+	if (!moduleData)
+		return;
+
+	// Resolution happens lazily when emptyIconAnimation is first accessed
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -395,4 +417,51 @@ InventoryBehavior* InventoryBehavior::getInventoryBehavior(BehaviorModule* modul
 const InventoryBehaviorModuleData* InventoryBehavior::getInventoryModuleData() const
 {
 	return static_cast<const InventoryBehaviorModuleData*>(getModuleData());
+}
+
+//-------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------
+// TheSuperHackers @feature author 15/01/2025 Get icon to draw for empty inventory items
+//-------------------------------------------------------------------------------------------------
+Anim2D* InventoryBehavior::getEmptyItemIcon()
+{
+	const InventoryBehaviorModuleData* moduleData = getInventoryModuleData();
+	if (!moduleData)
+		return NULL;
+
+	// Iterate through items and find the first empty one with an icon configured
+	for (std::map<AsciiString, InventoryItemConfig>::const_iterator it = moduleData->m_inventoryItems.begin();
+		 it != moduleData->m_inventoryItems.end(); ++it)
+	{
+		const AsciiString& itemKey = it->first;
+		const InventoryItemConfig& config = it->second;
+
+		// Check if item is empty (amount <= threshold or not in m_currentAmounts)
+		std::map<AsciiString, Real>::const_iterator amountIt = m_currentAmounts.find(itemKey);
+		if (amountIt != m_currentAmounts.end() && amountIt->second > config.emptyThreshold)
+		{
+			// Item is not empty, continue to next
+			continue;
+		}
+
+		// Get icon template (lazy loading handled in getEmptyIconAnimation)
+		Anim2DTemplate* iconTemplate = moduleData->getEmptyIconAnimation(itemKey);
+		
+		// Check if we have icon template configured
+		if (!iconTemplate)
+		{
+			// No icon configured, continue to next
+			continue;
+		}
+
+		// Found empty item with icon - create Anim2D from template
+		if (TheAnim2DCollection)
+		{
+			Anim2D* icon = newInstance(Anim2D)(iconTemplate, TheAnim2DCollection);
+			return icon;
+		}
+	}
+
+	// No more empty items with icons found
+	return NULL;
 }

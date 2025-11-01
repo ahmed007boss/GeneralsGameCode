@@ -29,9 +29,6 @@
 
 #pragma once
 
-#ifndef __InventoryBehavior_H_
-#define __InventoryBehavior_H_
-
 // INCLUDES ///////////////////////////////////////////////////////////////////////////////////////
 #include "GameLogic/Module/BehaviorModule.h"
 #include "Common/AsciiString.h"
@@ -41,6 +38,8 @@
 // FORWARD DECLARATIONS ///////////////////////////////////////////////////////////////////////////
 class Object;
 class INI;
+class Anim2DTemplate;
+class Anim2D;
 
 //-------------------------------------------------------------------------------------------------
 // TheSuperHackers @feature author 15/01/2025 Inventory item structure
@@ -51,8 +50,11 @@ struct InventoryItemConfig
     Real maxStorageCount;              ///< Maximum storage capacity
     Real initialAvailableAmount;       ///< Initial available amount
     Int costPerItem;                  ///< TheSuperHackers @feature author 15/01/2025 Cost per item for replenishment
+    AsciiString emptyIconAnimationName;   ///< TheSuperHackers @feature author 15/01/2025 Animation icon template name (resolved in loadPostProcess)
+    Anim2DTemplate* emptyIconAnimation;   ///< TheSuperHackers @feature author 15/01/2025 Animation icon template to display when item is empty (NULL = no icon)
+    Real emptyThreshold;               ///< TheSuperHackers @feature author 15/01/2025 Threshold value for considering this item empty (default 0.0)
     
-    InventoryItemConfig() : maxStorageCount(0.0f), initialAvailableAmount(0.0f), costPerItem(0) {}
+    InventoryItemConfig() : maxStorageCount(0.0f), initialAvailableAmount(0.0f), costPerItem(0), emptyIconAnimation(NULL), emptyThreshold(0.0f) {}
 };
 
 //-------------------------------------------------------------------------------------------------
@@ -64,12 +66,16 @@ public:
 	std::map<AsciiString, InventoryItemConfig> m_inventoryItems;     ///< List of inventory item configurations
 
 	InventoryBehaviorModuleData();
+	
+	// Allow InventoryBehavior to access m_inventoryItems for iteration
+	friend class InventoryBehavior;
 
     // Helper methods
     Real getMaxStorageCount(const AsciiString& itemKey) const;
     Real getInitialAvailableAmount(const AsciiString& itemKey) const;
     const UnicodeString& getDisplayName(const AsciiString& itemKey) const;
     Int getCostPerItem(const AsciiString& itemKey) const;
+    Anim2DTemplate* getEmptyIconAnimation(const AsciiString& itemKey) const;
 
 	virtual UnicodeString getModuleDescription() const;
 	virtual Int getModuleOrder() const { return 1000; } // High priority for display
@@ -110,14 +116,17 @@ public:
 	Bool isEmpty() const;
 	Real getTotalItems() const;
 
-            // Interface method for external access
-            static InventoryBehavior* getInventoryBehavior(BehaviorModule* module);
-            
-            // Getter for module data
-            const InventoryBehaviorModuleData* getInventoryModuleData() const;
+  // Interface method for external access
+  static InventoryBehavior* getInventoryBehavior(BehaviorModule* module);
+  
+  // Getter for module data
+  const InventoryBehaviorModuleData* getInventoryModuleData() const;
+
+	// TheSuperHackers @feature author 15/01/2025 Get icon to draw for empty inventory items
+	// Iterates through items internally and returns the first empty item's icon found (NULL when no more)
+	Anim2D* getEmptyItemIcon();
+
 
 private:
 	std::map<AsciiString, Real> m_currentAmounts;  ///< Current amounts for each item (runtime state)
 };
-
-#endif // __InventoryBehavior_H_

@@ -37,6 +37,7 @@
 #include "GameClient/Color.h"
 #include "WWMath/matrix3d.h"
 #include "GameClient/DrawableInfo.h"
+#include <map>
 
 // FORWARD REFERENCES /////////////////////////////////////////////////////////////////////////////
 class PositionalSound;
@@ -314,7 +315,7 @@ public:
 	void setColorTintEnvelope( TintEnvelope &source ) { if (m_colorTintEnvelope) *m_colorTintEnvelope = source; }
 
 
-  void imitateStealthLook( Drawable& otherDraw );
+  	void imitateStealthLook( Drawable& otherDraw );
 
 	void setTerrainDecal(TerrainDecalType type);	///<decal that is to appear under the drawable
 	void setTerrainDecalSize(Real x, Real y);
@@ -770,6 +771,7 @@ private:
 	void drawDisabled( const IRegion2D* healthBarRegion );					///< draw icons
 	void drawJammed( const IRegion2D* healthBarRegion );					///< draw icons
 	void drawBattlePlans( const IRegion2D* healthBarRegion );				///< Icons rendering for active battle plan statii
+	void drawInventoryIcons( const IRegion2D* healthBarRegion );			///< TheSuperHackers @feature author 15/01/2025 Draw icons for empty inventory items
 
 	Bool drawsAnyUIText( void );
 

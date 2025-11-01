@@ -61,6 +61,7 @@
 #include "GameLogic/Module/StealthUpdate.h"
 #include "GameLogic/Module/StickyBombUpdate.h"
 #include "GameLogic/Module/BattlePlanUpdate.h"
+#include "GameLogic/Module/InventoryBehavior.h"
 #include "GameLogic/ScriptEngine.h"
 #include "GameLogic/Weapon.h"
 
@@ -2827,6 +2828,8 @@ void Drawable::drawIconUI( void )
 
 		//Moved this to last so that it shows up over contained and ammo icons.
 		drawVeterancy( healthBarRegion );
+		
+		drawInventoryIcons( healthBarRegion );
 
 #ifdef KRIS_BRUTAL_HACK_FOR_AIRCRAFT_CARRIER_DEBUGGING
 		drawUIText();
@@ -3854,6 +3857,56 @@ void Drawable::drawJammed(const IRegion2D* healthBarRegion)
 
 	}
 
+}
+
+//-------------------------------------------------------------------------------------------------
+// TheSuperHackers @feature author 15/01/2025 Draw icons for empty inventory items
+//-------------------------------------------------------------------------------------------------
+void Drawable::drawInventoryIcons(const IRegion2D* healthBarRegion)
+{
+	const Object* obj = getObject();
+	if (!obj || !healthBarRegion)
+		return;
+
+	// Find InventoryBehavior module
+	InventoryBehavior* inventoryBehavior = NULL;
+	for (BehaviorModule** b = obj->getBehaviorModules(); *b; ++b)
+	{
+		inventoryBehavior = InventoryBehavior::getInventoryBehavior(*b);
+		if (inventoryBehavior)
+			break;
+	}
+	if (!inventoryBehavior)
+		return;
+
+	if (!inventoryBehavior->getInventoryModuleData())
+		return;
+
+	// Get icon from InventoryBehavior (iterates internally, returns first empty item's icon)
+	Anim2D* icon = inventoryBehavior->getEmptyItemIcon();
+	if (icon != NULL)
+	{
+		Int barHeight = healthBarRegion->hi.y - healthBarRegion->lo.y;
+
+		Int frameWidth = icon->getCurrentFrameWidth();
+		Int frameHeight = icon->getCurrentFrameHeight();
+
+#ifdef SCALE_ICONS_WITH_ZOOM_ML
+		// adjust the width to be a % of the health bar region size
+		Int barWidth = healthBarRegion->hi.x - healthBarRegion->lo.x;
+		Int size = REAL_TO_INT( barWidth * 0.3f );
+		frameHeight = REAL_TO_INT((INT_TO_REAL(size) / INT_TO_REAL(frameWidth)) * frameHeight);
+		frameWidth = size;
+#endif
+		// given our scaled width and height we need to find the top left point to draw the image at
+		ICoord2D screen;
+		screen.x = healthBarRegion->lo.x;
+		screen.y = healthBarRegion->hi.y - (frameHeight + barHeight);
+		icon->draw( screen.x, screen.y, frameWidth, frameHeight );
+		
+		// Delete the icon after drawing (created on the fly, not stored)
+		deleteInstance(icon);
+	}
 }
 
 //-------------------------------------------------------------------------------------------------
