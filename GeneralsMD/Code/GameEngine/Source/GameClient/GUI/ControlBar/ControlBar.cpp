@@ -281,11 +281,14 @@ void ControlBar::populatePurchaseScience( Player* player )
 	commandSet8 = TheControlBar->findCommandSet(player->getPlayerTemplate()->getPurchaseScienceCommandSetRank8()); // TEMP WILL CHANGE TO PROPER WAY ONCE WORKING
 
 	for( i = 0; i < MAX_PURCHASE_SCIENCE_RANK_1; i++ )
-		m_sciencePurchaseWindowsRank1[i]->winHide(TRUE);
+		if (m_sciencePurchaseWindowsRank1[i]!=nullptr)
+			m_sciencePurchaseWindowsRank1[i]->winHide(TRUE);
 	for( i = 0; i < MAX_PURCHASE_SCIENCE_RANK_3; i++ )
-		m_sciencePurchaseWindowsRank3[i]->winHide(TRUE);
+		if (m_sciencePurchaseWindowsRank3[i] != nullptr)
+			m_sciencePurchaseWindowsRank3[i]->winHide(TRUE);
 	for( i = 0; i < MAX_PURCHASE_SCIENCE_RANK_8; i++ )
-		m_sciencePurchaseWindowsRank8[i]->winHide(TRUE);
+		if (m_sciencePurchaseWindowsRank8[i] != nullptr)
+			m_sciencePurchaseWindowsRank8[i]->winHide(TRUE);
 
 
 	// if no command set match is found hide all the buttons
@@ -306,7 +309,8 @@ void ControlBar::populatePurchaseScience( Player* player )
 		if( commandButton == NULL || BitIsSet( commandButton->getOptions(), SCRIPT_ONLY ) )
 		{
 			// hide window on interface
-			m_sciencePurchaseWindowsRank1[ i ]->winHide( TRUE );
+			if(m_sciencePurchaseWindowsRank1[ i ] != nullptr) 
+				m_sciencePurchaseWindowsRank1[ i ]->winHide( TRUE );
 		}
 		else
 		{
@@ -366,8 +370,9 @@ void ControlBar::populatePurchaseScience( Player* player )
 		if( commandButton == NULL || BitIsSet( commandButton->getOptions(), SCRIPT_ONLY ) )
 		{
 			// hide window on interface
-			m_sciencePurchaseWindowsRank3[ i ]->winHide( TRUE );
-		}
+			if (m_sciencePurchaseWindowsRank3[ i ] != nullptr)
+				m_sciencePurchaseWindowsRank3[ i ]->winHide( TRUE );
+		} 
 		else
 		{
 			// make sure the window is not hidden
@@ -429,7 +434,8 @@ void ControlBar::populatePurchaseScience( Player* player )
 		if( commandButton == NULL || BitIsSet( commandButton->getOptions(), SCRIPT_ONLY ) )
 		{
 			// hide window on interface
-			m_sciencePurchaseWindowsRank8[ i ]->winHide( TRUE );
+			if (m_sciencePurchaseWindowsRank8[ i ] != nullptr)
+				m_sciencePurchaseWindowsRank8[ i ]->winHide( TRUE );
 		}
 		else
 		{
@@ -2059,7 +2065,9 @@ void ControlBar::init( void )
 			id = TheNameKeyGenerator->nameToKey( windowName.str() );
 			m_sciencePurchaseWindowsRank1[ i ] =
 				TheWindowManager->winGetWindowFromId( m_contextParent[ CP_PURCHASE_SCIENCE ], id );
-			m_sciencePurchaseWindowsRank1[ i ]->winSetStatus( WIN_STATUS_USE_OVERLAY_STATES );
+			if (m_sciencePurchaseWindowsRank1[i] != nullptr) {
+				m_sciencePurchaseWindowsRank1[i]->winSetStatus(WIN_STATUS_USE_OVERLAY_STATES);
+			}
 		}
 		for( i = 0; i < MAX_PURCHASE_SCIENCE_RANK_3; i++ )
 		{
@@ -2067,7 +2075,9 @@ void ControlBar::init( void )
 			id = TheNameKeyGenerator->nameToKey( windowName.str() );
 			m_sciencePurchaseWindowsRank3[ i ] =
 				TheWindowManager->winGetWindowFromId( m_contextParent[ CP_PURCHASE_SCIENCE ], id );
-			m_sciencePurchaseWindowsRank3[ i ]->winSetStatus( WIN_STATUS_USE_OVERLAY_STATES );
+			if (m_sciencePurchaseWindowsRank3[i] != nullptr) {
+				m_sciencePurchaseWindowsRank3[i]->winSetStatus(WIN_STATUS_USE_OVERLAY_STATES);
+			}
 		}
 
 		for( i = 0; i < MAX_PURCHASE_SCIENCE_RANK_8; i++ )
@@ -2076,7 +2086,9 @@ void ControlBar::init( void )
 			id = TheNameKeyGenerator->nameToKey( windowName.str() );
 			m_sciencePurchaseWindowsRank8[ i ] =
 				TheWindowManager->winGetWindowFromId( m_contextParent[ CP_PURCHASE_SCIENCE ], id );
-			m_sciencePurchaseWindowsRank8[ i ]->winSetStatus( WIN_STATUS_USE_OVERLAY_STATES );
+			if (m_sciencePurchaseWindowsRank8[i] != nullptr) {
+				m_sciencePurchaseWindowsRank8[i]->winSetStatus(WIN_STATUS_USE_OVERLAY_STATES);
+			}
 		}
 
 		// keep a pointer to the window making up the right HUD display
